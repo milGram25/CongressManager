@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@plugin "daisyui";
+
+/* Colores de la paletta */
+@plugin "daisyui/theme" {
+  name: "congressTheme";
+  default: true;
+  color-scheme: light;
+  --color-primary: #001219;
+  --color-secondary: #94d2bd;
+  --color-accent: #e9d8a6;
+  --color-base-100: #fafafa;
+  --color-base-200: #f3f4f6;
+  --color-base-300: #e5e7eb;
+  --color-base-content: #222222;
+  --color-neutral: #222222;
+}
