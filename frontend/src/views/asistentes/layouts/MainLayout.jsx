@@ -152,6 +152,16 @@ export default function AsistenteLayout() {
                 <span>Enviar Ponencia</span>
               </div>
             </NavLink>
+            <NavLink
+              to="/asistente/estatus-ponencia"
+              className={navLinkClass}
+              onClick={closeDrawer}
+            >
+              <div className="flex items-center gap-3">
+                <MdUploadFile className="text-lg pl-1" />
+                <span>Estatus Ponencia</span>
+              </div>
+            </NavLink>
           </nav>
         </div>
       </div>
