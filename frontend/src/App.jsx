@@ -26,7 +26,7 @@ function App() {
         </Route>
 
         {/* Por defecto va a asistente hasta que tengamos algo mas */}
-        <Route path="*" element={<Navigate to="/asistente" replace />} />
+        <Route path="*" element={<Navigate to="/asistente/catalogo" replace />} />
       </Routes>
     </BrowserRouter>
   );

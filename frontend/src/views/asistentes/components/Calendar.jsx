@@ -105,9 +105,9 @@ export default function Calendar() {
                   aspect-square flex flex-col items-center justify-center rounded-lg text-sm
                   transition-all duration-200 cursor-pointer border border-transparent relative
                   ${!isCurrentMonth ? 'opacity-30' : 'hover:border-base-300 hover:bg-base-200'}
-                  ${hasTaller && !hasPonencia ? 'bg-base-300/80 hover:bg-base-300' : ''}
+                  ${hasTaller && !hasPonencia ? 'bg-secondary/80 hover:bg-secondary' : ''}
                   ${!hasTaller && hasPonencia ? 'bg-accent/80 hover:bg-accent' : ''}
-                  ${hasTaller && hasPonencia ? 'bg-gradient-to-br from-base-300/80 to-accent/80 text-base-content hover:from-base-300 hover:to-accent' : ''}
+                  ${hasTaller && hasPonencia ? 'bg-gradient-to-br from-secondary/80 to-accent/80 text-base-content hover:from-secondary hover:to-accent' : ''}
                 `}
               >
                 <span className="font-medium">{format(calDay, 'd')}</span>
