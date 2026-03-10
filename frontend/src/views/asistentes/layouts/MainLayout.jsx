@@ -31,7 +31,7 @@ export default function AsistenteLayout() {
       {/* controla estado de la barra lateral */}
       <input id="asistente-drawer" type="checkbox" className="drawer-toggle" />
 
-      {/* --- Vista principal --- */}
+      {/*  Vista principal  */}
       <div className="drawer-content flex bg-base-100 flex-col p-6 md:p-10 relative">
         {/* Header */}
         <header className="flex items-center gap-6 border-b border-gray-300 pb-4 mb-8">
@@ -78,7 +78,7 @@ export default function AsistenteLayout() {
         </div>
       </div>
 
-      {/* --- SIDEBAR --- */}
+      {/* sidebar */}
       <div className="drawer-side z-50">
         {/* overlay en mobil */}
         <label
