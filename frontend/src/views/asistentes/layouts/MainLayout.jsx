@@ -1,0 +1,160 @@
+import { NavLink, Outlet } from "react-router-dom";
+import cienuLogo from "../../../assets/CIENU.jpg"; // Adjust path and extension (.png, .jpg, .svg)
+import ridmaeLogo from "../../../assets/ridmae.jpg";
+import {
+  MdCalendarMonth,
+  MdLibraryBooks,
+  MdPayment,
+  MdCoPresent,
+  MdUploadFile,
+} from "react-icons/md";
+
+export default function AsistenteLayout() {
+  // Estilo para vista activa
+  const navLinkClass = ({ isActive }) =>
+    `block px-4 py-2 rounded-full text-sm transition-colors ${
+      isActive
+        ? "bg-primary text-base-100 font-medium"
+        : "hover:bg-base-200 text-base-content opacity-80"
+    }`;
+
+  const closeDrawer = () => {
+    const drawerCheckbox = document.getElementById("asistente-drawer");
+    if (drawerCheckbox) {
+      drawerCheckbox.checked = false;
+    }
+  };
+
+  return (
+    // Clase de daisy para la side bar
+    <div className="drawer lg:drawer-open min-h-screen bg-base-200 text-base-content">
+      {/* controla estado de la barra lateral */}
+      <input id="asistente-drawer" type="checkbox" className="drawer-toggle" />
+
+      {/*  Vista principal  */}
+      <div className="drawer-content flex bg-base-100 flex-col p-6 md:p-10 relative">
+        {/* Header */}
+        <header className="flex items-center gap-6 border-b border-gray-300 pb-4 mb-8">
+          {/* menu desplegable en mobil */}
+          <label
+            htmlFor="asistente-drawer"
+            className="p-2 hover:bg-base-200 rounded-lg transition-colors cursor-pointer lg:hidden"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2.5}
+              stroke="currentColor"
+              className="w-7 h-7"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+              />
+            </svg>
+          </label>
+          <h1 className="text-4xl font-bold">Asistente</h1>
+        </header>
+
+        {/* Vista Dinamica Cambiante */}
+        <main className="flex-1 w-full max-w-4xl mx-auto pb-24">
+          <Outlet />
+        </main>
+
+        {/* Footer */}
+        <div className="mt-auto pt-4 border-t border-gray-200 flex justify-between items-end w-full ">
+          <img
+            src={cienuLogo}
+            alt="Logo CIENU"
+            className="h-12 w-auto object-contain"
+          />
+          <img
+            src={ridmaeLogo}
+            alt="Logo RIDMAE"
+            className="h-10 w-auto object-contain"
+          />
+        </div>
+      </div>
+
+      {/* sidebar */}
+      <div className="drawer-side z-50">
+        {/* overlay en mobil */}
+        <label
+          htmlFor="asistente-drawer"
+          aria-label="close sidebar"
+          className="drawer-overlay"
+        ></label>
+
+        {/* contenedor de la barra  */}
+        <div className="bg-base-100 text-base-content min-h-full w-64 p-6 border-r border-gray-200 lg:border-none lg:bg-transparent flex flex-col">
+          {/* espaciador para alinear debajo del header, maybe en un futuro un logo */}
+          <div className="hidden lg:block h-[88px]"></div>
+
+          {/* links de navegacion */}
+          <nav className="flex flex-col space-y-1 mt-4 lg:mt-0">
+            <NavLink
+              to="/asistente/agenda"
+              className={navLinkClass}
+              onClick={closeDrawer}
+            >
+              <div className="flex items-center gap-3">
+                <MdCalendarMonth className="text-lg" />
+                <span>Agenda</span>
+              </div>
+            </NavLink>
+            <NavLink
+              to="/asistente/catalogo"
+              className={navLinkClass}
+              onClick={closeDrawer}
+            >
+              <div className="flex items-center gap-3">
+                <MdLibraryBooks className="text-lg" />
+                <span>Catálogo</span>
+              </div>
+            </NavLink>
+
+            <NavLink
+              to="/asistente/pagos"
+              className={navLinkClass}
+              onClick={closeDrawer}
+            >
+              <div className="flex items-center gap-3">
+                <MdPayment className="text-lg" />
+                <span>Pagos</span>
+              </div>
+            </NavLink>
+            <div className="pt-4 pb-2">
+              <span className="px-4 text-xs font-semibold uppercase opacity-50 tracking-wider">
+                Ponente
+              </span>
+            </div>
+
+            <NavLink
+              to="/asistente/mis-ponencias"
+              className={navLinkClass}
+              onClick={closeDrawer}
+            >
+              <div className="flex items-center gap-3">
+                <MdCoPresent className="text-lg pl-1" />
+                <span>Mis Ponencias</span>
+              </div>
+            </NavLink>
+
+            <NavLink
+              to="/asistente/enviar-ponencia"
+              className={navLinkClass}
+              onClick={closeDrawer}
+            >
+              <div className="flex items-center gap-3">
+                <MdUploadFile className="text-lg pl-1" />
+                <span>Enviar Ponencia</span>
+              </div>
+            </NavLink>
+          </nav>
+        </div>
+      </div>
+    </div>
+  );
+}
