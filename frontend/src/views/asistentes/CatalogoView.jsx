@@ -1,8 +1,16 @@
 // Aqui se inserta el apartado de catalogo
 
-import React from 'react';
+import React, {useState} from 'react';
+import { useNavigate } from 'react-router-dom'; // navegación entre componentes(ir a pagos)
 
 export default function CatalogoView() {
+  // Estado para navegar
+  const navigate = useNavigate(); //
+  //Estados agregados para botón registrar, controlando el flujo
+  const [ponenciaARegistrar, setPonenciaARegistrar] = useState(null);
+  const [pasoConfirmacion, setPasoConfirmacion] = useState(false);
+  
+  
   // Datos de las ponencias (puedes añadir más aquí siguiendo el mismo formato)
   const ponencias = [
     {
@@ -29,6 +37,19 @@ export default function CatalogoView() {
     }
   ];
 
+  const manejarRegistro = (p) => {
+    setPonenciaARegistrar(p);
+    setPasoConfirmacion(false); // Reiniciamos al paso 1 (Confirmación)
+  };
+
+  const confirmarFinal = () => {
+    setPasoConfirmacion(true); // Pasamos al paso 2 (Éxito)
+  };
+
+  const cerrarModal = () => {
+    setPonenciaARegistrar(null);
+    setPasoConfirmacion(false);
+  };
 
   return (
     <div className="p-8 bg-base-100 min-h-full">
@@ -64,7 +85,9 @@ export default function CatalogoView() {
                 <p className="text-2xl font-bold text-neutral">Costo: <span className="text-primary font-black">{p.costo}</span></p>
                 
                 {/* Botón de DaisyUI con color primary y efecto hover automático */}
-                <button className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300">
+                <button 
+                onClick={() => manejarRegistro(p)}
+                className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300">
                   Registrarme
                 </button>
               </div>
@@ -72,6 +95,57 @@ export default function CatalogoView() {
           </div>
         ))}
       </div>
+    
+  {/* --- MODAL DE REGISTRO  --- */}
+      {ponenciaARegistrar && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+          {/* Overlay oscuro */}
+          <div className="absolute inset-0 bg-neutral/40 backdrop-blur-sm" onClick={cerrarModal}></div>
+
+          {/* Caja del Modal */}
+          <div className="relative bg-base-100 border border-base-300 w-full max-w-md p-8 rounded-2xl shadow-2xl text-center animate-in fade-in zoom-in duration-200">
+            
+            {!pasoConfirmacion ? (
+              /* PASO 1: CONFIRMAR O RECHAZAR */
+              <div className="space-y-6">
+                <h3 className="text-2xl font-bold text-primary">Confirmar Registro</h3>
+                <p className="text-neutral leading-relaxed">
+                  ¿Estás seguro que deseas inscribirte a la ponencia: <br/>
+                  <span className="font-bold italic">"{ponenciaARegistrar.titulo}"</span>?
+                </p>
+                <div className="flex gap-4 justify-center pt-2">
+                  <button onClick={cerrarModal} className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300">
+                    Rechazar
+                  </button>
+                  <button onClick={confirmarFinal} className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300">
+                    Confirmar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* PASO 2: ÉXITO Y REDIRECCIÓN */
+              <div className="space-y-6">
+                <div className="text-secondary text-6xl">✓</div>
+                <h3 className="text-2xl font-bold text-neutral">¡Registro Exitoso!</h3>
+                <p className="text-neutral text-sm opacity-90">
+                  Tu inscripción se ha realizado correctamente. El cargo ya se encuentra reflejado en tu apartado de pagos.
+                </p>
+                <div className="flex flex-col gap-3 pt-4">
+                  <button 
+                    onClick={() => navigate('/asistente/pagos')}
+                    className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300"
+                  >
+                    Ir a Pagos
+                  </button>
+                  <button onClick={cerrarModal} className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300">
+                    Seguir aquí
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
