@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Calendar from './components/Calendar';
-import DailyScheduleView from './components/DailyScheduleView';
+import AgendaList from './components/AgendaList';
 
 export default function AgendaView() {
   // toggle de 'hoy' (list) y  'general' (calendar)
@@ -32,7 +32,7 @@ export default function AgendaView() {
       {/* Render condicional */}
       <div className="w-full transition-all duration-300">
         {activeView === 'general' && <Calendar/>}
-        {activeView === 'hoy' && <DailyScheduleView />}
+        {activeView === 'hoy' && <AgendaList />}
       </div>
       
     </div>
