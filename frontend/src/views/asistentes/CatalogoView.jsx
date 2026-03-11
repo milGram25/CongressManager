@@ -1,7 +1,5 @@
 // Aqui se inserta el apartado de catalogo
-//export default function CatalogoView() {
-  //return <div className="flex h-full items-center justify-center text-2xl opacity-50">Catálogo View</div>;
-//}
+
 import React from 'react';
 
 export default function CatalogoView() {
@@ -31,39 +29,42 @@ export default function CatalogoView() {
     }
   ];
 
+
   return (
-    <div className="flex flex-col min-h-full p-8 bg-white">
+    <div className="p-8 bg-base-100 min-h-full">
       {/* Encabezado de la página */}
       <div className="mb-10 text-center">
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">Catálogo</h1>
-        <h2 className="text-3xl font-bold text-left text-gray-700">Disponibles</h2>
+        <h1 className="text-4xl font-bold text-neutral mb-2">Catálogo</h1>
+        <h2 className="text-3xl font-bold text-left opacity-80 text-neutral">Disponibles</h2>
       </div>
 
       {/* Contenedor de las tarjetas */}
-      <div className="flex flex-col items-center gap-10">
+      <div className="flex flex-col items-center gap-8">
         {ponencias.map((p) => (
-          <div key={p.id} className="border-2 border-gray-300 p-8 max-w-3xl w-full rounded-sm shadow-sm bg-white hover:shadow-md transition-shadow">
-            <div className="text-center space-y-3">
-              <p className="font-bold text-xl">Título Ponencia: <span className="font-normal italic">"{p.titulo}"</span></p>
-              <p className="font-bold">Nombre Ponente: <span className="font-normal">{p.ponente}</span></p>
-              <p className="font-bold">Modalidad: <span className="font-normal">{p.modalidad}</span></p>
-              <p className="font-bold">Lugar: <span className="font-normal">{p.lugar}</span></p>
-              
-              {/* Sección de Fecha y Hora */}
-              <div className="flex justify-center gap-16 py-3 border-y border-gray-100 my-4">
+          <div key={p.id} className="card bg-base-100 border border-base-300 shadow-sm max-w-3xl w-full rounded-md p-8 hover:shadow-md transition-all">
+            <div className="text-center space-y-4">
+              <p className="text-xl font-bold leading-tight text-neutral">Título Ponencia: <span className="font-normal italic">"{p.titulo}"</span></p>
+              <div className="text-neutral/90">
+                <p className="font-bold">Nombre Ponente: <span className="font-normal">{p.ponente}</span></p>
+                <p className="font-bold">Modalidad: <span className="font-normal">{p.modalidad}</span></p>
+                <p className="font-bold">Lugar: <span className="font-normal">{p.lugar}</span></p>
+              </div>
+             {/* Separador visual usando base-200 */}
+              <div className="flex justify-center gap-12 py-3 border-y border-base-200 bg-base-200/50 rounded-lg text neutral">
                 <p className="font-bold">Fecha: <span className="font-normal">{p.fecha}</span></p>
                 <p className="font-bold">Hora: <span className="font-normal">{p.hora}</span></p>
               </div>
 
-              {/* Sinopsis */}
-              <p className="text-justify leading-relaxed">
+              <p className="text-justify text-sm leading-relaxed text-neutral/80">
                 <span className="font-bold">Sinopsis: </span>{p.sinopsis}
               </p>
 
-              {/* Fila de Costo y Botón */}
-              <div className="flex justify-between items-center mt-8 pt-4 border-t border-gray-50">
-                <p className="font-bold text-2xl">Costo: <span className="font-normal text-blue-600">{p.costo}</span></p>
-                <button className="bg-gray-100 px-8 py-2 rounded-lg font-bold border border-gray-400 hover:bg-black hover:text-white transition-all uppercase text-sm">
+              {/* Footer de la tarjeta con botón usando el color Primary (#001219) */}
+              <div className="flex justify-between items-center mt-6 pt-4 border-t border-base-200">
+                <p className="text-2xl font-bold text-neutral">Costo: <span className="text-primary font-black">{p.costo}</span></p>
+                
+                {/* Botón de DaisyUI con color primary y efecto hover automático */}
+                <button className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300">
                   Registrarme
                 </button>
               </div>
