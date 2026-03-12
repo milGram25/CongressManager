@@ -17,16 +17,44 @@ export function AuthProvider({ children }) {
     return saved ? JSON.parse(saved) : null;
   });
 
+  // Lista de usuarios registrados (esto normalmente iría en el backend)
+  const getRegisteredUsers = () => {
+    const users = localStorage.getItem("registered_users");
+    return users ? JSON.parse(users) : [GENERIC_USER];
+  };
+
   /**
-   * Intenta iniciar sesión. Por ahora valida contra el usuario genérico.
-   * Retorna true si tuvo éxito, false si las credenciales son incorrectas.
+   * Registra un nuevo usuario en localStorage.
+   */
+  const register = (userData) => {
+    const users = getRegisteredUsers();
+    
+    // Validar si el correo ya existe
+    if (users.find(u => u.email === userData.email)) {
+      return { success: false, message: "El correo ya está registrado." };
+    }
+
+    // Guardar nuevo usuario
+    const newUsers = [...users, userData];
+    localStorage.setItem("registered_users", JSON.stringify(newUsers));
+    return { success: true };
+  };
+
+  /**
+   * Intenta iniciar sesión. Valida contra los usuarios registrados.
    */
   const login = (email, password) => {
-    if (
-      email.trim() === GENERIC_USER.email &&
-      password === GENERIC_USER.password
-    ) {
-      const userData = { email: GENERIC_USER.email, nombre: GENERIC_USER.nombre, rol: GENERIC_USER.rol };
+    const users = getRegisteredUsers();
+    const foundUser = users.find(
+      u => u.email.trim() === email.trim() && u.password === password
+    );
+
+    if (foundUser) {
+      const userData = { 
+        email: foundUser.email, 
+        nombre: foundUser.nombres || foundUser.nombre, 
+        rol: foundUser.rol || "asistente" 
+      };
       setUser(userData);
       localStorage.setItem("congress_user", JSON.stringify(userData));
       return true;
@@ -40,7 +68,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, register }}>
       {children}
     </AuthContext.Provider>
   );

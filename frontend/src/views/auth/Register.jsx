@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import cienuLogo from '../../assets/CIENU.jpg';
 import ridmaeLogo from '../../assets/ridmae.jpg';
 
 const Register = () => {
+  const { register } = useAuth();
   const navigate = useNavigate();
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     nombres: '',
     apellidos: '',
@@ -24,11 +28,28 @@ const Register = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Aquí iría la lógica de registro
-    console.log('Datos de registro:', formData);
-    // Por ahora simulamos éxito y mandamos al login
-    alert('Registro exitoso (simulado)');
-    navigate('/login');
+    setError('');
+
+    // Validación de contraseñas
+    if (formData.password !== formData.confirmPassword) {
+      setError('Las contraseñas no coinciden.');
+      return;
+    }
+
+    setLoading(true);
+
+    // Simular un pequeño delay de red
+    setTimeout(() => {
+      const result = register(formData);
+      
+      if (result.success) {
+        alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
+        navigate('/login');
+      } else {
+        setError(result.message);
+        setLoading(false);
+      }
+    }, 500);
   };
 
   return (
@@ -43,6 +64,13 @@ const Register = () => {
           </div>
 
           <form className="p-8 pt-4" onSubmit={handleSubmit}>
+            {/* Mensaje de error */}
+            {error && (
+              <div className="mb-6 bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl">
+                {error}
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
               
               <div className="space-y-1">
@@ -160,9 +188,10 @@ const Register = () => {
             <div className="mt-10 space-y-4">
               <button 
                 type="submit"
-                className="w-full py-3.5 bg-[#148f96] hover:bg-[#117a81] text-white rounded-full font-bold tracking-wide transition-all shadow-md shadow-teal-100 active:scale-95"
+                disabled={loading}
+                className="w-full py-3.5 bg-[#148f96] hover:bg-[#117a81] disabled:opacity-60 text-white rounded-full font-bold tracking-wide transition-all shadow-md shadow-teal-100 active:scale-95"
               >
-                CONFIRMAR REGISTRO
+                {loading ? 'REGISTRANDO...' : 'CONFIRMAR REGISTRO'}
               </button>
               
               <div className="text-center">
