@@ -15,4 +15,8 @@
   --color-base-300: #e5e7eb;
   --color-base-content: #222222;
   --color-neutral: #222222;
+  /*colores para los estatus de ponencias*/
+  --color-success: #22c55e;
+  --color-warning: #facc15;
+  --color-error: #ef4444;
 }
