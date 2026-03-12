@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import cienuLogo from "../../../assets/CIENU.jpg";
 import ridmaeLogo from "../../../assets/ridmae.jpg";
@@ -13,6 +13,17 @@ import {
 export default function AsistenteLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  // Determinar si estamos en una sección de ponente
+  const isPonenteSection = 
+    pathname.includes('mis-ponencias') || 
+    pathname.includes('enviar-ponencia') || 
+    pathname.includes('estatus-ponencia') ||
+    pathname.includes('subir-multimedia') ||
+    pathname.includes('subir-extenso');
+
+  const displayTitle = isPonenteSection ? "Ponente" : "Asistente";
 
   const handleLogout = () => {
     logout();
@@ -64,7 +75,7 @@ export default function AsistenteLayout() {
               />
             </svg>
           </label>
-          <h1 className="text-4xl font-bold">Asistente</h1>
+          <h1 className="text-4xl font-bold">{displayTitle}</h1>
         </header>
 
         {/* Vista Dinamica Cambiante */}
@@ -96,8 +107,10 @@ export default function AsistenteLayout() {
 
         {/* contenedor de la barra  */}
         <div className="bg-base-100 text-base-content min-h-full w-64 p-6 border-r border-gray-200 lg:border-none lg:bg-transparent flex flex-col">
-          {/* espaciador para alinear debajo del header, maybe en un futuro un logo */}
-          <div className="hidden lg:block h-[88px]"></div>
+          {/* Título en el Sidebar para Desktop */}
+          <div className="hidden lg:flex h-[88px] items-center px-4">
+            <h2 className="text-3xl font-bold text-slate-800">{displayTitle}</h2>
+          </div>
 
           {/* links de navegacion */}
           <nav className="flex flex-col space-y-1 mt-4 lg:mt-0">

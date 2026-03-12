@@ -87,7 +87,10 @@ export default function RevisorLayout() {
         ></label>
 
         <div className="bg-base-100 text-base-content min-h-full w-64 p-6 border-r border-gray-200 lg:border-none lg:bg-transparent flex flex-col">
-          <div className="hidden lg:block h-[88px]"></div>
+          {/* Título en el Sidebar para Desktop */}
+          <div className="hidden lg:flex h-[88px] items-center px-4">
+            <h2 className="text-3xl font-bold text-slate-800">Revisor</h2>
+          </div>
 
           <nav className="flex flex-col space-y-1 mt-4 lg:mt-0">
             <NavLink
