@@ -11,6 +11,7 @@ import EstatusPonenciaView from "./views/asistentes/EstatusPonenciaView";
 import MultimediaView from "./views/asistentes/MultimediaView";
 import SubirExtensoView from "./views/asistentes/SubirExtensoView";
 import Login from "./views/auth/Login";
+import Register from "./views/auth/Register";
 
 // Routea a las diferentes vistas del sistema
 function App() {
@@ -18,8 +19,9 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Ruta pública: login */}
+          {/* Ruta pública: login y registro */}
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
           {/* Rutas protegidas: requieren sesión activa */}
           <Route
