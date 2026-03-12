@@ -75,8 +75,8 @@ export default function PagosView() {
             
             <div className="border-t border-gray-300 pt-4 mb-6">
               <div className="flex justify-between items-end">
-                <span className="text-sm">Total a pagar:</span>
-                <span className="text-xl font-bold text-primary">${total.toFixed(2) + " MXN"}</span>
+                <span className="text-sm">Total:</span>
+                <span className="text-lg font-bold text-primary">${total.toFixed(2) + " MXN"}</span>
               </div>
             </div>
 
