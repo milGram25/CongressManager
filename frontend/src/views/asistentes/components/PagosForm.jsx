@@ -5,6 +5,7 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
+// https://docs.stripe.com/payments/link/card-element-link#enable-link
 
 export default function PagosForm({ total }) {
   const stripe = useStripe();
