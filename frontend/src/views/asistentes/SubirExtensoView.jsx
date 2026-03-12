@@ -37,11 +37,19 @@ export default function MultimediaView(){
   };
 
   return (
-    <div className="p-8 bg-base-100 min-h-screen">
-      {/*boton de regresar*/}
-      <button type="button" onClick={()=>navigate(-1)} className='btn btn-primary mb-4'>
-        ←
+    <div className="p-8 bg-base-100 min-h-screen relative">
+      
+      {/* Botón de regresar con formato de cuadro negro y flecha grande */}
+      <button 
+        type="button" 
+        onClick={() => navigate(-1)} 
+        className="mb-8 w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-md hover:opacity-90 transition-all"
+      >
+        <span className="text-white text-4xl font-black leading-none -mt-1 select-none">
+          ←
+        </span>
       </button>
+
       <h1 className="text-2xl font-bold mb-6">Subir Extenso</h1>
       <p className="mb-4 text-base-content">
         Añadir envío, máximo 1 archivo.

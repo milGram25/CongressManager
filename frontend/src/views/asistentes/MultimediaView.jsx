@@ -40,9 +40,13 @@ export default function MultimediaView(){
   return (
     <div className="p-8 bg-base-100 min-h-screen">
       {/*boton de regresar*/}
-      <button type="button" onClick={()=>navigate(-1)} className='btn btn-primary mb-4'>
-        ←
-      </button>
+      <button type="button" onClick={()=>navigate(-1)} className="absolute top-6 left-6 w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-md hover:opacity-90 transition-all group"
+          >
+            <span className="text-white text-4xl font-black leading-none -mt-1 select-none">
+              ←
+            </span>
+          </button>
+          
       <h1 className="text-2xl font-bold mb-6">Contenido Multimedia</h1>
       <p className="mb-4 text-base-content">
         Añadir envío, máximo 2 archivos.
