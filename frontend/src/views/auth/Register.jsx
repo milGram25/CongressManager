@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import Select from 'react-select';
+import countryList from 'react-select-country-list';
 import cienuLogo from '../../assets/CIENU.jpg';
 import ridmaeLogo from '../../assets/ridmae.jpg';
 
@@ -9,6 +11,8 @@ const Register = () => {
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const options = useMemo(() => countryList().getData(), []);
+  
   const [formData, setFormData] = useState({
     nombres: '',
     apellidos: '',
@@ -26,6 +30,10 @@ const Register = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleCountryChange = (value) => {
+    setFormData({ ...formData, pais: value.label });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
@@ -33,6 +41,27 @@ const Register = () => {
     // Validación de contraseñas
     if (formData.password !== formData.confirmPassword) {
       setError('Las contraseñas no coinciden.');
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+
+    // Validación de correo electrónico
+    // 1. Debe contener un @
+    // 2. Debe empezar con minúscula
+    const emailRegex = /^[a-z].*@.*$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('El correo debe empezar con minúscula y contener un "@".');
+      return;
+    }
+
+    // Validación de teléfono (exactamente 10 dígitos)
+    const phoneDigits = formData.telefono.replace(/\D/g, '');
+    if (phoneDigits.length !== 10) {
+      setError('El teléfono debe tener exactamente 10 dígitos.');
       return;
     }
 
@@ -97,24 +126,46 @@ const Register = () => {
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-400 uppercase ml-1">Género *</label>
-                <input 
+                <select 
                   name="genero"
                   required
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all" 
-                  type="text" 
+                  value={formData.genero}
                   onChange={handleChange}
-                />
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all appearance-none"
+                >
+                  <option value="" disabled>Selecciona una opción</option>
+                  <option value="Hombre">Hombre</option>
+                  <option value="Mujer">Mujer</option>
+                  <option value="Prefiero no decirlo">Prefiero no decirlo</option>
+                </select>
               </div>
 
               <div className="hidden md:block"></div>
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-400 uppercase ml-1">País</label>
-                <input 
-                  name="pais"
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all" 
-                  type="text" 
-                  onChange={handleChange}
+                <Select 
+                  options={options} 
+                  value={options.find(opt => opt.label === formData.pais)}
+                  onChange={handleCountryChange}
+                  placeholder="Busca tu país..."
+                  noOptionsMessage={() => "No se encontraron resultados"}
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      padding: '2px 8px',
+                      borderRadius: '0.75rem', // xl
+                      backgroundColor: '#f9fafb', // gray-50
+                      border: 'none',
+                      boxShadow: 'none',
+                      '&:hover': { border: 'none' }
+                    }),
+                    placeholder: (base) => ({
+                      ...base,
+                      color: '#9ca3af', // gray-400
+                    }),
+                  }}
+                  className="w-full transition-all"
                 />
               </div>
 
@@ -129,16 +180,42 @@ const Register = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Discapacidad</label>
-                <input 
-                  name="discapacidad"
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all" 
-                  type="text" 
-                  onChange={handleChange}
-                />
+                <label className="text-xs font-bold text-gray-400 uppercase ml-1">¿Tiene alguna discapacidad? *</label>
+                <select 
+                  name="tieneDiscapacidad"
+                  required
+                  value={formData.tieneDiscapacidad || ''}
+                  onChange={(e) => {
+                    setFormData({ 
+                      ...formData, 
+                      tieneDiscapacidad: e.target.value,
+                      discapacidad: e.target.value === 'No' ? 'Ninguna' : '' 
+                    });
+                  }}
+                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all appearance-none"
+                >
+                  <option value="" disabled>Selecciona una opción</option>
+                  <option value="No">No</option>
+                  <option value="Si">Si</option>
+                </select>
               </div>
 
-              <div className="hidden md:block"></div>
+              {formData.tieneDiscapacidad === 'Si' ? (
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-400 uppercase ml-1">Escriba su discapacidad *</label>
+                  <input 
+                    name="discapacidad"
+                    required
+                    value={formData.discapacidad}
+                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all" 
+                    type="text" 
+                    placeholder="Ej. Visual, Motriz..."
+                    onChange={handleChange}
+                  />
+                </div>
+              ) : (
+                <div className="hidden md:block"></div>
+              )}
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-400 uppercase ml-1">Correo electrónico *</label>
@@ -152,9 +229,11 @@ const Register = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Teléfono celular</label>
+                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Teléfono celular *</label>
                 <input 
                   name="telefono"
+                  required
+                  placeholder="10 dígitos"
                   className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all" 
                   type="tel" 
                   onChange={handleChange}
