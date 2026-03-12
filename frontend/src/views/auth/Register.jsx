@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Select from 'react-select';
 import countryList from 'react-select-country-list';
+import { HiEye, HiEyeOff } from 'react-icons/hi';
 import cienuLogo from '../../assets/CIENU.jpg';
 import ridmaeLogo from '../../assets/ridmae.jpg';
 
@@ -11,6 +12,8 @@ const Register = () => {
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const options = useMemo(() => countryList().getData(), []);
   
   const [formData, setFormData] = useState({
@@ -242,24 +245,42 @@ const Register = () => {
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-400 uppercase ml-1">Contraseña *</label>
-                <input 
-                  name="password"
-                  required
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all" 
-                  type="password" 
-                  onChange={handleChange}
-                />
+                <div className="relative">
+                  <input 
+                    name="password"
+                    required
+                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all pr-12" 
+                    type={showPassword ? "text" : "password"} 
+                    onChange={handleChange}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#148f96] transition-colors"
+                  >
+                    {showPassword ? <HiEye size={20} /> : <HiEyeOff size={20} />}
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-400 uppercase ml-1">Confirmar contraseña *</label>
-                <input 
-                  name="confirmPassword"
-                  required
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all" 
-                  type="password" 
-                  onChange={handleChange}
-                />
+                <div className="relative">
+                  <input 
+                    name="confirmPassword"
+                    required
+                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all pr-12" 
+                    type={showConfirmPassword ? "text" : "password"} 
+                    onChange={handleChange}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#148f96] transition-colors"
+                  >
+                    {showConfirmPassword ? <HiEye size={20} /> : <HiEyeOff size={20} />}
+                  </button>
+                </div>
               </div>
             </div>
 
