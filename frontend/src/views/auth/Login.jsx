@@ -24,7 +24,13 @@ export default function Login() {
     setTimeout(() => {
       const ok = login(email, password);
       if (ok) {
-        navigate('/asistente', { replace: true });
+        // Obtenemos el usuario recién logueado para ver su rol
+        const savedUser = JSON.parse(localStorage.getItem("congress_user"));
+        if (savedUser?.rol === 'revisor') {
+          navigate('/revisor', { replace: true });
+        } else {
+          navigate('/asistente', { replace: true });
+        }
       } else {
         setError('Correo o contraseña incorrectos.');
         setLoading(false);

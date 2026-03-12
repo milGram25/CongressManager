@@ -1,12 +1,20 @@
 import { createContext, useContext, useState } from "react";
 
-// Usuario genérico para pruebas (mientras se conecta el backend)
-const GENERIC_USER = {
-  email: "admin@udg.mx",
-  password: "admin123",
-  nombre: "Usuario Demo",
-  rol: "asistente",
-};
+// Usuarios genéricos para pruebas (mientras se conecta el backend)
+const GENERIC_USERS = [
+  {
+    email: "admin@udg.mx",
+    password: "admin123",
+    nombre: "Usuario Demo Asistente",
+    rol: "asistente",
+  },
+  {
+    email: "revisor@udg.mx",
+    password: "revisor123",
+    nombre: "Usuario Demo Revisor",
+    rol: "revisor",
+  }
+];
 
 const AuthContext = createContext(null);
 
@@ -19,8 +27,17 @@ export function AuthProvider({ children }) {
 
   // Lista de usuarios registrados (esto normalmente iría en el backend)
   const getRegisteredUsers = () => {
-    const users = localStorage.getItem("registered_users");
-    return users ? JSON.parse(users) : [GENERIC_USER];
+    const savedUsers = localStorage.getItem("registered_users");
+    const users = savedUsers ? JSON.parse(savedUsers) : [];
+    
+    // Combinamos con los usuarios genéricos asegurando que no haya duplicados por email
+    const allUsers = [...GENERIC_USERS];
+    users.forEach(u => {
+      if (!allUsers.find(au => au.email === u.email)) {
+        allUsers.push(u);
+      }
+    });
+    return allUsers;
   };
 
   /**
