@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
 import cienuLogo from "../../../assets/CIENU.jpg";
 import ridmaeLogo from "../../../assets/ridmae.jpg";
 import {
@@ -10,6 +11,14 @@ import {
 } from "react-icons/md";
 
 export default function AsistenteLayout() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
+
   // Estilo para vista activa
   const navLinkClass = ({ isActive }) =>
     `block px-4 py-2 rounded-full text-sm transition-colors ${
@@ -161,6 +170,20 @@ export default function AsistenteLayout() {
               </div>
             </NavLink>
           </nav>
+
+          {/* Pie del sidebar: usuario + cerrar sesión */}
+          <div className="mt-auto pt-4 border-t border-gray-200">
+            <p className="text-xs text-gray-400 px-4 mb-2 truncate">{user?.nombre}</p>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-2 rounded-full text-sm text-red-500 hover:bg-red-50 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M18 12H6m6-3-3 3 3 3" />
+              </svg>
+              Cerrar sesión
+            </button>
+          </div>
         </div>
       </div>
     </div>
