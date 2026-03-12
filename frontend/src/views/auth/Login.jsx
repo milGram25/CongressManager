@@ -101,6 +101,7 @@ export default function Login() {
 
               <button
                 type="button"
+                onClick={() => navigate('/register')}
                 className="w-full py-3.5 bg-white border-2 border-[#148f96] text-[#148f96] hover:bg-teal-50 rounded-full font-bold tracking-wide transition-all active:scale-95"
               >
                 CREAR CUENTA NUEVA
