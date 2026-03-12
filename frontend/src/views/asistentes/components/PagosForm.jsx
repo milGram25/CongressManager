@@ -1,4 +1,11 @@
-import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import {
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+// https://docs.stripe.com/payments/link/card-element-link#enable-link
 
 export default function PagosForm({ total }) {
   const stripe = useStripe();
@@ -9,41 +16,50 @@ export default function PagosForm({ total }) {
 
     if (!stripe || !elements) return;
 
-  // // simulacionde llamada al backend (debug)
-  //   console.log("Procesando pago de:", total);
-    
-    const cardElement = elements.getElement(CardElement);
+    const cardNumberElement = elements.getElement(CardNumberElement);
     const { error, paymentMethod } = await stripe.createPaymentMethod({
-      type: 'card',
-      card: cardElement,
+      type: "card",
+      card: cardNumberElement,
     });
 
     if (error) {
-      console.log('[error]', error);
+      console.log("[error]", error);
     } else {
-      console.log('[PaymentMethod]', paymentMethod);
-      alert("¡Pago realizado con éxito!");
+      console.log("[PaymentMethod]", paymentMethod);
+      alert("pago realizado");
     }
+  };
+
+  const elementOptions = {
+    style: {
+      base: {
+        fontSize: "16px",
+        color: "#222222",
+        "::placeholder": { color: "#aab7c4" },
+      },
+      invalid: { color: "#9e2146" },
+    },
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="p-4 border border-gray-300 rounded-lg bg-white">
-        <CardElement options={{
-          style: {
-            base: {
-              fontSize: '16px',
-              color: '#424770',
-              '::placeholder': { color: '#aab7c4' },
-            },
-            invalid: { color: '#9e2146' },
-          },
-        }} />
+        <CardNumberElement options={elementOptions} />
       </div>
-      <button 
-        type="submit" 
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="p-4 border border-gray-300 rounded-lg bg-white">
+          <CardExpiryElement options={elementOptions} />
+        </div>
+        <div className="p-4 border border-gray-300 rounded-lg bg-white">
+          <CardCvcElement options={elementOptions} />
+        </div>
+      </div>
+
+      <button
+        type="submit"
         disabled={!stripe || total === 0}
-        className="btn btn-primary w-full text-white"
+        className="btn btn-primary w-full text-white mt-2"
       >
         Pagar ${total.toFixed(2)}
       </button>
