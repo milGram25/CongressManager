@@ -1,7 +1,4 @@
 // Aqui se inserta el apartado de mis ponencias
-//export default function MisPonenciasView() {
-  //return <div className="flex h-full items-center justify-center text-2xl opacity-50">Mis Ponencias View</div>;
-//}
 
 import React, { useState } from 'react';
 
@@ -31,18 +28,18 @@ export default function MisPonenciasView() {
   ];
 
   return (
-    <div className="p-8 bg-white min-h-full relative">
-      <h1 className="text-4xl font-bold mb-8">Mis Ponencias</h1>
+    <div className="p-8 bg-base-100 min-h-full relative">
+      <h1 className="text-4xl font-bold text-neutral mb-8">Mis Ponencias</h1>
 
       {/* Listado de Ponencias */}
       <div className="flex flex-col items-center gap-6">
         {misPonencias.map((p) => (
-          <div key={p.id} className="border border-gray-400 p-8 max-w-2xl w-full relative">
+          <div key={p.id} className="card bg-base-100 border border-base-300 p-8 max-w-2xl w-full relative shadow-sm hover:shadow-md transition-all">
             <div className="text-center space-y-4">
-              <h3 className="text-xl font-medium px-4">Título Ponencia: "{p.titulo}"</h3>
+              <h3 className="text-xl font-bold italic">Título Ponencia: "{p.titulo}"</h3>
               <p className="font-bold">Lugar: <span className="font-normal">{p.lugar}</span></p>
               
-              <div className="flex justify-center gap-10">
+              <div className="flex justify-center gap-10 py-2 border-y border-base-200">
                 <p className="font-bold">Fecha: <span className="font-normal">{p.fecha}</span></p>
                 <p className="font-bold">Hora: <span className="font-normal">{p.hora}</span></p>
               </div>
@@ -53,7 +50,7 @@ export default function MisPonenciasView() {
             {/* Botón + para abrir el modal */}
             <button 
             onClick={() => setPonenciaSeleccionada(p)}
-            className="absolute bottom-4 right-4 text-white bg-teal-800 rounded-full w-10 h-10 flex items-center justify-center text-3xl pb-1 hover:bg-teal-700 transition-colors shadow-md"
+            className="absolute bottom-4 right-4 btn btn-primary btn-circle btn-sm text-2xl pb-1"
             >
              +
             </button>
@@ -63,33 +60,35 @@ export default function MisPonenciasView() {
 
       {/* --- VENTANA EMERGENTE (MODAL) --- */}
       {ponenciaSeleccionada && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-          <div className="bg-white border border-gray-400 p-8 max-w-2xl w-full relative shadow-2xl">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-[100] p-4">
+          <div className="bg-base-100 border border-base-300 max-w-2xl w-full rounded-box relative shadow-2xl p-10 flex flex-col items-center">
             
-            {/* Botón de flecha atrás para cerrar */}
+            {/* Botón de flecha atrás */}
             <button 
               onClick={() => setPonenciaSeleccionada(null)}
-              className="absolute top-10 left-[-40px] md:left-4 text-3xl hover:scale-110 transition-transform"
+              className="absolute top-6 left-6 btn btn-ghost btn-circle text-3xl"
             >
               ←
             </button>
 
-            <div className="text-center space-y-4">
-              <h2 className="font-bold text-lg">Título:</h2>
-              <p className="italic">"{ponenciaSeleccionada.titulo}"</p>
+            <div className="text-center space-y-4 mt-6 w-full">
+              <h2 className="font-bold text-lg text-primary uppercase tracking-wide">Título:</h2>
+              <p className="italic font-medium text-xl">"{ponenciaSeleccionada.titulo}"</p>
               
               <p className="font-bold">Lugar: <span className="font-normal">{ponenciaSeleccionada.lugar}</span></p>
               
-              <div className="flex justify-center gap-10">
+              <div className="flex justify-center gap-10 py-3 border-y border-base-200 w-full my-4">
                 <p className="font-bold">Fecha: <span className="font-normal">{ponenciaSeleccionada.fecha}</span></p>
                 <p className="font-bold">Hora: <span className="font-normal">{ponenciaSeleccionada.hora}</span></p>
               </div>
 
               <p className="font-bold">Cupos disponibles: <span className="font-normal">{ponenciaSeleccionada.cupos}</span></p>
               
-              <div className="pt-4 text-justify">
+              <div className="pt-4 text-justify w-full">
                 <p className="font-bold text-center mb-2">Resumen:</p>
-                <p className="leading-relaxed text-gray-700">{ponenciaSeleccionada.resumen}</p>
+                <p className="leading-relaxed text-neutral text-sm">
+                  {ponenciaSeleccionada.resumen}
+                </p>
               </div>
             </div>
           </div>
