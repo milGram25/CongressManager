@@ -32,14 +32,14 @@ export default function EstatusPonenciaView(){
     },
   ];
 
-  //boton depende del estatus, con color de la paleta y depende del boton te redirige a las ventanas de subir extenso o multimedia
+  //boton depende del estatus, con color en css y depende del boton te redirige a las ventanas de subir extenso o multimedia
   const renderBoton = (estatus) => {
     if(estatus == "extenso-aceptado"){
-      return(<button onClick={()=> navigate("/asistente/subir-multimedia")} style={{ backgroundColor: "#001219", color: "white", padding: "8px 16px", borderRadius: "6px" }}>Subir multimedia</button>
+      return(<button onClick={()=> navigate("/asistente/subir-multimedia")} className="btn btn-primary">Subir multimedia</button>
       );
     }
     if(estatus == "resumen-aceptado"){
-      return(<button onClick={() => navigate("/asistente/subir-extenso")} style={{ backgroundColor: "#001219", color: "white", padding: "8px 16px", borderRadius: "6px" }}>Subir extenso</button>
+      return(<button onClick={() => navigate("/asistente/subir-extenso")} className="btn btn-primary">Subir extenso</button>
       );
     }
     return null;
@@ -47,10 +47,10 @@ export default function EstatusPonenciaView(){
 
   //color segun estatus verde, rojo y amarillo solo los bordes
   const colorEstatus=(estatus) =>{
-    if(estatus == "extenso-aceptado"|| estatus == "resumen-aceptado")return "border-green-500";
-    if(estatus == "extenso-con-modificaciones")return "border-yellow-500";
-    if(estatus == "rechazado")return "border-red-500";
-    return "border-gray-400";
+    if(estatus == "extenso-aceptado"|| estatus == "resumen-aceptado")return "border-success"; {/*border-green-500 */}
+    if(estatus == "extenso-con-modificaciones")return "border-warning";
+    if(estatus == "rechazado")return "border-error";
+    return "border-neutral";
   };
 
   //texto que se muestra depende el estatus en los cuadros
@@ -65,7 +65,7 @@ export default function EstatusPonenciaView(){
   };
 
   return (
-    <div className="p-8 bg-white min-h-screen">
+    <div className="p-8 bg-base min-h-screen">
       <h1 className="text-3xl font-bold mb-6">Estatus de Ponencias</h1>
 
       <div className="flex flex-col gap-6">
@@ -86,5 +86,4 @@ export default function EstatusPonenciaView(){
       </div>
     </div>
   );
-
 }
