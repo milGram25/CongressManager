@@ -12,6 +12,7 @@ import {
   MdRateReview,
   MdGavel,
   MdRocketLaunch,
+  MdBadge,
 } from "react-icons/md";
 
 export default function AsistenteLayout() {
@@ -218,6 +219,17 @@ export default function AsistenteLayout() {
               <div className="flex items-center gap-3">
                 <MdPayment className="text-lg" />
                 <span>Pagos</span>
+              </div>
+            </NavLink>
+
+            <NavLink
+              to="/asistente/constancias"
+              className={navLinkClass}
+              onClick={closeDrawer}
+            >
+              <div className="flex items-center gap-3">
+                <MdBadge className="text-lg" />
+                <span>Mis Constancias</span>
               </div>
             </NavLink>
             <div className="pt-4 pb-2">

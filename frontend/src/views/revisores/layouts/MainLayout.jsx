@@ -171,16 +171,6 @@ export default function RevisorLayout() {
                 <span>Historial</span>
               </div>
             </NavLink>
-            <NavLink
-              to="/revisor/constancias"
-              className={navLinkClass}
-              onClick={closeDrawer}
-            >
-              <div className="flex items-center gap-3">
-                <MdBadge className="text-lg" />
-                <span>Constancias</span>
-              </div>
-            </NavLink>
           </nav>
 
           <div className="mt-auto pt-4 border-t border-gray-200">
