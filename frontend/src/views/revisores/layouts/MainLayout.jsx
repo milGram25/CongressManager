@@ -1,29 +1,17 @@
-import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import cienuLogo from "../../../assets/CIENU.jpg";
 import ridmaeLogo from "../../../assets/ridmae.jpg";
 import {
-  MdCalendarMonth,
-  MdLibraryBooks,
-  MdPayment,
-  MdCoPresent,
-  MdUploadFile,
+  MdDashboard,
+  MdRateReview,
+  MdHistory,
+  MdBadge,
 } from "react-icons/md";
 
-export default function AsistenteLayout() {
+export default function RevisorLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
-
-  // Determinar si estamos en una sección de ponente
-  const isPonenteSection = 
-    pathname.includes('mis-ponencias') || 
-    pathname.includes('enviar-ponencia') || 
-    pathname.includes('estatus-ponencia') ||
-    pathname.includes('subir-multimedia') ||
-    pathname.includes('subir-extenso');
-
-  const displayTitle = isPonenteSection ? "Ponente" : "Asistente";
 
   const handleLogout = () => {
     logout();
@@ -39,25 +27,20 @@ export default function AsistenteLayout() {
     }`;
 
   const closeDrawer = () => {
-    const drawerCheckbox = document.getElementById("asistente-drawer");
+    const drawerCheckbox = document.getElementById("revisor-drawer");
     if (drawerCheckbox) {
       drawerCheckbox.checked = false;
     }
   };
 
   return (
-    // Clase de daisy para la side bar
     <div className="drawer lg:drawer-open min-h-screen bg-base-200 text-base-content">
-      {/* controla estado de la barra lateral */}
-      <input id="asistente-drawer" type="checkbox" className="drawer-toggle" />
+      <input id="revisor-drawer" type="checkbox" className="drawer-toggle" />
 
-      {/*  Vista principal  */}
       <div className="drawer-content flex bg-base-100 flex-col p-6 md:p-10 relative">
-        {/* Header */}
         <header className="flex items-center gap-6 border-b border-gray-300 pb-4 mb-8">
-          {/* menu desplegable en mobil */}
           <label
-            htmlFor="asistente-drawer"
+            htmlFor="revisor-drawer"
             className="p-2 hover:bg-base-200 rounded-lg transition-colors cursor-pointer lg:hidden"
           >
             <svg
@@ -75,15 +58,13 @@ export default function AsistenteLayout() {
               />
             </svg>
           </label>
-          <h1 className="text-4xl font-bold">{displayTitle}</h1>
+          <h1 className="text-4xl font-bold">Revisor</h1>
         </header>
 
-        {/* Vista Dinamica Cambiante */}
         <main className="flex-1 w-full max-w-4xl mx-auto pb-24">
           <Outlet />
         </main>
 
-        {/* Footer */}
         <div className="mt-auto pt-4 border-t border-gray-200 flex justify-between items-end w-full ">
           <img
             src={cienuLogo}
@@ -100,91 +81,60 @@ export default function AsistenteLayout() {
 
       <div className="drawer-side z-50">
         <label
-          htmlFor="asistente-drawer"
+          htmlFor="revisor-drawer"
           aria-label="close sidebar"
           className="drawer-overlay"
         ></label>
 
-        {/* contenedor de la barra  */}
         <div className="bg-base-100 text-base-content min-h-full w-64 p-6 border-r border-gray-200 lg:border-none lg:bg-transparent flex flex-col">
           {/* Título en el Sidebar para Desktop */}
           <div className="hidden lg:flex h-[88px] items-center px-4">
-            <h2 className="text-3xl font-bold text-slate-800">{displayTitle}</h2>
+            <h2 className="text-3xl font-bold text-slate-800">Revisor</h2>
           </div>
 
-          {/* links de navegacion */}
           <nav className="flex flex-col space-y-1 mt-4 lg:mt-0">
             <NavLink
-              to="/asistente/agenda"
+              to="/revisor/inicio"
               className={navLinkClass}
               onClick={closeDrawer}
             >
               <div className="flex items-center gap-3">
-                <MdCalendarMonth className="text-lg" />
-                <span>Agenda</span>
+                <MdDashboard className="text-lg" />
+                <span>Inicio</span>
               </div>
             </NavLink>
             <NavLink
-              to="/asistente/catalogo"
+              to="/revisor/revisiones"
               className={navLinkClass}
               onClick={closeDrawer}
             >
               <div className="flex items-center gap-3">
-                <MdLibraryBooks className="text-lg" />
-                <span>Catálogo</span>
-              </div>
-            </NavLink>
-
-            <NavLink
-              to="/asistente/pagos"
-              className={navLinkClass}
-              onClick={closeDrawer}
-            >
-              <div className="flex items-center gap-3">
-                <MdPayment className="text-lg" />
-                <span>Pagos</span>
-              </div>
-            </NavLink>
-            <div className="pt-4 pb-2">
-              <span className="px-4 text-xs font-semibold uppercase opacity-50 tracking-wider">
-                Ponente
-              </span>
-            </div>
-
-            <NavLink
-              to="/asistente/mis-ponencias"
-              className={navLinkClass}
-              onClick={closeDrawer}
-            >
-              <div className="flex items-center gap-3">
-                <MdCoPresent className="text-lg pl-1" />
-                <span>Mis Ponencias</span>
-              </div>
-            </NavLink>
-
-            <NavLink
-              to="/asistente/enviar-ponencia"
-              className={navLinkClass}
-              onClick={closeDrawer}
-            >
-              <div className="flex items-center gap-3">
-                <MdUploadFile className="text-lg pl-1" />
-                <span>Enviar Ponencia</span>
+                <MdRateReview className="text-lg" />
+                <span>Mis Revisiones</span>
               </div>
             </NavLink>
             <NavLink
-              to="/asistente/estatus-ponencia"
+              to="/revisor/historial"
               className={navLinkClass}
               onClick={closeDrawer}
             >
               <div className="flex items-center gap-3">
-                <MdUploadFile className="text-lg pl-1" />
-                <span>Estatus Ponencia</span>
+                <MdHistory className="text-lg" />
+                <span>Historial</span>
+              </div>
+            </NavLink>
+            <NavLink
+              to="/revisor/constancias"
+              className={navLinkClass}
+              onClick={closeDrawer}
+            >
+              <div className="flex items-center gap-3">
+                <MdBadge className="text-lg" />
+                <span>Constancias</span>
               </div>
             </NavLink>
           </nav>
 
-          {/* Pie del sidebar: usuario + cerrar sesión */}
           <div className="mt-auto pt-4 border-t border-gray-200">
             <p className="text-xs text-gray-400 px-4 mb-2 truncate">{user?.nombre}</p>
             <button

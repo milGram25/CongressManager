@@ -12,6 +12,10 @@ import MultimediaView from "./views/asistentes/MultimediaView";
 import SubirExtensoView from "./views/asistentes/SubirExtensoView";
 import Login from "./views/auth/Login";
 import Register from "./views/auth/Register";
+import RevisorLayout from "./views/revisores/layouts/MainLayout";
+import RevisionesView from "./views/revisores/RevisionesView";
+import PlaceholderView from "./views/revisores/PlaceholderView";
+import DetalleRevisionView from "./views/revisores/DetalleRevisionView";
 
 // Routea a las diferentes vistas del sistema
 function App() {
@@ -23,11 +27,11 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* Rutas protegidas: requieren sesión activa */}
+          {/* Rutas para Asistentes */}
           <Route
             path="/asistente"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRole="asistente">
                 <AsistenteLayout />
               </ProtectedRoute>
             }
@@ -41,6 +45,23 @@ function App() {
             <Route path="estatus-ponencia" element={<EstatusPonenciaView />} />
             <Route path="subir-multimedia" element={<MultimediaView />} />
             <Route path="subir-extenso" element={<SubirExtensoView />} />
+          </Route>
+
+          {/* Rutas para Revisores */}
+          <Route
+            path="/revisor"
+            element={
+              <ProtectedRoute allowedRole="revisor">
+                <RevisorLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="revisiones" replace />} />
+            <Route path="inicio" element={<PlaceholderView title="Inicio" />} />
+            <Route path="revisiones" element={<RevisionesView />} />
+            <Route path="revision/:id" element={<DetalleRevisionView />} />
+            <Route path="historial" element={<PlaceholderView title="Historial" />} />
+            <Route path="constancias" element={<PlaceholderView title="Constancias" />} />
           </Route>
 
           {/* Por defecto va al login */}
