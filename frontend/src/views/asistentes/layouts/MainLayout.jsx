@@ -9,6 +9,7 @@ import {
   MdCoPresent,
   MdUploadFile,
   MdRateReview,
+  MdGavel,
 } from "react-icons/md";
 
 export default function AsistenteLayout() {
@@ -131,6 +132,28 @@ export default function AsistenteLayout() {
                   <div className="flex items-center gap-3">
                     <MdRateReview className="text-lg text-[#148f96]" />
                     <span className="font-bold text-[#148f96]">Panel Revisor</span>
+                  </div>
+                </NavLink>
+                <div className="border-b border-gray-100 my-2 mx-4"></div>
+              </>
+            )}
+
+            {/* Acceso a Dictaminador (Solo si tiene el rol) */}
+            {user?.rol === 'dictaminador' && (
+              <>
+                <div className="pt-2 pb-2">
+                  <span className="px-4 text-[10px] font-bold uppercase text-[#148f96] tracking-widest opacity-80">
+                    Modo Dictaminador
+                  </span>
+                </div>
+                <NavLink
+                  to="/dictaminador/dictamenes"
+                  className={navLinkClass}
+                  onClick={closeDrawer}
+                >
+                  <div className="flex items-center gap-3">
+                    <MdGavel className="text-lg text-[#148f96]" />
+                    <span className="font-bold text-[#148f96]">Panel Dictaminador</span>
                   </div>
                 </NavLink>
                 <div className="border-b border-gray-100 my-2 mx-4"></div>

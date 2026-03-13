@@ -16,6 +16,8 @@ import RevisorLayout from "./views/revisores/layouts/MainLayout";
 import RevisionesView from "./views/revisores/RevisionesView";
 import PlaceholderView from "./views/revisores/PlaceholderView";
 import DetalleRevisionView from "./views/revisores/DetalleRevisionView";
+import DictaminadorLayout from "./views/dictaminadores/layouts/MainLayout";
+import DetalleDictamenView from "./views/dictaminadores/DetalleDictamenView";
 
 // Routea a las diferentes vistas del sistema
 function App() {
@@ -62,6 +64,21 @@ function App() {
             <Route path="revision/:id" element={<DetalleRevisionView />} />
             <Route path="historial" element={<PlaceholderView title="Historial" />} />
             <Route path="constancias" element={<PlaceholderView title="Constancias" />} />
+          </Route>
+
+          {/* Rutas para Dictaminadores */}
+          <Route
+            path="/dictaminador"
+            element={
+              <ProtectedRoute allowedRole="dictaminador">
+                <DictaminadorLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="dictamenes" replace />} />
+            <Route path="inicio" element={<PlaceholderView title="Inicio" />} />
+            <Route path="dictamenes" element={<DetalleDictamenView />} />
+            <Route path="historial" element={<PlaceholderView title="Historial" />} />
           </Route>
 
           {/* Por defecto va al login */}

@@ -13,6 +13,12 @@ const GENERIC_USERS = [
     password: "revisor123",
     nombre: "Usuario Demo Revisor",
     rol: "revisor",
+  },
+  {
+    email: "dictaminador@udg.mx",
+    password: "dictaminador123",
+    nombre: "Usuario Demo Dictaminador",
+    rol: "dictaminador",
   }
 ];
 
