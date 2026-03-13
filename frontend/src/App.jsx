@@ -18,6 +18,7 @@ import PlaceholderView from "./views/revisores/PlaceholderView";
 import DetalleRevisionView from "./views/revisores/DetalleRevisionView";
 import DictaminadorLayout from "./views/dictaminadores/layouts/MainLayout";
 import DetalleDictamenView from "./views/dictaminadores/DetalleDictamenView";
+import DictamenesView from "./views/dictaminadores/DictamenesView";
 
 // Routea a las diferentes vistas del sistema
 function App() {
@@ -77,7 +78,8 @@ function App() {
           >
             <Route index element={<Navigate to="dictamenes" replace />} />
             <Route path="inicio" element={<PlaceholderView title="Inicio" />} />
-            <Route path="dictamenes" element={<DetalleDictamenView />} />
+            <Route path="dictamenes" element={<DictamenesView />} />
+            <Route path="dictamen/:id" element={<DetalleDictamenView />} />
             <Route path="historial" element={<PlaceholderView title="Historial" />} />
           </Route>
 
