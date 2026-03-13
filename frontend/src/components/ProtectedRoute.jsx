@@ -14,6 +14,10 @@ export default function ProtectedRoute({ children, allowedRole }) {
   }
 
   if (allowedRole && user.rol !== allowedRole) {
+    // Los revisores tienen permiso de ver la sección de asistente también
+    if (user.rol === 'revisor' && allowedRole === 'asistente') {
+      return children;
+    }
     return <Navigate to="/asistente" replace />;
   }
 

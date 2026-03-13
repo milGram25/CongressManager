@@ -7,6 +7,7 @@ import {
   MdRateReview,
   MdHistory,
   MdBadge,
+  MdPerson,
 } from "react-icons/md";
 
 export default function RevisorLayout() {
@@ -93,6 +94,24 @@ export default function RevisorLayout() {
           </div>
 
           <nav className="flex flex-col space-y-1 mt-4 lg:mt-0">
+            {/* Acceso a Asistente (Para volver) */}
+            <div className="pt-2 pb-2">
+              <span className="px-4 text-[10px] font-bold uppercase text-gray-400 tracking-widest opacity-80">
+                Modo Asistente
+              </span>
+            </div>
+            <NavLink
+              to="/asistente/agenda"
+              className={navLinkClass}
+              onClick={closeDrawer}
+            >
+              <div className="flex items-center gap-3">
+                <MdPerson className="text-lg" />
+                <span>Vista Asistente</span>
+              </div>
+            </NavLink>
+            <div className="border-b border-gray-100 my-2 mx-4"></div>
+
             <NavLink
               to="/revisor/inicio"
               className={navLinkClass}

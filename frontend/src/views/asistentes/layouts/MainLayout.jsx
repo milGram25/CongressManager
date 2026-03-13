@@ -8,6 +8,7 @@ import {
   MdPayment,
   MdCoPresent,
   MdUploadFile,
+  MdRateReview,
 } from "react-icons/md";
 
 export default function AsistenteLayout() {
@@ -114,6 +115,28 @@ export default function AsistenteLayout() {
 
           {/* links de navegacion */}
           <nav className="flex flex-col space-y-1 mt-4 lg:mt-0">
+            {/* Acceso a Revisor (Solo si tiene el rol) */}
+            {user?.rol === 'revisor' && (
+              <>
+                <div className="pt-2 pb-2">
+                  <span className="px-4 text-[10px] font-bold uppercase text-[#148f96] tracking-widest opacity-80">
+                    Modo Revisor
+                  </span>
+                </div>
+                <NavLink
+                  to="/revisor/revisiones"
+                  className={navLinkClass}
+                  onClick={closeDrawer}
+                >
+                  <div className="flex items-center gap-3">
+                    <MdRateReview className="text-lg text-[#148f96]" />
+                    <span className="font-bold text-[#148f96]">Panel Revisor</span>
+                  </div>
+                </NavLink>
+                <div className="border-b border-gray-100 my-2 mx-4"></div>
+              </>
+            )}
+
             <NavLink
               to="/asistente/agenda"
               className={navLinkClass}
