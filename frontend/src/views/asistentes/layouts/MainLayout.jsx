@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import cienuLogo from "../../../assets/CIENU.jpg";
 import ridmaeLogo from "../../../assets/ridmae.jpg";
@@ -10,12 +11,35 @@ import {
   MdUploadFile,
   MdRateReview,
   MdGavel,
+  MdRocketLaunch,
 } from "react-icons/md";
 
 export default function AsistenteLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const headerRef = useRef(null);
+
+  // Intersection Observer para detectar cuando el header principal sale de la vista
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsHeaderVisible(entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+
+    if (headerRef.current) {
+      observer.observe(headerRef.current);
+    }
+
+    return () => {
+      if (headerRef.current) {
+        observer.unobserve(headerRef.current);
+      }
+    };
+  }, [pathname]);
 
   // Determinar si estamos en una sección de ponente
   const isPonenteSection = 
@@ -54,9 +78,9 @@ export default function AsistenteLayout() {
       <input id="asistente-drawer" type="checkbox" className="drawer-toggle" />
 
       {/*  Vista principal  */}
-      <div className="drawer-content flex bg-base-100 flex-col p-6 md:p-10 relative">
-        {/* Header */}
-        <header className="flex items-center gap-6 border-b border-gray-300 pb-4 mb-8">
+      <div className="drawer-content flex bg-base-100 flex-col p-6 md:p-10 relative overflow-y-auto">
+        {/* Header con Ref para el Observer */}
+        <header ref={headerRef} className="flex items-center gap-6 border-b border-gray-300 pb-4 mb-8">
           {/* menu desplegable en mobil */}
           <label
             htmlFor="asistente-drawer"
@@ -109,9 +133,14 @@ export default function AsistenteLayout() {
 
         {/* contenedor de la barra  */}
         <div className="bg-base-100 text-base-content min-h-full w-64 p-6 border-r border-gray-200 lg:border-none lg:bg-transparent flex flex-col">
-          {/* Título en el Sidebar para Desktop */}
-          <div className="hidden lg:flex h-[88px] items-center px-4">
-            <h2 className="text-3xl font-bold text-slate-800">{displayTitle}</h2>
+          {/* Título dinámico en el Sidebar para Desktop */}
+          <div className="hidden lg:flex h-[88px] items-center px-4 overflow-hidden">
+            <div className={`transition-all duration-500 transform ${isHeaderVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} absolute`}>
+               <MdRocketLaunch className="text-5xl text-[#148f96] animate-bounce" title="¡Bienvenido!" />
+            </div>
+            <div className={`transition-all duration-500 transform ${!isHeaderVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+               <h2 className="text-3xl font-bold text-slate-800">{displayTitle}</h2>
+            </div>
           </div>
 
           {/* links de navegacion */}

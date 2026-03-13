@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import cienuLogo from "../../../assets/CIENU.jpg";
 import ridmaeLogo from "../../../assets/ridmae.jpg";
@@ -8,11 +9,34 @@ import {
   MdHistory,
   MdBadge,
   MdPerson,
+  MdRocketLaunch,
 } from "react-icons/md";
 
 export default function RevisorLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const headerRef = useRef(null);
+
+  // Observer para detectar si el título principal está en pantalla
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsHeaderVisible(entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+
+    if (headerRef.current) {
+      observer.observe(headerRef.current);
+    }
+
+    return () => {
+      if (headerRef.current) {
+        observer.unobserve(headerRef.current);
+      }
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -38,8 +62,8 @@ export default function RevisorLayout() {
     <div className="drawer lg:drawer-open min-h-screen bg-base-200 text-base-content">
       <input id="revisor-drawer" type="checkbox" className="drawer-toggle" />
 
-      <div className="drawer-content flex bg-base-100 flex-col p-6 md:p-10 relative">
-        <header className="flex items-center gap-6 border-b border-gray-300 pb-4 mb-8">
+      <div className="drawer-content flex bg-base-100 flex-col p-6 md:p-10 relative overflow-y-auto">
+        <header ref={headerRef} className="flex items-center gap-6 border-b border-gray-300 pb-4 mb-8">
           <label
             htmlFor="revisor-drawer"
             className="p-2 hover:bg-base-200 rounded-lg transition-colors cursor-pointer lg:hidden"
@@ -88,9 +112,14 @@ export default function RevisorLayout() {
         ></label>
 
         <div className="bg-base-100 text-base-content min-h-full w-64 p-6 border-r border-gray-200 lg:border-none lg:bg-transparent flex flex-col">
-          {/* Título en el Sidebar para Desktop */}
-          <div className="hidden lg:flex h-[88px] items-center px-4">
-            <h2 className="text-3xl font-bold text-slate-800">Revisor</h2>
+          {/* Título dinámico en el Sidebar para Desktop */}
+          <div className="hidden lg:flex h-[88px] items-center px-4 overflow-hidden relative">
+            <div className={`transition-all duration-500 transform ${isHeaderVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} absolute`}>
+               <MdRocketLaunch className="text-5xl text-[#148f96] animate-bounce" />
+            </div>
+            <div className={`transition-all duration-500 transform ${!isHeaderVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+               <h2 className="text-3xl font-bold text-slate-800">Revisor</h2>
+            </div>
           </div>
 
           <nav className="flex flex-col space-y-1 mt-4 lg:mt-0">
