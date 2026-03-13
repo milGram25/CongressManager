@@ -13,10 +13,7 @@ export default function DetalleRevisionView() {
     titulo: "Impacto de la Inteligencia Artificial en la Educación Superior 2026",
     autores: "Juan Pérez, Maria García",
     resumen: "Este trabajo explora cómo las herramientas de IA generativa están transformando los procesos de enseñanza-aprendizaje en las universidades de América Latina...",
-    documentos: [
-      { nombre: "Extenso_Final.pdf", tamaño: "2.4 MB" },
-      { nombre: "Anexos_Graficas.zip", tamaño: "15.8 MB" }
-    ],
+    extenso: { nombre: "Extenso_Final.pdf", tamaño: "2.4 MB" },
     rubricas: [
       { id: 1, criterio: "Originalidad y relevancia del tema", opciones: ["Excelente", "Bueno", "Regular", "Insuficiente"] },
       { id: 2, criterio: "Calidad metodológica", opciones: ["Excelente", "Bueno", "Regular", "Insuficiente"] },
@@ -72,18 +69,16 @@ export default function DetalleRevisionView() {
             <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
               <div className="flex items-center gap-2 mb-4 text-slate-700 font-bold border-b pb-2">
                 <MdFileDownload size={20} />
-                <span>Documentos</span>
+                <span>Extenso</span>
               </div>
               <div className="space-y-3">
-                {ponencia.documentos.map((doc, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer group">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-slate-700 group-hover:text-[#148f96]">{doc.nombre}</span>
-                      <span className="text-[10px] text-gray-400">{doc.tamaño}</span>
-                    </div>
-                    <MdFileDownload className="text-gray-400 group-hover:text-[#148f96]" size={20} />
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer group">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-slate-700 group-hover:text-[#148f96]">{ponencia.extenso.nombre}</span>
+                    <span className="text-[10px] text-gray-400">{ponencia.extenso.tamaño}</span>
                   </div>
-                ))}
+                  <MdFileDownload className="text-gray-400 group-hover:text-[#148f96]" size={20} />
+                </div>
               </div>
             </section>
           </div>
