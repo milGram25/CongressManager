@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import cienuLogo from "../../../assets/CIENU.jpg";
 import ridmaeLogo from "../../../assets/ridmae.jpg";
+import { GrStatusGood } from "react-icons/gr";
 import {
   MdCalendarMonth,
   MdLibraryBooks,
@@ -156,7 +157,7 @@ export default function AsistenteLayout() {
               onClick={closeDrawer}
             >
               <div className="flex items-center gap-3">
-                <MdUploadFile className="text-lg pl-1" />
+                <GrStatusGood className="text-lg pl-1" />
                 <span>Estatus Ponencia</span>
               </div>
             </NavLink>
