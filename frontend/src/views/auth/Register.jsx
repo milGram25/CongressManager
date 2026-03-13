@@ -41,30 +41,42 @@ const Register = () => {
     e.preventDefault();
     setError('');
 
-    // Validación de contraseñas
-    if (formData.password !== formData.confirmPassword) {
-      setError('Las contraseñas no coinciden.');
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      setError('La contraseña debe tener al menos 8 caracteres.');
-      return;
+    // Validación de campos obligatorios (manual para mostrar en el cuadro central)
+    if (!formData.nombres.trim()) return setError('El nombre es obligatorio.');
+    if (!formData.apellidos.trim()) return setError('El apellido es obligatorio.');
+    if (!formData.genero) return setError('El género es obligatorio.');
+    if (!formData.pais) return setError('El país es obligatorio.');
+    if (formData.tieneDiscapacidad === 'Si' && !formData.discapacidad.trim()) {
+      return setError('Por favor especifique su discapacidad.');
     }
 
     // Validación de correo electrónico
+    if (!formData.email.trim()) return setError('El correo electrónico es obligatorio.');
+    
     // 1. Debe contener un @
     // 2. Debe empezar con minúscula
     const emailRegex = /^[a-z].*@.*$/;
     if (!emailRegex.test(formData.email)) {
-      setError('El correo debe empezar con minúscula y contener un "@".');
+      setError('Correo inválido.');
       return;
     }
 
     // Validación de teléfono (exactamente 10 dígitos)
+    if (!formData.telefono.trim()) return setError('El teléfono celular es obligatorio.');
     const phoneDigits = formData.telefono.replace(/\D/g, '');
     if (phoneDigits.length !== 10) {
       setError('El teléfono debe tener exactamente 10 dígitos.');
+      return;
+    }
+
+    // Validación de contraseñas
+    if (!formData.password) return setError('La contraseña es obligatoria.');
+    if (formData.password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setError('Las contraseñas no coinciden.');
       return;
     }
 
@@ -109,7 +121,7 @@ const Register = () => {
                 <label className="text-xs font-bold text-gray-400 uppercase ml-1">Nombre(s) *</label>
                 <input 
                   name="nombres"
-                  required
+                  value={formData.nombres}
                   className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all" 
                   type="text" 
                   onChange={handleChange}
@@ -120,7 +132,7 @@ const Register = () => {
                 <label className="text-xs font-bold text-gray-400 uppercase ml-1">Apellido(s) *</label>
                 <input 
                   name="apellidos"
-                  required
+                  value={formData.apellidos}
                   className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all" 
                   type="text" 
                   onChange={handleChange}
@@ -131,7 +143,6 @@ const Register = () => {
                 <label className="text-xs font-bold text-gray-400 uppercase ml-1">Género *</label>
                 <select 
                   name="genero"
-                  required
                   value={formData.genero}
                   onChange={handleChange}
                   className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all appearance-none"
@@ -176,6 +187,7 @@ const Register = () => {
                 <label className="text-xs font-bold text-gray-400 uppercase ml-1">Institución de Adscripción</label>
                 <input 
                   name="institucion"
+                  value={formData.institucion}
                   className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all" 
                   type="text" 
                   onChange={handleChange}
@@ -186,7 +198,6 @@ const Register = () => {
                 <label className="text-xs font-bold text-gray-400 uppercase ml-1">¿Tiene alguna discapacidad? *</label>
                 <select 
                   name="tieneDiscapacidad"
-                  required
                   value={formData.tieneDiscapacidad || ''}
                   onChange={(e) => {
                     setFormData({ 
@@ -208,7 +219,6 @@ const Register = () => {
                   <label className="text-xs font-bold text-gray-400 uppercase ml-1">Escriba su discapacidad *</label>
                   <input 
                     name="discapacidad"
-                    required
                     value={formData.discapacidad}
                     className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all" 
                     type="text" 
@@ -224,9 +234,9 @@ const Register = () => {
                 <label className="text-xs font-bold text-gray-400 uppercase ml-1">Correo electrónico *</label>
                 <input 
                   name="email"
-                  required
+                  value={formData.email}
                   className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all" 
-                  type="email" 
+                  type="text" 
                   onChange={handleChange}
                 />
               </div>
@@ -235,7 +245,7 @@ const Register = () => {
                 <label className="text-xs font-bold text-gray-400 uppercase ml-1">Teléfono celular *</label>
                 <input 
                   name="telefono"
-                  required
+                  value={formData.telefono}
                   placeholder="10 dígitos"
                   className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all" 
                   type="tel" 
@@ -248,7 +258,7 @@ const Register = () => {
                 <div className="relative">
                   <input 
                     name="password"
-                    required
+                    value={formData.password}
                     className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all pr-12" 
                     type={showPassword ? "text" : "password"} 
                     onChange={handleChange}
@@ -268,7 +278,7 @@ const Register = () => {
                 <div className="relative">
                   <input 
                     name="confirmPassword"
-                    required
+                    value={formData.confirmPassword}
                     className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all pr-12" 
                     type={showConfirmPassword ? "text" : "password"} 
                     onChange={handleChange}
