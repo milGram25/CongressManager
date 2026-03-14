@@ -6,6 +6,12 @@ import PagosView from "./views/asistentes/PagosView";
 import MisPonenciasView from "./views/asistentes/MisPonenciasView";
 import EnviarPonenciaView from "./views/asistentes/EnviarPonenciaView";
 import EstatusPonenciaView from "./views/asistentes/EstatusPonenciaView";
+import Login from "./views/auth/Login";
+import Register from "./views/auth/Register";
+import RevisorLayout from "./views/revisores/layouts/MainLayout";
+import RevisionesView from "./views/revisores/RevisionesView";
+import PlaceholderView from "./views/revisores/PlaceholderView";
+import DetalleRevisionView from "./views/revisores/DetalleRevisionView";
 
 // Routea a las diferentes vistas del sistema
 function App() {
@@ -26,6 +32,23 @@ function App() {
           <Route path="enviar-ponencia" element={<EnviarPonenciaView />} />
           <Route path="estatus-ponencia" element={<EstatusPonenciaView />} />
         </Route>
+          {/* Rutas para Asistentes */}
+          <Route
+            path="/asistente"
+            element={
+              <ProtectedRoute allowedRole="asistente">
+                <AsistenteLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="agenda" replace />} />
+            <Route path="agenda" element={<AgendaView />} />
+            <Route path="catalogo" element={<CatalogoView />} />
+            <Route path="pagos" element={<PagosView />} />
+            <Route path="mis-ponencias" element={<MisPonenciasView />} />
+            <Route path="enviar-ponencia" element={<EnviarPonenciaView />} />
+            <Route path="estatus-ponencia" element={<EstatusPonenciaView />} />
+          </Route>
 
         {/* Por defecto va a asistente hasta que tengamos algo mas */}
         <Route path="*" element={<Navigate to="/asistente/catalogo" replace />} />
