@@ -28,6 +28,8 @@ export default function Login() {
         const savedUser = JSON.parse(localStorage.getItem("congress_user"));
         if (savedUser?.rol === 'revisor') {
           navigate('/revisor', { replace: true });
+        } else if (savedUser?.rol === 'dictaminador') {
+          navigate('/dictaminador', { replace: true });
         } else {
           navigate('/asistente', { replace: true });
         }
