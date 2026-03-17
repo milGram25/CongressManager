@@ -63,13 +63,16 @@ export default function MisPonenciasView() {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-[100] p-4">
           <div className="bg-base-100 border border-base-300 max-w-2xl w-full rounded-box relative shadow-2xl p-10 flex flex-col items-center">
             
-            {/* Botón de flecha atrás */}
-            <button 
-              onClick={() => setPonenciaSeleccionada(null)}
-              className="absolute top-6 left-6 btn btn-ghost btn-circle text-3xl"
-            >
+          {/* Botón de regreso */}
+          <button 
+            type="button" 
+            onClick={() => setPonenciaSeleccionada(null)} 
+            className="absolute top-6 left-6 w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-md hover:opacity-90 transition-all group"
+          >
+            <span className="text-white text-4xl font-black leading-none -mt-1 select-none">
               ←
-            </button>
+            </span>
+          </button>
 
             <div className="text-center space-y-4 mt-6 w-full">
               <h2 className="font-bold text-lg text-primary uppercase tracking-wide">Título:</h2>

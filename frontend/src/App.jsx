@@ -31,6 +31,13 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
+          <Route path="agenda" element={<AgendaView />} />
+          <Route path="catalogo" element={<CatalogoView />} />
+          <Route path="pagos" element={<PagosView />} />
+          <Route path="mis-ponencias" element={<MisPonenciasView />} />
+          <Route path="enviar-ponencia" element={<EnviarPonenciaView />} />
+          <Route path="estatus-ponencia" element={<EstatusPonenciaView />} />
+        </Route>
           {/* Rutas para Asistentes */}
           <Route
             path="/asistente"
