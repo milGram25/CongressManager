@@ -8,7 +8,6 @@ import {
   MdGavel,
   MdHistory,
   MdPerson,
-  MdRocketLaunch,
 } from "react-icons/md";
 
 export default function DictaminadorLayout() {
@@ -89,7 +88,7 @@ export default function DictaminadorLayout() {
           {/* Título dinámico en el Sidebar para Desktop */}
           <div className="hidden lg:flex h-[88px] items-center px-4 overflow-hidden relative">
             <div className={`transition-all duration-500 transform ${isHeaderVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} absolute`}>
-               <MdRocketLaunch className="text-5xl text-[#148f96] animate-bounce" />
+               <MdGavel className="text-5xl text-[#148f96] animate-bounce" />
             </div>
             <div className={`transition-all duration-500 transform ${!isHeaderVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
                <h2 className="text-3xl font-bold text-slate-800">Dictaminador</h2>
