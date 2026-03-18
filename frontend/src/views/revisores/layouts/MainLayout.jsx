@@ -9,7 +9,6 @@ import {
   MdHistory,
   MdBadge,
   MdPerson,
-  MdRocketLaunch,
 } from "react-icons/md";
 
 export default function RevisorLayout() {
@@ -115,7 +114,7 @@ export default function RevisorLayout() {
           {/* Título dinámico en el Sidebar para Desktop */}
           <div className="hidden lg:flex h-[88px] items-center px-4 overflow-hidden relative">
             <div className={`transition-all duration-500 transform ${isHeaderVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} absolute`}>
-               <MdRocketLaunch className="text-5xl text-[#148f96] animate-bounce" />
+               <MdRateReview className="text-5xl text-[#148f96] animate-bounce" />
             </div>
             <div className={`transition-all duration-500 transform ${!isHeaderVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
                <h2 className="text-3xl font-bold text-slate-800">Revisor</h2>

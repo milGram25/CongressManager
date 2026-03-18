@@ -12,7 +12,7 @@ import {
   MdUploadFile,
   MdRateReview,
   MdGavel,
-  MdRocketLaunch,
+  MdSchool,
   MdBadge,
 } from "react-icons/md";
 
@@ -138,7 +138,7 @@ export default function AsistenteLayout() {
           {/* Título dinámico en el Sidebar para Desktop */}
           <div className="hidden lg:flex h-[88px] items-center px-4 overflow-hidden">
             <div className={`transition-all duration-500 transform ${isHeaderVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} absolute`}>
-               <MdRocketLaunch className="text-5xl text-[#148f96] animate-bounce" title="¡Bienvenido!" />
+               <MdSchool className="text-5xl text-[#148f96] animate-bounce" title="¡Bienvenido!" />
             </div>
             <div className={`transition-all duration-500 transform ${!isHeaderVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
                <h2 className="text-3xl font-bold text-slate-800">{displayTitle}</h2>
