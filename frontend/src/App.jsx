@@ -8,8 +8,6 @@ import PagosView from "./views/asistentes/PagosView";
 import MisPonenciasView from "./views/asistentes/MisPonenciasView";
 import EnviarPonenciaView from "./views/asistentes/EnviarPonenciaView";
 import EstatusPonenciaView from "./views/asistentes/EstatusPonenciaView";
-import MultimediaView from "./views/asistentes/MultimediaView";
-import SubirExtensoView from "./views/asistentes/SubirExtensoView";
 import ConstanciasView from "./views/asistentes/ConstanciasView";
 import Login from "./views/auth/Login";
 import Register from "./views/auth/Register";
@@ -37,7 +35,6 @@ function App() {
           <Route path="mis-ponencias" element={<MisPonenciasView />} />
           <Route path="enviar-ponencia" element={<EnviarPonenciaView />} />
           <Route path="estatus-ponencia" element={<EstatusPonenciaView />} />
-        </Route>
           {/* Rutas para Asistentes */}
           <Route
             path="/asistente"
@@ -54,9 +51,10 @@ function App() {
             <Route path="mis-ponencias" element={<MisPonenciasView />} />
             <Route path="enviar-ponencia" element={<EnviarPonenciaView />} />
             <Route path="estatus-ponencia" element={<EstatusPonenciaView />} />
-            <Route path="subir-multimedia" element={<MultimediaView />} />
-            <Route path="subir-extenso" element={<SubirExtensoView />} />
-            <Route path="constancias" element={<ConstanciasView title="Mis Constancias" />} />
+            <Route
+              path="constancias"
+              element={<ConstanciasView title="Mis Constancias" />}
+            />
           </Route>
 
           {/* Rutas para Revisores */}
@@ -72,7 +70,10 @@ function App() {
             <Route path="inicio" element={<PlaceholderView title="Inicio" />} />
             <Route path="revisiones" element={<RevisionesView />} />
             <Route path="revision/:id" element={<DetalleRevisionView />} />
-            <Route path="historial" element={<PlaceholderView title="Historial" />} />
+            <Route
+              path="historial"
+              element={<PlaceholderView title="Historial" />}
+            />
           </Route>
 
           {/* Rutas para Dictaminadores */}
@@ -88,7 +89,10 @@ function App() {
             <Route path="inicio" element={<PlaceholderView title="Inicio" />} />
             <Route path="dictamenes" element={<DictamenesView />} />
             <Route path="dictamen/:id" element={<DetalleDictamenView />} />
-            <Route path="historial" element={<PlaceholderView title="Historial" />} />
+            <Route
+              path="historial"
+              element={<PlaceholderView title="Historial" />}
+            />
           </Route>
 
           {/* Por defecto va al login */}
@@ -100,4 +104,3 @@ function App() {
 }
 
 export default App;
-
