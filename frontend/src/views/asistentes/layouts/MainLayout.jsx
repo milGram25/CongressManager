@@ -1,4 +1,6 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useAuth } from "../../../context/AuthContext";
 import cienuLogo from "../../../assets/CIENU.jpg";
 import ridmaeLogo from "../../../assets/ridmae.jpg";
 import { GrStatusGood } from "react-icons/gr";
@@ -8,9 +10,54 @@ import {
   MdPayment,
   MdCoPresent,
   MdUploadFile,
+  MdRateReview,
+  MdGavel,
+  MdRocketLaunch,
+  MdBadge,
 } from "react-icons/md";
 
 export default function AsistenteLayout() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const headerRef = useRef(null);
+
+  // Intersection Observer para detectar cuando el header principal sale de la vista
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsHeaderVisible(entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+
+    if (headerRef.current) {
+      observer.observe(headerRef.current);
+    }
+
+    return () => {
+      if (headerRef.current) {
+        observer.unobserve(headerRef.current);
+      }
+    };
+  }, [pathname]);
+
+  // Determinar si estamos en una sección de ponente
+  const isPonenteSection = 
+    pathname.includes('mis-ponencias') || 
+    pathname.includes('enviar-ponencia') || 
+    pathname.includes('estatus-ponencia') ||
+    pathname.includes('subir-multimedia') ||
+    pathname.includes('subir-extenso');
+
+  const displayTitle = isPonenteSection ? "Ponente" : "Asistente";
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
+
   // Estilo para vista activa
   const navLinkClass = ({ isActive }) =>
     `block px-4 py-2 rounded-full text-sm transition-colors ${
@@ -33,9 +80,9 @@ export default function AsistenteLayout() {
       <input id="asistente-drawer" type="checkbox" className="drawer-toggle" />
 
       {/*  Vista principal  */}
-      <div className="drawer-content flex bg-base-100 flex-col p-6 md:p-10 relative">
-        {/* Header */}
-        <header className="flex items-center gap-6 border-b border-gray-300 pb-4 mb-8">
+      <div className="drawer-content flex bg-base-100 flex-col p-6 md:p-10 relative overflow-y-auto">
+        {/* Header con Ref para el Observer */}
+        <header ref={headerRef} className="flex items-center gap-6 border-b border-gray-300 pb-4 mb-8">
           {/* menu desplegable en mobil */}
           <label
             htmlFor="asistente-drawer"
@@ -56,7 +103,7 @@ export default function AsistenteLayout() {
               />
             </svg>
           </label>
-          <h1 className="text-4xl font-bold">Asistente</h1>
+          <h1 className="text-4xl font-bold">{displayTitle}</h1>
         </header>
 
         {/* Vista Dinamica Cambiante */}
@@ -88,11 +135,62 @@ export default function AsistenteLayout() {
 
         {/* contenedor de la barra  */}
         <div className="bg-base-100 text-base-content min-h-full w-64 p-6 border-r border-gray-200 lg:border-none lg:bg-transparent flex flex-col">
-          {/* espaciador para alinear debajo del header, maybe en un futuro un logo */}
-          <div className="hidden lg:block h-[88px]"></div>
+          {/* Título dinámico en el Sidebar para Desktop */}
+          <div className="hidden lg:flex h-[88px] items-center px-4 overflow-hidden">
+            <div className={`transition-all duration-500 transform ${isHeaderVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} absolute`}>
+               <MdRocketLaunch className="text-5xl text-[#148f96] animate-bounce" title="¡Bienvenido!" />
+            </div>
+            <div className={`transition-all duration-500 transform ${!isHeaderVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+               <h2 className="text-3xl font-bold text-slate-800">{displayTitle}</h2>
+            </div>
+          </div>
 
           {/* links de navegacion */}
           <nav className="flex flex-col space-y-1 mt-4 lg:mt-0">
+            {/* Acceso a Revisor (Solo si tiene el rol) */}
+            {user?.rol === 'revisor' && (
+              <>
+                <div className="pt-2 pb-2">
+                  <span className="px-4 text-[10px] font-bold uppercase text-[#148f96] tracking-widest opacity-80">
+                    Modo Revisor
+                  </span>
+                </div>
+                <NavLink
+                  to="/revisor/revisiones"
+                  className={navLinkClass}
+                  onClick={closeDrawer}
+                >
+                  <div className="flex items-center gap-3">
+                    <MdRateReview className="text-lg text-[#148f96]" />
+                    <span className="font-bold text-[#148f96]">Panel Revisor</span>
+                  </div>
+                </NavLink>
+                <div className="border-b border-gray-100 my-2 mx-4"></div>
+              </>
+            )}
+
+            {/* Acceso a Dictaminador (Solo si tiene el rol) */}
+            {user?.rol === 'dictaminador' && (
+              <>
+                <div className="pt-2 pb-2">
+                  <span className="px-4 text-[10px] font-bold uppercase text-[#148f96] tracking-widest opacity-80">
+                    Modo Dictaminador
+                  </span>
+                </div>
+                <NavLink
+                  to="/dictaminador/dictamenes"
+                  className={navLinkClass}
+                  onClick={closeDrawer}
+                >
+                  <div className="flex items-center gap-3">
+                    <MdGavel className="text-lg text-[#148f96]" />
+                    <span className="font-bold text-[#148f96]">Panel Dictaminador</span>
+                  </div>
+                </NavLink>
+                <div className="border-b border-gray-100 my-2 mx-4"></div>
+              </>
+            )}
+
             <NavLink
               to="/asistente/agenda"
               className={navLinkClass}
@@ -122,6 +220,17 @@ export default function AsistenteLayout() {
               <div className="flex items-center gap-3">
                 <MdPayment className="text-lg" />
                 <span>Pagos</span>
+              </div>
+            </NavLink>
+
+            <NavLink
+              to="/asistente/constancias"
+              className={navLinkClass}
+              onClick={closeDrawer}
+            >
+              <div className="flex items-center gap-3">
+                <MdBadge className="text-lg" />
+                <span>Mis Constancias</span>
               </div>
             </NavLink>
             <div className="pt-4 pb-2">
@@ -162,6 +271,20 @@ export default function AsistenteLayout() {
               </div>
             </NavLink>
           </nav>
+
+          {/* Pie del sidebar: usuario + cerrar sesión */}
+          <div className="mt-auto pt-4 border-t border-gray-200">
+            <p className="text-xs text-gray-400 px-4 mb-2 truncate">{user?.nombre}</p>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-2 rounded-full text-sm text-red-500 hover:bg-red-50 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M18 12H6m6-3-3 3 3 3" />
+              </svg>
+              Cerrar sesión
+            </button>
+          </div>
         </div>
       </div>
     </div>
