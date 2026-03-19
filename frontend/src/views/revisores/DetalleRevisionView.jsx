@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MdFileDownload, MdAssignment, MdComment } from 'react-icons/md';
+import { MdFileDownload, MdAssignment, MdComment, MdClose } from 'react-icons/md';
 
 export default function DetalleRevisionView() {
   const { id } = useParams();
@@ -19,10 +19,24 @@ export default function DetalleRevisionView() {
   ]);
 
   const handleCalificacionChange = (id, valor) => {
-    setCalificaciones(prev => ({
-      ...prev,
-      [id]: valor
-    }));
+    setCalificaciones(prev => {
+      // Si el valor ya estaba seleccionado, lo quitamos (Toggle)
+      if (prev[id] === valor) {
+        const newState = { ...prev };
+        delete newState[id];
+        return newState;
+      }
+      // Si no, lo seleccionamos
+      return { ...prev, [id]: valor };
+    });
+  };
+
+  const clearCalificacion = (id) => {
+    setCalificaciones(prev => {
+      const newCalificaciones = { ...prev };
+      delete newCalificaciones[id];
+      return newCalificaciones;
+    });
   };
 
   const calcularPromedio = () => {
@@ -146,22 +160,38 @@ export default function DetalleRevisionView() {
                       >
                         {comentariosCriterios[rubrica.id] !== undefined ? 'Quitar Comentario' : '+ Comentario'}
                       </button>
-                      <div className="flex items-center gap-2">
-                        {rubrica.opciones.map((opcion) => (
-                          <label key={opcion} className="relative group cursor-pointer">
-                            <input 
-                              type="radio" 
-                              name={`rubrica-${rubrica.id}`} 
-                              className="peer hidden" 
-                              onChange={() => handleCalificacionChange(rubrica.id, opcion)}
-                            />
-                            <div className="w-10 h-10 flex items-center justify-center rounded-lg border-2 border-gray-100 text-sm font-bold text-slate-400 transition-all 
-                              peer-checked:bg-[#148f96] peer-checked:border-[#148f96] peer-checked:text-white
-                              hover:border-[#148f96] hover:text-[#148f96] peer-checked:hover:text-white group-active:scale-90">
-                              {opcion}
-                            </div>
-                          </label>
-                        ))}
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 relative">
+                          {rubrica.opciones.map((opcion) => (
+                            <label key={opcion} className="relative group cursor-pointer">
+                              <input 
+                                type="radio" 
+                                name={`rubrica-${rubrica.id}`} 
+                                className="peer hidden" 
+                                checked={calificaciones[rubrica.id] === opcion}
+                                onChange={() => {}} // Se maneja en el onClick de la caja visual
+                              />
+                              <div 
+                                onClick={() => handleCalificacionChange(rubrica.id, opcion)}
+                                className="w-10 h-10 flex items-center justify-center rounded-lg border-2 border-gray-100 text-sm font-bold text-slate-400 transition-all 
+                                peer-checked:bg-[#148f96] peer-checked:border-[#148f96] peer-checked:text-white
+                                hover:border-[#148f96] hover:text-[#148f96] peer-checked:hover:text-white group-active:scale-90">
+                                {opcion}
+                              </div>
+                            </label>
+                          ))}
+                          
+                          {/* Botón de limpiar minimalista */}
+                          {calificaciones[rubrica.id] && (
+                            <button 
+                              onClick={() => clearCalificacion(rubrica.id)}
+                              className="ml-1 p-1 text-slate-300 hover:text-red-400 transition-colors animate-in fade-in zoom-in duration-200"
+                              title="Limpiar selección"
+                            >
+                              <MdClose size={18} />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
