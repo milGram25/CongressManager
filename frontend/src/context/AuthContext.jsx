@@ -3,8 +3,8 @@ import { createContext, useContext, useState } from "react";
 // Usuarios genéricos para pruebas (mientras se conecta el backend)
 const GENERIC_USERS = [
   {
-    email: "admin@udg.mx",
-    password: "admin123",
+    email: "asistente@udg.mx",
+    password: "asistente123",
     nombre: "Usuario Demo Asistente",
     rol: "asistente",
   },

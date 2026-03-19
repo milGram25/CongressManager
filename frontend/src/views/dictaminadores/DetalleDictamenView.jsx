@@ -125,19 +125,14 @@ export default function DetalleDictamenView() {
         </header>
 
         <div className="space-y-6">
-          <details className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
-              <div className="flex items-center gap-2 text-slate-700 font-bold">
-                <MdDescription size={22} className="text-[#148f96]" />
-                <span>Información de la Ponencia</span>
-              </div>
-              <span className="text-[#148f96] group-open:rotate-180 transition-transform">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="9 5l7 7-7 7" />
-                </svg>
-              </span>
-            </summary>
-            <div className="p-6 pt-0 space-y-6 border-t border-gray-50">
+          {/* Información de la Ponencia (Siempre visible) */}
+          <section className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex items-center gap-2 mb-6 text-slate-700 font-bold border-b pb-3">
+              <MdDescription size={22} className="text-[#148f96]" />
+              <span>Información de la Ponencia</span>
+            </div>
+            
+            <div className="space-y-6">
               <div>
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Resumen</label>
                 <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100 italic text-slate-600 text-sm leading-relaxed">
@@ -145,7 +140,7 @@ export default function DetalleDictamenView() {
                 </div>
               </div>
             </div>
-          </details>
+          </section>
 
           <section className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
             <div className="flex items-center gap-2 mb-6 text-slate-700 font-bold border-b pb-2">
