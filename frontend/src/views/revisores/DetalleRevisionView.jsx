@@ -94,7 +94,21 @@ export default function DetalleRevisionView() {
     extenso: { nombre: "Extenso_Final.pdf", tamaño: "2.4 MB" }
   };
 
+  const [showErrors, setShowErrors] = useState(false);
+
   const handleAction = (decision) => {
+    if (totalEvaluados < rubricas.length) {
+      setShowErrors(true);
+      // Encontrar el primer criterio no evaluado para hacer scroll
+      const primeroFaltante = rubricas.find(r => !calificaciones[r.id]);
+      if (primeroFaltante) {
+        const element = document.getElementById(`rubrica-${primeroFaltante.id}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+      return;
+    }
     // Aquí iría la lógica para enviar la revisión al backend
     alert(`Revisión enviada como: ${decision}`);
     navigate('/revisor/revisiones');
@@ -144,10 +158,25 @@ export default function DetalleRevisionView() {
             
             <div className="space-y-8">
               {rubricas.map((rubrica) => (
-                <div key={rubrica.id} className="p-4 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                <div 
+                  key={rubrica.id} 
+                  id={`rubrica-${rubrica.id}`}
+                  className={`p-4 rounded-xl transition-all border ${
+                    showErrors && !calificaciones[rubrica.id] 
+                    ? 'border-red-400' 
+                    : 'hover:bg-gray-50 border-transparent hover:border-gray-100'
+                  }`}
+                >
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="max-w-xl">
-                      <p className="text-sm font-bold text-slate-700">{rubrica.id}. {rubrica.criterio}</p>
+                      <div className="flex items-center gap-3 mb-1">
+                        <p className="text-sm font-bold text-slate-700">{rubrica.id}. {rubrica.criterio}</p>
+                        {showErrors && !calificaciones[rubrica.id] && (
+                          <span className="text-[10px] font-black text-red-500 uppercase tracking-tighter bg-white px-2 py-0.5 rounded-full border border-red-100">
+                            ¡Falta responder!
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-4">
                       <button 
@@ -172,7 +201,12 @@ export default function DetalleRevisionView() {
                                 onChange={() => {}} // Se maneja en el onClick de la caja visual
                               />
                               <div 
-                                onClick={() => handleCalificacionChange(rubrica.id, opcion)}
+                                onClick={() => {
+                                  handleCalificacionChange(rubrica.id, opcion);
+                                  if (showErrors && Object.keys(calificaciones).length + 1 === rubricas.length) {
+                                    setShowErrors(false);
+                                  }
+                                }}
                                 className="w-10 h-10 flex items-center justify-center rounded-lg border-2 border-gray-100 text-sm font-bold text-slate-400 transition-all 
                                 peer-checked:bg-[#148f96] peer-checked:border-[#148f96] peer-checked:text-white
                                 hover:border-[#148f96] hover:text-[#148f96] peer-checked:hover:text-white group-active:scale-90">
