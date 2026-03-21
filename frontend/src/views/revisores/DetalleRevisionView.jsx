@@ -119,7 +119,7 @@ export default function DetalleRevisionView() {
       {/* Botón Volver */}
       <button 
         onClick={() => navigate('/revisor/revisiones')}
-        className="text-sm font-bold text-[#148f96] hover:underline flex items-center gap-2"
+        className="text-sm font-bold text-primary hover:underline flex items-center gap-2"
       >
         ← Volver a Mis Revisiones
       </button>
@@ -127,21 +127,21 @@ export default function DetalleRevisionView() {
       <div className="flex flex-col gap-6">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <span className="text-xs font-bold text-[#148f96] uppercase tracking-widest">Detalle de Revisión</span>
-            <h1 className="text-3xl font-bold text-slate-800 mt-1">{ponencia.titulo}</h1>
-            <p className="text-sm text-gray-400 font-mono mt-1">ID: {ponencia.id}</p>
+            <span className="text-xs font-bold text-primary uppercase tracking-widest">Detalle de Revisión</span>
+            <h1 className="text-3xl font-bold text-base-content mt-1">{ponencia.titulo}</h1>
+            <p className="text-sm text-base-content/40 font-mono mt-1">ID: {ponencia.id}</p>
           </div>
           
           {/* Extenso movido al header de forma compacta */}
           <div className="flex-shrink-0">
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:border-[#148f96] transition-colors cursor-pointer group">
-              <div className="bg-gray-50 p-3 rounded-xl group-hover:bg-teal-50 transition-colors">
-                <MdFileDownload className="text-[#148f96]" size={24} />
+            <div className="bg-base-100 p-4 rounded-2xl shadow-sm border border-base-300 flex items-center gap-4 hover:border-primary transition-colors cursor-pointer group">
+              <div className="bg-base-200 p-3 rounded-xl group-hover:bg-primary/10 transition-colors">
+                <MdFileDownload className="text-primary" size={24} />
               </div>
               <div className="flex flex-col pr-4">
-                <span className="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1">Documento Extenso</span>
-                <span className="text-sm font-bold text-slate-700">{ponencia.extenso.nombre}</span>
-                <span className="text-[10px] text-gray-400">{ponencia.extenso.tamaño}</span>
+                <span className="text-[10px] font-bold text-base-content/40 uppercase leading-none mb-1">Documento Extenso</span>
+                <span className="text-sm font-bold text-base-content">{ponencia.extenso.nombre}</span>
+                <span className="text-[10px] text-base-content/40">{ponencia.extenso.tamaño}</span>
               </div>
             </div>
           </div>
@@ -150,8 +150,8 @@ export default function DetalleRevisionView() {
         <div className="space-y-6">
           
           {/* Rúbricas: Ahora ocupan todo el ancho */}
-          <section className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-            <div className="flex items-center gap-2 mb-6 text-slate-700 font-bold border-b pb-2">
+          <section className="bg-base-100 p-8 rounded-2xl shadow-sm border border-base-300">
+            <div className="flex items-center gap-2 mb-6 text-base-content font-bold border-b border-base-300 pb-2">
               <MdAssignment size={22} />
               <span>Rúbrica de Evaluación</span>
             </div>
@@ -163,16 +163,16 @@ export default function DetalleRevisionView() {
                   id={`rubrica-${rubrica.id}`}
                   className={`p-4 rounded-xl transition-all border ${
                     showErrors && !calificaciones[rubrica.id] 
-                    ? 'border-red-400' 
-                    : 'hover:bg-gray-50 border-transparent hover:border-gray-100'
+                    ? 'border-error/50' 
+                    : 'hover:bg-base-200 border-transparent hover:border-base-300'
                   }`}
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="max-w-xl">
                       <div className="flex items-center gap-3 mb-1">
-                        <p className="text-sm font-bold text-slate-700">{rubrica.id}. {rubrica.criterio}</p>
+                        <p className="text-sm font-bold text-base-content">{rubrica.id}. {rubrica.criterio}</p>
                         {showErrors && !calificaciones[rubrica.id] && (
-                          <span className="text-[10px] font-black text-red-500 uppercase tracking-tighter bg-white px-2 py-0.5 rounded-full border border-red-100">
+                          <span className="text-[10px] font-black text-error uppercase tracking-tighter bg-base-100 px-2 py-0.5 rounded-full border border-error/20">
                             ¡Falta responder!
                           </span>
                         )}
@@ -183,8 +183,8 @@ export default function DetalleRevisionView() {
                         onClick={() => toggleComentarioCriterio(rubrica.id)}
                         className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${
                           comentariosCriterios[rubrica.id] !== undefined 
-                          ? 'bg-teal-50 border-teal-200 text-[#148f96]' 
-                          : 'border-gray-200 text-gray-400 hover:border-[#148f96] hover:text-[#148f96]'
+                          ? 'bg-primary/10 border-primary/20 text-primary' 
+                          : 'border-base-300 text-base-content/40 hover:border-primary hover:text-primary'
                         }`}
                       >
                         {comentariosCriterios[rubrica.id] !== undefined ? 'Quitar Comentario' : '+ Comentario'}
@@ -207,9 +207,9 @@ export default function DetalleRevisionView() {
                                     setShowErrors(false);
                                   }
                                 }}
-                                className="w-10 h-10 flex items-center justify-center rounded-lg border-2 border-gray-100 text-sm font-bold text-slate-400 transition-all 
-                                peer-checked:bg-[#148f96] peer-checked:border-[#148f96] peer-checked:text-white
-                                hover:border-[#148f96] hover:text-[#148f96] peer-checked:hover:text-white group-active:scale-90">
+                                className="w-10 h-10 flex items-center justify-center rounded-lg border-2 border-base-200 text-sm font-bold text-base-content/40 transition-all 
+                                peer-checked:bg-primary peer-checked:border-primary peer-checked:text-white
+                                hover:border-primary hover:text-primary peer-checked:hover:text-white group-active:scale-90">
                                 {opcion}
                               </div>
                             </label>
@@ -219,7 +219,7 @@ export default function DetalleRevisionView() {
                           {calificaciones[rubrica.id] && (
                             <button 
                               onClick={() => clearCalificacion(rubrica.id)}
-                              className="ml-1 p-1 text-slate-300 hover:text-red-400 transition-colors animate-in fade-in zoom-in duration-200"
+                              className="ml-1 p-1 text-base-content/20 hover:text-error transition-colors animate-in fade-in zoom-in duration-200"
                               title="Limpiar selección"
                             >
                               <MdClose size={18} />
@@ -232,24 +232,24 @@ export default function DetalleRevisionView() {
                   
                   {/* Confirmación integrada */}
                   {confirmingRemoval === rubrica.id && (
-                    <div className="mt-4 pt-4 border-t border-teal-50 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <div className="mt-4 pt-4 border-t border-primary/10 animate-in fade-in slide-in-from-top-1 duration-200">
                       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></div>
-                          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                          <div className="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></div>
+                          <p className="text-xs font-bold text-base-content/40 uppercase tracking-wider">
                             ¿Deseas descartar el comentario escrito?
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
                           <button 
                             onClick={() => setConfirmingRemoval(null)}
-                            className="px-6 py-2 text-[10px] font-bold text-[#148f96] hover:bg-[#148f96] hover:text-white border border-[#148f96] rounded-lg transition-all uppercase w-28"
+                            className="px-6 py-2 text-[10px] font-bold text-primary hover:bg-primary hover:text-white border border-primary rounded-lg transition-all uppercase w-28"
                           >
                             Mantener
                           </button>
                           <button 
                             onClick={() => forceToggleComentario(rubrica.id)}
-                            className="px-6 py-2 text-[10px] font-bold text-red-500 hover:bg-red-500 hover:text-white border border-red-500 rounded-lg transition-all uppercase w-28"
+                            className="px-6 py-2 text-[10px] font-bold text-error hover:bg-error hover:text-white border border-error rounded-lg transition-all uppercase w-28"
                           >
                             Eliminar
                           </button>
@@ -266,7 +266,7 @@ export default function DetalleRevisionView() {
                         onChange={(e) => handleComentarioChange(rubrica.id, e.target.value)}
                         onInput={autoResize}
                         placeholder={`Observación específica sobre: ${rubrica.criterio}...`}
-                        className="w-full min-h-[6rem] p-4 bg-white border-2 border-teal-100 rounded-xl outline-none focus:border-[#148f96] transition-all text-sm resize-none overflow-hidden"
+                        className="w-full min-h-[6rem] p-4 bg-base-100 border-2 border-primary/10 rounded-xl outline-none focus:border-primary transition-all text-sm resize-none overflow-hidden"
                       />
                     </div>
                   )}
@@ -279,12 +279,12 @@ export default function DetalleRevisionView() {
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Sección de Promedio */}
-            <section className="lg:col-span-1 bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">Promedio de Revisión</p>
+            <section className="lg:col-span-1 bg-base-100 p-8 rounded-2xl shadow-sm border border-base-300 flex flex-col items-center justify-center text-center">
+              <p className="text-[10px] font-bold text-base-content/40 uppercase tracking-[0.2em] mb-4">Promedio de Revisión</p>
               <div className="relative inline-flex items-center justify-center">
                 <svg className="w-32 h-32 transform -rotate-90">
                   <circle
-                    className="text-gray-100"
+                    className="text-base-200"
                     strokeWidth="8"
                     stroke="currentColor"
                     fill="transparent"
@@ -293,7 +293,7 @@ export default function DetalleRevisionView() {
                     cy="64"
                   />
                   <circle
-                    className="text-[#148f96] transition-all duration-1000 ease-out"
+                    className="text-primary transition-all duration-1000 ease-out"
                     strokeWidth="8"
                     strokeDasharray={364.4}
                     strokeDashoffset={364.4 - (364.4 * porcentajeCalificacion) / 100}
@@ -306,18 +306,18 @@ export default function DetalleRevisionView() {
                   />
                 </svg>
                 <div className="absolute flex flex-col">
-                  <span className="text-4xl font-black text-slate-800">{promedioCalculado}</span>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase">/ 10.0</span>
+                  <span className="text-4xl font-black text-base-content">{promedioCalculado}</span>
+                  <span className="text-[10px] font-bold text-base-content/40 uppercase">/ 10.0</span>
                 </div>
               </div>
-              <p className="mt-6 text-xs font-bold text-slate-500">
+              <p className="mt-6 text-xs font-bold text-base-content/60">
                 {totalEvaluados} de {rubricas.length} criterios evaluados
               </p>
             </section>
 
             {/* Comentarios del Revisor */}
-            <section className="lg:col-span-3 bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-              <div className="flex items-center gap-2 mb-4 text-slate-700 font-bold border-b pb-2">
+            <section className="lg:col-span-3 bg-base-100 p-8 rounded-2xl shadow-sm border border-base-300">
+              <div className="flex items-center gap-2 mb-4 text-base-content font-bold border-b border-base-300 pb-2">
                 <MdComment size={22} />
                 <span>Comentarios del Revisor</span>
               </div>
@@ -326,7 +326,7 @@ export default function DetalleRevisionView() {
                 onChange={(e) => setComentarios(e.target.value)}
                 onInput={autoResize}
                 placeholder="Escriba aquí sus observaciones detalladas para los autores..."
-                className="w-full min-h-[10rem] p-4 bg-gray-50 rounded-2xl border-none focus:bg-white focus:ring-2 focus:ring-[#148f96] outline-none transition-all text-sm resize-none overflow-hidden"
+                className="w-full min-h-[10rem] p-4 bg-base-200 rounded-2xl border-none focus:bg-base-100 focus:ring-2 focus:ring-primary outline-none transition-all text-sm resize-none overflow-hidden"
               ></textarea>
             </section>
           </div>
@@ -335,19 +335,19 @@ export default function DetalleRevisionView() {
           <div className="flex flex-col md:flex-row gap-4 pt-4">
             <button 
               onClick={() => handleAction('ACEPTADO')}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-green-100 transition-all active:scale-95 uppercase tracking-wider text-sm"
+              className="flex-1 bg-success hover:brightness-95 text-white font-bold py-4 rounded-xl shadow-lg shadow-success/20 transition-all active:scale-95 uppercase tracking-wider text-sm"
             >
               Aceptar
             </button>
             <button 
               onClick={() => handleAction('SOLICITUD DE CAMBIOS')}
-              className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-yellow-100 transition-all active:scale-95 uppercase tracking-wider text-sm"
+              className="flex-1 bg-warning hover:brightness-95 text-white font-bold py-4 rounded-xl shadow-lg shadow-warning/20 transition-all active:scale-95 uppercase tracking-wider text-sm"
             >
               Solicitud de cambios
             </button>
             <button 
               onClick={() => handleAction('RECHAZADO')}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-red-100 transition-all active:scale-95 uppercase tracking-wider text-sm"
+              className="flex-1 bg-error hover:brightness-95 text-white font-bold py-4 rounded-xl shadow-lg shadow-error/20 transition-all active:scale-95 uppercase tracking-wider text-sm"
             >
               Rechazar
             </button>
