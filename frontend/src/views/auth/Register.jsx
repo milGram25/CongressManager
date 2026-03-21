@@ -97,20 +97,20 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] flex flex-col font-sans">
+    <div className="min-h-screen bg-base-200 flex flex-col font-sans">
       <div className="flex-grow flex items-center justify-center p-4">
-        <div className="w-full max-w-2xl bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden my-8">
+        <div className="w-full max-w-2xl bg-base-100 rounded-3xl shadow-sm border border-base-300 overflow-hidden my-8">
           
           {/* Header */}
           <div className="p-8 pb-4">
-            <h1 className="text-3xl font-bold text-gray-800">Registro de Usuario</h1>
-            <p className="text-gray-500 mt-2 text-sm italic">* Campos obligatorios</p>
+            <h1 className="text-3xl font-bold text-base-content">Registro de Usuario</h1>
+            <p className="text-base-content/60 mt-2 text-sm italic">* Campos obligatorios</p>
           </div>
 
           <form className="p-8 pt-4" onSubmit={handleSubmit}>
             {/* Mensaje de error */}
             {error && (
-              <div className="mb-6 bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl">
+              <div className="mb-6 bg-error/10 border border-error/20 text-error text-sm px-4 py-3 rounded-xl">
                 {error}
               </div>
             )}
@@ -118,34 +118,34 @@ const Register = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
               
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Nombre(s) *</label>
+                <label className="text-xs font-bold text-base-content/50 uppercase ml-1">Nombre(s) *</label>
                 <input 
                   name="nombres"
                   value={formData.nombres}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all" 
+                  className="w-full px-4 py-3 rounded-xl bg-base-200 border border-transparent focus:bg-base-100 focus:border-primary outline-none transition-all" 
                   type="text" 
                   onChange={handleChange}
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Apellido(s) *</label>
+                <label className="text-xs font-bold text-base-content/50 uppercase ml-1">Apellido(s) *</label>
                 <input 
                   name="apellidos"
                   value={formData.apellidos}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all" 
+                  className="w-full px-4 py-3 rounded-xl bg-base-200 border border-transparent focus:bg-base-100 focus:border-primary outline-none transition-all" 
                   type="text" 
                   onChange={handleChange}
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Género *</label>
+                <label className="text-xs font-bold text-base-content/50 uppercase ml-1">Género *</label>
                 <select 
                   name="genero"
                   value={formData.genero}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all appearance-none"
+                  className="w-full px-4 py-3 rounded-xl bg-base-200 border border-transparent focus:bg-base-100 focus:border-primary outline-none transition-all appearance-none"
                 >
                   <option value="" disabled>Selecciona una opción</option>
                   <option value="Hombre">Hombre</option>
@@ -157,7 +157,7 @@ const Register = () => {
               <div className="hidden md:block"></div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase ml-1">País</label>
+                <label className="text-xs font-bold text-base-content/50 uppercase ml-1">País</label>
                 <Select 
                   options={options} 
                   value={options.find(opt => opt.label === formData.pais)}
@@ -169,33 +169,52 @@ const Register = () => {
                       ...base,
                       padding: '2px 8px',
                       borderRadius: '0.75rem', // xl
-                      backgroundColor: '#f9fafb', // gray-50
+                      backgroundColor: 'var(--color-base-200)',
                       border: 'none',
                       boxShadow: 'none',
                       '&:hover': { border: 'none' }
                     }),
                     placeholder: (base) => ({
                       ...base,
-                      color: '#9ca3af', // gray-400
+                      color: 'var(--color-base-content)',
+                      opacity: 0.5
                     }),
+                    singleValue: (base) => ({
+                      ...base,
+                      color: 'var(--color-base-content)'
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      backgroundColor: 'var(--color-base-100)',
+                      borderRadius: '0.75rem'
+                    }),
+                    option: (base, state) => ({
+                      ...base,
+                      backgroundColor: state.isFocused ? 'var(--color-base-200)' : 'transparent',
+                      color: 'var(--color-base-content)',
+                      '&:active': {
+                        backgroundColor: 'var(--color-primary)',
+                        color: 'var(--color-primary-content)'
+                      }
+                    })
                   }}
                   className="w-full transition-all"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Institución de Adscripción</label>
+                <label className="text-xs font-bold text-base-content/50 uppercase ml-1">Institución de Adscripción</label>
                 <input 
                   name="institucion"
                   value={formData.institucion}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all" 
+                  className="w-full px-4 py-3 rounded-xl bg-base-200 border border-transparent focus:bg-base-100 focus:border-primary outline-none transition-all" 
                   type="text" 
                   onChange={handleChange}
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase ml-1">¿Tiene alguna discapacidad? *</label>
+                <label className="text-xs font-bold text-base-content/50 uppercase ml-1">¿Tiene alguna discapacidad? *</label>
                 <select 
                   name="tieneDiscapacidad"
                   value={formData.tieneDiscapacidad || ''}
@@ -206,7 +225,7 @@ const Register = () => {
                       discapacidad: e.target.value === 'No' ? 'Ninguna' : '' 
                     });
                   }}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all appearance-none"
+                  className="w-full px-4 py-3 rounded-xl bg-base-200 border border-transparent focus:bg-base-100 focus:border-primary outline-none transition-all appearance-none"
                 >
                   <option value="" disabled>Selecciona una opción</option>
                   <option value="No">No</option>
@@ -216,11 +235,11 @@ const Register = () => {
 
               {formData.tieneDiscapacidad === 'Si' ? (
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-400 uppercase ml-1">Escriba su discapacidad *</label>
+                  <label className="text-xs font-bold text-base-content/50 uppercase ml-1">Escriba su discapacidad *</label>
                   <input 
                     name="discapacidad"
                     value={formData.discapacidad}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all" 
+                    className="w-full px-4 py-3 rounded-xl bg-base-200 border border-transparent focus:bg-base-100 focus:border-primary outline-none transition-all" 
                     type="text" 
                     placeholder="Ej. Visual, Motriz..."
                     onChange={handleChange}
@@ -231,42 +250,42 @@ const Register = () => {
               )}
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Correo electrónico *</label>
+                <label className="text-xs font-bold text-base-content/50 uppercase ml-1">Correo electrónico *</label>
                 <input 
                   name="email"
                   value={formData.email}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all" 
+                  className="w-full px-4 py-3 rounded-xl bg-base-200 border border-transparent focus:bg-base-100 focus:border-primary outline-none transition-all" 
                   type="text" 
                   onChange={handleChange}
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Teléfono celular *</label>
+                <label className="text-xs font-bold text-base-content/50 uppercase ml-1">Teléfono celular *</label>
                 <input 
                   name="telefono"
                   value={formData.telefono}
                   placeholder="10 dígitos"
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all" 
+                  className="w-full px-4 py-3 rounded-xl bg-base-200 border border-transparent focus:bg-base-100 focus:border-primary outline-none transition-all" 
                   type="tel" 
                   onChange={handleChange}
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Contraseña *</label>
+                <label className="text-xs font-bold text-base-content/50 uppercase ml-1">Contraseña *</label>
                 <div className="relative">
                   <input 
                     name="password"
                     value={formData.password}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all pr-12" 
+                    className="w-full px-4 py-3 rounded-xl bg-base-200 border border-transparent focus:bg-base-100 focus:border-primary outline-none transition-all pr-12" 
                     type={showPassword ? "text" : "password"} 
                     onChange={handleChange}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#148f96] transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-base-content/50 hover:text-primary transition-colors"
                   >
                     {showPassword ? <HiEye size={20} /> : <HiEyeOff size={20} />}
                   </button>
@@ -274,19 +293,19 @@ const Register = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Confirmar contraseña *</label>
+                <label className="text-xs font-bold text-base-content/50 uppercase ml-1">Confirmar contraseña *</label>
                 <div className="relative">
                   <input 
                     name="confirmPassword"
                     value={formData.confirmPassword}
-                    className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all pr-12" 
+                    className="w-full px-4 py-3 rounded-xl bg-base-200 border border-transparent focus:bg-base-100 focus:border-primary outline-none transition-all pr-12" 
                     type={showConfirmPassword ? "text" : "password"} 
                     onChange={handleChange}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#148f96] transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-base-content/50 hover:text-primary transition-colors"
                   >
                     {showConfirmPassword ? <HiEye size={20} /> : <HiEyeOff size={20} />}
                   </button>
@@ -299,13 +318,13 @@ const Register = () => {
               <button 
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 bg-[#148f96] hover:bg-[#117a81] disabled:opacity-60 text-white rounded-full font-bold tracking-wide transition-all shadow-md shadow-teal-100 active:scale-95"
+                className="w-full py-3.5 bg-primary hover:bg-primary/90 disabled:opacity-60 text-primary-content rounded-full font-bold tracking-wide transition-all shadow-md shadow-primary/20 active:scale-95"
               >
                 {loading ? 'REGISTRANDO...' : 'CONFIRMAR REGISTRO'}
               </button>
               
               <div className="text-center">
-                <Link to="/login" className="text-sm text-[#148f96] font-bold hover:underline">
+                <Link to="/login" className="text-sm text-primary font-bold hover:underline">
                   ¿Ya tienes cuenta? Iniciar sesión
                 </Link>
               </div>
