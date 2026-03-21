@@ -60,7 +60,7 @@ export default function DictaminadorLayout() {
       <input id="dictaminador-drawer" type="checkbox" className="drawer-toggle" />
 
       <div className="drawer-content flex bg-base-100 flex-col p-6 md:p-10 relative overflow-y-auto">
-        <header ref={headerRef} className="flex items-center gap-6 border-b border-gray-300 pb-4 mb-8">
+        <header ref={headerRef} className="flex items-center gap-6 border-b border-base-300 pb-4 mb-8">
           <label
             htmlFor="dictaminador-drawer"
             className="p-2 hover:bg-base-200 rounded-lg transition-colors cursor-pointer lg:hidden"
@@ -69,14 +69,14 @@ export default function DictaminadorLayout() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
           </label>
-          <h1 className="text-4xl font-bold text-slate-800">Dictaminador</h1>
+          <h1 className="text-4xl font-bold text-base-content">Dictaminador</h1>
         </header>
 
         <main className="flex-1 w-full max-w-5xl mx-auto pb-24">
           <Outlet />
         </main>
 
-        <div className="mt-auto pt-4 border-t border-gray-200 flex justify-between items-end w-full ">
+        <div className="mt-auto pt-4 border-t border-base-300 flex justify-between items-end w-full ">
           <img src={cienuLogo} alt="Logo CIENU" className="h-12 w-auto object-contain" />
           <img src={ridmaeLogo} alt="Logo RIDMAE" className="h-10 w-auto object-contain" />
         </div>
@@ -84,20 +84,20 @@ export default function DictaminadorLayout() {
 
       <div className="drawer-side z-50">
         <label htmlFor="dictaminador-drawer" aria-label="close sidebar" className="drawer-overlay"></label>
-        <div className="bg-base-100 text-base-content min-h-full w-64 p-6 border-r border-gray-200 lg:border-none lg:bg-transparent flex flex-col">
+        <div className="bg-base-100 text-base-content min-h-full w-64 p-6 border-r border-base-300 lg:border-none lg:bg-transparent flex flex-col">
           {/* Título dinámico en el Sidebar para Desktop */}
           <div className="hidden lg:flex h-[88px] items-center px-4 overflow-hidden relative">
             <div className={`transition-all duration-500 transform ${isHeaderVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} absolute`}>
-               <MdGavel className="text-5xl text-[#148f96] animate-bounce" />
+               <MdGavel className="text-5xl text-primary animate-bounce" />
             </div>
             <div className={`transition-all duration-500 transform ${!isHeaderVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
-               <h2 className="text-3xl font-bold text-slate-800">Dictaminador</h2>
+               <h2 className="text-3xl font-bold text-base-content">Dictaminador</h2>
             </div>
           </div>
 
           <nav className="flex flex-col space-y-1 mt-4 lg:mt-0">
             <div className="pt-2 pb-2">
-              <span className="px-4 text-[10px] font-bold uppercase text-gray-400 tracking-widest opacity-80">
+              <span className="px-4 text-[10px] font-bold uppercase text-base-content/40 tracking-widest opacity-80">
                 Modo Asistente
               </span>
             </div>
@@ -107,7 +107,7 @@ export default function DictaminadorLayout() {
                 <span>Vista Asistente</span>
               </div>
             </NavLink>
-            <div className="border-b border-gray-100 my-2 mx-4"></div>
+            <div className="border-b border-base-200 my-2 mx-4"></div>
 
             <NavLink to="/dictaminador/inicio" className={navLinkClass} onClick={closeDrawer}>
               <div className="flex items-center gap-3">
@@ -129,8 +129,8 @@ export default function DictaminadorLayout() {
             </NavLink>
           </nav>
 
-          <div className="mt-auto pt-4 border-t border-gray-200">
-            <p className="text-xs text-gray-400 px-4 mb-2 truncate">{user?.nombre}</p>
+          <div className="mt-auto pt-4 border-t border-base-300">
+            <p className="text-xs text-base-content/40 px-4 mb-2 truncate">{user?.nombre}</p>
             <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2 rounded-full text-sm text-red-500 hover:bg-red-50 transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M18 12H6m6-3-3 3 3 3" />

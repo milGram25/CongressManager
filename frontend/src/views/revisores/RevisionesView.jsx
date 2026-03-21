@@ -3,27 +3,27 @@ import { useNavigate } from 'react-router-dom';
 
 const RevisionCard = ({ titulo, id, fechaAsignado, fechaLimite, estado, urgente }) => {
   const navigate = useNavigate();
-  const borderColor = urgente ? 'border-l-[#D32F2F]' : 'border-l-[#FBC02D]';
-  const labelColor = urgente ? 'text-[#D32F2F]' : 'text-[#AF8905]';
+  const borderColor = urgente ? 'border-l-error' : 'border-l-warning';
+  const labelColor = urgente ? 'text-error' : 'text-warning';
 
   return (
-    <div className={`flex flex-col md:flex-row items-start md:items-center justify-between bg-white p-6 mb-4 rounded-xl shadow-sm border-l-[10px] ${borderColor} transition-all hover:shadow-md`}>
+    <div className={`flex flex-col md:flex-row items-start md:items-center justify-between bg-base-100 p-6 mb-4 rounded-xl shadow-sm border-l-[10px] ${borderColor} transition-all hover:shadow-md`}>
       <div className="flex flex-col gap-1">
         <span className={`text-[10px] font-bold uppercase tracking-widest ${labelColor}`}>
           {urgente ? '¡URGENTE! - FECHA LÍMITE PRÓXIMA' : estado}
         </span>
-        <h3 className="text-lg font-semibold text-slate-700 leading-tight mb-1">{titulo}</h3>
-        <p className="text-xs text-slate-400 font-bold mb-2 uppercase tracking-tighter">ID: {id}</p>
-        <div className="flex flex-wrap gap-4 md:gap-6 text-[11px] text-gray-400 font-medium">
+        <h3 className="text-lg font-semibold text-base-content leading-tight mb-1">{titulo}</h3>
+        <p className="text-xs text-base-content/60 font-bold mb-2 uppercase tracking-tighter">ID: {id}</p>
+        <div className="flex flex-wrap gap-4 md:gap-6 text-[11px] text-base-content/40 font-medium">
           <span>Asignado: {fechaAsignado}</span>
-          <span className={urgente ? "text-red-600 font-bold underline decoration-red-600" : ""}>
+          <span className={urgente ? "text-error font-bold underline decoration-error" : ""}>
             Límite: {fechaLimite}
           </span>
         </div>
       </div>
       <button 
         onClick={() => navigate(`/revisor/revision/${id.replace('#', '')}`)}
-        className="mt-4 md:mt-0 bg-[#008B8B] hover:bg-[#007A7A] text-white px-7 py-2 rounded-lg font-bold text-sm tracking-wide transition-all shadow-sm active:scale-95"
+        className="mt-4 md:mt-0 bg-primary hover:bg-primary/90 text-white px-7 py-2 rounded-lg font-bold text-sm tracking-wide transition-all shadow-sm active:scale-95"
       >
         REVISAR
       </button>
@@ -37,16 +37,16 @@ export default function RevisionesView() {
   return (
     <div className="flex flex-col h-full w-full bg-transparent relative">
       <div className="flex-grow">
-        <h1 className="text-2xl font-semibold text-gray-700 mb-8">Extensos por revisar</h1>
+        <h1 className="text-2xl font-semibold text-base-content mb-8">Extensos por revisar</h1>
         
         {/* Tabs */}
-        <div className="flex border-b border-gray-200 mb-8">
+        <div className="flex border-b border-base-300 mb-8">
           <button 
             onClick={() => setActiveTab('pendientes')}
             className={`px-8 py-3 border-b-2 text-sm transition-all ${
               activeTab === 'pendientes' 
-                ? 'border-[#008B8B] text-[#008B8B] font-bold' 
-                : 'border-transparent text-gray-400 font-semibold hover:text-gray-600'
+                ? 'border-primary text-primary font-bold' 
+                : 'border-transparent text-base-content/40 font-semibold hover:text-base-content/60'
             }`}
           >
             Pendientes (3)
@@ -55,8 +55,8 @@ export default function RevisionesView() {
             onClick={() => setActiveTab('completadas')}
             className={`px-8 py-3 border-b-2 text-sm transition-all ${
               activeTab === 'completadas' 
-                ? 'border-[#008B8B] text-[#008B8B] font-bold' 
-                : 'border-transparent text-gray-400 font-semibold hover:text-gray-600'
+                ? 'border-primary text-primary font-bold' 
+                : 'border-transparent text-base-content/40 font-semibold hover:text-base-content/60'
             }`}
           >
             Completadas (12)
@@ -93,7 +93,7 @@ export default function RevisionesView() {
               />
             </>
           ) : (
-            <div className="py-10 text-center text-gray-400 italic bg-white rounded-xl border border-dashed border-gray-200">
+            <div className="py-10 text-center text-base-content/40 italic bg-base-100 rounded-xl border border-dashed border-base-300">
               Aquí aparecerán tus revisiones ya completadas.
             </div>
           )}

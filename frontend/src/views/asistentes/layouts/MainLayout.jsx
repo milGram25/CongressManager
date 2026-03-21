@@ -82,7 +82,7 @@ export default function AsistenteLayout() {
       {/*  Vista principal  */}
       <div className="drawer-content flex bg-base-100 flex-col p-6 md:p-10 relative overflow-y-auto">
         {/* Header con Ref para el Observer */}
-        <header ref={headerRef} className="flex items-center gap-6 border-b border-gray-300 pb-4 mb-8">
+        <header ref={headerRef} className="flex items-center gap-6 border-b border-base-300 pb-4 mb-8">
           {/* menu desplegable en mobil */}
           <label
             htmlFor="asistente-drawer"
@@ -112,7 +112,7 @@ export default function AsistenteLayout() {
         </main>
 
         {/* Footer */}
-        <div className="mt-auto pt-4 border-t border-gray-200 flex justify-between items-end w-full ">
+        <div className="mt-auto pt-4 border-t border-base-200 flex justify-between items-end w-full ">
           <img
             src={cienuLogo}
             alt="Logo CIENU"
@@ -134,14 +134,14 @@ export default function AsistenteLayout() {
         ></label>
 
         {/* contenedor de la barra  */}
-        <div className="bg-base-100 text-base-content min-h-full w-64 p-6 border-r border-gray-200 lg:border-none lg:bg-transparent flex flex-col">
+        <div className="bg-base-100 text-base-content min-h-full w-64 p-6 border-r border-base-200 lg:border-none lg:bg-transparent flex flex-col">
           {/* Título dinámico en el Sidebar para Desktop */}
           <div className="hidden lg:flex h-[88px] items-center px-4 overflow-hidden">
             <div className={`transition-all duration-500 transform ${isHeaderVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} absolute`}>
-               <MdSchool className="text-5xl text-[#148f96] animate-bounce" title="¡Bienvenido!" />
+               <MdSchool className="text-5xl text-primary animate-bounce" title="¡Bienvenido!" />
             </div>
             <div className={`transition-all duration-500 transform ${!isHeaderVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
-               <h2 className="text-3xl font-bold text-slate-800">{displayTitle}</h2>
+               <h2 className="text-3xl font-bold text-base-content">{displayTitle}</h2>
             </div>
           </div>
 
@@ -151,7 +151,7 @@ export default function AsistenteLayout() {
             {user?.rol === 'revisor' && (
               <>
                 <div className="pt-2 pb-2">
-                  <span className="px-4 text-[10px] font-bold uppercase text-[#148f96] tracking-widest opacity-80">
+                  <span className="px-4 text-[10px] font-bold uppercase text-primary tracking-widest opacity-80">
                     Modo Revisor
                   </span>
                 </div>
@@ -161,11 +161,11 @@ export default function AsistenteLayout() {
                   onClick={closeDrawer}
                 >
                   <div className="flex items-center gap-3">
-                    <MdRateReview className="text-lg text-[#148f96]" />
-                    <span className="font-bold text-[#148f96]">Panel Revisor</span>
+                    <MdRateReview className="text-lg text-primary" />
+                    <span className="font-bold text-primary">Panel Revisor</span>
                   </div>
                 </NavLink>
-                <div className="border-b border-gray-100 my-2 mx-4"></div>
+                <div className="border-b border-base-100 my-2 mx-4"></div>
               </>
             )}
 
@@ -173,7 +173,7 @@ export default function AsistenteLayout() {
             {user?.rol === 'dictaminador' && (
               <>
                 <div className="pt-2 pb-2">
-                  <span className="px-4 text-[10px] font-bold uppercase text-[#148f96] tracking-widest opacity-80">
+                  <span className="px-4 text-[10px] font-bold uppercase text-primary tracking-widest opacity-80">
                     Modo Dictaminador
                   </span>
                 </div>
@@ -183,11 +183,11 @@ export default function AsistenteLayout() {
                   onClick={closeDrawer}
                 >
                   <div className="flex items-center gap-3">
-                    <MdGavel className="text-lg text-[#148f96]" />
-                    <span className="font-bold text-[#148f96]">Panel Dictaminador</span>
+                    <MdGavel className="text-lg text-primary" />
+                    <span className="font-bold text-primary">Panel Dictaminador</span>
                   </div>
                 </NavLink>
-                <div className="border-b border-gray-100 my-2 mx-4"></div>
+                <div className="border-b border-base-100 my-2 mx-4"></div>
               </>
             )}
 
@@ -273,8 +273,8 @@ export default function AsistenteLayout() {
           </nav>
 
           {/* Pie del sidebar: usuario + cerrar sesión */}
-          <div className="mt-auto pt-4 border-t border-gray-200">
-            <p className="text-xs text-gray-400 px-4 mb-2 truncate">{user?.nombre}</p>
+          <div className="mt-auto pt-4 border-t border-base-200">
+            <p className="text-xs text-base-content/50 px-4 mb-2 truncate">{user?.nombre}</p>
             <button
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-4 py-2 rounded-full text-sm text-red-500 hover:bg-red-50 transition-colors"

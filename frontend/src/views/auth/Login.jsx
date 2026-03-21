@@ -41,26 +41,26 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] flex flex-col font-sans">
+    <div className="min-h-screen bg-base-200 flex flex-col font-sans">
       <div className="flex-grow flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="w-full max-w-md bg-base-100 rounded-3xl shadow-sm border border-base-300 overflow-hidden">
 
           {/* Header */}
           <div className="p-8 pb-4">
-            <h1 className="text-3xl font-bold text-gray-800">Iniciar sesión</h1>
+            <h1 className="text-3xl font-bold text-base-content">Iniciar sesión</h1>
           </div>
 
           <form className="p-8 pt-4 space-y-5" onSubmit={handleSubmit}>
             {/* Mensaje de error */}
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl">
+              <div className="bg-error/10 border border-error/20 text-error text-sm px-4 py-3 rounded-xl">
                 {error}
               </div>
             )}
 
             {/* Input Email */}
             <div className="space-y-1">
-              <label className="text-xs font-bold text-gray-400 uppercase ml-1">
+              <label className="text-xs font-bold text-base-content/50 uppercase ml-1">
                 Correo Electrónico
               </label>
               <input
@@ -69,17 +69,17 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-base-200 border border-transparent focus:bg-base-100 focus:border-primary outline-none transition-all"
               />
             </div>
 
             {/* Input Password */}
             <div className="space-y-1">
               <div className="flex justify-between items-center">
-                <label className="text-xs font-bold text-gray-400 uppercase ml-1">
+                <label className="text-xs font-bold text-base-content/50 uppercase ml-1">
                   Contraseña
                 </label>
-                <a href="#" className="text-xs text-[#148f96] hover:underline">
+                <a href="#" className="text-xs text-primary hover:underline">
                   ¿Olvidaste tu contraseña?
                 </a>
               </div>
@@ -90,12 +90,12 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-[#148f96] outline-none transition-all pr-12"
+                  className="w-full px-4 py-3 rounded-xl bg-base-200 border border-transparent focus:bg-base-100 focus:border-primary outline-none transition-all pr-12"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#148f96] transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-base-content/50 hover:text-primary transition-colors"
                 >
                   {showPassword ? <HiEye size={20} /> : <HiEyeOff size={20} />}
                 </button>
@@ -107,21 +107,21 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 bg-[#148f96] hover:bg-[#117a81] disabled:opacity-60 text-white rounded-full font-bold tracking-wide transition-all shadow-md shadow-teal-100 active:scale-95"
+                className="w-full py-3.5 bg-primary hover:bg-primary/90 disabled:opacity-60 text-primary-content rounded-full font-bold tracking-wide transition-all shadow-md shadow-primary/20 active:scale-95"
               >
                 {loading ? 'ENTRANDO...' : 'INICIAR SESIÓN'}
               </button>
 
               <div className="relative flex py-2 items-center">
-                <div className="flex-grow border-t border-gray-100"></div>
-                <span className="flex-shrink mx-4 text-gray-400 text-xs uppercase">o</span>
-                <div className="flex-grow border-t border-gray-100"></div>
+                <div className="flex-grow border-t border-base-300"></div>
+                <span className="flex-shrink mx-4 text-base-content/50 text-xs uppercase">o</span>
+                <div className="flex-grow border-t border-base-300"></div>
               </div>
 
               <button
                 type="button"
                 onClick={() => navigate('/register')}
-                className="w-full py-3.5 bg-white border-2 border-[#148f96] text-[#148f96] hover:bg-teal-50 rounded-full font-bold tracking-wide transition-all active:scale-95"
+                className="w-full py-3.5 bg-base-100 border-2 border-primary text-primary hover:bg-primary/5 rounded-full font-bold tracking-wide transition-all active:scale-95"
               >
                 CREAR CUENTA NUEVA
               </button>
