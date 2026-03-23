@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import EventDetailModal from "./EventDetailModal";
+import EventDetailModal from "../../../components/EventDetailModal";
 
 export default function AgendaList() {
   const [selectedEvent, setSelectedEvent] = useState(null);

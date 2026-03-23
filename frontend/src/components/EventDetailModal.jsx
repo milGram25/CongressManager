@@ -1,5 +1,16 @@
+import { format, isValid } from "date-fns";
+import { es } from "date-fns/locale";
+
 export default function EventDetailModal({ event }) {
   // if (!event) return null;
+
+  const renderDate = (date) => {
+    if (!date) return "";
+    if (date instanceof Date) {
+      return isValid(date) ? format(date, "d 'de' MMMM, yyyy", { locale: es }) : "";
+    }
+    return date; // Si ya es un string
+  };
 
   return (
     <dialog id="detail_modal" className="modal modal-bottom sm:modal-middle">
@@ -12,7 +23,7 @@ export default function EventDetailModal({ event }) {
                 <h3 className="font-bold text-2xl text-primary">
                   {event.title}
                 </h3>
-                <p className="text-sm opacity-70 mt-1">{event.author}</p>
+                <p className="text-sm opacity-70 mt-1">{event.author || "Sin autor"}</p>
               </div>
             </div>
 
@@ -24,14 +35,14 @@ export default function EventDetailModal({ event }) {
                     Fecha y Hora
                   </span>
                   <p>
-                    {event.date} • {event.time}
+                    {renderDate(event.date)} • {event.time}
                   </p>
                 </div>
                 <div>
                   <span className="font-bold block opacity-50 uppercase text-[10px]">
                     Lugar
                   </span>
-                  <p>{event.location}</p>
+                  <p>{event.location || "Por definir"}</p>
                 </div>
               </div>
 
@@ -41,7 +52,7 @@ export default function EventDetailModal({ event }) {
                   Abstract
                 </span>
                 <p className="text-sm leading-relaxed text-justify italic">
-                  "{event.abstract}"
+                  "{event.abstract || "Sin abstract disponible."}"
                 </p>
               </div>
 
@@ -50,7 +61,7 @@ export default function EventDetailModal({ event }) {
                 <span className="font-bold block text-primary mb-2">
                   Descripción
                 </span>
-                <p className="text-sm leading-relaxed">{event.description}</p>
+                <p className="text-sm leading-relaxed">{event.description || "Sin descripción disponible."}</p>
               </div>
             </div>
           </>

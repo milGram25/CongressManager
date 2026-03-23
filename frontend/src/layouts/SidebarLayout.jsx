@@ -42,13 +42,15 @@ export default function SidebarLayout({
     navigate("/login", { replace: true });
   };
 
-  // Estilo para vista activa
-  const navLinkClass = ({ isActive }) =>
-    `block px-4 py-2 rounded-full text-sm transition-colors ${
-      isActive
-        ? "bg-primary text-base-100 font-medium"
-        : "hover:bg-base-200 text-base-content opacity-80"
-    }`;
+  // Determinar si estamos en una sección de ponente (específico para Asistente)
+  const isPonenteSection = 
+    pathname.includes('mis-ponencias') || 
+    pathname.includes('enviar-ponencia') || 
+    pathname.includes('estatus-ponencia') ||
+    pathname.includes('subir-multimedia') ||
+    pathname.includes('subir-extenso');
+
+  const displayTitle = (roleTitle === "Asistente" && isPonenteSection) ? "Ponente" : roleTitle;
 
   const closeDrawer = () => {
     const drawerCheckbox = document.getElementById(drawerId);
@@ -61,8 +63,10 @@ export default function SidebarLayout({
     <div className="drawer lg:drawer-open min-h-screen bg-base-200 text-base-content">
       <input id={drawerId} type="checkbox" className="drawer-toggle" />
 
+      {/* Vista principal */}
       <div className="drawer-content flex bg-base-100 flex-col p-6 md:p-10 relative overflow-y-auto">
         <header ref={headerRef} className="flex items-center gap-6 border-b border-base-300 pb-4 mb-8">
+          {/* Menu desplegable en móvil */}
           <label
             htmlFor={drawerId}
             className="p-2 hover:bg-base-200 rounded-lg transition-colors cursor-pointer lg:hidden"
@@ -82,7 +86,7 @@ export default function SidebarLayout({
               />
             </svg>
           </label>
-          <h1 className="text-4xl font-bold">{roleTitle}</h1>
+          <h1 className="text-4xl font-bold">{displayTitle}</h1>
         </header>
 
         <main className="flex-1 w-full max-w-5xl mx-auto pb-24">
@@ -110,16 +114,19 @@ export default function SidebarLayout({
           className="drawer-overlay"
         ></label>
 
+        {/* Contenedor del sidebar */}
         <div className="bg-base-100 text-base-content min-h-full w-64 p-6 border-r border-base-200 lg:border-none lg:bg-transparent flex flex-col">
+          {/* Título dinámico en el Sidebar para Desktop */}
           <div className="hidden lg:flex h-[88px] items-center px-4 overflow-hidden relative">
             <div className={`transition-all duration-500 transform ${isHeaderVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} absolute`}>
-               {MainIcon && <MainIcon className="text-5xl text-primary animate-bounce" />}
+               {MainIcon && <MainIcon className="text-5xl text-primary animate-bounce" title="¡Bienvenido!" />}
             </div>
             <div className={`transition-all duration-500 transform ${!isHeaderVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
-               <h2 className="text-3xl font-bold text-base-content">{roleTitle}</h2>
+               <h2 className="text-3xl font-bold text-base-content">{displayTitle}</h2>
             </div>
           </div>
 
+          {/* Links de navegación */}
           <nav className="flex flex-col space-y-1 mt-4 lg:mt-0">
             {menuItems.map((item, index) => {
               if (item.type === 'header') {
@@ -167,6 +174,7 @@ export default function SidebarLayout({
             })}
           </nav>
 
+          {/* Pie del sidebar: usuario + cerrar sesión */}
           <div className="mt-auto pt-4 border-t border-base-300">
             <p className="text-xs text-base-content/40 px-4 mb-2 truncate">{user?.nombre}</p>
             <button
