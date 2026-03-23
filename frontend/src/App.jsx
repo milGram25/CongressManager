@@ -62,6 +62,7 @@ import {
   MdWork,
   MdDescription,
   MdArticle,
+  MdReceipt,
 } from "react-icons/md";
 
 const AsistenteLayoutWrapper = () => {
@@ -142,6 +143,11 @@ const AdminLayoutWrapper = () => {
 
     { to: '/admin/pagos', label: 'Pagos', icon: MdPayment },
     { to: '/admin/usuarios', label: 'Usuarios', icon: MdGroup },
+    ...(pathname.includes('/admin/usuarios') ? [
+      { to: '/admin/usuarios/constancias', label: 'Constancias', icon: MdBadge, className: 'pl-9 opacity-70' },
+      { to: '/admin/usuarios/facturas', label: 'Facturas', icon: MdReceipt, className: 'pl-9 opacity-70' },
+      { to: '/admin/usuarios/historial', label: 'Historial', icon: MdHistory, className: 'pl-9 opacity-70' },
+    ] : []),
     { to: '/admin/ajustes', label: 'Configuración', icon: MdSettings },
   ];
 
@@ -297,7 +303,12 @@ function App() {
               </Route>
             </Route>
             <Route path="pagos" element={<AdminPagosView />} />
-            <Route path="usuarios" element={<UsuariosView />} />
+            <Route path="usuarios">
+              <Route index element={<UsuariosView />} />
+              <Route path="constancias" element={<PlaceholderView title="Constancias de Usuarios" />} />
+              <Route path="facturas" element={<PlaceholderView title="Facturas de Usuarios" />} />
+              <Route path="historial" element={<PlaceholderView title="Historial de Usuarios" />} />
+            </Route>
             <Route path="ajustes" element={<AjustesView />} />
           </Route>
 
