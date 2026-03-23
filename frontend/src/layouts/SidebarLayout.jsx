@@ -148,12 +148,31 @@ export default function SidebarLayout({
                 );
               }
               if (item.type === 'role-icons') {
+                const fitsFull = item.roles.length === 1;
                 return (
-                  <div key={index} className="flex items-center gap-2 px-2 py-2 mb-2">
+                  <div key={index} className={`flex ${fitsFull ? 'flex-col' : 'items-center gap-2'} px-2 py-2 mb-2`}>
                     {item.roles.map((role, rIdx) => {
                       const RoleIcon = role.icon;
                       const isActiveRole = pathname.includes(role.to.split('/')[1]);
                       
+                      if (fitsFull) {
+                        return (
+                          <NavLink
+                            key={rIdx}
+                            to={role.to}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${
+                              isActiveRole 
+                                ? "bg-primary text-base-100 shadow-md" 
+                                : "bg-base-200 text-base-content/70 hover:bg-primary/10 hover:text-primary"
+                            }`}
+                            onClick={closeDrawer}
+                          >
+                            <RoleIcon className="text-xl" />
+                            <span>{role.label}</span>
+                          </NavLink>
+                        );
+                      }
+
                       return (
                         <NavLink
                           key={rIdx}
