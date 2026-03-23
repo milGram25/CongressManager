@@ -1,15 +1,47 @@
-import { NavLink, Outlet } from "react-router-dom";
-import cienuLogo from "../../../assets/CIENU.jpg";
-import ridmaeLogo from "../../../assets/ridmae.jpg";
-import {
-  MdCalendarMonth,
-  MdLibraryBooks,
-  MdPayment,
-  MdCoPresent,
-  MdUploadFile,
-} from "react-icons/md";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useAuth } from "../context/AuthContext";
+import cienuLogo from "../assets/CIENU.jpg";
+import ridmaeLogo from "../assets/ridmae.jpg";
+import { MdLogout } from "react-icons/md";
 
-export default function AsistenteLayout() {
+export default function SidebarLayout({ 
+  roleTitle, 
+  drawerId, 
+  menuItems, 
+  MainIcon 
+}) {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const headerRef = useRef(null);
+
+  // Intersection Observer para detectar cuando el header principal sale de la vista
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsHeaderVisible(entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+
+    if (headerRef.current) {
+      observer.observe(headerRef.current);
+    }
+
+    return () => {
+      if (headerRef.current) {
+        observer.unobserve(headerRef.current);
+      }
+    };
+  }, [pathname]);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
+
   // Estilo para vista activa
   const navLinkClass = ({ isActive }) =>
     `block px-4 py-2 rounded-full text-sm transition-colors ${
@@ -19,25 +51,20 @@ export default function AsistenteLayout() {
     }`;
 
   const closeDrawer = () => {
-    const drawerCheckbox = document.getElementById("asistente-drawer");
+    const drawerCheckbox = document.getElementById(drawerId);
     if (drawerCheckbox) {
       drawerCheckbox.checked = false;
     }
   };
 
   return (
-    // Clase de daisy para la side bar
     <div className="drawer lg:drawer-open min-h-screen bg-base-200 text-base-content">
-      {/* controla estado de la barra lateral */}
-      <input id="asistente-drawer" type="checkbox" className="drawer-toggle" />
+      <input id={drawerId} type="checkbox" className="drawer-toggle" />
 
-      {/*  Vista principal  */}
-      <div className="drawer-content flex bg-base-100 flex-col p-6 md:p-10 relative">
-        {/* Header */}
-        <header className="flex items-center gap-6 border-b border-gray-300 pb-4 mb-8">
-          {/* menu desplegable en mobil */}
+      <div className="drawer-content flex bg-base-100 flex-col p-6 md:p-10 relative overflow-y-auto">
+        <header ref={headerRef} className="flex items-center gap-6 border-b border-base-300 pb-4 mb-8">
           <label
-            htmlFor="asistente-drawer"
+            htmlFor={drawerId}
             className="p-2 hover:bg-base-200 rounded-lg transition-colors cursor-pointer lg:hidden"
           >
             <svg
@@ -55,16 +82,14 @@ export default function AsistenteLayout() {
               />
             </svg>
           </label>
-          <h1 className="text-4xl font-bold">Asistente</h1>
+          <h1 className="text-4xl font-bold">{roleTitle}</h1>
         </header>
 
-        {/* Vista Dinamica Cambiante */}
-        <main className="flex-1 w-full max-w-4xl mx-auto pb-24">
+        <main className="flex-1 w-full max-w-5xl mx-auto pb-24">
           <Outlet />
         </main>
 
-        {/* Footer */}
-        <div className="mt-auto pt-4 border-t border-gray-200 flex justify-between items-end w-full ">
+        <div className="mt-auto pt-4 border-t border-base-200 flex justify-between items-end w-full ">
           <img
             src={cienuLogo}
             alt="Logo CIENU"
@@ -80,87 +105,78 @@ export default function AsistenteLayout() {
 
       <div className="drawer-side z-50">
         <label
-          htmlFor="asistente-drawer"
+          htmlFor={drawerId}
           aria-label="close sidebar"
           className="drawer-overlay"
         ></label>
 
-        {/* contenedor de la barra  */}
-        <div className="bg-base-100 text-base-content min-h-full w-64 p-6 border-r border-gray-200 lg:border-none lg:bg-transparent flex flex-col">
-          {/* espaciador para alinear debajo del header, maybe en un futuro un logo */}
-          <div className="hidden lg:block h-[88px]"></div>
-
-          {/* links de navegacion */}
-          <nav className="flex flex-col space-y-1 mt-4 lg:mt-0">
-            <NavLink
-              to="/asistente/agenda"
-              className={navLinkClass}
-              onClick={closeDrawer}
-            >
-              <div className="flex items-center gap-3">
-                <MdCalendarMonth className="text-lg" />
-                <span>Agenda</span>
-              </div>
-            </NavLink>
-            <NavLink
-              to="/asistente/catalogo"
-              className={navLinkClass}
-              onClick={closeDrawer}
-            >
-              <div className="flex items-center gap-3">
-                <MdLibraryBooks className="text-lg" />
-                <span>Catálogo</span>
-              </div>
-            </NavLink>
-
-            <NavLink
-              to="/asistente/pagos"
-              className={navLinkClass}
-              onClick={closeDrawer}
-            >
-              <div className="flex items-center gap-3">
-                <MdPayment className="text-lg" />
-                <span>Pagos</span>
-              </div>
-            </NavLink>
-            <div className="pt-4 pb-2">
-              <span className="px-4 text-xs font-semibold uppercase opacity-50 tracking-wider">
-                Ponente
-              </span>
+        <div className="bg-base-100 text-base-content min-h-full w-64 p-6 border-r border-base-200 lg:border-none lg:bg-transparent flex flex-col">
+          <div className="hidden lg:flex h-[88px] items-center px-4 overflow-hidden relative">
+            <div className={`transition-all duration-500 transform ${isHeaderVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} absolute`}>
+               {MainIcon && <MainIcon className="text-5xl text-primary animate-bounce" />}
             </div>
+            <div className={`transition-all duration-500 transform ${!isHeaderVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+               <h2 className="text-3xl font-bold text-base-content">{roleTitle}</h2>
+            </div>
+          </div>
 
-            <NavLink
-              to="/asistente/mis-ponencias"
-              className={navLinkClass}
-              onClick={closeDrawer}
-            >
-              <div className="flex items-center gap-3">
-                <MdCoPresent className="text-lg pl-1" />
-                <span>Mis Ponencias</span>
-              </div>
-            </NavLink>
-
-            <NavLink
-              to="/asistente/enviar-ponencia"
-              className={navLinkClass}
-              onClick={closeDrawer}
-            >
-              <div className="flex items-center gap-3">
-                <MdUploadFile className="text-lg pl-1" />
-                <span>Enviar Ponencia</span>
-              </div>
-            </NavLink>
-            <NavLink
-              to="/asistente/estatus-ponencia"
-              className={navLinkClass}
-              onClick={closeDrawer}
-            >
-              <div className="flex items-center gap-3">
-                <MdUploadFile className="text-lg pl-1" />
-                <span>Estatus Ponencia</span>
-              </div>
-            </NavLink>
+          <nav className="flex flex-col space-y-1 mt-4 lg:mt-0">
+            {menuItems.map((item, index) => {
+              if (item.type === 'header') {
+                return (
+                  <div key={index} className="pt-4 pb-2">
+                    <span className="px-4 text-xs font-semibold uppercase opacity-50 tracking-wider">
+                      {item.label}
+                    </span>
+                  </div>
+                );
+              }
+              if (item.type === 'subheader') {
+                return (
+                  <div key={index} className="pt-2 pb-2">
+                    <span className={`px-4 text-[10px] font-bold uppercase tracking-widest opacity-80 ${item.className || 'text-base-content/40'}`}>
+                      {item.label}
+                    </span>
+                  </div>
+                );
+              }
+              if (item.type === 'separator') {
+                return <div key={index} className="border-b border-base-200 my-2 mx-4"></div>;
+              }
+              
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={index}
+                  to={item.to}
+                  className={({ isActive }) => 
+                    `block px-4 py-2 rounded-full text-sm transition-colors ${
+                      isActive
+                        ? "bg-primary text-base-100 font-medium"
+                        : `hover:bg-base-200 text-base-content opacity-80 ${item.className || ''}`
+                    }`
+                  }
+                  onClick={closeDrawer}
+                >
+                  <div className="flex items-center gap-3">
+                    {Icon && <Icon className="text-lg" />}
+                    <span className={item.labelClassName || ''}>{item.label}</span>
+                  </div>
+                </NavLink>
+              );
+            })}
           </nav>
+
+          <div className="mt-auto pt-4 border-t border-base-300">
+            <p className="text-xs text-base-content/40 px-4 mb-2 truncate">{user?.nombre}</p>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-2 rounded-full text-sm text-red-500 hover:bg-red-50 transition-colors"
+            >
+              <MdLogout className="w-4 h-4" />
+              Cerrar sesión
+            </button>
+          </div>
         </div>
       </div>
     </div>
