@@ -208,11 +208,12 @@ export default function SidebarLayout({
                     const isSub = isSubItem || isSubSubItem;
                     
                     if (isActive) {
-                      return `${baseClasses} ${
-                        isSub 
-                          ? "bg-primary/10 text-primary font-semibold" 
-                          : "bg-primary text-base-100 font-semibold shadow-sm"
-                      } ${isSubItem ? 'py-1.5' : ''} ${isSubSubItem ? 'py-1' : ''}`;
+                      if (isSub) {
+                        // Color aún más oscuro para submenús activos (Nivel 1)
+                        const subActiveBg = isSubItem ? "bg-primary/30" : "bg-primary/10";
+                        return `${baseClasses} ${subActiveBg} text-primary font-bold ${isSubItem ? 'py-1.5' : ''} ${isSubSubItem ? 'py-1' : ''}`;
+                      }
+                      return `${baseClasses} bg-primary text-base-100 font-semibold shadow-sm`;
                     }
                     
                     return `${baseClasses} hover:bg-base-200/50 text-base-content/70 hover:text-base-content ${
