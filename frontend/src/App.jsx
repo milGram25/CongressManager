@@ -149,6 +149,10 @@ const AdminLayoutWrapper = () => {
       { to: '/admin/usuarios/historial', label: 'Historial', icon: MdHistory, className: 'pl-9 opacity-70' },
     ] : []),
     { to: '/admin/ajustes', label: 'Configuración', icon: MdSettings },
+    ...(pathname.includes('/admin/ajustes') ? [
+      { to: '/admin/ajustes/instituciones', label: 'Instituciones', icon: MdAccountBalance, className: 'pl-9 opacity-70' },
+      { to: '/admin/ajustes/areas', label: 'Áreas', icon: MdWork, className: 'pl-9 opacity-70' },
+    ] : []),
   ];
 
   return <SidebarLayout roleTitle="Administrador" drawerId="admin-drawer" menuItems={menuItems} MainIcon={MdAdminPanelSettings} />;
@@ -309,7 +313,11 @@ function App() {
               <Route path="facturas" element={<PlaceholderView title="Facturas de Usuarios" />} />
               <Route path="historial" element={<PlaceholderView title="Historial de Usuarios" />} />
             </Route>
-            <Route path="ajustes" element={<AjustesView />} />
+            <Route path="ajustes">
+              <Route index element={<AjustesView />} />
+              <Route path="instituciones" element={<PlaceholderView title="Gestión de Instituciones" />} />
+              <Route path="areas" element={<PlaceholderView title="Gestión de Áreas" />} />
+            </Route>
           </Route>
 
           {/* Por defecto va al login */}
