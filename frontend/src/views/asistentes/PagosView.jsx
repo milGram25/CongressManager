@@ -143,8 +143,8 @@ export default function PagosView() {
                           <input 
                             type="text" 
                             required
-                            placeholder="Introduce el código (123456)"
-                            className="w-full pl-12 pr-4 py-3 rounded-xl bg-base-200 border-none outline-none focus:ring-2 focus:ring-secondary text-sm text-center tracking-[0.5em] font-bold"
+                            placeholder="Introduce el código"
+                            className="w-full pl-12 pr-4 py-3 rounded-xl bg-base-200 border-none outline-none focus:ring-2 focus:ring-secondary text-sm text-left tracking-[0.5em] font-bold"
                             value={verificationCode}
                             onChange={(e) => setVerificationCode(e.target.value)}
                           />
