@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import AsistenteLayout from "./views/asistentes/layouts/MainLayout";
+import AsistenteLayout from "./layouts/SidebarLayout";
 import AgendaView from "./views/asistentes/AgendaView";
 import CatalogoView from "./views/asistentes/CatalogoView";
 import PagosView from "./views/asistentes/PagosView";
