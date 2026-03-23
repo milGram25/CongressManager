@@ -22,7 +22,6 @@ export default function CatalogoView() {
       fecha: "30 - Abril - 2026",
       hora: "10:00 am",
       sinopsis: "Se verá la importancia de compartir, difundir y aplicar el conocimiento científico de manera accesible y colaborativa. Analizaremos cómo la ciencia abierta transforma los procesos de enseñanza, aprendizaje e investigación.",
-      costo: "$150 MXN"
     },
     {
       id: 2,
@@ -33,7 +32,6 @@ export default function CatalogoView() {
       fecha: "13 - Mayo - 2026",
       hora: "12:00 pm",
       sinopsis: "Reunirá políticas públicas para analizar los desafíos éticos del uso creciente de la inteligencia artificial en sectores como salud, educación e industria.",
-      costo: "$100 MXN"
     }
   ];
 
@@ -82,9 +80,7 @@ export default function CatalogoView() {
 
               {/* Footer de la tarjeta con botón usando el color Primary (#001219) */}
               <div className="flex justify-between items-center mt-6 pt-4 border-t border-base-200">
-                <p className="text-2xl font-bold text-neutral">Costo: <span className="text-primary font-black">{p.costo}</span></p>
                 
-                {/* Botón de DaisyUI con color primary y efecto hover automático */}
                 <button 
                 onClick={() => manejarRegistro(p)}
                 className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300">
@@ -128,14 +124,14 @@ export default function CatalogoView() {
                 <div className="text-secondary text-6xl">✓</div>
                 <h3 className="text-2xl font-bold text-neutral">¡Registro Exitoso!</h3>
                 <p className="text-neutral text-sm opacity-90">
-                  Tu inscripción se ha realizado correctamente. El cargo ya se encuentra reflejado en tu apartado de pagos.
+                  Tu inscripción se ha realizado correctamente. Podrás ver el registro en tu Agenda.
                 </p>
                 <div className="flex flex-col gap-3 pt-4">
                   <button 
-                    onClick={() => navigate('/asistente/pagos')}
+                    onClick={() => navigate('/asistente/agenda')}
                     className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300"
                   >
-                    Ir a Pagos
+                    Ir a Agenda
                   </button>
                   <button onClick={cerrarModal} className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300">
                     Seguir aquí
