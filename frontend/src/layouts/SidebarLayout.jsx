@@ -141,34 +141,82 @@ export default function SidebarLayout({
               if (item.type === 'subheader') {
                 return (
                   <div key={index} className="pt-2 pb-2">
-                    <span className={`px-4 text-[10px] font-bold uppercase tracking-widest opacity-80 ${item.className || 'text-base-content/40'}`}>
+                    <span className={`px-4 text-[10px] font-bold uppercase tracking-widest opacity-80 ${item.className || 'text-primary'}`}>
                       {item.label}
                     </span>
                   </div>
                 );
               }
-              if (item.type === 'separator') {
-                return <div key={index} className="border-b border-base-200 my-2 mx-4"></div>;
+              if (item.type === 'role-icons') {
+                return (
+                  <div key={index} className="flex items-center gap-2 px-2 py-2 mb-2">
+                    {item.roles.map((role, rIdx) => {
+                      const RoleIcon = role.icon;
+                      const isActiveRole = pathname.includes(role.to.split('/')[1]);
+                      
+                      return (
+                        <NavLink
+                          key={rIdx}
+                          to={role.to}
+                          className={`group flex items-center justify-center h-10 rounded-full transition-all duration-500 ease-in-out overflow-hidden ${
+                            isActiveRole 
+                              ? "bg-primary text-base-100 px-4 min-w-[130px]" 
+                              : "bg-base-200 text-base-content/70 hover:bg-primary/10 hover:text-primary px-3 hover:px-4 hover:min-w-[130px]"
+                          }`}
+                          onClick={closeDrawer}
+                        >
+                          <RoleIcon className={`text-xl flex-shrink-0 ${isActiveRole ? '' : 'group-hover:scale-110'} transition-transform`} />
+                          <span className={`whitespace-nowrap ml-2 text-xs font-bold transition-all duration-500 opacity-0 group-hover:opacity-100 ${isActiveRole ? 'opacity-100 block' : 'max-w-0 group-hover:max-w-[110px]'}`}>
+                            {role.label}
+                          </span>
+                        </NavLink>
+                      );
+                    })}
+                  </div>
+                );
               }
               
               const Icon = item.icon;
+              const isSubItem = item.className?.includes('pl-9');
+              const isSubSubItem = item.className?.includes('pl-14');
+              
               return (
                 <NavLink
                   key={index}
                   to={item.to}
-                  className={({ isActive }) => 
-                    `block px-4 py-2 rounded-full text-sm transition-colors ${
-                      isActive
-                        ? "bg-primary text-base-100 font-medium"
-                        : `hover:bg-base-200 text-base-content opacity-80 ${item.className || ''}`
-                    }`
-                  }
+                  className={({ isActive }) => {
+                    const baseClasses = `group block px-4 py-2 rounded-xl text-sm transition-all duration-200 relative ${item.className || ''}`;
+                    const isSub = isSubItem || isSubSubItem;
+                    
+                    if (isActive) {
+                      return `${baseClasses} ${
+                        isSub 
+                          ? "bg-primary/10 text-primary font-semibold" 
+                          : "bg-primary text-base-100 font-semibold shadow-sm"
+                      } ${isSubItem ? 'py-1.5' : ''} ${isSubSubItem ? 'py-1' : ''}`;
+                    }
+                    
+                    return `${baseClasses} hover:bg-base-200/50 text-base-content/70 hover:text-base-content ${
+                      isSubItem ? 'py-1.5' : ''
+                    } ${isSubSubItem ? 'py-1' : ''}`;
+                  }}
                   onClick={closeDrawer}
                 >
-                  <div className="flex items-center gap-3">
-                    {Icon && <Icon className="text-lg" />}
-                    <span className={item.labelClassName || ''}>{item.label}</span>
-                  </div>
+                  {({ isActive }) => (
+                    <div className="flex items-center gap-3">
+                      {Icon && (
+                        <Icon className={`transition-transform duration-200 group-hover:scale-110 ${
+                          isSubSubItem ? 'text-base' : 'text-lg'
+                        } ${isActive ? '' : 'opacity-70'}`} />
+                      )}
+                      
+                      <span className={`truncate ${item.labelClassName || ''} ${
+                        isSubSubItem ? 'text-[13px]' : ''
+                      }`}>
+                        {item.label}
+                      </span>
+                    </div>
+                  )}
                 </NavLink>
               );
             })}

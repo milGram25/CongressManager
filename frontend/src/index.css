@@ -2,9 +2,25 @@
 
 @plugin "daisyui";
 
-/* Colores de la paletta */
+/* Forzar el tema de DaisyUI con el color azul casi negro */
+@theme {
+  --color-primary: #001219;
+  --color-secondary: #94d2bd;
+  --color-accent: #e9d8a6;
+  --color-neutral: #222222;
+  --color-base-100: #fafafa;
+  --color-base-200: #f3f4f6;
+  --color-base-300: #e5e7eb;
+  --color-base-content: #222222;
+  /* Colores de estado */
+  --color-success: #22c55e;
+  --color-warning: #facc15;
+  --color-error: #ef4444;
+}
+
+/* Configuración adicional de DaisyUI */
 @plugin "daisyui/theme" {
-  name: "congressTheme";
+  name: "light";
   default: true;
   color-scheme: light;
   --color-primary: #001219;
@@ -15,8 +31,4 @@
   --color-base-300: #e5e7eb;
   --color-base-content: #222222;
   --color-neutral: #222222;
-  /*colores para los estatus de ponencias*/
-  --color-success: #22c55e;
-  --color-warning: #facc15;
-  --color-error: #ef4444;
 }

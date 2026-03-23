@@ -30,6 +30,8 @@ export default function Login() {
           navigate('/revisor', { replace: true });
         } else if (savedUser?.rol === 'dictaminador') {
           navigate('/dictaminador', { replace: true });
+        } else if (savedUser?.rol === 'administrador') {
+          navigate('/admin', { replace: true });
         } else {
           navigate('/asistente', { replace: true });
         }

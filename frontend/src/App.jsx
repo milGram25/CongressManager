@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SidebarLayout from "./layouts/SidebarLayout";
@@ -16,6 +16,23 @@ import PlaceholderView from "./views/revisores/PlaceholderView";
 import DetalleRevisionView from "./views/revisores/DetalleRevisionView";
 import DetalleDictamenView from "./views/dictaminadores/DetalleDictamenView";
 import DictamenesView from "./views/dictaminadores/DictamenesView";
+import DashboardView from "./views/admin/DashboardView";
+import AdminAgendaView from "./views/admin/AgendaView";
+import ProcesosView from "./views/admin/ProcesosView";
+import EventosView from "./views/admin/EventosView";
+import AdminPagosView from "./views/admin/PagosView";
+import UsuariosView from "./views/admin/UsuariosView";
+import AjustesView from "./views/admin/AjustesView";
+import ProcesosResumenesView from "./views/admin/ProcesosResumenesView";
+import ProcesosExtensosView from "./views/admin/ProcesosExtensosView";
+import TalleresView from "./views/admin/TalleresView";
+import PonenciasView from "./views/admin/PonenciasView";
+import CongresosView from "./views/admin/CongresosView";
+import CongresoDetallesView from "./views/admin/CongresoDetallesView";
+import CongresoCrearView from "./views/admin/CongresoCrearView";
+import CongresoSedeView from "./views/admin/CongresoSedeView";
+import CongresoFechasView from "./views/admin/CongresoFechasView";
+import CongresoTiposTrabajoView from "./views/admin/CongresoTiposTrabajoView";
 
 import { GrStatusGood } from "react-icons/gr";
 import {
@@ -31,21 +48,45 @@ import {
   MdPerson,
   MdDashboard,
   MdHistory,
+  MdAdminPanelSettings,
+  MdSettings,
+  MdGroup,
+  MdEvent,
+  MdAssignment,
+  MdGroups,
+  MdAccountBalance,
+  MdInfo,
+  MdAddCircle,
+  MdPlace,
+  MdEventAvailable,
+  MdWork,
+  MdDescription,
+  MdArticle,
 } from "react-icons/md";
 
 const AsistenteLayoutWrapper = () => {
   const { user } = useAuth();
+  const { pathname } = useLocation();
+
   const menuItems = [
-    ...(user?.rol === 'revisor' ? [
-      { type: 'subheader', label: 'Modo Revisor', className: 'text-primary' },
-      { to: '/revisor/revisiones', label: 'Panel Revisor', icon: MdRateReview, className: 'text-primary', labelClassName: 'font-bold text-primary' },
-      { type: 'separator' }
+    // Si el usuario tiene permisos de administrador, revisor o dictaminador, mostrar accesos rápidos
+    ...((user?.rol === 'administrador' || user?.rol === 'revisor' || user?.rol === 'dictaminador') ? [
+      { type: 'subheader', label: 'Vistas de Rol' },
+      { 
+        type: 'role-icons', 
+        roles: [
+          ...(user?.rol === 'administrador' ? [
+            { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
+            { to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview },
+            { to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel },
+          ] : [
+            ...(user?.rol === 'revisor' ? [{ to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview }] : []),
+            ...(user?.rol === 'dictaminador' ? [{ to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel }] : []),
+          ]),
+        ]
+      },
     ] : []),
-    ...(user?.rol === 'dictaminador' ? [
-      { type: 'subheader', label: 'Modo Dictaminador', className: 'text-primary' },
-      { to: '/dictaminador/dictamenes', label: 'Panel Dictaminador', icon: MdGavel, className: 'text-primary', labelClassName: 'font-bold text-primary' },
-      { type: 'separator' }
-    ] : []),
+
     { to: '/asistente/agenda', label: 'Agenda', icon: MdCalendarMonth },
     { to: '/asistente/catalogo', label: 'Catálogo', icon: MdLibraryBooks },
     { to: '/asistente/pagos', label: 'Pagos', icon: MdPayment },
@@ -59,11 +100,70 @@ const AsistenteLayoutWrapper = () => {
   return <SidebarLayout roleTitle="Asistente" drawerId="asistente-drawer" menuItems={menuItems} MainIcon={MdSchool} />;
 };
 
-const RevisorLayoutWrapper = () => {
+const AdminLayoutWrapper = () => {
+  const { pathname } = useLocation();
+  
   const menuItems = [
-    { type: 'subheader', label: 'Modo Asistente' },
-    { to: '/asistente/agenda', label: 'Vista Asistente', icon: MdPerson },
-    { type: 'separator' },
+    { type: 'subheader', label: 'Vistas de Rol' },
+    { 
+      type: 'role-icons', 
+      roles: [
+        { to: '/asistente/agenda', label: 'Asistente', icon: MdPerson },
+        { to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview },
+        { to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel },
+      ]
+    },
+    
+    { to: '/admin/dashboard', label: 'Dashboard', icon: MdDashboard },
+    { to: '/admin/agenda', label: 'Agenda', icon: MdCalendarMonth },
+    
+    // Procesos con sub-menú dinámico
+    { to: '/admin/procesos', label: 'Procesos', icon: MdAssignment },
+    ...(pathname.includes('/admin/procesos') ? [
+      { to: '/admin/procesos/resumenes', label: 'Resúmenes', icon: MdDescription, className: 'pl-9 opacity-70' },
+      { to: '/admin/procesos/extensos', label: 'Extensos', icon: MdArticle, className: 'pl-9 opacity-70' },
+    ] : []),
+
+    // Eventos con sub-menú dinámico
+    { to: '/admin/eventos', label: 'Eventos', icon: MdEvent },
+    ...(pathname.includes('/admin/eventos') ? [
+      { to: '/admin/eventos/talleres', label: 'Talleres', icon: MdGroups, className: 'pl-9 opacity-70' },
+      { to: '/admin/eventos/ponencias', label: 'Ponencias', icon: MdCoPresent, className: 'pl-9 opacity-70' },
+      { to: '/admin/eventos/congresos', label: 'Congresos', icon: MdAccountBalance, className: 'pl-9 opacity-70' },
+      // Sub-sub menú de Congresos
+      ...(pathname.includes('/admin/eventos/congresos') ? [
+        { to: '/admin/eventos/congresos/detalles', label: 'Detalles', icon: MdInfo, className: 'pl-14 opacity-60' },
+        { to: '/admin/eventos/congresos/crear', label: 'Crear', icon: MdAddCircle, className: 'pl-14 opacity-60' },
+        { to: '/admin/eventos/congresos/sede', label: 'Sede', icon: MdPlace, className: 'pl-14 opacity-60' },
+        { to: '/admin/eventos/congresos/fechas', label: 'Fechas', icon: MdEventAvailable, className: 'pl-14 opacity-60' },
+        { to: '/admin/eventos/congresos/tipos-trabajo', label: 'Tipos Trabajo', icon: MdWork, className: 'pl-14 opacity-60' },
+      ] : [])
+    ] : []),
+
+    { to: '/admin/pagos', label: 'Pagos', icon: MdPayment },
+    { to: '/admin/usuarios', label: 'Usuarios', icon: MdGroup },
+    { to: '/admin/ajustes', label: 'Configuración', icon: MdSettings },
+  ];
+
+  return <SidebarLayout roleTitle="Administrador" drawerId="admin-drawer" menuItems={menuItems} MainIcon={MdAdminPanelSettings} />;
+};
+
+const RevisorLayoutWrapper = () => {
+  const { user } = useAuth();
+  const menuItems = [
+    { type: 'subheader', label: 'Vistas de Rol' },
+    { 
+      type: 'role-icons', 
+      roles: [
+        ...(user?.rol === 'administrador' ? [
+          { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
+          { to: '/asistente/agenda', label: 'Asistente', icon: MdPerson },
+          { to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel },
+        ] : [
+          { to: '/asistente/agenda', label: 'Asistente', icon: MdPerson },
+        ]),
+      ]
+    },
     { to: '/revisor/inicio', label: 'Inicio', icon: MdDashboard },
     { to: '/revisor/revisiones', label: 'Mis Revisiones', icon: MdRateReview },
     { to: '/revisor/historial', label: 'Historial', icon: MdHistory },
@@ -73,10 +173,21 @@ const RevisorLayoutWrapper = () => {
 };
 
 const DictaminadorLayoutWrapper = () => {
+  const { user } = useAuth();
   const menuItems = [
-    { type: 'subheader', label: 'Modo Asistente' },
-    { to: '/asistente/agenda', label: 'Vista Asistente', icon: MdPerson },
-    { type: 'separator' },
+    { type: 'subheader', label: 'Vistas de Rol' },
+    { 
+      type: 'role-icons', 
+      roles: [
+        ...(user?.rol === 'administrador' ? [
+          { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
+          { to: '/asistente/agenda', label: 'Asistente', icon: MdPerson },
+          { to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview },
+        ] : [
+          { to: '/asistente/agenda', label: 'Asistente', icon: MdPerson },
+        ]),
+      ]
+    },
     { to: '/dictaminador/inicio', label: 'Inicio', icon: MdDashboard },
     { to: '/dictaminador/dictamenes', label: 'Mis Dictámenes', icon: MdGavel },
     { to: '/dictaminador/historial', label: 'Historial', icon: MdHistory },
@@ -153,6 +264,41 @@ function App() {
               path="historial"
               element={<PlaceholderView title="Historial" />}
             />
+          </Route>
+
+          {/* Rutas para Administradores */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRole="administrador">
+                <AdminLayoutWrapper />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<DashboardView />} />
+            <Route path="agenda" element={<AdminAgendaView />} />
+            <Route path="procesos">
+              <Route index element={<ProcesosView />} />
+              <Route path="resumenes" element={<ProcesosResumenesView />} />
+              <Route path="extensos" element={<ProcesosExtensosView />} />
+            </Route>
+            <Route path="eventos">
+              <Route index element={<EventosView />} />
+              <Route path="talleres" element={<TalleresView />} />
+              <Route path="ponencias" element={<PonenciasView />} />
+              <Route path="congresos">
+                <Route index element={<CongresosView />} />
+                <Route path="detalles" element={<CongresoDetallesView />} />
+                <Route path="crear" element={<CongresoCrearView />} />
+                <Route path="sede" element={<CongresoSedeView />} />
+                <Route path="fechas" element={<CongresoFechasView />} />
+                <Route path="tipos-trabajo" element={<CongresoTiposTrabajoView />} />
+              </Route>
+            </Route>
+            <Route path="pagos" element={<AdminPagosView />} />
+            <Route path="usuarios" element={<UsuariosView />} />
+            <Route path="ajustes" element={<AjustesView />} />
           </Route>
 
           {/* Por defecto va al login */}

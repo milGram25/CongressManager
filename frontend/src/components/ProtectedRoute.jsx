@@ -14,7 +14,10 @@ export default function ProtectedRoute({ children, allowedRole }) {
   }
 
   if (allowedRole && user.rol !== allowedRole) {
-    // Los revisores y dictaminadores tienen permiso de ver la sección de asistente también
+    // Los administradores tienen acceso a todo. 
+    // Revisores y dictaminadores pueden ver la sección de asistente.
+    if (user.rol === 'administrador') return children;
+
     const isSpecialRole = user.rol === 'revisor' || user.rol === 'dictaminador';
     if (isSpecialRole && allowedRole === 'asistente') {
       return children;
