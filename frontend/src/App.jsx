@@ -39,7 +39,7 @@ function App() {
           <Route
             path="/asistente"
             element={
-              <ProtectedRoute allowedRole="asistente">
+              <ProtectedRoute allowedRoles={["asistente", "ponente"]}>
                 <AsistenteLayout />
               </ProtectedRoute>
             }
