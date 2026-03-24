@@ -18,6 +18,16 @@ export default function PagosView() {
   const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState('');
 
+  // Estados de facturación
+  const [pagoExitoso, setPagoExitoso] = useState(false); // Controla el modal de éxito
+  const [quiereFactura, setQuiereFactura] = useState(false); // Cambia a formulario fiscal
+  const [showXML, setShowXML] = useState(false); // Muestra el XML final
+  const [datosFacturacion, setDatosFacturacion] = useState({
+    rfc: '',
+    razonSocial: '',
+    usoCFDI: 'G03'
+  });
+
   // Precios base por rol
   const BASE_PRICES = {
     ponente: 2000,
@@ -57,6 +67,8 @@ export default function PagosView() {
       setError('Código de verificación incorrecto. Intenta con 123456.');
     }
   };
+
+  const handleSimularPago = () => setPagoExitoso(true);
 
   return (
     <div className="max-w-4xl mx-auto p-4">
@@ -194,7 +206,8 @@ export default function PagosView() {
           <div className="bg-base-200 p-6 rounded-2xl sticky top-24 shadow-sm">
             <h3 className="font-bold text-xl mb-6">Resumen de Pago</h3>
             <Elements stripe={stripePromise}>
-              <PagosForm total={finalPrice} />
+              <PagosForm total={finalPrice} onSuccess={() => setPagoExitoso(true)} />
+              <button onClick={handleSimularPago} className="btn btn-ghost btn-xs w-full mt-2 opacity-30">Simular Éxito</button>
             </Elements>
             <p className="text-[10px] mt-6 opacity-40 text-center italic">
               Al realizar el pago, confirmas que tu información de registro es correcta.
@@ -202,6 +215,84 @@ export default function PagosView() {
           </div>
         </div>
       </div>
+
+      {/* MODAL 1: ÉXITO Y PREGUNTA DE FACTURACIÓN */}
+      {pagoExitoso && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+          <div className="relative bg-base-100 p-8 rounded-2xl shadow-2xl max-w-md w-full">
+            {!quiereFactura ? (
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 bg-success/20 text-success rounded-full flex items-center justify-center text-3xl mx-auto">✓</div>
+                <h2 className="text-2xl font-bold">¡Pago Exitoso!</h2>
+                <p className="text-sm opacity-70">¿Deseas generar tu factura XML ahora mismo?</p>
+                <div className="flex gap-3 pt-4">
+                  <button onClick={() => setQuiereFactura(true)} className="btn btn-primary flex-1">Sí, facturar</button>
+                  <button onClick={() => setPagoExitoso(false)} className="btn btn-ghost flex-1">Omitir</button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <h3 className="text-xl font-bold text-center">Datos Fiscales</h3>
+                <div className="form-control text-left">
+                  <label className="label text-xs font-bold">RFC</label>
+                  <input 
+                    type="text" 
+                    placeholder="XAXX010101000"
+                    className="input input-bordered w-full"
+                    onChange={(e) => setDatosFacturacion({...datosFacturacion, rfc: e.target.value})}
+                  />
+                </div>
+                <div className="form-control text-left">
+                  <label className="label text-xs font-bold">RAZÓN SOCIAL</label>
+                  <input 
+                    type="text" 
+                    placeholder="Nombre o Empresa"
+                    className="input input-bordered w-full"
+                    onChange={(e) => setDatosFacturacion({...datosFacturacion, razonSocial: e.target.value})}
+                  />
+                </div>
+                <button 
+                  disabled={!datosFacturacion.rfc || !datosFacturacion.razonSocial}
+                  onClick={() => { setShowXML(true); setPagoExitoso(false); }}
+                  className="btn btn-primary w-full mt-4"
+                >
+                  Generar XML
+                </button>
+                <button onClick={() => setQuiereFactura(false)} className="btn btn-link btn-sm w-full opacity-50">Volver</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showXML && (
+      <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowXML(false)}></div>
+          <div className="relative bg-base-100 p-8 rounded-2xl shadow-2xl max-w-2xl w-full">
+            <h3 className="text-xl font-bold mb-4 text-neutral">Comprobante Fiscal Digital (XML)</h3>
+            <div className="bg-neutral text-white p-4 rounded-lg font-mono text-[10px] overflow-x-auto h-64 border border-primary">
+              <pre>{`<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante version="4.0" Fecha="${new Date().toISOString()}" 
+    SubTotal="${(finalPrice / 1.16).toFixed(2)}" Total="${finalPrice.toFixed(2)}" Moneda="MXN" 
+    TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE">
+  <cfdi:Emisor Rfc="CONG20260101ABC" Nombre="CONGRESO INTERNACIONAL 2026" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="${datosFacturacion.rfc.toUpperCase()}" 
+      Nombre="${datosFacturacion.razonSocial.toUpperCase()}" 
+      UsoCFDI="${datosFacturacion.usoCFDI}"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="81111508" Cantidad="1" Descripcion="Registro Eventos Congreso" 
+        ValorUnitario="${(finalPrice / 1.16).toFixed(2)}" Importe="${(finalPrice / 1.16).toFixed(2)}"/>
+  </cfdi:Conceptos>
+</cfdi:Comprobante>`}</pre>
+            </div>
+            <div className="flex gap-4 mt-6">
+              <button className="btn btn-primary flex-1" onClick={() => window.print()}>Imprimir / Guardar</button>
+              <button className="btn btn-ghost border-base-300" onClick={() => setShowXML(false)}>Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
