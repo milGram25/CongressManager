@@ -3,14 +3,17 @@ import { useNavigate } from 'react-router-dom';
 
 const RevisionCard = ({ titulo, id, fechaAsignado, fechaLimite, estado, urgente }) => {
   const navigate = useNavigate();
-  const borderColor = urgente ? 'border-l-error' : 'border-l-warning';
-  const labelColor = urgente ? 'text-error' : 'text-warning';
+  
+  // Mapeo de colores basado en urgencia
+  const config = urgente 
+    ? { border: 'border-l-error', text: 'text-error', label: '¡URGENTE! - FECHA LÍMITE PRÓXIMA' }
+    : { border: 'border-l-warning', text: 'text-warning', label: 'ESPERANDO DICTAMEN' };
 
   return (
-    <div className={`flex flex-col md:flex-row items-start md:items-center justify-between bg-base-100 p-6 mb-4 rounded-xl shadow-sm border-l-[10px] ${borderColor} transition-all hover:shadow-md`}>
+    <div className={`flex flex-col md:flex-row items-start md:items-center justify-between bg-base-100 p-6 mb-4 rounded-xl shadow-sm border-l-[10px] ${config.border} transition-all hover:shadow-md`}>
       <div className="flex flex-col gap-1">
-        <span className={`text-[10px] font-bold uppercase tracking-widest ${labelColor}`}>
-          {urgente ? '¡URGENTE! - FECHA LÍMITE PRÓXIMA' : estado}
+        <span className={`text-[10px] font-bold uppercase tracking-widest ${config.text}`}>
+          {config.label}
         </span>
         <h3 className="text-lg font-semibold text-base-content leading-tight mb-1">{titulo}</h3>
         <p className="text-xs text-base-content/60 font-bold mb-2 uppercase tracking-tighter">ID: {id}</p>
@@ -73,14 +76,14 @@ export default function RevisionesView() {
                 fechaAsignado="10 Feb 2026" 
                 fechaLimite="05 Mar 2026"
                 estado="ESPERANDO DICTAMEN" 
-                urgente={false} 
+                urgente={true} 
               />
               <RevisionCard 
                 titulo="Análisis de Redes Eléctricas en Zonas Rurales de Jalisco"
                 id="#ART-8845" 
                 fechaAsignado="01 Feb 2026" 
                 fechaLimite="HOY"
-                estado="URGENTE" 
+                estado="REVISIÓN TÉCNICA" 
                 urgente={true} 
               />
               <RevisionCard 
