@@ -15,7 +15,7 @@
   /* Colores de estado */
   --color-success: #22c55e;
   --color-warning: #facc15;
-  --color-error: #ef4444;
+  --color-error: #DC2626;
 }
 
 /* Configuración adicional de DaisyUI */
@@ -31,4 +31,5 @@
   --color-base-300: #e5e7eb;
   --color-base-content: #222222;
   --color-neutral: #222222;
+  --color-error: #DC2626;
 }
