@@ -49,7 +49,8 @@ export default function AsistenteLayout() {
     pathname.includes('enviar-ponencia') || 
     pathname.includes('estatus-ponencia') ||
     pathname.includes('subir-multimedia') ||
-    pathname.includes('subir-extenso');
+    pathname.includes('subir-extenso') ||
+    pathname.includes('subir-correccion');
 
   const displayTitle = isPonenteSection ? "Ponente" : "Asistente";
 
@@ -268,6 +269,36 @@ export default function AsistenteLayout() {
               <div className="flex items-center gap-3">
                 <GrStatusGood className="text-lg pl-1" />
                 <span>Estatus Ponencia</span>
+              </div>
+            </NavLink>
+            <NavLink
+              to="/asistente/subir-multimedia"
+              className={navLinkClass}
+              onClick={closeDrawer}
+            >
+              <div className="flex items-center gap-3">
+                <MdUploadFile className="text-lg pl-1" />
+                <span>Subir Multimedia</span>
+              </div>
+            </NavLink>
+            <NavLink
+              to="/asistente/subir-extenso"
+              className={navLinkClass}
+              onClick={closeDrawer}
+            >
+              <div className="flex items-center gap-3">
+                <MdUploadFile className="text-lg pl-1" />
+                <span>Subir Extenso</span>
+              </div>
+            </NavLink>
+            <NavLink
+              to="/asistente/subir-correccion"
+              className={navLinkClass}
+              onClick={closeDrawer}
+            >
+              <div className="flex items-center gap-3">
+                <MdUploadFile className="text-lg pl-1" />
+                <span>Subir Corrección</span>
               </div>
             </NavLink>
           </nav>
