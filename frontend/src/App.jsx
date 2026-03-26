@@ -8,6 +8,9 @@ import PagosView from "./views/asistentes/PagosView";
 import MisPonenciasView from "./views/asistentes/MisPonenciasView";
 import EnviarPonenciaView from "./views/asistentes/EnviarPonenciaView";
 import EstatusPonenciaView from "./views/asistentes/EstatusPonenciaView";
+import SubirModificadoView from "./views/asistentes/SubirModificadoView";
+import SubirExtensoView from "./views/asistentes/SubirExtensoView";
+import SubirMultimediaView from "./views/asistentes/SubirMultimediaView";
 import ConstanciasView from "./views/asistentes/ConstanciasView";
 import Login from "./views/auth/Login";
 import Register from "./views/auth/Register";
@@ -216,6 +219,17 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
+          <Route path="agenda" element={<AgendaView />} />
+            <Route path="catalogo" element={<CatalogoView />} />
+            <Route path="pagos" element={<PagosView />} />
+            <Route path="mis-ponencias" element={<MisPonenciasView />} />
+            <Route path="enviar-ponencia" element={<EnviarPonenciaView />} />
+            <Route path="estatus-ponencia" element={<EstatusPonenciaView />} />
+            <Route path="subir-multimedia" element={<SubirMultimediaView />} />
+            <Route path="subir-correccion" element={<SubirModificadoView />} />
+            <Route path="subir-extenso" element={<SubirExtensoView />} />
+
+
           {/* Rutas para Asistentes */}
           <Route
             path="/asistente"
@@ -232,6 +246,9 @@ function App() {
             <Route path="mis-ponencias" element={<MisPonenciasView />} />
             <Route path="enviar-ponencia" element={<EnviarPonenciaView />} />
             <Route path="estatus-ponencia" element={<EstatusPonenciaView />} />
+            <Route path="subir-multimedia" element={<SubirMultimediaView />} />
+            <Route path="subir-correccion" element={<SubirModificadoView />} />
+            <Route path="subir-extenso" element={<SubirExtensoView />} />
             <Route
               path="constancias"
               element={<ConstanciasView title="Mis Constancias" />}
