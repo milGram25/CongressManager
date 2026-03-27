@@ -73,21 +73,21 @@ export default function EstatusPonenciaView(){
   const renderBoton = (p) => {
     if (p.estatus == "extenso-aceptado") {
       return (
-        <button className="btn btn-primary w-40" onClick={() => navigate("/subir-multimedia")}>
+        <button className="btn btn-primary w-40" onClick={() => navigate("/ponente/subir-multimedia")}>
           Subir Multimedia
         </button>
       );
     }
     if (p.estatus == "resumen-aceptado") {
       return (
-        <button className="btn btn-primary w-40" onClick={() => navigate("/subir-extenso")}>
+        <button className="btn btn-primary w-40" onClick={() => navigate("/ponente/subir-extenso")}>
           Subir Extenso
         </button>
       );
     }
     if (p.estatus == "extenso-con-modificaciones") {
       return (
-        <button className="btn btn-primary w-40" onClick={() => navigate("/subir-correccion")}>
+        <button className="btn btn-primary w-40" onClick={() => navigate("/ponente/subir-correccion")}>
           Subir Corrección
         </button>
       );
