@@ -8,6 +8,9 @@ import PagosView from "./views/asistentes/PagosView";
 import MisPonenciasView from "./views/asistentes/MisPonenciasView";
 import EnviarPonenciaView from "./views/asistentes/EnviarPonenciaView";
 import EstatusPonenciaView from "./views/asistentes/EstatusPonenciaView";
+import SubirModificadoView from "./views/asistentes/SubirModificadoView";
+import SubirExtensoView from "./views/asistentes/SubirExtensoView";
+import SubirMultimediaView from "./views/asistentes/SubirMultimediaView";
 import ConstanciasView from "./views/asistentes/ConstanciasView";
 import Login from "./views/auth/Login";
 import Register from "./views/auth/Register";
@@ -67,10 +70,9 @@ import {
 
 const AsistenteLayoutWrapper = () => {
   const { user } = useAuth();
-  const { pathname } = useLocation();
 
   const menuItems = [
-    // Si el usuario tiene permisos de administrador, revisor o dictaminador, mostrar accesos rápidos
+    // Accesos rápidos para roles con permisos extra
     ...((user?.rol === 'administrador' || user?.rol === 'revisor' || user?.rol === 'dictaminador') ? [
       { type: 'subheader', label: 'Vistas de Rol' },
       { 
@@ -93,12 +95,45 @@ const AsistenteLayoutWrapper = () => {
     { to: '/asistente/pagos', label: 'Pagos', icon: MdPayment },
     { to: '/asistente/constancias', label: 'Mis Constancias', icon: MdBadge },
     { type: 'header', label: 'Ponente' },
-    { to: '/asistente/mis-ponencias', label: 'Mis Ponencias', icon: MdCoPresent },
     { to: '/asistente/enviar-ponencia', label: 'Enviar Ponencia', icon: MdUploadFile },
-    { to: '/asistente/estatus-ponencia', label: 'Estatus Ponencia', icon: GrStatusGood },
   ];
 
   return <SidebarLayout roleTitle="Asistente" drawerId="asistente-drawer" menuItems={menuItems} MainIcon={MdSchool} />;
+};
+
+const PonenteLayoutWrapper = () => {
+  const { user } = useAuth();
+
+  const menuItems = [
+    // Accesos rápidos para roles con permisos extra
+    ...((user?.rol === 'administrador' || user?.rol === 'revisor' || user?.rol === 'dictaminador') ? [
+      { type: 'subheader', label: 'Vistas de Rol' },
+      { 
+        type: 'role-icons', 
+        roles: [
+          ...(user?.rol === 'administrador' ? [
+            { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
+            { to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview },
+            { to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel },
+          ] : [
+            ...(user?.rol === 'revisor' ? [{ to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview }] : []),
+            ...(user?.rol === 'dictaminador' ? [{ to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel }] : []),
+          ]),
+        ]
+      },
+    ] : []),
+
+    { to: '/ponente/agenda', label: 'Agenda', icon: MdCalendarMonth },
+    { to: '/ponente/catalogo', label: 'Catálogo', icon: MdLibraryBooks },
+    { to: '/ponente/pagos', label: 'Pagos', icon: MdPayment },
+    { to: '/ponente/constancias', label: 'Mis Constancias', icon: MdBadge },
+    { type: 'header', label: 'Ponente' },
+    { to: '/ponente/mis-ponencias', label: 'Mis Ponencias', icon: MdCoPresent },
+    { to: '/ponente/enviar-ponencia', label: 'Enviar Ponencia', icon: MdUploadFile },
+    { to: '/ponente/estatus-ponencia', label: 'Estatus Ponencia', icon: GrStatusGood },
+  ];
+
+  return <SidebarLayout roleTitle="Ponente" drawerId="ponente-drawer" menuItems={menuItems} MainIcon={MdCoPresent} />;
 };
 
 const AdminLayoutWrapper = () => {
@@ -220,8 +255,28 @@ function App() {
           <Route
             path="/asistente"
             element={
-              <ProtectedRoute allowedRoles={["asistente", "ponente"]}>
+              <ProtectedRoute allowedRole="asistente">
                 <AsistenteLayoutWrapper />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="agenda" replace />} />
+            <Route path="agenda" element={<AgendaView />} />
+            <Route path="catalogo" element={<CatalogoView />} />
+            <Route path="pagos" element={<PagosView />} />
+            <Route path="enviar-ponencia" element={<EnviarPonenciaView />} />
+            <Route
+              path="constancias"
+              element={<ConstanciasView title="Mis Constancias" />}
+            />
+          </Route>
+
+          {/* Rutas para Ponentes */}
+          <Route
+            path="/ponente"
+            element={
+              <ProtectedRoute allowedRole="ponente">
+                <PonenteLayoutWrapper />
               </ProtectedRoute>
             }
           >
@@ -232,6 +287,9 @@ function App() {
             <Route path="mis-ponencias" element={<MisPonenciasView />} />
             <Route path="enviar-ponencia" element={<EnviarPonenciaView />} />
             <Route path="estatus-ponencia" element={<EstatusPonenciaView />} />
+            <Route path="subir-multimedia" element={<SubirMultimediaView />} />
+            <Route path="subir-correccion" element={<SubirModificadoView />} />
+            <Route path="subir-extenso" element={<SubirExtensoView />} />
             <Route
               path="constancias"
               element={<ConstanciasView title="Mis Constancias" />}
