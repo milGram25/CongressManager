@@ -1,15 +1,9 @@
 import { useState } from "react";
 
-export default function PagosComponente() {
+export default function PagosComponente({listaPagos}) {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const date = new Date();
-  const mockSchedule = [
-    { id: "1", nombre: "Ernesto", rol: "Ponente", fecha:"28 / marzo / 2026 - 12:54", estatus: "pagado"},
-    { id: "2", nombre: "Jimenita", rol: "Miembro comité", fecha:"28 / marzo / 2026 - 12:54",estatus: "pagado" },
-    { id: "3", nombre: "Kaleb", rol: "Asistente", fecha:"28 / marzo / 2026 - 12:54", estatus: "pendiente" },
-    { id: "4", nombre: "Gabriel", rol: "Miembro comité", fecha:"28 / marzo / 2026 - 12:54", estatus: "pendiente" },
-    { id: "5", nombre: "Lalo", rol: "Miembro comité", fecha:"28 / marzo / 2026 - 12:54", estatus: "pagado" }
-  ];
+ 
 
   return (
 
@@ -58,7 +52,7 @@ export default function PagosComponente() {
       </div>
       {/*valores*/}
       <div className="p-4 space-y-2 w-full">
-        {mockSchedule.map((item) => (
+        {listaPagos.map((item) => (
           <div
             key={item.id}
             className={`text-center flex justify-between p-3 border rounded-xl shadow-sm cursor-pointer transition-colors
