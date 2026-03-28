@@ -15,7 +15,7 @@ export default function PagosComponente() {
 
     <div className="mx-auto w-full p-4 bg-base-100 rounded-xl shadow-sm border border-base-200 overflow-hidden">
       {/*header*/}
-      <div className="flex pb-4 w-full border-b m-4 gap-4">
+      <div className="flex pb-4 pr-6 w-full border-b m-4 gap-4">
   
         <div className="flex-1 flex flex-col gap-1">
           <h1 className="text-xl font-bold">Nombre</h1>
