@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { MdArrowBack } from "react-icons/md";
 
+import FechasGen from "./Componentes/fechasGen";
+
 export default function CongresoFechasView() {
   const navigate = useNavigate();
   return (
@@ -15,6 +17,7 @@ export default function CongresoFechasView() {
       </button>
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <h2 className="text-2xl font-bold">Congreso: Fechas</h2>
+        <FechasGen />
         <p className="text-base-content/50 mt-2 italic">Sección en proceso de desarrollo...</p>
       </div>
     </div>
