@@ -21,14 +21,6 @@ export default function PagosComponente({listaPagos}) {
         </div>
 
         <div className="flex-1 flex flex-col gap-1">
-          <h1 className="text-xl font-bold">Fecha</h1>
-          <select className="rounded-full">
-            <option value="Recientes">Recientes</option>
-            <option value="Antiguos">Antiguos</option>
-          </select>
-        </div>
-
-        <div className="flex-1 flex flex-col gap-1">
           <h1 className="text-xl font-bold">Rol</h1>
           <select className="rounded-full">
             <option value="Todos">Todos</option>
@@ -37,6 +29,14 @@ export default function PagosComponente({listaPagos}) {
             <option value="Talleristas">Talleristas</option>
             <option value="Ponentes">Ponentes</option>
             <option value="Dictaminadores">Dictaminadores</option>
+          </select>
+        </div>
+
+        <div className="flex-1 flex flex-col gap-1">
+          <h1 className="text-xl font-bold">Fecha</h1>
+          <select className="rounded-full">
+            <option value="Recientes">Recientes</option>
+            <option value="Antiguos">Antiguos</option>
           </select>
         </div>
 
