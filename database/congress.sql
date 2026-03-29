@@ -63,8 +63,10 @@ CREATE TABLE costos_congreso (
     id_costos_congreso SERIAL PRIMARY KEY,
     cuenta_deposito VARCHAR(255) NOT NULL,
     descuento_prepago DOUBLE PRECISION DEFAULT 0,
+    descuento_estudiante DOUBLE PRECISION DEFAULT 0,
     costo_congreso_asistente DOUBLE PRECISION NOT NULL,
-    costo_congreso_ponente DOUBLE PRECISION NOT NULL
+    costo_congreso_ponente DOUBLE PRECISION NOT NULL,
+    costo_congreso_comite DOUBLE PRECISION NOT NULL
 );
 
 CREATE TABLE fechas_congreso (
@@ -102,7 +104,8 @@ CREATE TABLE congreso (
     id_sede INTEGER NOT NULL REFERENCES sede(id_sede),
     id_institucion INTEGER NOT NULL REFERENCES institucion(id_institucion),
     id_fechas_congreso INTEGER NOT NULL REFERENCES fechas_congreso(id_fechas_congreso),
-    id_costos_congreso INTEGER NOT NULL REFERENCES costos_congreso(id_costos_congreso)
+    id_costos_congreso INTEGER NOT NULL REFERENCES costos_congreso(id_costos_congreso),
+    id_rubrica INTEGER NOT NULL REFERENCES rubricas(id_rubrica)
 );
 
 -- Roles específicos
@@ -154,8 +157,13 @@ CREATE TABLE evento (
 CREATE TABLE asistente (
     id_asistente SERIAL PRIMARY KEY,
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona),
-    id_evento INTEGER NOT NULL REFERENCES evento(id_evento),
     asistio BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE asistente_evento (
+    id_asistente_evento SERIAL PRIMARY KEY,
+    id_asistente INTEGER NOT NULL REFERENCES asistente(id_asistente),
+    id_evento INTEGER NOT NULL REFERENCES evento(id_evento)
 );
 
 -- Evaluación de ponencias
@@ -171,14 +179,9 @@ CREATE TABLE resumen (
 
 CREATE TABLE extenso (
     id_extenso SERIAL PRIMARY KEY,
-    id_evaluador1 INTEGER REFERENCES evaluador(id_evaluador),
-    id_evaluador2 INTEGER REFERENCES evaluador(id_evaluador),
-    id_evaluador3 INTEGER REFERENCES evaluador(id_evaluador),
     fecha_inicio TIMESTAMP NOT NULL,
     fecha_final TIMESTAMP NOT NULL,
-    revisado BOOLEAN DEFAULT FALSE,
-    estatus estatus_extenso_enum,
-    retroalimentacion TEXT
+    revisado BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE taller (
@@ -214,7 +217,7 @@ CREATE TABLE pagos (
     pagado BOOLEAN DEFAULT FALSE,
     fecha_pago_realizado TIMESTAMP,
     limite_fecha_pago TIMESTAMP NOT NULL,
-    id_destinatario INTEGER NOT NULL REFERENCES sede(id_sede)
+    id_destinatario INTEGER NOT NULL REFERENCES costos_congreso(id_constos_congreso)
 );
 
 CREATE TABLE historial_acciones (
@@ -231,8 +234,48 @@ CREATE TABLE constancia (
     ruta_constancia VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE facturas (
+CREATE TABLE factura (
     id_factura SERIAL PRIMARY KEY,
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona),
     ruta_factura VARCHAR(255) NOT NULL
+);
+
+-- Rubricas para evaluación de extensos
+CREATE TABLE rubrica (
+    id_rubrica SERIAL PRIMARY KEY,
+    tipo_evento tipo_evento_enum NOT NULL,
+    nombre VARCHAR(255) NOT NULL,
+    esta_activo BOOLEAN DEFAULT true,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE rubrica_grupo (
+    id_grupo SERIAL PRIMARY KEY,
+    id_rubrica INTEGER REFERENCES rubricas(id_rubrica) ON DELETE CASCADE,
+    nombre_grupo VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE rubrica_criterio (
+    id_criterio SERIAL PRIMARY KEY,
+    id_grupo INTEGER REFERENCES rubrica_grupos(id_grupo) ON DELETE CASCADE,
+    descripcion VARCHAR(255) NOT NULL,
+    calificacion NUMERIC(3,2) DEFAULT 1.0
+);
+
+CREATE TABLE evaluacion (
+    id_evaluacion SERIAL PRIMARY KEY,
+    id_extenso INTEGER NOT NULL REFERENCES extenso(id_extenso) ON DELETE CASCADE,
+    id_evaluador INTEGER NOT NULL REFERENCES evaluador(id_evaluador),
+    retroalimentacion TEXT,
+    estatus estatus_extenso_enum NOT NULL,
+    fecha_de_revision TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE evaluacion_criterio (
+    id_evaluacion_criterio SERIAL PRIMARY KEY,
+    id_evaluacion INTEGER REFERENCES evaluaciones(id_evaluacion) ON DELETE CASCADE,
+    id_criterio INTEGER REFERENCES rubrica_criterio(id_criterio),
+    puntaje INTEGER CHECK (puntaje BETWEEN 1 AND 5),
+    comentario TEXT,
+    UNIQUE(id_evaluacion, id_criterio)
 );
