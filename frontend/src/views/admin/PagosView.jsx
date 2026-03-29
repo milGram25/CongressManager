@@ -5,11 +5,11 @@ export default function AdminPagosView() {
   //Estas listas hay que borrarlas, ya que solo están como ejemplos
 
    const listaPagos = [
-    { id: "1", nombre: "Ernesto", rol: "Ponente", fecha:"28 / marzo / 2026 - 12:54", estatus: "pagado"},
-    { id: "2", nombre: "Jimenita", rol: "Miembro comité", fecha:"28 / marzo / 2026 - 12:54",estatus: "pagado" },
-    { id: "3", nombre: "Kaleb", rol: "Asistente", fecha:"28 / marzo / 2026 - 12:54", estatus: "pendiente" },
-    { id: "4", nombre: "Gabriel", rol: "Miembro comité", fecha:"28 / marzo / 2026 - 12:54", estatus: "pendiente" },
-    { id: "5", nombre: "Lalo", rol: "Miembro comité", fecha:"28 / marzo / 2026 - 12:54", estatus: "pagado" }
+    { id: "1", nombre: "Ernesto", rol: "Ponente", fecha:"28 / marzo / 2026 - 12:54", estatus: "Pagado"},
+    { id: "2", nombre: "Jimenita", rol: "Comité académico", fecha:"28 / marzo / 2026 - 12:54",estatus: "Pagado" },
+    { id: "3", nombre: "Kaleb", rol: "Asistente", fecha:"28 / marzo / 2026 - 12:54", estatus: "Pendiente" },
+    { id: "4", nombre: "Gabriel", rol: "Comité académico", fecha:"28 / marzo / 2026 - 12:54", estatus: "Pendiente" },
+    { id: "5", nombre: "Lalo", rol: "Comité académico", fecha:"28 / marzo / 2026 - 12:54", estatus: "Pagado" }
   ];
 
 
