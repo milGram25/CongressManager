@@ -37,7 +37,7 @@ const Register = () => {
     setFormData({ ...formData, pais: value.label });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -82,9 +82,8 @@ const Register = () => {
 
     setLoading(true);
 
-    // Simular un pequeño delay de red
-    setTimeout(() => {
-      const result = register(formData);
+    try {
+      const result = await register(formData);
       
       if (result.success) {
         alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
@@ -93,7 +92,10 @@ const Register = () => {
         setError(result.message);
         setLoading(false);
       }
-    }, 500);
+    } catch (err) {
+      setError('Error al conectar con el servidor.');
+      setLoading(false);
+    }
   };
 
   return (

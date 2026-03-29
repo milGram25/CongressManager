@@ -59,42 +59,70 @@ export function AuthProvider({ children }) {
   };
 
   /**
-   * Registra un nuevo usuario en localStorage.
+   * Registra un nuevo usuario en la base de datos a través del backend.
    */
-  const register = (userData) => {
-    const users = getRegisteredUsers();
-    
-    // Validar si el correo ya existe
-    if (users.find(u => u.email === userData.email)) {
-      return { success: false, message: "El correo ya está registrado." };
-    }
+  const register = async (userData) => {
+    try {
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nombre: userData.nombre || userData.nombres,
+          primer_apellido: userData.primer_apellido || userData.apellidos?.split(' ')[0] || '',
+          segundo_apellido: userData.segundo_apellido || userData.apellidos?.split(' ').slice(1).join(' ') || '',
+          email: userData.email,
+          password: userData.password
+        }),
+      });
 
-    // Guardar nuevo usuario
-    const newUsers = [...users, userData];
-    localStorage.setItem("registered_users", JSON.stringify(newUsers));
-    return { success: true };
+      const data = await response.json();
+
+      if (data.success) {
+        return { success: true, message: data.message };
+      } else {
+        return { success: false, message: data.message || "Error al registrarse" };
+      }
+    } catch (error) {
+      console.error("Error en registro:", error);
+      return { success: false, message: "Error de conexión con el servidor" };
+    }
   };
 
   /**
-   * Intenta iniciar sesión. Valida contra los usuarios registrados.
+   * Intenta iniciar sesión. Valida contra el backend.
    */
-  const login = (email, password) => {
-    const users = getRegisteredUsers();
-    const foundUser = users.find(
-      u => u.email.trim() === email.trim() && u.password === password
-    );
+  const login = async (email, password) => {
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (foundUser) {
-      const userData = { 
-        email: foundUser.email, 
-        nombre: foundUser.nombres || foundUser.nombre, 
-        rol: foundUser.rol || "asistente" 
-      };
-      setUser(userData);
-      localStorage.setItem("congress_user", JSON.stringify(userData));
-      return true;
+      const data = await response.json();
+
+      if (data.success) {
+        const userData = {
+          id: data.user.id,
+          email: data.user.email,
+          nombre: data.user.nombre,
+          rol: data.user.rol,
+          token: data.token
+        };
+        setUser(userData);
+        localStorage.setItem("congress_user", JSON.stringify(userData));
+        return { success: true };
+      } else {
+        return { success: false, message: data.message || "Credenciales incorrectas" };
+      }
+    } catch (error) {
+      console.error("Error en login:", error);
+      return { success: false, message: "Error de conexión con el servidor" };
     }
-    return false;
   };
 
   const logout = () => {

@@ -15,15 +15,15 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    // Pequeño delay para simular la llamada al servidor
-    setTimeout(() => {
-      const ok = login(email, password);
-      if (ok) {
+    try {
+      const result = await login(email, password);
+      
+      if (result.success) {
         // Obtenemos el usuario recién logueado para ver su rol
         const savedUser = JSON.parse(localStorage.getItem("congress_user"));
         if (savedUser?.rol === 'revisor') {
@@ -36,10 +36,13 @@ export default function Login() {
           navigate('/asistente', { replace: true });
         }
       } else {
-        setError('Correo o contraseña incorrectos.');
+        setError(result.message || 'Correo o contraseña incorrectos.');
         setLoading(false);
       }
-    }, 400);
+    } catch (err) {
+      setError('Error al intentar iniciar sesión. Inténtelo más tarde.');
+      setLoading(false);
+    }
   };
 
   return (
