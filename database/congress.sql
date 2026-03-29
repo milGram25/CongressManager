@@ -1,7 +1,6 @@
 -- DROP SCHEMA public CASCADE; CREATE SCHEMA public;
--- Para recargar la base de datos, ejecutar el comando anterior para eliminar todas las tablas y luego ejecutar este script nuevamente.
 
--- Tipos de datos personalizados
+-- 1. TIPOS DE DATOS PERSONALIZADOS (ENUMS)
 CREATE TYPE tipo_evento_enum AS ENUM ('ponencia', 'taller');
 CREATE TYPE estatus_extenso_enum AS ENUM ('aceptado', 'aceptado con ligeras modificaciones', 'aceptado con modificaciones mayores', 'rechazado');
 CREATE TYPE estatus_resumen_enum AS ENUM ('aceptado', 'rechazado');
@@ -13,11 +12,11 @@ CREATE TYPE accion_enum AS ENUM (
     'crear area general', 'crear subarea especifica', 'borrar usuario', 'modificar fecha evento'
 );
 
--- Tablas principales
+-- 2. TABLAS DE INFRAESTRUCTURA INDEPENDIENTES
 CREATE TABLE institucion (
     id_institucion SERIAL PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL,
-    ruta_imagen VARCHAR(255) NOT NULL
+    ruta_imagen VARCHAR(255)
 );
 
 CREATE TABLE sede (
@@ -51,11 +50,11 @@ CREATE TABLE multimedia (
 CREATE TABLE persona (
     id_persona SERIAL PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL,
-    correo_electronico VARCHAR(255) UNIQUE,
-    contrasena VARCHAR(255) NOT NULL,
-    num_telefono VARCHAR(20) UNIQUE,
     primer_apellido VARCHAR(255) NOT NULL,
     segundo_apellido VARCHAR(255),
+    correo_electronico VARCHAR(255) UNIQUE NOT NULL,
+    contrasena VARCHAR(255) NOT NULL,
+    num_telefono VARCHAR(20) UNIQUE,
     curp CHAR(18) UNIQUE
 );
 
@@ -91,7 +90,29 @@ CREATE TABLE fechas_congreso (
     fecha_fin_subir_multimedia TIMESTAMP NOT NULL
 );
 
--- Organización del congreso
+-- 3. SISTEMA DE RÚBRICAS (Plantillas de evaluación)
+CREATE TABLE rubrica (
+    id_rubrica SERIAL PRIMARY KEY,
+    tipo_evento tipo_evento_enum NOT NULL,
+    nombre VARCHAR(255) NOT NULL,
+    esta_activo BOOLEAN DEFAULT true,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE rubrica_grupo (
+    id_grupo SERIAL PRIMARY KEY,
+    id_rubrica INTEGER NOT NULL REFERENCES rubrica(id_rubrica) ON DELETE CASCADE,
+    nombre_grupo VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE rubrica_criterio (
+    id_criterio SERIAL PRIMARY KEY,
+    id_grupo INTEGER NOT NULL REFERENCES rubrica_grupo(id_grupo) ON DELETE CASCADE,
+    descripcion VARCHAR(255) NOT NULL,
+    peso NUMERIC(3,2) DEFAULT 1.0 -- Peso relativo del criterio en la evaluación
+);
+
+-- 4. ORGANIZACIÓN DEL CONGRESO
 CREATE TABLE subareas (
     id_subareas SERIAL PRIMARY KEY,
     nombre VARCHAR(255),
@@ -105,17 +126,10 @@ CREATE TABLE congreso (
     id_institucion INTEGER NOT NULL REFERENCES institucion(id_institucion),
     id_fechas_congreso INTEGER NOT NULL REFERENCES fechas_congreso(id_fechas_congreso),
     id_costos_congreso INTEGER NOT NULL REFERENCES costos_congreso(id_costos_congreso),
-    id_rubrica INTEGER NOT NULL REFERENCES rubricas(id_rubrica)
+    id_rubrica_default INTEGER REFERENCES rubrica(id_rubrica) -- Rubrica global del congreso
 );
 
--- Roles específicos
-CREATE TABLE tallerista (
-    id_tallerista SERIAL PRIMARY KEY,
-    id_persona INTEGER REFERENCES persona(id_persona),
-    nombre VARCHAR(255), 
-    asistio BOOLEAN DEFAULT FALSE
-);
-
+-- 5. ROLES Y LOGÍSTICA
 CREATE TABLE evaluador (
     id_evaluador SERIAL PRIMARY KEY,
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona)
@@ -132,7 +146,12 @@ CREATE TABLE ponente (
     asistio BOOLEAN DEFAULT FALSE
 );
 
--- Logística del congreso
+CREATE TABLE asistente (
+    id_asistente SERIAL PRIMARY KEY,
+    id_persona INTEGER NOT NULL REFERENCES persona(id_persona) ON DELETE CASCADE,
+    institucion_procedencia VARCHAR(255)
+);
+
 CREATE TABLE mesas_trabajo (
     id_mesas_trabajo SERIAL PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL,
@@ -154,24 +173,19 @@ CREATE TABLE evento (
     enlace VARCHAR(255)
 );
 
-CREATE TABLE asistente (
-    id_asistente SERIAL PRIMARY KEY,
-    id_persona INTEGER NOT NULL REFERENCES persona(id_persona),
-    asistio BOOLEAN DEFAULT FALSE
-);
-
 CREATE TABLE asistente_evento (
     id_asistente_evento SERIAL PRIMARY KEY,
-    id_asistente INTEGER NOT NULL REFERENCES asistente(id_asistente),
-    id_evento INTEGER NOT NULL REFERENCES evento(id_evento)
+    id_asistente INTEGER NOT NULL REFERENCES asistente(id_asistente) ON DELETE CASCADE,
+    id_evento INTEGER NOT NULL REFERENCES evento(id_evento) ON DELETE CASCADE,
+    fecha_inscripcion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(id_asistente, id_evento)
 );
 
--- Evaluación de ponencias
+-- 6. GESTIÓN DE TRABAJOS (Resúmenes y Extensos)
 CREATE TABLE resumen (
     id_resumen SERIAL PRIMARY KEY,
     id_dictaminador INTEGER REFERENCES dictaminador(id_dictaminador),
-    fecha_inicio TIMESTAMP NOT NULL,
-    fecha_final TIMESTAMP NOT NULL,
+    fecha_entrega TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     revisado BOOLEAN DEFAULT FALSE,
     estatus estatus_resumen_enum,
     retroalimentacion TEXT
@@ -179,17 +193,10 @@ CREATE TABLE resumen (
 
 CREATE TABLE extenso (
     id_extenso SERIAL PRIMARY KEY,
-    fecha_inicio TIMESTAMP NOT NULL,
-    fecha_final TIMESTAMP NOT NULL,
-    revisado BOOLEAN DEFAULT FALSE
-);
-
-CREATE TABLE taller (
-    id_taller SERIAL PRIMARY KEY,
-    id_evento INTEGER REFERENCES evento(id_evento),
-    tipo_participacion tipo_participacion_enum,
-    id_tallerista INTEGER NOT NULL REFERENCES tallerista(id_tallerista),
-    id_subarea INTEGER NOT NULL REFERENCES subareas(id_subareas)
+    titulo VARCHAR(255) NOT NULL,
+    fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    revisado BOOLEAN DEFAULT FALSE,
+    version_numero INTEGER DEFAULT 1 -- Para manejar "Solicitud de cambios"
 );
 
 CREATE TABLE ponencia (
@@ -202,22 +209,51 @@ CREATE TABLE ponencia (
     id_multimedia INTEGER REFERENCES multimedia(id_material)
 );
 
--- Adminsitración de acciones y pagos
+-- 7. EVALUACIONES (Instancias de revisión)
+CREATE TABLE evaluacion (
+    id_evaluacion SERIAL PRIMARY KEY,
+    id_extenso INTEGER NOT NULL REFERENCES extenso(id_extenso) ON DELETE CASCADE,
+    id_evaluador INTEGER NOT NULL REFERENCES evaluador(id_evaluador),
+    retroalimentacion_general TEXT,
+    estatus estatus_extenso_enum NOT NULL,
+    fecha_de_revision TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE evaluacion_criterio (
+    id_evaluacion_criterio SERIAL PRIMARY KEY,
+    id_evaluacion INTEGER NOT NULL REFERENCES evaluacion(id_evaluacion) ON DELETE CASCADE,
+    id_criterio INTEGER NOT NULL REFERENCES rubrica_criterio(id_criterio),
+    puntaje INTEGER CHECK (puntaje BETWEEN 1 AND 5),
+    comentario_especifico TEXT,
+    UNIQUE(id_evaluacion, id_criterio)
+);
+
+-- 8. ADMINISTRACIÓN, PAGOS Y CONTROL
 CREATE TABLE ponente_has_ponencia (
     id_ponente_has_ponencia SERIAL PRIMARY KEY,
     id_ponente INTEGER NOT NULL REFERENCES ponente(id_ponente),
     id_ponencia INTEGER NOT NULL REFERENCES ponencia(id_ponencia)
 );
 
+CREATE TABLE factura (
+    id_factura SERIAL PRIMARY KEY,
+    id_persona INTEGER NOT NULL REFERENCES persona(id_persona),
+    rfc VARCHAR(13),
+    razon_social VARCHAR(255),
+    codigo_postal VARCHAR(10),
+    regimen_fiscal VARCHAR(255),
+    ruta_pdf_xml VARCHAR(255) NOT NULL
+);
+
 CREATE TABLE pagos (
     id_pagos SERIAL PRIMARY KEY,
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona),
     monto DOUBLE PRECISION DEFAULT 0,
-    descuento DOUBLE PRECISION DEFAULT 0,
     pagado BOOLEAN DEFAULT FALSE,
     fecha_pago_realizado TIMESTAMP,
-    limite_fecha_pago TIMESTAMP NOT NULL,
-    id_destinatario INTEGER NOT NULL REFERENCES costos_congreso(id_constos_congreso)
+    id_costos INTEGER NOT NULL REFERENCES costos_congreso(id_costos_congreso),
+    requiere_factura BOOLEAN DEFAULT FALSE,
+    id_factura INTEGER REFERENCES factura(id_factura)
 );
 
 CREATE TABLE historial_acciones (
@@ -232,50 +268,4 @@ CREATE TABLE constancia (
     id_constancia SERIAL PRIMARY KEY,
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona),
     ruta_constancia VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE factura (
-    id_factura SERIAL PRIMARY KEY,
-    id_persona INTEGER NOT NULL REFERENCES persona(id_persona),
-    ruta_factura VARCHAR(255) NOT NULL
-);
-
--- Rubricas para evaluación de extensos
-CREATE TABLE rubrica (
-    id_rubrica SERIAL PRIMARY KEY,
-    tipo_evento tipo_evento_enum NOT NULL,
-    nombre VARCHAR(255) NOT NULL,
-    esta_activo BOOLEAN DEFAULT true,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE rubrica_grupo (
-    id_grupo SERIAL PRIMARY KEY,
-    id_rubrica INTEGER REFERENCES rubricas(id_rubrica) ON DELETE CASCADE,
-    nombre_grupo VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE rubrica_criterio (
-    id_criterio SERIAL PRIMARY KEY,
-    id_grupo INTEGER REFERENCES rubrica_grupos(id_grupo) ON DELETE CASCADE,
-    descripcion VARCHAR(255) NOT NULL,
-    calificacion NUMERIC(3,2) DEFAULT 1.0
-);
-
-CREATE TABLE evaluacion (
-    id_evaluacion SERIAL PRIMARY KEY,
-    id_extenso INTEGER NOT NULL REFERENCES extenso(id_extenso) ON DELETE CASCADE,
-    id_evaluador INTEGER NOT NULL REFERENCES evaluador(id_evaluador),
-    retroalimentacion TEXT,
-    estatus estatus_extenso_enum NOT NULL,
-    fecha_de_revision TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE evaluacion_criterio (
-    id_evaluacion_criterio SERIAL PRIMARY KEY,
-    id_evaluacion INTEGER REFERENCES evaluaciones(id_evaluacion) ON DELETE CASCADE,
-    id_criterio INTEGER REFERENCES rubrica_criterio(id_criterio),
-    puntaje INTEGER CHECK (puntaje BETWEEN 1 AND 5),
-    comentario TEXT,
-    UNIQUE(id_evaluacion, id_criterio)
 );
