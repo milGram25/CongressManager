@@ -93,7 +93,7 @@ CREATE TABLE fechas_congreso (
 -- 3. SISTEMA DE RÚBRICAS (Plantillas de evaluación)
 CREATE TABLE rubrica (
     id_rubrica SERIAL PRIMARY KEY,
-    tipo_evento tipo_evento_enum NOT NULL,
+    tipo_trabajo INTEGER NOT NULL REFERENCES tipo_trabajo(id_tipo_trabajo),
     nombre VARCHAR(255) NOT NULL,
     esta_activo BOOLEAN DEFAULT true,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -110,6 +110,20 @@ CREATE TABLE rubrica_criterio (
     id_grupo INTEGER NOT NULL REFERENCES rubrica_grupo(id_grupo) ON DELETE CASCADE,
     descripcion VARCHAR(255) NOT NULL,
     peso NUMERIC(3,2) DEFAULT 1.0 -- Peso relativo del criterio en la evaluación
+);
+
+CREATE TABLE dictamen (
+    id_dictamen SERIAL PRIMARY KEY,
+    tipo_trabajo INTEGER NOT NULL REFERENCES tipo_trabajo(id_tipo_trabajo),
+    nombre VARCHAR(255) NOT NULL,
+    esta_activo BOOLEAN DEFAULT true,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE dictamen_pregunta (
+    id_pregunta SERIAL PRIMARY KEY,
+    id_dictamen INTEGER NOT NULL REFERENCES dictamen(id_dictamen) ON DELETE CASCADE,
+    descripcion VARCHAR(255) NOT NULL
 );
 
 -- 4. ORGANIZACIÓN DEL CONGRESO
@@ -142,8 +156,7 @@ CREATE TABLE dictaminador (
 
 CREATE TABLE ponente (
     id_ponente SERIAL PRIMARY KEY,
-    id_persona INTEGER NOT NULL REFERENCES persona(id_persona),
-    asistio BOOLEAN DEFAULT FALSE
+    id_persona INTEGER NOT NULL REFERENCES persona(id_persona)
 );
 
 CREATE TABLE asistente (
@@ -228,11 +241,30 @@ CREATE TABLE evaluacion_criterio (
     UNIQUE(id_evaluacion, id_criterio)
 );
 
+CREATE TABLE dictamen_resumen (
+    id_dictamen SERIAL PRIMARY KEY,
+    id_resumen INTEGER NOT NULL REFERENCES resumen(id_resumen) ON DELETE CASCADE,
+    id_dictaminador INTEGER NOT NULL REFERENCES dictaminador(id_dictaminador),
+    retroalimentacion_general TEXT,
+    estatus estatus_resumen_enum NOT NULL,
+    fecha_de_revision TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE evaluacion_pregunta (
+    id_evaluacion_pregunta SERIAL PRIMARY KEY,
+    id_dictamen INTEGER NOT NULL REFERENCES dictamen_resumen(id_dictamen) ON DELETE CASCADE,
+    id_pregunta INTEGER NOT NULL REFERENCES rubrica_pregunta(id_pregunta),
+    cumplio BOOLEAN,
+    comentario_especifico TEXT,
+    UNIQUE(id_dictamen, id_pregunta)
+);
 -- 8. ADMINISTRACIÓN, PAGOS Y CONTROL
 CREATE TABLE ponente_has_ponencia (
     id_ponente_has_ponencia SERIAL PRIMARY KEY,
     id_ponente INTEGER NOT NULL REFERENCES ponente(id_ponente),
-    id_ponencia INTEGER NOT NULL REFERENCES ponencia(id_ponencia)
+    id_ponencia INTEGER NOT NULL REFERENCES ponencia(id_ponencia),
+    asistio BOOLEAN DEFAULT FALSE,
+    UNIQUE(id_ponente, id_ponencia)
 );
 
 CREATE TABLE factura (
