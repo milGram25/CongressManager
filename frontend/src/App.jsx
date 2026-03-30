@@ -22,7 +22,15 @@ import ProcesosView from "./views/admin/ProcesosView";
 import EventosView from "./views/admin/EventosView";
 import AdminPagosView from "./views/admin/PagosView";
 import UsuariosView from "./views/admin/UsuariosView";
+
+import UsuariosConstanciasView from "./views/admin/UsuariosConstanciasView";
+import UsuariosFacturasView from "./views/admin/UsuariosFacturasView";
+import UsuariosHistorialView from "./views/admin/UsuariosHistorialView";
+
 import AjustesView from "./views/admin/AjustesView";
+import AjustesAreasView from "./views/admin/AjustesAreasView";
+import AjustesInstitucionesView from "./views/admin/AjustesInstitucionesView";
+
 import ProcesosResumenesView from "./views/admin/ProcesosResumenesView";
 import ProcesosExtensosView from "./views/admin/ProcesosExtensosView";
 import TalleresView from "./views/admin/TalleresView";
@@ -309,14 +317,14 @@ function App() {
             <Route path="pagos" element={<AdminPagosView />} />
             <Route path="usuarios">
               <Route index element={<UsuariosView />} />
-              <Route path="constancias" element={<PlaceholderView title="Constancias de Usuarios" />} />
-              <Route path="facturas" element={<PlaceholderView title="Facturas de Usuarios" />} />
-              <Route path="historial" element={<PlaceholderView title="Historial de Usuarios" />} />
+              <Route path="constancias" element={<UsuariosConstanciasView title="Constancias de Usuarios" />} />
+              <Route path="facturas" element={<UsuariosFacturasView title="Facturas de Usuarios" />} />
+              <Route path="historial" element={<UsuariosHistorialView title="Historial de Usuarios" />} />
             </Route>
             <Route path="ajustes">
               <Route index element={<AjustesView />} />
-              <Route path="instituciones" element={<PlaceholderView title="Gestión de Instituciones" />} />
-              <Route path="areas" element={<PlaceholderView title="Gestión de Áreas" />} />
+              <Route path="instituciones" element={<AjustesInstitucionesView title="Gestión de Instituciones" />} />
+              <Route path="areas" element={<AjustesAreasView title="Gestión de Áreas" />} />
             </Route>
           </Route>
 
