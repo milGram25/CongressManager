@@ -173,6 +173,7 @@ CREATE TABLE mesas_trabajo (
     id_sede INTEGER NOT NULL REFERENCES sede(id_sede)
 );
 
+
 CREATE TABLE evento (
     id_evento SERIAL PRIMARY KEY,
     id_congreso INTEGER NOT NULL REFERENCES congreso(id_congreso),
@@ -214,11 +215,22 @@ CREATE TABLE extenso (
 
 CREATE TABLE ponencia (
     id_ponencia SERIAL PRIMARY KEY,
-    id_evento INTEGER NOT NULL REFERENCES evento(id_evento),
+    id_evento INTEGER REFERENCES evento(id_evento),
     tipo_participacion tipo_participacion_enum,
     id_subarea INTEGER NOT NULL REFERENCES subareas(id_subareas),
     id_resumen INTEGER NOT NULL REFERENCES resumen(id_resumen),
     id_extenso INTEGER REFERENCES extenso(id_extenso),
+    id_multimedia INTEGER REFERENCES multimedia(id_material)
+);
+
+-- Te parece bien asi la tabla de taller?
+-- no sé qué opines de poner el tipo de participación en el área de evento ok
+CREATE TABLE taller (
+    id_taller SERIAL PRIMARY KEY,
+    tallerista VARCHAR(255) NOT NULL,
+    id_evento INTEGER NOT NULL REFERENCES evento(id_evento),
+    tipo_participacion tipo_participacion_enum,
+    id_subarea INTEGER NOT NULL REFERENCES subareas(id_subareas),
     id_multimedia INTEGER REFERENCES multimedia(id_material)
 );
 
@@ -281,8 +293,8 @@ CREATE TABLE pagos (
     id_pagos SERIAL PRIMARY KEY,
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona),
     monto DOUBLE PRECISION DEFAULT 0,
-    pagado BOOLEAN DEFAULT FALSE,
-    fecha_pago_realizado TIMESTAMP,
+    concepto VARCHAR(255) NOT NULL,
+    fecha_pago_realizado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     id_costos INTEGER NOT NULL REFERENCES costos_congreso(id_costos_congreso),
     requiere_factura BOOLEAN DEFAULT FALSE,
     id_factura INTEGER REFERENCES factura(id_factura)
