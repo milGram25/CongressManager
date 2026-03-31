@@ -56,7 +56,7 @@ CREATE TABLE persona (
     contrasena VARCHAR(255) NOT NULL,
     num_telefono VARCHAR(20) UNIQUE,
     curp CHAR(18) UNIQUE,
-    esta_activo BOOLEAN NOT NULL DEFAULT: TRUE
+    esta_activo NOT NULL BOOLEAN DEFAULT: TRUE
 );
 
 CREATE TABLE costos_congreso (
