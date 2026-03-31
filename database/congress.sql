@@ -55,7 +55,8 @@ CREATE TABLE persona (
     correo_electronico VARCHAR(255) UNIQUE NOT NULL,
     contrasena VARCHAR(255) NOT NULL,
     num_telefono VARCHAR(20) UNIQUE,
-    curp CHAR(18) UNIQUE
+    curp CHAR(18) UNIQUE,
+    esta_activo BOOLEAN NOT NULL DEFAULT: TRUE
 );
 
 CREATE TABLE costos_congreso (
@@ -162,7 +163,8 @@ CREATE TABLE ponente (
 CREATE TABLE asistente (
     id_asistente SERIAL PRIMARY KEY,
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona) ON DELETE CASCADE,
-    institucion_procedencia VARCHAR(255)
+    institucion_procedencia VARCHAR(255),
+    es_estudiante NOT NULL BOOLEAN DEFAULT: FALSE
 );
 
 CREATE TABLE mesas_trabajo (
