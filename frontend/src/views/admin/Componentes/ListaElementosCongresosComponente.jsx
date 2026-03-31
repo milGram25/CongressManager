@@ -32,8 +32,8 @@ export default function ListaElementosGenerica({listaCongresos}){
         <div className="w-140 h-min-50 border border-b rounded-lg">
             {/*header*/}
             <div className="flex bg-black h-15 items-center rounded-t-lg">
-                <div className="flex flex-1 bg-white m-2 border border-b h-10 rounded-full pl-5">
-                    <input className="w-full" type="text" placeholder="Buscar congreso"/>
+                <div className="flex flex-1 bg-white m-2 border border-b h-10 rounded-full">
+                    <input className="w-full pl-5" type="text" placeholder="Buscar congreso"/>
 
                 </div>
                 <div className="flex gap-3 h-12 text-center bg-white border border-b items-center pl-2 pr-2 rounded-full mr-3">
