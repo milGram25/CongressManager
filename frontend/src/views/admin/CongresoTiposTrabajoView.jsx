@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { MdArrowBack } from "react-icons/md";
+import RubricasYPreguntas from "./Componentes/RubricasYPreguntas.jsx";
 
 export default function CongresoTiposTrabajoView() {
   const navigate = useNavigate();
@@ -13,10 +14,7 @@ export default function CongresoTiposTrabajoView() {
         <MdArrowBack className="text-2xl" />
         <span className="text-sm font-medium">Regresar</span>
       </button>
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <h2 className="text-2xl font-bold">Congreso: Tipos de Trabajo</h2>
-        <p className="text-base-content/50 mt-2 italic">Sección en proceso de desarrollo...</p>
-      </div>
+      <RubricasYPreguntas />
     </div>
   );
 }
