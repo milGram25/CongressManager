@@ -7,23 +7,89 @@ import {
 } from "react-icons/md";
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
+const MOCK_DICTAMINADORES = [
+{
+    id: 1,
+    nombre: "Ana García",
+    grado: "Dr. en Ciencias Computacionales",
+    institucion: "UNAM",
+    especialidad: "Inteligencia Artificial",
+    perfil: "Investigadora con 15 años de experiencia en ML y redes neuronales.",
+    email: "ana.garcia@unam.mx",
+  },
+  {
+    id: 2,
+    nombre: "Luis Martínez",
+    grado: "M.C. en Ingeniería de Software",
+    institucion: "IPN",
+    especialidad: "Desarrollo de Software",
+    perfil: "Docente e investigador enfocado en arquitecturas de software escalables.",
+    email: "luis.martinez@ipn.mx",
+  },
+  {
+    id: 3,
+    nombre: "María Sánchez",
+    grado: "Dra. en Bioinformática",
+    institucion: "CINVESTAV",
+    especialidad: "Biología Computacional",
+    perfil: "Especialista en análisis genómico y modelado computacional de proteínas.",
+    email: "m.sanchez@cinvestav.mx",
+  },
+  {
+    id: 4,
+    nombre: "Carlos López",
+    grado: "ING en computacion",
+    institucion: "Cualtos",
+    especialidad: "RedesComputacionales",
+    perfil: "Especialista en dispositivos Cisco",
+    email: "carli_loi9@gmail.com",
+  },
+  {
+  id: 5,
+  nombre: "Pedro Ruiz",
+  grado: "M.C. en Sistemas Computacionales",
+  institucion: "ITESM",
+  especialidad: "Ciberseguridad y Redes",
+  perfil: "Consultor en seguridad informática con experiencia en protección de infraestructuras críticas.",
+  email: "pedro.ruiz@itesm.mx",
+  },
+  {
+  id: 6,
+  nombre: "Elena Torres",
+  grado: "Dra. en Matemáticas Aplicadas",
+  institucion: "BUAP",
+  especialidad: "Modelado Estadístico",
+  perfil: "Investigadora en análisis de datos masivos y modelos predictivos aplicados a salud pública.",
+  email: "e.torres@buap.mx",
+  },
+  {
+  id: 7,
+  nombre: "Roberto Díaz",
+  grado: "Dr. en Ingeniería Eléctrica",
+  institucion: "UAM Iztapalapa",
+  especialidad: "Robótica e Automatización",
+  perfil: "Especialista en diseño de sistemas embebidos y robótica industrial con enfoque en manufactura.",
+  email: "r.diaz@uam.mx",
+  },
+];
+
 const MOCK_EXTENSOS = [
   {
     id: 1, title: "Internet de las cosas",
     asignado: true,  revisado: false, aceptado: false,
-    revisores: ["Ana García", "Luis Martínez"],
+    revisores: [1,2],
     fechaLimite: "2026-04-15",
   },
   {
     id: 2, title: "Programación e inteligencia artificial",
     asignado: true,  revisado: false, aceptado: false,
-    revisores: ["Carlos López"],
+    revisores: [4],
     fechaLimite: "2026-04-20",
   },
   {
     id: 3, title: "Biología y computadoras",
     asignado: true,  revisado: true,  aceptado: false,
-    revisores: ["María Sánchez", "Pedro Ruiz"],
+    revisores: [3,5],
     fechaLimite: "2026-04-10",
   },
   {
@@ -35,15 +101,16 @@ const MOCK_EXTENSOS = [
   {
     id: 5, title: "Enfoque estructural de POO",
     asignado: true,  revisado: true,  aceptado: true,
-    revisores: ["Elena Torres"],
+    revisores: [6],
     fechaLimite: null,
   },
   {
     id: 6, title: "Las villas de California",
     asignado: true,  revisado: false, aceptado: false,
-    revisores: ["Roberto Díaz"],
+    revisores: [7],
     fechaLimite: "2026-04-28",
   },
+  
 ];
 
 const FILTER_OPTIONS = [
@@ -123,20 +190,26 @@ function IconBtn({ active, title, popoverContent, children }) {
 }
 
 // ─── Popover contents ─────────────────────────────────────────────────────────
-function PopoverAsignado({ item }) {
+
+function PopoverAsignado({ item, dictaminadores }) {
+  const asignados = dictaminadores.filter(d => item.revisores.includes(d.id));
   return (
     <div>
       <p className="text-[11px] font-bold text-base-content/50 uppercase tracking-wide mb-2">Revisores asignados</p>
-      {item.revisores.length === 0 ? (
+      {asignados.length === 0 ? (
         <p className="text-xs text-base-content/40 italic">Sin asignar todavía</p>
       ) : (
-        <ul className="space-y-1.5">
-          {item.revisores.map((r, i) => (
-            <li key={i} className="flex items-center gap-2">
+        <ul className="space-y-2">
+          {asignados.map((d) => (
+            <li key={d.id} className="flex items-start gap-2">
               <div className="w-6 h-6 rounded-full bg-[#00868a] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">
-                {r.charAt(0)}
+                {d.nombre.charAt(0)}
               </div>
-              <span className="text-xs text-base-content font-medium">{r}</span>
+              <div>
+                <p className="text-xs text-base-content font-semibold">{d.nombre}</p>
+                <p className="text-[10px] text-base-content/50">{d.grado}</p>
+                <p className="text-[10px] text-base-content/40">{d.institucion} · {d.especialidad}</p>
+              </div>
             </li>
           ))}
         </ul>
@@ -232,7 +305,7 @@ function ExtensoRow({ item, selected, onSelect, onView }) {
       {/* Status pill */}
       <div className="flex items-center gap-1.5 bg-base-200 rounded-full px-3 py-1.5 flex-shrink-0">
         <StatusDot active={item.asignado} />
-        <IconBtn active={item.asignado} title="Ver revisores asignados" popoverContent={<PopoverAsignado item={item} />}>
+        <IconBtn active={item.asignado} title="Ver revisores asignados" popoverContent={<PopoverAsignado item={item} dictaminadores={MOCK_DICTAMINADORES} />}>
           <MdPerson size={14} />
         </IconBtn>
 
