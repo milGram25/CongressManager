@@ -100,7 +100,7 @@ const GenericDateComponent = () => {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold mb-3 pb-2 border-b border-gray-200 text-gray-800">Fin (Opcional)</h3>
+                <h3 className="text-lg font-semibold mb-3 pb-2 border-b border-gray-200 text-gray-800">Fin</h3>
                 <div className="flex gap-4">
                   <div className="flex-1">
                     <input
@@ -123,7 +123,7 @@ const GenericDateComponent = () => {
                 </div>
               </div>
 
-              <button
+              {/*<button
                 onClick={handleSave}
                 className="mt-auto w-full py-3 bg-[#0b1a1c] text-white font-bold rounded-lg hover:bg-[#1a2f33] transition-colors flex items-center justify-center gap-2"
               >
@@ -132,7 +132,7 @@ const GenericDateComponent = () => {
                   <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
                 Añadir Fecha
-              </button>
+              </button>*/}
             </div>
           </div>
         </div>
