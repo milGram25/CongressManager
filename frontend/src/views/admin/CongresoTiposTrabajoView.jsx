@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MdArrowBack, MdDownload, MdAdd, MdDelete, MdEdit, MdCheck, MdClose } from "react-icons/md";
- 
+
 const MOCK_TIPOS = [
   "Avances de tesis",
   "Investigaciones concluidas",
   "Experiencias de investigación",
 ];
- 
+
 function exportToCSV(tipos) {
   const csv = ["Tipo de trabajo", ...tipos].join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -16,9 +16,6 @@ function exportToCSV(tipos) {
   a.href = url; a.download = "tipos_de_trabajo.csv"; a.click();
   URL.revokeObjectURL(url);
 }
- 
-import { MdArrowBack } from "react-icons/md";
-import RubricasYPreguntas from "./Componentes/RubricasYPreguntas.jsx";
 
 export default function CongresoTiposTrabajoView() {
   const navigate = useNavigate();
@@ -27,44 +24,44 @@ export default function CongresoTiposTrabajoView() {
   const [editVal, setEditVal] = useState("");
   const [adding, setAdding] = useState(false);
   const [newVal, setNewVal] = useState("");
- 
+
   function startEdit(i) {
     setEditIdx(i);
     setEditVal(tipos[i]);
     setAdding(false);
   }
- 
+
   function confirmEdit() {
     if (!editVal.trim()) return;
     setTipos(t => t.map((v, i) => i === editIdx ? editVal.trim() : v));
     setEditIdx(null);
   }
- 
+
   function cancelEdit() { setEditIdx(null); }
- 
+
   function deleteTipo(i) {
     setTipos(t => t.filter((_, idx) => idx !== i));
     if (editIdx === i) setEditIdx(null);
   }
- 
+
   function startAdd() {
     setAdding(true);
     setNewVal("");
     setEditIdx(null);
   }
- 
+
   function confirmAdd() {
     if (!newVal.trim()) return;
     setTipos(t => [...t, newVal.trim()]);
     setAdding(false);
     setNewVal("");
   }
- 
+
   function cancelAdd() { setAdding(false); setNewVal(""); }
- 
+
   return (
     <div className="bg-base-100 rounded-3xl border border-base-300 shadow-sm overflow-hidden" style={{ width: 339 }}>
- 
+
       {/* Header teal */}
       <div className="flex items-center justify-between px-5 py-4" style={{ backgroundColor: "#00868a" }}>
         <div className="flex items-center gap-2">
@@ -94,7 +91,7 @@ export default function CongresoTiposTrabajoView() {
           </button>
         </div>
       </div>
- 
+
       {/* Lista */}
       <div className="p-3 space-y-2 overflow-y-auto" style={{ maxHeight: 240 }}>
         {tipos.map((tipo, i) => (
@@ -140,7 +137,7 @@ export default function CongresoTiposTrabajoView() {
             </div>
           </div>
         ))}
- 
+
         {/* Fila para agregar */}
         {adding && (
           <div className="border-b border-base-200 pb-2">
@@ -162,21 +159,11 @@ export default function CongresoTiposTrabajoView() {
             </div>
           </div>
         )}
- 
+
         {tipos.length === 0 && !adding && (
           <p className="text-center py-6 text-sm text-base-content/40 italic">Sin tipos de trabajo. Presiona + para agregar.</p>
         )}
       </div>
-    <div className="bg-base-100 p-8 rounded-3xl border border-base-300 shadow-sm min-h-[400px]">
-      <button 
-        onClick={() => navigate(-1)} 
-        className="mb-6 p-2 hover:bg-base-200 rounded-full transition-colors flex items-center gap-2 text-base-content/70 hover:text-primary"
-        title="Regresar a la vista anterior"
-      >
-        <MdArrowBack className="text-2xl" />
-        <span className="text-sm font-medium">Regresar</span>
-      </button>
-      <RubricasYPreguntas />
     </div>
   );
 }
