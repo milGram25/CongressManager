@@ -1,6 +1,7 @@
 // Aqui se inserta el apartado de enviar ponencia
 
 import React, {useState} from 'react';
+import { FaTrashCan } from "react-icons/fa6";
 //campos a llenar 
 export default function EnviarPonenciaView(){
   const [tipoParticipacion, setTipoParticipacion] = useState('');
@@ -14,19 +15,31 @@ export default function EnviarPonenciaView(){
   const [coautores, setCoautores]=useState([]);
   const [mostrarCoautores, setMostrarCoautores]=useState(false);
 
+  //inicia coautores, crea un espacio vacio para que aparezca el primer input
   const parteCoautores=()=>{
     setMostrarCoautores(true);
     if(coautores.length==0){
       setCoautores([""]);
     }
   }
+  //se agregan al arreglo los coautores que se necesiten
   const agregarCoautor=() => {
     setCoautores([...coautores, ""]);
   };
+  //actualiza el arreglo para ir agregando los nuevos
   const actualizaCoautor=(index, valor) => {
     const nuevos=[...coautores];
     nuevos[index] = valor;
     setCoautores(nuevos);
+  };
+  //elimina los coautores por posicion
+  const eliminarCoautor=(indexEliminar)=> {
+    const nuevos = coautores.filter((_, index)=> index!==indexEliminar);
+    setCoautores(nuevos);
+    //por si no hay coautores regresa al boton inicial de agregar coautores
+    if(nuevos.length==0){
+      setMostrarCoautores(false);
+    }
   };
 
   const handleSubmit=(e) => {
@@ -60,26 +73,29 @@ export default function EnviarPonenciaView(){
           required
         />
         {/*espacio, boton para coautor o caoutores*/}
-        <button type="button" onClick={parteCoautores}
-          className="btn btn-primary w-fit"
-        >
-          Agregar Coautor
-        </button>
+        {!mostrarCoautores &&(
+          <button type="button" onClick={parteCoautores} className="btn btn-primary w-fit">
+            Agregar Coautor
+          </button>
+        )}
         {mostrarCoautores &&(
           <div className="flex flex-col gap-2">
             {coautores.map((coautor, index)=>(
-              <div key={index}>
-                <label className="font-bold">Coautor {index + 1}</label>
+              <div key={index} className='flex items-end gap-2'>
+                <label className="font-bold">{index + 1}.</label>
                 <input
                   type="text"
-                  placeholder={`Nombre del coautor ${index + 1}`}
+                  placeholder={`Nombre Coautor ${index + 1}`}
                   value={coautor}
                   onChange={(e)=>actualizaCoautor(index, e.target.value)}
                   className="input input-bordered w-full"
                 />
+                <button type="button" onClick={() => eliminarCoautor(index)} className="btn btn-base btn-sm">
+                  <FaTrashCan />
+                </button>
               </div>
             ))}
-            <button type="button" onClick={agregarCoautor} classname="btn btn-outline w-fit">
+            <button type="button" onClick={agregarCoautor} className="btn btn-primary w-fit">
               Agregar otro coautor
             </button>
           </div>
