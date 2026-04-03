@@ -1,14 +1,55 @@
 import { useNavigate } from "react-router-dom";
 import { MdArrowBack } from "react-icons/md";
 import FechasGen from "./Componentes/fechasGen";
-import CongresosFechasGen from "./Componentes/CongresosFechasGenericoV2"
+import CongresosFechasGen from "./Componentes/CongresosFechasGenericoV2";
+
+import ListaDesplegableElementosGenerica from "./Componentes/ListaDesplegableElementosGenerica";
 
 export default function CongresoFechasView() {
-  const navigate = useNavigate();
+  
+
+  const listaCongresos = [{
+      id: 1,
+      nombre: "CIENU 2025"
+    },
+    {
+      id: 2,
+      nombre: "CIENU 2026"
+    },
+  ];
+
+  const listaInstituciones = [{
+      id: 1,
+      nombre: "CIENU"
+    },
+    {
+      id: 2,
+      nombre: "RIDMAE"
+    },
+  ];
+
+ 
+ 
+
   return (
     <div>
-      <div className="flex flex-col items-center justify-center py-20 text-center">
+      <div>
+        <div className="flex gap-4">
+          <div className="border bg-black rounded-full h-10 w-2"></div>
+          <h2 className="flex-1 text-2xl font-bold text-start">Fechas</h2>
+        </div>
+        <p className="pt-2 pl-12 text-start mb-4">
+          Administra las fechas de todo el congreso seleccionado. Pero, primero, escoja la institución y su respectivo congreso
+        </p>
+        <div className="flex gap-10 justify-center mt-10">
+            <ListaDesplegableElementosGenerica titulo={"Instituciones"} lista={listaInstituciones}/>
+            <ListaDesplegableElementosGenerica titulo={"Congresos"} lista={listaCongresos}/>
+        </div>
 
+      </div>
+      
+
+      <div className="flex flex-col items-center justify-center py-10 text-center">
         <div className="w-240">
           <div className="text-black p-6 gap-2 rounded-t-lg">
             <div className="flex gap-4">
