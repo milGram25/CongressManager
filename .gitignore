@@ -1,5 +1,14 @@
+# =====================
+# Node.js / Frontend
+# =====================
+node_modules/
+node_modules
+dist/
+dist-ssr/
+*.local
+
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,20 +16,56 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# =====================
+# Python / Django
+# =====================
 
-# Editor directories and files
+# Entorno virtual — NUNCA subir al repo
+venv/
+env/
+.venv/
+
+# Archivos compilados de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+
+# Variables de entorno — NUNCA subir al repo (contiene secretos)
+.env
+.env.*
+!.env.example
+
+# Base de datos SQLite local
+db.sqlite3
+*.sqlite3
+
+# Archivos de medios subidos por usuarios
+media/
+
+# Archivos estáticos generados
+staticfiles/
+
+# Django migrations (comentar esta línea si quieres versionar las migraciones)
+# */migrations/*.py
+# !*/migrations/__init__.py
+
+# Pytest / coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# =====================
+# Editor / Sistema
+# =====================
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-
-node_modules/
