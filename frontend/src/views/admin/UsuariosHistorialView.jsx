@@ -30,7 +30,7 @@ export default function UsuariosHistorialView() {
 
         },
         {
-            id:3,
+            id:4,
             nombre: "Forense",
             fecha: "2026-03-15 23:59:59.00000",
             rol: "dictaminador",
