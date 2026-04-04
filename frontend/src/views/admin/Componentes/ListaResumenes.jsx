@@ -6,16 +6,27 @@ import { MdFilterListAlt } from "react-icons/md";
 import { HiEye, HiPlay, HiCheck } from "react-icons/hi";
 
 
-export default function ListaElementosCongresosComponente({listaCongresos}){
+export default function ListaResumenes({listaElementos}){
     //lista íconos debe de tener tres elementos
+    const listaAlt = 
+        {
+            alt1: "Importancia de rol",
+            alt2: "Inmediatez temporal",
+            alt3: "Importancia de acción"
+            
+        };
+    const descripcion = "";
+    const titulo = "Historial";
+    const nombreBarraBusqueda = "Buscar acción";
+    
     const [ordenarItem, setOrdenarItem] = useState("todos");
     const fechaActual = new Date();
 
-    const [listaFiltrada,setListaFiltrada] = useState(listaCongresos);
+    const [listaFiltrada,setListaFiltrada] = useState(listaElementos);
     const [valorInput, setValorInput] = useState("");
     
     function filtrar(valor){
-        let resultado = [...listaCongresos];
+        let resultado = [...listaElementos];
         setOrdenarItem(valor);
 
         switch(valor){
@@ -37,7 +48,7 @@ export default function ListaElementosCongresosComponente({listaCongresos}){
         setValorInput(value);
 
         if (value.trim() === '') {
-            setListaFiltrada(listaCongresos);
+            setListaFiltrada(listaElementos);
             return;
         }
 
@@ -46,7 +57,7 @@ export default function ListaElementosCongresosComponente({listaCongresos}){
 
     // Esta función filtra la lista
     function busqueda(value) {
-        const filtrados = listaCongresos.filter((item) =>
+        const filtrados = listaElementos.filter((item) =>
             item.nombre.toLowerCase().includes(value.toLowerCase()) //todo en minúscula
         );
         setListaFiltrada(filtrados);
@@ -55,12 +66,12 @@ export default function ListaElementosCongresosComponente({listaCongresos}){
 
     function restaurarBusqueda(){
         setValorInput("");
-        setListaFiltrada(listaCongresos);
+        setListaFiltrada(listaElementos);
     }
 
     function restaurarTodo(){
         setValorInput("");
-        setListaFiltrada(listaCongresos);
+        setListaFiltrada(listaElementos);
         setOrdenarItem("todos");
     }
 
@@ -69,7 +80,7 @@ export default function ListaElementosCongresosComponente({listaCongresos}){
             {/*header*/}
             <div className="flex bg-black h-15 items-center rounded-t-lg">
                 <div className="flex flex-1 bg-white m-2 border border-b h-10 rounded-full" title={"Barra de búsqueda"}>
-                    <input className="w-full pl-5" type="text" placeholder="Buscar congreso" onChange={(e)=>busquedaInput(e)} value={valorInput}/>
+                    <input className="w-full pl-5" type="text" placeholder={nombreBarraBusqueda} onChange={(e)=>busquedaInput(e)} value={valorInput}/>
 
                 </div>
                 <div className="flex gap-3 h-12 text-center bg-white border border-b items-center pl-2 pr-2 rounded-full mr-3">
@@ -87,9 +98,9 @@ export default function ListaElementosCongresosComponente({listaCongresos}){
             {/*descripción y título*/}
             <div className="flex h-min-12 flex m-4 pb-4 border-b border-b">
                 <div className="w-90 pr-4">
-                    <h1>Congresos asignados</h1>
+                    <h1>{titulo}</h1>
                     <div className="ml-4 text-gray-500">
-                         Aquí se pueden encontrar todos los congresos creados por esta institución
+                         {descripcion}
                     </div>
 
                 </div>
@@ -139,7 +150,7 @@ export default function ListaElementosCongresosComponente({listaCongresos}){
                 
 
             </div>
-            {/*Lista de congresos actuales*/}
+            {/*Lista de elementos actuales*/}
             <div>
                 {
                 listaFiltrada.map((item) => (
@@ -155,21 +166,25 @@ export default function ListaElementosCongresosComponente({listaCongresos}){
 
                         {/* Indicadores de fechas */}
                         <div className="flex items-center gap-2 border border-gray-300 rounded-full px-3 py-1">
-                        {/* Punto fecha_inicio */}
-                        <div className={`w-3 h-3 rounded-full ${fechaActual >= new Date(item.fecha_inicio) ? "bg-green-500" : "bg-red-500"}`}></div>
+                            {/* Punto fecha_inicio */}
+                            <div className={`w-3 h-3 rounded-full ${fechaActual >= new Date(item.fecha_inicio) ? "bg-green-500" : "bg-red-500"}`}></div>
 
-                        {/* Botón play */}
-                        <button className="flex items-center justify-center w-8 h-8 rounded-full bg-black transition-colors"  title={"Congresos iniciados"}>
-                            <HiPlay className="text-white text-sm" />
-                        </button>
+                            {/* Botón play */}
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black transition-colors"  title={listaAlt.alt2}>
+                                <HiPlay className="text-white text-sm" />
+                            </div>
 
-                        {/* Punto fecha_fin */}
-                        <div className={`w-3 h-3 rounded-full ${fechaActual >= new Date(item.fecha_final) ? "bg-green-500" : "bg-red-500"}`}></div>
+                            {/* Punto fecha_fin */}
+                            <div className={`w-3 h-3 rounded-full ${fechaActual >= new Date(item.fecha_final) ? "bg-green-500" : "bg-red-500"}`}></div>
 
-                        {/* Botón check */}
-                        <button className="flex items-center justify-center w-8 h-8 rounded-full bg-black transition-colors"  title={"Congresos concluidos"}>
-                            <HiCheck className="text-white text-sm" />
-                        </button>
+                            {/* Botón check */}
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black transition-colors"  title={listaAlt.alt2}>
+                                <HiCheck className="text-white text-sm" />
+                            </div>
+
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black transition-colors"  title={listaAlt.alt2}>
+                                <HiCheck className="text-white text-sm" />
+                            </div>
                         </div>
 
                     </div>
