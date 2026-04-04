@@ -275,14 +275,15 @@ export default function PagosComponente({ listaPagos: propsPagos }) {
                 ? "border-[#00868a] bg-[#e8f5f5]"
                 : "border-base-300 hover:border-[#00868a]/40 hover:bg-base-200/40"}`}
           >
+            
             {/* Orden */}
-            <span className="text-sm font-bold text-base-content w-16 flex-shrink-0">#{p.orden}</span>
+            <span className="text-sm font-bold text-base-content flex-1">#{p.orden}</span>
             {/* Rol */}
-            <span className="text-sm text-base-content/70 w-40 flex-shrink-0">{p.rol}</span>
+            <span className="text-sm text-base-content/70 flex-1">{p.rol}</span>
             {/* Fecha */}
             <span className="text-sm text-base-content/60 flex-1">{formatFecha(p.fecha)}</span>
             {/* Estatus */}
-            <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div className="flex flex-1 items-center gap-1.5">
               <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${p.estatus === "Pagado" ? "bg-green-500" : "bg-red-500"}`} />
               <span className={`text-sm font-medium ${p.estatus === "Pagado" ? "text-green-600" : "text-red-500"}`}>{p.estatus}</span>
             </div>
