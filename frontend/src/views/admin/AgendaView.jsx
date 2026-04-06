@@ -1,4 +1,5 @@
 import { useState } from "react";
+import DetallesAgenda from "./Componentes/detallesagenda"; //Enlace detallesagenda para poder ver los detalles de cada evento al hacer click en ellos
 
 const DAYS_HEADER = ["D", "L", "M", "M", "J", "V", "S"];
 const MONTHS = [
@@ -7,6 +8,18 @@ const MONTHS = [
 ];
 
 const MOCK_EVENTS = {
+  "2026-4-6": [
+    {
+      id: 4,
+      title: "Ponencia: IA aplicada a la gestion de congresos",
+      description: "Sesion enfocada en automatizacion, seguimiento de asistentes y herramientas digitales para la administracion del evento.",
+      cupos: 100,
+      lugar: "Auditorio Principal",
+      fecha: "06 / Abril / 2026",
+      hora: "12:00 PM",
+      enlace: "https://meet.ejemplo.com/agenda-abril-6",
+    },
+  ],
   "2026-3-17": [
     {
       id: 1,
@@ -195,7 +208,7 @@ export default function AdminAgendaView() {
     day === today.getDate() && viewMonth === today.getMonth() && viewYear === today.getFullYear();
 
   return (
-    <div className="bg-base-100 rounded-3xl border border-base-300 shadow-sm p-6 w-full" style={{ maxWidth: 789 }}>
+    <div className="bg-base-100 rounded-3xl border border-base-300 shadow-sm p-6 w-full" style={{ maxWidth: 820 }}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -324,7 +337,7 @@ export default function AdminAgendaView() {
                 ))}
               </div>
             )}
-            {selectedEvent && <EventCard event={selectedEvent} />}
+            {selectedEvent && <DetallesAgenda event={selectedEvent} />}
           </div>
         )}
       </div>
