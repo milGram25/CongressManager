@@ -22,7 +22,16 @@ export default function CongresoTiposTrabajoView() {
   
 
   return (
-    <div className=" rounded-3xl overflow-hidden w-250" >
+    <div className=" overflow-hidden w-250" >
+
+      <div className="flex gap-4">
+        <div className="border bg-black rounded-full h-10 w-2"></div>
+        <h2 className="flex-1 text-2xl font-bold text-start">Tipos de trabajo</h2>
+      </div>
+      <p className="pt-2 pl-12 text-start mb-4">
+        Crea tipos de trabajo y añádeles preguntas o rúbricas para que los dictaminadores o evaluadores realicen sus revisiones, respectivamente
+      </p>
+
       <CongresoTiposTrabajoComponente/>
       <RubricasYPreguntas/>
 
