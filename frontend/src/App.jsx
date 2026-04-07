@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import FacturasView from "./views/asistentes/FacturasView";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SidebarLayout from "./layouts/SidebarLayout";
 import AgendaView from "./views/asistentes/AgendaView";
@@ -101,6 +102,7 @@ const AsistenteLayoutWrapper = () => {
     { to: '/asistente/agenda', label: 'Agenda', icon: MdCalendarMonth },
     { to: '/asistente/catalogo', label: 'Catálogo', icon: MdLibraryBooks },
     { to: '/asistente/pagos', label: 'Pagos', icon: MdPayment },
+    { to: '/asistente/facturas', label: 'Mis Facturas', icon: MdReceipt },
     { to: '/asistente/constancias', label: 'Mis Constancias', icon: MdBadge },
     { type: 'header', label: 'Ponente' },
     { to: '/asistente/enviar-ponencia', label: 'Enviar Ponencia', icon: MdUploadFile },
@@ -134,6 +136,7 @@ const PonenteLayoutWrapper = () => {
     { to: '/ponente/agenda', label: 'Agenda', icon: MdCalendarMonth },
     { to: '/ponente/catalogo', label: 'Catálogo', icon: MdLibraryBooks },
     { to: '/ponente/pagos', label: 'Pagos', icon: MdPayment },
+    { to: '/ponente/facturas', label: 'Mis Facturas', icon: MdReceipt },
     { to: '/ponente/constancias', label: 'Mis Constancias', icon: MdBadge },
     { type: 'header', label: 'Ponente' },
     { to: '/ponente/mis-ponencias', label: 'Mis Ponencias', icon: MdCoPresent },
@@ -272,6 +275,7 @@ function App() {
             <Route path="agenda" element={<AgendaView />} />
             <Route path="catalogo" element={<CatalogoView />} />
             <Route path="pagos" element={<PagosView />} />
+            <Route path="facturas" element={<FacturasView />} />
             <Route path="enviar-ponencia" element={<EnviarPonenciaView />} />
             <Route
               path="constancias"
@@ -292,6 +296,7 @@ function App() {
             <Route path="agenda" element={<AgendaView />} />
             <Route path="catalogo" element={<CatalogoView />} />
             <Route path="pagos" element={<PagosView />} />
+            <Route path="facturas" element={<FacturasView />} />
             <Route path="mis-ponencias" element={<MisPonenciasView />} />
             <Route path="enviar-ponencia" element={<EnviarPonenciaView />} />
             <Route path="estatus-ponencia" element={<EstatusPonenciaView />} />

@@ -1,33 +1,115 @@
 // Aqui se inserta el apartado de enviar ponencia
 
 import React, {useState} from 'react';
+import { FaTrashCan } from "react-icons/fa6";
 //campos a llenar 
 export default function EnviarPonenciaView(){
   const [tipoParticipacion, setTipoParticipacion] = useState('');
   const [ejeTematico, setEjeTematico] = useState('');
   const [tipoTrabajo, setTipoTrabajo] = useState('');
+  const [autor, setAutor] = useState('');
   const [titulo, setTitulo] = useState('');
   const [palabrasClave, setPalabrasClaves] = useState('');
   const [resumen, setResumen] = useState('');
+  //coautor(es)
+  const [coautores, setCoautores]=useState([]);
+  const [mostrarCoautores, setMostrarCoautores]=useState(false);
+
+  //inicia coautores, crea un espacio vacio para que aparezca el primer input
+  const parteCoautores=()=>{
+    setMostrarCoautores(true);
+    if(coautores.length==0){
+      setCoautores([""]);
+    }
+  }
+  //se agregan al arreglo los coautores que se necesiten
+  const agregarCoautor=() => {
+    setCoautores([...coautores, ""]);
+  };
+  //actualiza el arreglo para ir agregando los nuevos
+  const actualizaCoautor=(index, valor) => {
+    const nuevos=[...coautores];
+    nuevos[index] = valor;
+    setCoautores(nuevos);
+  };
+  //elimina los coautores por posicion
+  const eliminarCoautor=(indexEliminar)=> {
+    const nuevos = coautores.filter((_, index)=> index!==indexEliminar);
+    setCoautores(nuevos);
+    //por si no hay coautores regresa al boton inicial de agregar coautores
+    if(nuevos.length==0){
+      setMostrarCoautores(false);
+    }
+  };
 
   const handleSubmit=(e) => {
     e.preventDefault();
     console.log(
       {
+        titulo,
+        autor,
+        coautores,
         tipoParticipacion,
         ejeTematico,
         tipoTrabajo,
-        titulo,
         palabrasClave,
         resumen
       }
     );
   };
   return(
-    <div classname="p-8 bg-base-100 min-h-screen">
-      <h1 classname="text-3xl font-inter mb-6">Enviar Ponencia</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-xl">
+    <div className="p-8 bg-base-100 min-h-screen">
+      <h1 className="text-3xl font-bold mb-6">Enviar Ponencia</h1>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
 
+        {/*espacio de la parte de autor*/}
+        <label className="font-bold">Autor *</label>
+        <input
+          type="text"
+          placeholder="Autor de la ponencia"
+          value={autor}
+          onChange={(e)=>setAutor(e.target.value)}
+          className="input input-bordered w-full"
+          required
+        />
+        {/*espacio, boton para coautor o caoutores*/}
+        {!mostrarCoautores &&(
+          <button type="button" onClick={parteCoautores} className="btn btn-primary w-fit">
+            Agregar Coautor
+          </button>
+        )}
+        {mostrarCoautores &&(
+          <div className="flex flex-col gap-2">
+            {coautores.map((coautor, index)=>(
+              <div key={index} className='flex items-end gap-2'>
+                <label className="font-bold">{index + 1}.</label>
+                <input
+                  type="text"
+                  placeholder={`Nombre Coautor ${index + 1}`}
+                  value={coautor}
+                  onChange={(e)=>actualizaCoautor(index, e.target.value)}
+                  className="input input-bordered w-full"
+                />
+                <button type="button" onClick={() => eliminarCoautor(index)} className="btn btn-base btn-sm">
+                  <FaTrashCan />
+                </button>
+              </div>
+            ))}
+            <button type="button" onClick={agregarCoautor} className="btn btn-primary w-fit">
+              Agregar otro coautor
+            </button>
+          </div>
+        )}
+        {/*espacio de la parte de titulo*/}
+        <label className="font-bold">Título *</label>
+        <input
+          type="text"
+          placeholder="Título de la ponencia"
+          value={titulo}
+          onChange={(e)=>setTitulo(e.target.value)}
+          className="input input-bordered w-full"
+          required
+        />
         {/*espacio de la parte de tipo de participacin*/}
         <label className="font-bold">Tipo de participación *</label>
         <select value={tipoParticipacion} onChange={(e) => setTipoParticipacion(e.target.value)}
@@ -89,16 +171,6 @@ export default function EnviarPonenciaView(){
           <option value="Investigacion en educacion">Investigación en educación: trabajos de investigaciones concluidas.</option>
           <option value="avances de tesis">Avances de tesis de posgrado (no protocolos) únicamente que traten temas del ámbito educativo.</option>
         </select>
-        {/*espacio de la parte de titulo*/}
-        <label className="font-bold">Título *</label>
-        <input
-          type="text"
-          placeholder="Título de la ponencia"
-          value={titulo}
-          onChange={(e)=>setTitulo(e.target.value)}
-          className="input input-bordered w-full"
-          required
-        />
         {/*espacio de la parte de palabras clave*/}
         <label className="font-bold">Palabras clave *</label>
         <input

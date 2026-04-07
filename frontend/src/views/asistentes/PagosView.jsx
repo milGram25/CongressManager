@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from 'react-router-dom'; // navegación entre componentes(ir a facturas)
 import PagosForm from "./components/PagosForm";
 import {
   MdSchool,
@@ -16,6 +17,9 @@ const stripePromise = loadStripe("pk_test_tu_llave_aqui");
 
 export default function PagosView() {
   const { user } = useAuth();
+ 
+  //Navegación
+  const navigate = useNavigate();
 
   // Pilot: Selección de tipo de inscripción (Esto vendrá del backend en el futuro)
   const [tipoInscripcion, setTipoInscripcion] = useState("asistente");
@@ -32,12 +36,93 @@ export default function PagosView() {
   // Estados de facturación
   const [pagoExitoso, setPagoExitoso] = useState(false);
   const [quiereFactura, setQuiereFactura] = useState(false);
-  const [showXML, setShowXML] = useState(false);
+  const [solicitudEnviada, setSolicitudEnviada] = useState(false);
+  const [usarCorreoAlternativo, setUsarCorreoAlternativo] = useState(false);
+  const[correoFacturacion, setCorreoFacturacion] = useState("");
   const [datosFacturacion, setDatosFacturacion] = useState({
     rfc: "",
     razonSocial: "",
+    cp: "",
+    regimenFiscal: "601",
     usoCFDI: "G03",
   });
+
+  // Catálogos simplificados del SAT
+  const REGIMENES = [
+    { code: "601", label: "General de Ley Personas Morales" },
+    { code: "603", label: "Personas Morales con Fines no Lucrativos" },
+    { code: "605", label: "Sueldos y Salarios e Ingresos Asimilados a Salarios" },
+    { code: "606", label: "Arrendamiento" },
+    { code: "607", label: "Régimen de Enajenación o Adquisición de Bienes" },
+    { code: "608", label: "Demás ingresos" },
+    { code: "610", label: "Residentes en el Extranjero sin Establecimiento Permanente en México" },
+    { code: "611", label: "Ingresos por Dividendos (socios y accionistas)" },
+    { code: "612", label: "Personas Físicas con Actividades Empresariales y Profesionales" },
+    { code: "614", label: "Ingresos por intereses" },
+    { code: "615", label: "Régimen de los ingresos por obtención de premios" },
+    { code: "616", label: "Sin obligaciones fiscales" },
+    { code: "620", label: "Sociedades Cooperativas de Producción que optan por diferir sus ingresos" },
+    { code: "621", label: "Incorporación Fiscal" },
+    { code: "622", label: "Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras" },
+    { code: "623", label: "Opcional para Grupos de Sociedades" },
+    { code: "624", label: "Coordinados" },
+    { code: "625", label: "Régimen de las Actividades Empresariales con ingresos a través de Plataformas Tecnológicas" },
+    { code: "626", label: "Régimen Simplificado de Confianza" }
+  ];
+
+  const USOS = [
+    { code: "G01", label: "Adquisición de mercancías" },
+    { code: "G02", label: "Devoluciones, descuentos o bonificaciones" },
+    { code: "G03", label: "Gastos en general" },
+
+    { code: "I01", label: "Construcciones" },
+    { code: "I02", label: "Mobiliario y equipo de oficina por inversiones" },
+    { code: "I03", label: "Equipo de transporte" },
+    { code: "I04", label: "Equipo de cómputo y accesorios" },
+    { code: "I05", label: "Dados, troqueles, moldes, matrices y herramental" },
+    { code: "I06", label: "Comunicaciones telefónicas" },
+    { code: "I07", label: "Comunicaciones satelitales" },
+    { code: "I08", label: "Otra maquinaria y equipo" },
+
+    { code: "D01", label: "Honorarios médicos, dentales y gastos hospitalarios" },
+    { code: "D02", label: "Gastos médicos por incapacidad o discapacidad" },
+    { code: "D03", label: "Gastos funerales" },
+    { code: "D04", label: "Donativos" },
+    { code: "D05", label: "Intereses reales efectivamente pagados por créditos hipotecarios" },
+    { code: "D06", label: "Aportaciones voluntarias al SAR" },
+    { code: "D07", label: "Primas por seguros de gastos médicos" },
+    { code: "D08", label: "Gastos de transportación escolar obligatoria" },
+    { code: "D09", label: "Depósitos en cuentas para el ahorro, primas de planes de pensiones" },
+    { code: "D10", label: "Pagos por servicios educativos (colegiaturas)" },
+
+    { code: "S01", label: "Sin efectos fiscales" },
+    { code: "CP01", label: "Pagos" },
+    { code: "CN01", label: "Nómina" }
+  ];
+
+  // Función de validación para habilitar el botón
+const isFormValid = useMemo(() => {
+  // Regex para RFC (México)
+  const rfcRegex = /^([A-ZÑ&]{3,4}) ?(?:- ?)?(\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])) ?(?:- ?)?([A-Z\d]{2}[A-Z\d])$/;
+  // Regex para Email estándar
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Regex para CP (5 dígitos)
+  const cpRegex = /^\d{5}$/;
+
+  const camposFiscalesValidos = 
+    rfcRegex.test(datosFacturacion.rfc) &&
+    datosFacturacion.razonSocial.length >= 3 &&
+    cpRegex.test(datosFacturacion.cp) &&
+    datosFacturacion.regimenFiscal !== "";
+
+  // Si el usuario marcó "usar correo alternativo", validamos que el input tenga un email real
+  // Si no lo marcó, el correo es válido por defecto (porque el del login ya se supone validado)
+  const correoValido = usarCorreoAlternativo 
+    ? emailRegex.test(correoFacturacion) 
+    : true;
+
+  return camposFiscalesValidos && correoValido;
+}, [datosFacturacion, usarCorreoAlternativo, correoFacturacion]);
 
   // Estructura de precios CIENU 2026
   const PRECIOS = {
@@ -106,6 +191,20 @@ export default function PagosView() {
   };
 
   const handleSimularPago = () => setPagoExitoso(true);
+  const handleEnviarSolicitudFactura = () => {
+    const datosFinales = {
+    ...datosFacturacion,
+    // Si marcó usar alternativo, usa ese; si no, usa el del login
+    correoEnvio: usarCorreoAlternativo ? correoFacturacion : user?.email,
+    fechaSolicitud: new Date().toISOString()
+  };
+    console.log("Enviando datos al administrador:", datosFacturacion);
+    
+    // Cerramos el flujo anterior y mostramos el mensaje final
+    setSolicitudEnviada(true);
+    setQuiereFactura(false); 
+  };
+
 
   return (
     <div className="max-w-4xl mx-auto p-4">
@@ -404,7 +503,7 @@ export default function PagosView() {
                 </div>
                 <h2 className="text-2xl font-bold">¡Pago Exitoso!</h2>
                 <p className="text-sm opacity-70">
-                  ¿Deseas generar tu factura XML ahora mismo?
+                  ¿Deseas generar tu factura ahora mismo?
                 </p>
                 <div className="flex gap-3 pt-4">
                   <button
@@ -422,106 +521,196 @@ export default function PagosView() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-4">
-                <h3 className="text-xl font-bold text-center">
-                  Datos Fiscales
-                </h3>
-                <div className="form-control text-left">
-                  <label className="label text-xs font-bold">RFC</label>
+              <div className="space-y-4 overflow-y-auto max-h-[70vh] px-2">
+              <h3 className="text-xl font-bold text-center">Datos Fiscales</h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+                {/* RFC */}
+                <div className="form-control col-span-1">
+                  <label className="color primary text-[12px] font-bold  opacity-90">RFC</label>
                   <input
                     type="text"
                     placeholder="XAXX010101000"
-                    className="input input-bordered w-full bg-base-100"
-                    onChange={(e) =>
-                      setDatosFacturacion({
-                        ...datosFacturacion,
-                        rfc: e.target.value,
-                      })
-                    }
+                    maxLength={13}
+                    className={`input input-sm input-bordered uppercase bg-base-100 ${
+                      datosFacturacion.rfc && !/^([A-ZÑ&]{3,4}) ?(?:- ?)?(\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])) ?(?:- ?)?([A-Z\d]{2}[A-Z\d])$/.test(datosFacturacion.rfc) 
+                      ? "border-error" 
+                      : ""
+                    }`}
+                    value={datosFacturacion.rfc}
+                    onChange={(e) => setDatosFacturacion({...datosFacturacion, rfc: e.target.value.toUpperCase().trim()})}
                   />
+                  {/* Mensaje de error dinámico */}
+                  {datosFacturacion.rfc && !/^([A-ZÑ&]{3,4}) ?(?:- ?)?(\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])) ?(?:- ?)?([A-Z\d]{2}[A-Z\d])$/.test(datosFacturacion.rfc) && (
+                    <p className="text-error text-[10px] mt-1 font-medium italic">
+                      Formato de RFC inválido.
+                    </p>
+                  )}
                 </div>
-                <div className="form-control text-left">
-                  <label className="label text-xs font-bold">
-                    RAZÓN SOCIAL
-                  </label>
+
+                {/* CP */}
+                <div className="form-control col-span-1">
+                  <label className="color primary text-[12px] font-bold  opacity-90">CÓDIGO POSTAL</label>
                   <input
                     type="text"
-                    placeholder="Nombre o Empresa"
-                    className="input input-bordered w-full bg-base-100"
-                    onChange={(e) =>
-                      setDatosFacturacion({
-                        ...datosFacturacion,
-                        razonSocial: e.target.value,
-                      })
-                    }
+                    placeholder="00000"
+                    maxLength={5}
+                    className={`input input-sm input-bordered bg-base-100 ${
+                      datosFacturacion.cp && !/^\d{5}$/.test(datosFacturacion.cp) ? "border-error" : ""
+                    }`}
+                    value={datosFacturacion.cp}
+                    onChange={(e) => setDatosFacturacion({...datosFacturacion, cp: e.target.value.replace(/\D/g, "")})}
+                  />
+                  {/* Mensaje de error dinámico */}
+                  {datosFacturacion.cp && !/^\d{5}$/.test(datosFacturacion.cp) && (
+                    <p className="text-error text-[10px] mt-1 font-medium italic">
+                      Deben ser 5 dígitos.
+                    </p>
+                  )}
+                </div>
+
+                {/* RAZÓN SOCIAL */}
+                <div className="form-control col-span-full">
+                  <label className="color primary text-[12px] font-bold  opacity-90">NOMBRE O RAZÓN SOCIAL (Sin régimen capital)</label>
+                  <input
+                    type="text"
+                    placeholder="Tal cual aparece en Constancia"
+                    className="input input-sm input-bordered uppercase bg-base-100"
+                    value={datosFacturacion.razonSocial}
+                    onChange={(e) => setDatosFacturacion({...datosFacturacion, razonSocial: e.target.value.toUpperCase()})}
                   />
                 </div>
-                <button
-                  disabled={
-                    !datosFacturacion.rfc || !datosFacturacion.razonSocial
-                  }
-                  onClick={() => {
-                    setShowXML(true);
-                    setPagoExitoso(false);
-                  }}
-                  className="btn bg-alt hover:bg-alt/80 border-none w-full text-white mt-4"
-                >
-                  Generar XML
-                </button>
-                <button
-                  onClick={() => setQuiereFactura(false)}
-                  className="btn btn-link btn-sm w-full opacity-50 text-neutral"
-                >
-                  Volver
-                </button>
+
+                {/* RÉGIMEN FISCAL */}
+                <div className="form-control col-span-full">
+                  <label className="color primary text-[12px] font-bold  opacity-90">RÉGIMEN FISCAL</label>
+                  <select 
+                    className="select select-sm select-bordered bg-base-100"
+                    value={datosFacturacion.regimenFiscal}
+                    onChange={(e) => setDatosFacturacion({...datosFacturacion, regimenFiscal: e.target.value})}
+                  >
+                    {REGIMENES.map(r => <option key={r.code} value={r.code}>{r.code} - {r.label}</option>)}
+                  </select>
+                </div>
+
+                {/* USO CFDI */}
+                <div className="form-control col-span-full">
+                  <label className="color primary text-[12px] font-bold  opacity-90">USO DE CFDI</label>
+                  <select 
+                    className="select select-sm select-bordered bg-base-100"
+                    value={datosFacturacion.usoCFDI}
+                    onChange={(e) => setDatosFacturacion({...datosFacturacion, usoCFDI: e.target.value})}
+                  >
+                    {USOS.map(u => <option key={u.code} value={u.code}>{u.code} - {u.label}</option>)}
+                  </select>
+                </div>
               </div>
+
+              {/* CORREO PARA FACTURA */}
+              <div className="form-control col-span-full border-t border-base-200 mt-4 pt-4">
+              <label className="label cursor-pointer justify-start gap-3">
+              <input 
+                type="checkbox" 
+                className="checkbox-secondary checkbox" 
+                checked={usarCorreoAlternativo}
+                onChange={(e) => setUsarCorreoAlternativo(e.target.checked)}
+              />
+              <span className="text-base-content text-[12px] font-bold opacity-90">
+                ¿ENVIAR A OTRO CORREO DISTINTO AL DEL REGISTRO?
+              </span>
+            </label>
+
+             {usarCorreoAlternativo && (
+              <div className="mt-2 animate-in fade-in slide-in-from-top-1">
+              <input
+                type="email"
+                placeholder="ejemplo@correo.com"
+                className={`input input-sm input-bordered w-full bg-base-100 ${
+                  correoFacturacion && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoFacturacion) 
+                  ? "border-error" 
+                  : ""
+                }`}
+                value={correoFacturacion} // <--- IMPORTANTE
+                onChange={(e) => setCorreoFacturacion(e.target.value.trim())} // <--- IMPORTANTE
+              />
+              
+              {/* Mensaje de error dinámico para el correo */}
+              {correoFacturacion && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoFacturacion) && (
+                <p className="text-error text-[10px] mt-1 font-medium italic">
+                  Por favor ingresa un correo electrónico válido.
+                </p>
+              )}
+              
+              <p className="text-[10px] mt-1 opacity-100 italic">
+                Escribe el correo donde deseas recibir el PDF y XML.
+              </p>
+            </div>
+          )}
+          </div>
+              
+
+              <button
+                disabled={!isFormValid}
+                onClick={handleEnviarSolicitudFactura} // Solo llama a la función, ella se encarga del resto
+                className={`btn w-full mt-4 text-white ${
+                  isFormValid ? "bg-alt hover:bg-alt/80 border-none" : "bg-gray-400 cursor-not-allowed"
+                }`}
+              >
+                Enviar Solicitud Factura
+              </button>
+              <button onClick={() => setQuiereFactura(false)} className="btn btn-link btn-sm w-full opacity-50 text-neutral">
+                Volver
+              </button>
+            </div>
             )}
           </div>
         </div>
       )}
 
-      {showXML && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowXML(false)}
-          ></div>
-          <div className="relative bg-base-100 p-8 rounded-2xl shadow-2xl max-w-2xl w-full text-neutral">
-            <h3 className="text-xl font-bold mb-4">
-              Comprobante Fiscal Digital (XML)
-            </h3>
-            <div className="bg-neutral text-white p-4 rounded-lg font-mono text-[10px] overflow-x-auto h-64 border border-alt">
-              <pre>{`<?xml version="1.0" encoding="UTF-8"?>
-<cfdi:Comprobante version="4.0" Fecha="${new Date().toISOString()}" 
-    SubTotal="${(finalPrice / 1.16).toFixed(2)}" Total="${finalPrice.toFixed(2)}" Moneda="MXN" 
-    TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE">
-  <cfdi:Emisor Rfc="CONG20260101ABC" Nombre="CONGRESO INTERNACIONAL 2026" RegimenFiscal="601"/>
-  <cfdi:Receptor Rfc="${datosFacturacion.rfc.toUpperCase()}" 
-      Nombre="${datosFacturacion.razonSocial.toUpperCase()}" 
-      UsoCFDI="${datosFacturacion.usoCFDI}"/>
-  <cfdi:Conceptos>
-    <cfdi:Concepto ClaveProdServ="81111508" Cantidad="1" Descripcion="Registro Eventos Congreso" 
-        ValorUnitario="${(finalPrice / 1.16).toFixed(2)}" Importe="${(finalPrice / 1.16).toFixed(2)}"/>
-  </cfdi:Conceptos>
-</cfdi:Comprobante>`}</pre>
-            </div>
-            <div className="flex gap-4 mt-6">
-              <button
-                className="btn bg-alt hover:bg-alt/80 border-none text-white flex-1"
-                onClick={() => window.print()}
-              >
-                Imprimir / Guardar
-              </button>
-              <button
-                className="btn btn-ghost border-base-300 text-neutral"
-                onClick={() => setShowXML(false)}
-              >
-                Cerrar
-              </button>
-            </div>
+     {solicitudEnviada && (
+      <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+        <div className="relative bg-base-100 p-8 rounded-2xl shadow-2xl max-w-md w-full text-center border border-base-300">
+          
+          <div className="w-16 h-16 bg-secondary/20 text-alt rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
+            <MdCheckCircle />
+          </div>
+
+          <h3 className="text-xl font-bold mb-2 text-primary">¡Solicitud Recibida!</h3>
+          
+          <p className="text-sm text-neutral opacity-70 mb-6">
+            Tus datos han sido enviados al área administrativa. 
+            Puedes dar seguimiento al estatus de tu CFDI desde tu panel.
+          </p>
+
+          <div className="flex flex-col gap-3">
+            {/* BOTÓN PRINCIPAL: Ir a mis facturas */}
+            <button 
+              onClick={() => {
+                setSolicitudEnviada(false);
+                setPagoExitoso(false);
+                navigate("/asistente/facturas"); // Ajusta la ruta según tu App.jsx
+              }} 
+              className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300"
+            >
+              Ir a Mis Facturas
+            </button>
+
+            {/* BOTÓN SECUNDARIO: Solo cerrar */}
+            <button 
+              onClick={() => {
+                setSolicitudEnviada(false);
+                setPagoExitoso(false);
+                setUsarCorreoAlternativo(false);
+              }} 
+              className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300"
+            >
+              Cerrar
+            </button>
           </div>
         </div>
-      )}
+      </div>
+    )}
     </div>
-  );
+ );
 }
