@@ -8,84 +8,84 @@ import { BsFillPersonLinesFill } from "react-icons/bs";
 import { useEffect } from "react";
 
 
-export default function AdjuntarConstancia({persona}) {
+export default function AdjuntarFactura({persona}) {
  
-    const [rolPonente,setRolPonente] = useState({color:"bg-gray-500",title:"No necesita constancia"});
-    const [rolAsistente,setRolAsistente] = useState({color:"bg-gray-500",title:"No necesita constancia"});
-    const [rolEvaluador,setRolEvaluador] = useState({color:"bg-gray-500",title:"No necesita constancia"});
-    const [rolDictaminador,setRolDictaminador] = useState({color:"bg-gray-500",title:"No necesita constancia"});
-    const [rolTallerista,setRolTallerista] = useState({color:"bg-gray-500",title:"No necesita constancia"});
+    const [rolPonente,setRolPonente] = useState({color:"bg-gray-500",title:"No necesita factura"});
+    const [rolAsistente,setRolAsistente] = useState({color:"bg-gray-500",title:"No necesita factura"});
+    const [rolEvaluador,setRolEvaluador] = useState({color:"bg-gray-500",title:"No necesita factura"});
+    const [rolDictaminador,setRolDictaminador] = useState({color:"bg-gray-500",title:"No necesita factura"});
+    const [rolTallerista,setRolTallerista] = useState({color:"bg-gray-500",title:"No necesita factura"});
     useEffect(()=>{
         coloresRolesUsuario();
     },[]);
 
     const [idPersona,setIdPersona] = useState({id:1,
             es_ponente:true,
-            recibir_constancia_ponente:true,
+            recibir_factura_ponente:true,
             es_asistente:false,
-            recibir_constancia_asistente:false,
+            recibir_factura_asistente:false,
             es_tallerista:true,
-            recibir_constancia_tallerista:false,
+            recibir_factura_tallerista:false,
             es_evaluador:true,
-            recibir_constancia_evaluador:false,
+            recibir_factura_evaluador:false,
             es_dictaminador:true,
-            recibir_constancia_dictaminador:true});
+            recibir_factura_dictaminador:true});
 
     const [esRol,setEsRol] = useState("asistente");
 
-        //green = recibió constancia; red = no ha recibido y necesita; gray = no necesita constancia
+        //green = recibió factura; red = no ha recibido y necesita; gray = no necesita factura
 
     function coloresRolesUsuario(){
         if(idPersona.es_asistente){
-            if(idPersona.recibir_constancia_asistente){
-                setRolAsistente({color:"bg-green-500",title:"Ya recibió constancia"});
+            if(idPersona.recibir_factura_asistente){
+                setRolAsistente({color:"bg-green-500",title:"Ya recibió factura"});
             }else{
-                setRolAsistente({color:"bg-red-500",title:"Necesita constancia"});
+                setRolAsistente({color:"bg-red-500",title:"Necesita factura"});
             }
 
         }else{
-            setRolAsistente({color:"bg-gray-500",title:"No necesita constancia"});
+            setRolAsistente({color:"bg-gray-500",title:"No necesita factura"});
         }
           
         if(idPersona.es_ponente){
-            if(idPersona.recibir_constancia_ponente){
-                setRolPonente({color:"bg-green-500",title:"Ya recibió constancia"});
+            if(idPersona.recibir_factura_ponente){
+                setRolPonente({color:"bg-green-500",title:"Ya recibió factura"});
             }else{
-                setRolPonente({color:"bg-red-500",title:"Necesita constancia"});
+                setRolPonente({color:"bg-red-500",title:"Necesita factura"});
             }
 
         }else{
-            setRolPonente({color:"bg-gray-500",title:"No necesita constancia"});
+            setRolPonente({color:"bg-gray-500",title:"No necesita factura"});
         }
         if(idPersona.es_tallerista){
-            if(idPersona.recibir_constancia_tallerista){
-                setRolTallerista({color:"bg-green-500",title:"Ya recibió constancia"});
+            if(idPersona.recibir_factura_tallerista){
+                setRolTallerista({color:"bg-green-500",title:"Ya recibió factura"});
             }else{
-                setRolTallerista({color:"bg-red-500",title:"Necesita constancia"});
+                setRolTallerista({color:"bg-red-500",title:"Necesita factura"});
             }
 
         }else{
-            setRolTallerista({color:"bg-gray-500",title:"No necesita constancia"});
+            setRolTallerista({color:"bg-gray-500",title:"No necesita factura"});
         }
         if(idPersona.es_dictaminador){
-            if(idPersona.recibir_constancia_dictaminador){
-                setRolDictaminador({color:"bg-green-500",title:"Ya recibió constancia"});
+            if(idPersona.recibir_factura_dictaminador){
+                setRolDictaminador({color:"bg-green-500",title:"Ya recibió factura"});
             }else{
-                setRolDictaminador({color:"bg-red-500",title:"Necesita constancia"});
+                setRolDictaminador({color:"bg-red-500",title:"Necesita factura"});
             }
 
         }else{
-            setRolDictaminador({color:"bg-gray-500",title:"No necesita constancia"});
+            setRolDictaminador({color:"bg-gray-500",title:"No necesita factura"});
         }
         if(idPersona.es_evaluador){
-            if(idPersona.recibir_constancia_ponente){
-                setRolEvaluador({color:"bg-green-500",title:"Ya recibió constancia"});
+            if(idPersona.recibir_factura_ponente){
+                setRolEvaluador({color:"bg-green-500",title:"Ya recibió factura"});
             }else{
-                setRolEvaluador({color:"bg-red-500",title:"Necesita constancia"});
+                setRolEvaluador({color:"bg-red-500",title:"Necesita factura"});
             }
 
         }else{
-            setRolEvaluador({color:"bg-gray-500",title:"No necesita constancia"});
+            setRolEvaluador({color:"bg-gray-500",title:"No necesita factura"});
         }
     }
 
@@ -138,8 +138,8 @@ export default function AdjuntarConstancia({persona}) {
       {/* contenido - ocupa lo que queda */}
       <div className="flex flex-col w-full p-4 bg-base-100 rounded-xl shadow-sm border flex-1 border-b">
         <div className="h-20">
-            <h1 className="text-xl">Subir constancia</h1>{/*Subir constancia*/}
-            <p className="ml-5 text-gray-400 mt-2">Suba la constancia individual para esta persona en este rol </p>{/*Suba la constancia individual para esta persona en este rol*/}
+            <h1 className="text-xl">Subir factura</h1>{/*Subir factura*/}
+            <p className="ml-5 text-gray-400 mt-2">Suba la factura individual para esta persona en este rol </p>{/*Suba la factura individual para esta persona en este rol*/}
         </div>
         <div className="flex h-100 rounded-xl border border-dashed border-4 border-gray-500 cursor-grabbing items-center text-center ml-6 mr-6 mb-5">
             <p className="flex-1 text-lg text-gray-400">Suelte el archivo</p>
@@ -147,7 +147,7 @@ export default function AdjuntarConstancia({persona}) {
         </div>
         <div className="flex flex-col justify-center"  title="Vista previa de archivo">
             <p className="flex-1">
-                Constancia actual
+                Factura actual
             </p>
             <div className="h-50 w-80 border border-b m-5 mx-auto">
                 {/*Ruta de vista previa*/}
