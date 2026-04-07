@@ -15,33 +15,27 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    // Pequeño delay para simular la llamada al servidor
-    setTimeout(() => {
-      const ok = login(email, password);
-      if (ok) {
-        // Obtenemos el usuario recién logueado para ver su rol
-        const savedUser = JSON.parse(localStorage.getItem("congress_user"));
-        if (savedUser?.rol === 'revisor') {
-          navigate('/revisor', { replace: true });
-        } else if (savedUser?.rol === 'dictaminador') {
-          navigate('/dictaminador', { replace: true });
-        } else if (savedUser?.rol === 'administrador') {
-          navigate('/admin', { replace: true });
-        } else if (savedUser?.rol === 'ponente') {
-          navigate('/ponente', { replace: true });
-        } else {
-          navigate('/asistente', { replace: true });
-        }
+    try {
+      const userData = await login(email, password);
+      const rol = userData.rol;
+      if (rol === 'revisor') {
+        navigate('/revisor', { replace: true });
+      } else if (rol === 'dictaminador') {
+        navigate('/dictaminador', { replace: true });
+      } else if (rol === 'administrador' || rol === 'admin') {
+        navigate('/admin', { replace: true });
       } else {
-        setError('Correo o contraseña incorrectos.');
-        setLoading(false);
+        navigate('/asistente', { replace: true });
       }
-    }, 400);
+    } catch (err) {
+      setError(err.message || 'Correo o contraseña incorrectos.');
+      setLoading(false);
+    }
   };
 
   return (

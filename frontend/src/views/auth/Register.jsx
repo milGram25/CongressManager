@@ -37,7 +37,7 @@ const Register = () => {
     setFormData({ ...formData, pais: value.label });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -82,18 +82,24 @@ const Register = () => {
 
     setLoading(true);
 
-    // Simular un pequeño delay de red
-    setTimeout(() => {
-      const result = register(formData);
-      
-      if (result.success) {
-        alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
-        navigate('/login');
+    const result = await register(formData);
+    
+    if (result.success) {
+      // El AuthContext hace auto-login, navegamos según el rol
+      const rol = result.user?.rol;
+      if (rol === 'revisor') {
+        navigate('/revisor', { replace: true });
+      } else if (rol === 'dictaminador') {
+        navigate('/dictaminador', { replace: true });
+      } else if (rol === 'administrador' || rol === 'admin') {
+        navigate('/admin', { replace: true });
       } else {
-        setError(result.message);
-        setLoading(false);
+        navigate('/asistente', { replace: true });
       }
-    }, 500);
+    } else {
+      setError(result.message);
+      setLoading(false);
+    }
   };
 
   return (

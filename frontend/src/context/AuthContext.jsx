@@ -1,109 +1,72 @@
-import { createContext, useContext, useState } from "react";
-
-// Usuarios genéricos para pruebas (mientras se conecta el backend)
-const GENERIC_USERS = [
-  {
-    email: "admin@udg.mx",
-    password: "admin123",
-    nombre: "Administrador del Sistema",
-    rol: "administrador",
-  },
-  {
-    email: "asistente@udg.mx",
-    password: "asistente123",
-    nombre: "Usuario Demo Asistente",
-    rol: "asistente",
-  },
-  {
-    email: "revisor@udg.mx",
-    password: "revisor123",
-    nombre: "Usuario Demo Revisor",
-    rol: "revisor",
-  },
-  {
-    email: "dictaminador@udg.mx",
-    password: "dictaminador123",
-    nombre: "Usuario Demo Dictaminador",
-    rol: "dictaminador",
-  },
-  {
-    email: "ponente@udg.mx",
-    password: "ponente123",
-    nombre: "Usuario Demo Ponente",
-    rol: "ponente",
-  }
-];
+import { createContext, useContext, useState, useEffect } from "react";
+import { loginApi, registerApi, getMeApi } from "../api/authApi";
 
 const AuthContext = createContext(null);
 
+/** Mapea roles del backend al formato que usa el frontend para rutas */
+function mapRol(rolBackend) {
+  if (rolBackend === 'admin') return 'administrador';
+  return rolBackend; // asistente, revisor, dictaminador
+}
+
 export function AuthProvider({ children }) {
-  // Inicializa desde localStorage para persistir la sesión al recargar
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem("congress_user");
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true); // cargando sesión inicial
 
-  // Lista de usuarios registrados (esto normalmente iría en el backend)
-  const getRegisteredUsers = () => {
-    const savedUsers = localStorage.getItem("registered_users");
-    const users = savedUsers ? JSON.parse(savedUsers) : [];
-    
-    // Combinamos con los usuarios genéricos asegurando que no haya duplicados por email
-    const allUsers = [...GENERIC_USERS];
-    users.forEach(u => {
-      if (!allUsers.find(au => au.email === u.email)) {
-        allUsers.push(u);
-      }
-    });
-    return allUsers;
+  // Al montar, intentar restaurar sesión desde el access token guardado
+  useEffect(() => {
+    const accessToken = localStorage.getItem("congress_access");
+    if (!accessToken) {
+      setAuthLoading(false);
+      return;
+    }
+    getMeApi(accessToken)
+      .then((userData) => {
+        setUser({ ...userData, rol: mapRol(userData.rol) });
+      })
+      .catch(() => {
+        // Token expirado o inválido — limpiar sesión
+        localStorage.removeItem("congress_access");
+        localStorage.removeItem("congress_refresh");
+      })
+      .finally(() => setAuthLoading(false));
+  }, []);
+
+  /**
+   * Inicia sesión con el backend. Devuelve true si tuvo éxito, lanza un Error si falla.
+   */
+  const login = async (email, password) => {
+    const data = await loginApi(email, password); // puede lanzar Error
+    localStorage.setItem("congress_access", data.access);
+    localStorage.setItem("congress_refresh", data.refresh);
+    setUser({ ...data.user, rol: mapRol(data.user.rol) });
+    return data.user;
   };
 
   /**
-   * Registra un nuevo usuario en localStorage.
+   * Registra un usuario en el backend. Devuelve { success: true } o { success: false, message }.
    */
-  const register = (userData) => {
-    const users = getRegisteredUsers();
-    
-    // Validar si el correo ya existe
-    if (users.find(u => u.email === userData.email)) {
-      return { success: false, message: "El correo ya está registrado." };
+  const register = async (formData) => {
+    try {
+      const data = await registerApi(formData);
+      // Auto-login tras registro exitoso
+      localStorage.setItem("congress_access", data.access);
+      localStorage.setItem("congress_refresh", data.refresh);
+      setUser({ ...data.user, rol: mapRol(data.user.rol) });
+      return { success: true, user: data.user };
+    } catch (err) {
+      return { success: false, message: err.message };
     }
-
-    // Guardar nuevo usuario
-    const newUsers = [...users, userData];
-    localStorage.setItem("registered_users", JSON.stringify(newUsers));
-    return { success: true };
-  };
-
-  /**
-   * Intenta iniciar sesión. Valida contra los usuarios registrados.
-   */
-  const login = (email, password) => {
-    const users = getRegisteredUsers();
-    const foundUser = users.find(
-      u => u.email.trim() === email.trim() && u.password === password
-    );
-
-    if (foundUser) {
-      const userData = { 
-        email: foundUser.email, 
-        nombre: foundUser.nombres || foundUser.nombre, 
-        rol: foundUser.rol || "asistente" 
-      };
-      setUser(userData);
-      localStorage.setItem("congress_user", JSON.stringify(userData));
-      return true;
-    }
-    return false;
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("congress_user");
+    localStorage.removeItem("congress_access");
+    localStorage.removeItem("congress_refresh");
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register }}>
+    <AuthContext.Provider value={{ user, login, logout, register, authLoading }}>
       {children}
     </AuthContext.Provider>
   );
