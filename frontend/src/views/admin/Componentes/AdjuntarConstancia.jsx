@@ -17,7 +17,7 @@ export default function AdjuntarComponente({persona}) {
     const [rolTallerista,setRolTallerista] = useState({color:"bg-gray-500",title:"No necesita constancia"});
     useEffect(()=>{
         coloresRolesUsuario();
-    })
+    },[]);
 
     const [idPersona,setIdPersona] = useState({id:1,
             es_ponente:true,
