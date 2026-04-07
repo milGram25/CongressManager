@@ -8,12 +8,12 @@ export default function UsuariosConstanciasView() {
     <div>
 
       <div className="flex gap-4">
-          <div className="border bg-black rounded-full h-10 w-2"></div>
-          <h2 className="flex-1 text-2xl font-bold text-start">Adjuntar constancia</h2>
-        </div>
-        <p className="pt-2 pl-12 text-start mb-4">
-          Selecciona a la persona y gestiona las constancias según sus roles de este congreso
-        </p>
+        <div className="border bg-black rounded-full h-10 w-2"></div>
+        <h2 className="flex-1 text-2xl font-bold text-start">Adjuntar constancia</h2>
+      </div>
+      <p className="pt-2 pl-12 text-start mb-4">
+        Selecciona a la persona y gestiona las constancias según sus roles de este congreso
+      </p>
 
       <AdjuntarConstancia/>
       {/*<button 
