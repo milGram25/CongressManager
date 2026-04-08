@@ -1,25 +1,23 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from .models import User
+from .models import Persona
 
-
-@admin.register(User)
-class CustomUserAdmin(UserAdmin):
-    # Columnas visibles en la lista de usuarios
-    list_display = ('email', 'username', 'first_name', 'last_name', 'rol', 'institucion', 'is_staff')
-    list_filter = ('rol', 'is_staff', 'is_active')
-    search_fields = ('email', 'username', 'first_name', 'last_name')
-
-    # Agregar los campos personalizados al formulario de edición
-    fieldsets = UserAdmin.fieldsets + (
-        ('Información del Congreso', {
-            'fields': ('rol', 'institucion'),
+@admin.register(Persona)
+class PersonaAdmin(admin.ModelAdmin):
+    list_display = ('correo_electronico', 'nombre', 'primer_apellido', 'is_staff', 'is_superuser')
+    search_fields = ('correo_electronico', 'nombre', 'primer_apellido')
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'genero', 'pais')
+    
+    fieldsets = (
+        ('Información Personal', {
+            'fields': ('nombre', 'primer_apellido', 'segundo_apellido', 'correo_electronico', 'password', 'num_telefono', 'curp')
         }),
-    )
-
-    # Agregar los campos personalizados al formulario de creación
-    add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Información del Congreso', {
-            'fields': ('rol', 'institucion'),
+        ('Información de Perfil', {
+            'fields': ('genero', 'pais', 'discapacidad')
+        }),
+        ('Permisos', {
+            'fields': ('is_active', 'is_staff', 'is_superuser')
+        }),
+        ('Fechas Importantes', {
+            'fields': ('last_login',)
         }),
     )
