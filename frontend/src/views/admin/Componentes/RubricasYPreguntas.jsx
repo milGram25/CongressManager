@@ -125,14 +125,14 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
   )?.nombre;
 
   return (
-    <div className="w-full space-y-6 p-6">
+    <div className="w-full space-y-6">
       {/* Header con Selector */}
-      <div className="flex items-center justify-between bg-primary text-white p-6 rounded-lg">
-        <h2 className="text-xl font-bold">Seleccionar tipo de trabajo</h2>
+      <div className="flex items-center justify-between bg-primary text-white p-6 rounded-lg g-10">
+        <h2 className="w-100 text-xl font-bold">Seleccionar tipo de trabajo</h2>
         <select
           value={selectedTipoTrabajo}
           onChange={(e) => setSelectedTipoTrabajo(Number(e.target.value))}
-          className="select select-bordered select-sm w-48 bg-white text-base-content"
+          className="select select-bordered select-sm w-full bg-white text-base-content rounded-full pl-4"
         >
           {tiposTrabajoDisponibles.map((tipo) => (
             <option key={tipo.id} value={tipo.id}>

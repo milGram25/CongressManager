@@ -1,22 +1,22 @@
 import { useNavigate } from "react-router-dom";
 import { MdArrowBack } from "react-icons/md";
+import AdjuntarFactura from "./Componentes/AdjuntarFactura";
 
 export default function UsuariosFacturasView() {
   const navigate = useNavigate();
   return (
     <div className="bg-base-100 p-8 rounded-3xl border border-base-300 shadow-sm min-h-[400px]">
-      <button 
-        onClick={() => navigate(-1)} 
-        className="mb-6 p-2 hover:bg-base-200 rounded-full transition-colors flex items-center gap-2 text-base-content/70 hover:text-primary"
-        title="Regresar a la vista anterior"
-      >
-        <MdArrowBack className="text-2xl" />
-        <span className="text-sm font-medium">Regresar</span>
-      </button>
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <h2 className="text-2xl font-bold">Usuarios: Facturas</h2>
-        <p className="text-base-content/50 mt-2 italic">Sección en proceso de desarrollo...</p>
+
+      <div className="flex gap-4">
+        <div className="border bg-black rounded-full h-10 w-2"></div>
+        <h2 className="flex-1 text-2xl font-bold text-start">Adjuntar factura</h2>
       </div>
+      <p className="pt-2 pl-12 text-start mb-4">
+        Selecciona a la persona y gestiona las facturas según sus roles de este congreso
+      </p>
+
+      <AdjuntarFactura/>
+
     </div>
   );
 }
