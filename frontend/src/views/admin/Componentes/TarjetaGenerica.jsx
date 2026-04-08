@@ -13,7 +13,7 @@ const TarjetaGenerica = ({
 
     const cardStyle = {
         // Proporciones basadas en 329x384 sobre 1440x1200
-        width: '100%', // Usa 100% para que se adapte a la columna del Grid que hicimos antes
+        width: '300px', // Usa 100% para que se adapte a la columna del Grid que hicimos antes
         minHeight: '384px',
         backgroundColor: '#F9F8F8',
         border: '1px solid #1A1A1A',
@@ -27,7 +27,7 @@ const TarjetaGenerica = ({
     };
 
     const headerStyle = {
-        backgroundColor: '#005C70',
+        backgroundColor: 'black',
         color: '#FFFFFF',
         borderRadius: '30px',
         padding: '8px 16px',
@@ -44,7 +44,7 @@ const TarjetaGenerica = ({
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        gap: '12px'
+        gap: '6px'
     };
 
     const footerStyle = {
@@ -55,7 +55,7 @@ const TarjetaGenerica = ({
     };
 
     const iconBtnStyle = {
-        backgroundColor: '#005C70',
+        backgroundColor: 'black',
         color: '#FFFFFF',
         border: 'none',
         borderRadius: '50%',
@@ -68,11 +68,11 @@ const TarjetaGenerica = ({
     };
 
     const publishBtnStyle = {
-        backgroundColor: '#005C70',
+        backgroundColor: 'black',
         color: '#FFFFFF',
         border: 'none',
         borderRadius: '20px',
-        padding: '6px 16px',
+        //padding: '6px 16px',
         fontWeight: '600',
         cursor: 'pointer'
     };
@@ -87,7 +87,7 @@ const TarjetaGenerica = ({
 
             <div style={footerStyle}>
                 <button style={iconBtnStyle} onClick={onView} title="Ver detalles">
-                    <FiEye size={18} />
+                    <FiEye size={16} />
                 </button>
 
                 {botonPublicarTexto && (

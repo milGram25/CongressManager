@@ -15,52 +15,53 @@ const ItemCongreso = ({
                           totalPonencias = "25",
                           coordinador = "Dr. Santos",
                           fechaInicio = "28 oct 2026",
-                          fechaFin = "31 oct 2026"
+                          fechaFin = "31 oct 2026",
+                          listaDatos
                       }) => {
     return (
-        <TarjetaGenerica titulo={nombreCongreso} botonPublicarTexto="Publicar">
+        <TarjetaGenerica titulo={listaDatos.nombre_congreso} botonPublicarTexto="Publicar">
 
             {/* Fila 1: Siglas */}
             <div style={rowStyle}>
                 <div style={labelContainer}>
                     <div style={iconCircleBox}><FiBookOpen size={12}/></div>
-                    <span>Siglas</span>
+                    <span>Sede</span>
                 </div>
-                <div style={valuePillStyle}>{siglas}</div>
+                <div style={valuePillStyle}>{listaDatos.sede}</div>
             </div>
 
             {/* Fila 2: Ponencias */}
             <div style={rowStyle}>
                 <div style={labelContainer}>
                     <div style={iconCircleBox}><FiFileText size={12}/></div>
-                    <span>Ponencias</span>
+                    <span>Eventos</span>
                 </div>
-                <div style={valuePillStyle}>{totalPonencias}</div>
+                <div style={valuePillStyle}>{listaDatos.cantidad_eventos}</div> {/*Esto se tendrá que calcular en base a los eventos enlazados al mismo congreso*/}
             </div>
 
             {/* Fila 3: Coordinador */}
             <div style={rowStyle}>
                 <div style={labelContainer}>
                     <div style={iconCircleBox}><FiUser size={12}/></div>
-                    <span>Coordinador</span>
+                    <span>Institución</span>
                 </div>
-                <div style={valuePillStyle}>{coordinador}</div>
+                <div style={valuePillStyle}>{listaDatos.nombre_institucion}</div> {/*Es el nombre de la institución, solo que en la base de datos se le puso únicamente "nombre" al campo, así que hay que retornarlo correctamete cuando se llame a la base de datos*/}
             </div>
 
             {/* Fila 4 y 5: Fechas (como filas normales) */}
             <div style={{...rowStyle, marginTop: 'auto'}}>
                 <div style={labelContainer}>
                     <div style={iconCircleBox}><FiCalendar size={12}/></div>
-                    <span>Inicia</span>
+                    <span>Inicio</span>
                 </div>
-                <div style={valuePillStyle}>{fechaInicio}</div>
+                <div style={valuePillStyle}>{listaDatos.fecha_hora_inicio}</div>
             </div>
             <div style={rowStyle}>
                 <div style={labelContainer}>
                     <div style={iconCircleBox}><FiCalendar size={12}/></div>
-                    <span>Finaliza</span>
+                    <span>Fin</span>
                 </div>
-                <div style={valuePillStyle}>{fechaFin}</div>
+                <div style={valuePillStyle}>{listaDatos.fecha_hora_final}</div>
             </div>
 
         </TarjetaGenerica>

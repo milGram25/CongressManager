@@ -1,16 +1,49 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FiDownload, FiMinus, FiPlus } from 'react-icons/fi';
+//import MenuCrearBorrar from "./Componentes/MenuCrearBorrarGenerico";
+import Itemcrearborrargenerico from './itemcrearborrargenerico';
+import ItemPonencia2 from './ItemPonencia2';
+//import ItemTaller from './ItemTaller';
+//import ItemTaller from "./ItemTaller";
+import ItemTaller from './ItemTaller';
+import ItemCongreso from "./ItemCongreso";
+import ItemInstitucion from "./ItemInstitucion";
+
+import { useEffect } from 'react';
 
 const MenuCrearBorrarGenerico = ({
                                      title = "Crear [insertar sustantivo]",
                                      children,
                                      onDownload,
                                      onRemove,
-                                     onAdd
+                                     onAdd,
+                                     listaElementos2,
+                                     definirTipoElemento = "ponencia"
                                  }) => {
 
+    const [listaElementos,setListaElementos] = useState([]);
+    const Componente = (props) => {
+
+    switch(definirTipoElemento){
+        case "ponencia":
+            return <ItemPonencia2 {...props} />
+        case "taller":
+            return <ItemTaller {...props} />
+
+        case "institucion":
+            return <ItemInstitucion {...props} />
+
+        case "congreso":
+            return <ItemCongreso {...props} />
+
+        default:
+            return null;
+    }
+};
+
+
     const containerStyle = {
-        width: '74.03%',
+        width: '1000px',
         height: '82%',
         border: '1px solid #1A1A1A',
         borderRadius: '16px',
@@ -22,7 +55,7 @@ const MenuCrearBorrarGenerico = ({
     };
 
     const headerStyle = {
-        backgroundColor: '#005C70',
+        backgroundColor: 'black',
         padding: '16px 24px',
         display: 'flex',
         justifyContent: 'space-between',
@@ -70,7 +103,7 @@ const MenuCrearBorrarGenerico = ({
     };
 
     const pillButtonStyle = {
-        backgroundColor: '#005C70',
+        backgroundColor: 'black',
         border: 'none',
         borderRadius: '50%',
         width: '32px',
@@ -81,6 +114,13 @@ const MenuCrearBorrarGenerico = ({
         cursor: 'pointer',
         color: '#ffffff'
     };
+
+    function agregarElemento(){
+        setListaElementos([...listaElementos],onAdd);
+
+    }
+
+    
 
     return (
         <div style={containerStyle}>
@@ -107,7 +147,14 @@ const MenuCrearBorrarGenerico = ({
             </header>
 
             <main style={contentAreaStyle}>
-                {children}
+                {listaElementos2.map((objeto) => (
+                    <Componente
+                    key={objeto.id}
+                    
+                   
+                    listaDatos={objeto}
+                    />
+                ))}
             </main>
         </div>
     );
