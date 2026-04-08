@@ -5,7 +5,7 @@ import TarjetaGenerica from './TarjetaGenerica';
 // Reutilizamos estilos base
 const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '8px' };
 const labelContainer = { display: 'flex', alignItems: 'center', gap: '8px', color: '#4A4A4A', fontSize: '14px' };
-const iconCircleBox = { backgroundColor: '#005C70', color: '#FFFFFF', padding: '6px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '35px', height: '35px' };
+const iconCircleBox = { backgroundColor: '#005C70', color: '#FFFFFF', padding: '6px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '14px', height: '14px' };
 const valuePillStyle = { backgroundColor: '#FFFFFF', border: '1px solid #1A1A1A', borderRadius: '16px', padding: '4px 12px', color: '#1A1A1A', fontSize: '14px', fontWeight: '600', textAlign: 'center', minWidth: '60px' };
 
 const ItemPonencia = ({
@@ -17,7 +17,7 @@ const ItemPonencia = ({
                           estatus = "Aceptado"
                       }) => {
     return (
-        <TarjetaGenerica className="w-60"  titulo={nombrePonencia}> {/* Sin botón de publicar según la imagen */}
+        <TarjetaGenerica titulo={nombrePonencia}> {/* Sin botón de publicar según la imagen */}
 
             {/* Fila 1: Congreso */}
             <div style={rowStyle}>
@@ -38,15 +38,12 @@ const ItemPonencia = ({
             </div>
 
             {/* Fila 3: Fecha */}
-            <div className="flex "style={rowStyle}>
+            <div style={rowStyle}>
                 <div style={labelContainer}>
                     <div style={iconCircleBox}><FiCalendar size={12}/></div>
                     <span>Fecha</span>
-                    
                 </div>
-                
                 <div style={valuePillStyle}>{fecha}</div>
-                
             </div>
 
             {/* Fila 4: Hora */}
@@ -58,7 +55,14 @@ const ItemPonencia = ({
                 <div style={valuePillStyle}>{hora}</div>
             </div>
 
-           
+            {/* Fila 5: Estatus */}
+            <div style={{...rowStyle, marginTop: 'auto'}}>
+                <div style={labelContainer}>
+                    <div style={iconCircleBox}><FiCheckCircle size={12}/></div>
+                    <span>Estatus</span>
+                </div>
+                <div style={valuePillStyle}>{estatus}</div>
+            </div>
 
         </TarjetaGenerica>
     );

@@ -49,11 +49,10 @@ const ItemTaller = ({
                         tallerista = "Dr. Santos",
                         cupos = "100/100",
                         fecha = "30 oct 2026",
-                        hora = "15:00",
-                        listaDatos
+                        hora = "15:00"
                     }) => {
     return (
-        <TarjetaGenerica titulo={listaDatos.nombre_evento.trim()!==""?listaDatos.nombre_evento:"Undefined"} botonPublicarTexto="Publicar">
+        <TarjetaGenerica titulo={nombreTaller} botonPublicarTexto="Publicar">
             {/* Contenido Central */}
 
             {/* Fila 1: Congreso */}
@@ -62,7 +61,7 @@ const ItemTaller = ({
                     <div style={iconCircleBox}><FiMapPin size={12}/></div>
                     <span>Congreso</span>
                 </div>
-                <div style={valuePillStyle}>{listaDatos.nombre_congreso}</div>
+                <div style={valuePillStyle}>{congreso}</div>
             </div>
 
             {/* Fila 2: Tallerista */}
@@ -71,7 +70,7 @@ const ItemTaller = ({
                     <div style={iconCircleBox}><FiUser size={12}/></div>
                     <span>Tallerista</span>
                 </div>
-                <div style={valuePillStyle}>{listaDatos.tallerista.trim()!==""?listaDatos.tallerista:"Undefined"}</div>
+                <div style={valuePillStyle}>{tallerista}</div>
             </div>
 
             {/* Fila 3: Cupos */}
@@ -80,7 +79,7 @@ const ItemTaller = ({
                     <div style={iconCircleBox}><FiUsers size={12}/></div>
                     <span>Cupos</span>
                 </div>
-                <div style={valuePillStyle}>{listaDatos.cupos}</div>
+                <div style={valuePillStyle}>{cupos}</div>
             </div>
 
             {/* Fila 4: Fecha y Hora (Combinadas en cajas rectangulares al fondo) */}
@@ -99,4 +98,4 @@ const ItemTaller = ({
     );
 };
 
-export default ItemTaller;
+export default ItemTaller;It
