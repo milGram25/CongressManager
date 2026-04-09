@@ -55,7 +55,7 @@ const TarjetaGenerica = ({
     };
 
     const iconBtnStyle = {
-        backgroundColor: 'black',
+        
         color: '#FFFFFF',
         border: 'none',
         borderRadius: '50%',
@@ -72,9 +72,10 @@ const TarjetaGenerica = ({
         color: '#FFFFFF',
         border: 'none',
         borderRadius: '20px',
-        //padding: '6px 16px',
+        padding: '6px 16px',
         fontWeight: '600',
-        cursor: 'pointer'
+        cursor: 'pointer',
+        
     };
 
     return (
@@ -86,7 +87,7 @@ const TarjetaGenerica = ({
             </div>
 
             <div style={footerStyle}>
-                <button style={iconBtnStyle} onClick={onView} title="Ver detalles">
+                <button  className="bg-black hover:bg-gray-500" style={iconBtnStyle} onClick={onView} title="Ver detalles">
                     <FiEye size={16} />
                 </button>
 
@@ -97,10 +98,10 @@ const TarjetaGenerica = ({
                 )}
 
                 <div style={{ display: 'flex', gap: '8px' }}>
-                    <button style={iconBtnStyle} onClick={onCopy} title="Duplicar">
+                    <button className="bg-black hover:bg-gray-500" style={iconBtnStyle} onClick={onCopy} title="Duplicar">
                         <FiCopy size={16} />
                     </button>
-                    <button style={iconBtnStyle} onClick={onEdit} title="Editar">
+                    <button  className="bg-black hover:bg-gray-500" style={iconBtnStyle} onClick={onEdit} title="Editar">
                         <FiEdit2 size={16} />
                     </button>
                 </div>

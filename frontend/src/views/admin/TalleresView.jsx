@@ -12,7 +12,7 @@ export default function TalleresView() {
       nombre_evento:"mal taller",
       tallerista:"",
       fecha_hora_inicio:"2026-04-08T10:00",
-      fecha_hora_final:"2026-04-08T10:00",
+      fecha_hora_final:"2026-04-08T14:00",
       cupos:"40"
     },
     {
@@ -21,7 +21,7 @@ export default function TalleresView() {
       nombre_evento:"mal taller",
       tallerista:"Yo mero",
       fecha_hora_inicio:"2026-04-08T10:00",
-      fecha_hora_final:"2026-04-08T10:00",
+      fecha_hora_final:"2026-04-08T13:00",
       cupos:"40"
     },
     {
@@ -30,7 +30,7 @@ export default function TalleresView() {
       nombre_evento:"mal taller",
       tallerista:"Yo mero",
       fecha_hora_inicio:"2026-04-08T10:00",
-      fecha_hora_final:"2026-04-08T10:00",
+      fecha_hora_final:"2026-04-08T12:00",
       cupos:"40"
     },
     {
@@ -39,7 +39,7 @@ export default function TalleresView() {
       nombre_evento:"mal taller",
       tallerista:"Yo mero",
       fecha_hora_inicio:"2026-04-08T10:00",
-      fecha_hora_final:"2026-04-08T10:00",
+      fecha_hora_final:"2026-04-08T12:00",
       cupos:"40"
     },
     
@@ -48,7 +48,7 @@ export default function TalleresView() {
 
   return (
     <div className="bg-base-100 p-8 rounded-3xl border border-base-300 shadow-sm min-h-[400px]">
-      <MenuCrearBorrar title="Ver ponencia" listaElementos2={listaEventos} definirTipoElemento="taller"/>
+      <MenuCrearBorrar title="Crear taller" listaElementos2={listaEventos} definirTipoElemento="taller"/>
 
     
       

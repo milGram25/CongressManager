@@ -8,7 +8,7 @@ const rowStyle = {
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: '12px',
-    marginBottom: '8px'
+    marginBottom: '4px'
 };
 
 const labelContainer = {
@@ -20,15 +20,15 @@ const labelContainer = {
 };
 
 const iconCircleBox = {
-    backgroundColor: '#005C70', // Teal
+    backgroundColor: 'black', // Teal
     color: '#FFFFFF',
     padding: '6px',
     borderRadius: '50%', // Círculo perfecto
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '14px',
-    height: '14px'
+    width: '36px',
+    height: '36px'
 };
 
 const valuePillStyle = {
@@ -52,6 +52,13 @@ const ItemTaller = ({
                         hora = "15:00",
                         listaDatos
                     }) => {
+
+    const fecha_inicio = listaDatos.fecha_hora_inicio.split("T")[0];
+    const hora_inicio = listaDatos.fecha_hora_inicio.split("T")[1];
+
+    const fecha_fin = listaDatos.fecha_hora_final.split("T")[0];
+    const hora_fin = listaDatos.fecha_hora_final.split("T")[1];
+
     return (
         <TarjetaGenerica titulo={listaDatos.nombre_evento.trim()!==""?listaDatos.nombre_evento:"Undefined"} botonPublicarTexto="Publicar">
             {/* Contenido Central */}
@@ -83,16 +90,37 @@ const ItemTaller = ({
                 <div style={valuePillStyle}>{listaDatos.cupos}</div>
             </div>
 
-            {/* Fila 4: Fecha y Hora (Combinadas en cajas rectangulares al fondo) */}
-            <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', paddingTop: '12px' }}>
-                <div style={{ flex: 1, display: 'flex', border: '1px solid #1A1A1A', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#FFFFFF' }}>
-                    <div style={{ backgroundColor: '#005C70', color: '#FFFFFF', padding: '6px 10px', display: 'flex', alignItems: 'center' }}><FiCalendar size={14} /></div>
-                    <div style={{ padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, fontSize: '13px', color: '#1A1A1A' }}>{fecha}</div>
+            {/* Fila 4: Fecha y Hora inicio */}
+            <div style={{ gap: '8px', paddingTop: '2px' }}  title="Fecha y hora de inicio del taller">
+                <p className='w-8 text-sm text-gray-700'>Inicio</p>
+                <div className='flex gap-3'>
+                    <div style={{ flex: 3, display: 'flex', border: '1px solid #1A1A1A', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#FFFFFF' }}>
+                        <div style={{ backgroundColor: 'black', color: '#FFFFFF', padding: '6px 10px', display: 'flex', alignItems: 'center' }}><FiCalendar size={14} /></div>
+                        <div style={{ padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, fontSize: '13px', color: '#1A1A1A' }}>{fecha_inicio}</div>
+                    </div>
+                    <div style={{ flex: 2, display: 'flex', border: '1px solid #1A1A1A', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#FFFFFF' }}>
+                        <div style={{ backgroundColor: 'black', color: '#FFFFFF', padding: '6px 10px', display: 'flex', alignItems: 'center' }}><FiClock size={14} /></div>
+                        <div style={{ padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, fontSize: '13px', color: '#1A1A1A' }}>{hora_inicio}</div>
+                    </div>
+
                 </div>
-                <div style={{ flex: 1, display: 'flex', border: '1px solid #1A1A1A', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#FFFFFF' }}>
-                    <div style={{ backgroundColor: '#005C70', color: '#FFFFFF', padding: '6px 10px', display: 'flex', alignItems: 'center' }}><FiClock size={14} /></div>
-                    <div style={{ padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, fontSize: '13px', color: '#1A1A1A' }}>{hora}</div>
+                
+            </div>
+            {/* Fila 4: Fecha y Hora final */}
+            <div style={{ gap: '8px', paddingTop: '2px' }}  title="Fecha y hora de fin del taller">
+                <p className='w-8 text-sm text-gray-700'>Fin</p>
+                <div className='flex gap-3'>
+                    <div style={{ flex: 3, display: 'flex', border: '1px solid #1A1A1A', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#FFFFFF' }}>
+                        <div style={{ backgroundColor: 'black', color: '#FFFFFF', padding: '6px 10px', display: 'flex', alignItems: 'center' }}><FiCalendar size={14} /></div>
+                        <div style={{ padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, fontSize: '13px', color: '#1A1A1A' }}>{fecha_fin}</div>
+                    </div>
+                    <div style={{ flex: 2, display: 'flex', border: '1px solid #1A1A1A', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#FFFFFF' }}>
+                        <div style={{ backgroundColor: 'black', color: '#FFFFFF', padding: '6px 10px', display: 'flex', alignItems: 'center' }}><FiClock size={14} /></div>
+                        <div style={{ padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, fontSize: '13px', color: '#1A1A1A' }}>{hora_fin}</div>
+                    </div>
+
                 </div>
+                
             </div>
 
         </TarjetaGenerica>

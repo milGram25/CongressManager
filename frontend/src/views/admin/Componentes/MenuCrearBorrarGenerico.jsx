@@ -24,22 +24,25 @@ const MenuCrearBorrarGenerico = ({
     const [listaElementos,setListaElementos] = useState([]);
     const Componente = (props) => {
 
-    switch(definirTipoElemento){
-        case "ponencia":
-            return <ItemPonencia2 {...props} />
-        case "taller":
-            return <ItemTaller {...props} />
+        switch(definirTipoElemento){
+            case "ponencia":
+                return <ItemPonencia2 {...props} />
+            case "taller":
+                return <ItemTaller {...props} />
 
-        case "institucion":
-            return <ItemInstitucion {...props} />
+            case "institucion":
+                return <ItemInstitucion {...props} />
 
-        case "congreso":
-            return <ItemCongreso {...props} />
+            case "congreso":
+                return <ItemCongreso {...props} />
 
-        default:
-            return null;
-    }
-};
+            default:
+                return null;
+        }
+    };
+
+    const mostrarAgregarEliminar = !["ponencia", "institucion"].includes(definirTipoElemento);
+      
 
 
     const containerStyle = {
@@ -132,8 +135,10 @@ const MenuCrearBorrarGenerico = ({
                         {/* Ícono de descarga */}
                         <FiDownload size={18} strokeWidth={2} />
                     </button>
+                    
+                    {mostrarAgregarEliminar?
 
-                    <div style={pillContainerStyle}>
+                    (<div style={pillContainerStyle}>
                         <button onClick={onRemove} style={pillButtonStyle} title="Quitar">
                             {/* Ícono de menos */}
                             <FiMinus size={16} strokeWidth={3} />
@@ -142,7 +147,7 @@ const MenuCrearBorrarGenerico = ({
                             {/* Ícono de más */}
                             <FiPlus size={16} strokeWidth={3} />
                         </button>
-                    </div>
+                    </div>):""}
                 </div>
             </header>
 
