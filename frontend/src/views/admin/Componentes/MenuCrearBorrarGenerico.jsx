@@ -8,6 +8,7 @@ import ItemPonencia2 from './ItemPonencia2';
 import ItemTaller from './ItemTaller';
 import ItemCongreso from "./ItemCongreso";
 import ItemInstitucion from "./ItemInstitucion";
+import { IoMdAdd } from "react-icons/io";
 
 import { useEffect } from 'react';
 
@@ -21,7 +22,7 @@ const MenuCrearBorrarGenerico = ({
                                      definirTipoElemento = "ponencia"
                                  }) => {
 
-    const [listaElementos,setListaElementos] = useState([]);
+    const [listaElementos,setListaElementos] = useState(listaElementos2);
     const Componente = (props) => {
 
         switch(definirTipoElemento){
@@ -118,10 +119,61 @@ const MenuCrearBorrarGenerico = ({
         color: '#ffffff'
     };
 
-    function agregarElemento(){
-        setListaElementos([...listaElementos],onAdd);
+    function handleAgregarElemento(elemento){
+        const nuevo = {
+            
+            nombre_congreso:"RIDMAE 2025",
+            sede:"CUALTOS",
+            cantidad_eventos:100,
+            nombre_institucion:"RIDMAE",
+            fecha_hora_inicio:"2026-04-08T08:00",
+            fecha_hora_final:"2026-04-08T10:00"
+        };
+        agregarElemento(nuevo);
+    }
+
+    function agregarElemento(nuevo){
+        setListaElementos([...listaElementos,nuevo]);
 
     }
+    
+    //calculamos la cantidad de elementos faltantes para completar la fila horizontal y que o se vea tan vacío
+    const elementosFilaFaltantes = [];
+    let i=0;
+    if(mostrarAgregarEliminar){//si el menú de agregar se muestra es porque se pueden crear más
+        elementosFilaFaltantes.push(
+        <button key={1} className="p-4 flex cursor-pointer text-xl bg-[#F9F8F8] justify-between w-[300px] h-[384px] border rounded-xl border-dashed border-gray-500 border-4
+             bg-[repeating-linear-gradient(45deg,#d1d5db,#d1d5db_10px,#f3f4f6_10px,#f3f4f6_20px)] hover:bg-gray-500"
+             onClick={(e)=>handleAgregarElemento(e)}
+            
+        >
+            <div className='flex flex-col items-center justify-center w-full h-full rounded-xl bg-[#F9F8F8] gap-4'>
+                <p className='font-bold'>Crear {definirTipoElemento}</p>
+                <IoMdAdd className='w-15 h-15'/>
+
+            </div>
+                
+
+            
+
+        </button>
+        );
+        i=1;
+
+
+    };
+    
+
+    for(i; i<(3-(listaElementos.length % 3));i++){
+        elementosFilaFaltantes.push(
+            <div key={i} className='w-[300px] h-[384px] bg-gray-100 rounded-xl'>
+
+            </div>
+        )
+
+    };
+
+    
 
     
 
@@ -143,7 +195,7 @@ const MenuCrearBorrarGenerico = ({
                             {/* Ícono de menos */}
                             <FiMinus size={16} strokeWidth={3} />
                         </button>
-                        <button onClick={onAdd} style={pillButtonStyle} title="Agregar">
+                        <button onClick={(e)=>handleAgregarElemento(e)} style={pillButtonStyle} title="Agregar">
                             {/* Ícono de más */}
                             <FiPlus size={16} strokeWidth={3} />
                         </button>
@@ -152,13 +204,19 @@ const MenuCrearBorrarGenerico = ({
             </header>
 
             <main style={contentAreaStyle}>
-                {listaElementos2.map((objeto) => (
+                {listaElementos.map((objeto, index) => (
                     <Componente
-                    key={objeto.id}
+                    key={index}
                     
                    
                     listaDatos={objeto}
                     />
+                ))}
+                {elementosFilaFaltantes.map((item, index)=>(
+                    <div key={index}>
+                        {item}
+                    </div>
+
                 ))}
             </main>
         </div>

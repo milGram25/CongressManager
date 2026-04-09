@@ -14,7 +14,7 @@ export default function CongresoCrearView() {
       cantidad_eventos:100,
       nombre_institucion:"RIDMAE",
       fecha_hora_inicio:"2026-04-08T08:00",
-      fecha_hora_final:"2026-04-08T10:00",
+      fecha_hora_final:"2026-04-08T10:00"
     },
     {
       id:2,
@@ -23,7 +23,7 @@ export default function CongresoCrearView() {
       cantidad_eventos:100,
       nombre_institucion:"RIDMAE",
       fecha_hora_inicio:"2026-04-08T08:00",
-      fecha_hora_final:"2026-04-08T10:00",
+      fecha_hora_final:"2026-04-08T10:00"
     },
     {
       id:3,
@@ -32,10 +32,28 @@ export default function CongresoCrearView() {
       cantidad_eventos:100,
       nombre_institucion:"RIDMAE",
       fecha_hora_inicio:"2026-04-08T08:00",
-      fecha_hora_final:"2026-04-08T10:00",
+      fecha_hora_final:"2026-04-08T10:00"
     },
     {
       id:4,
+      nombre_congreso:"RIDMAE 2025",
+      sede:"CUALTOS",
+      cantidad_eventos:100,
+      nombre_institucion:"RIDMAE",
+      fecha_hora_inicio:"2026-04-08T08:00",
+      fecha_hora_final:"2026-04-08T10:00"
+    },
+    {
+      id:5,
+      nombre_congreso:"RIDMAE 2025",
+      sede:"CUALTOS",
+      cantidad_eventos:100,
+      nombre_institucion:"RIDMAE",
+      fecha_hora_inicio:"2026-04-08T08:00",
+      fecha_hora_final:"2026-04-08T10:00"
+    },
+    {
+      id:6,
       nombre_congreso:"RIDMAE 2025",
       sede:"CUALTOS",
       cantidad_eventos:100,
