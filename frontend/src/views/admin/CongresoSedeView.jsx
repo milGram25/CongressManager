@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { MdArrowBack } from "react-icons/md";
 import CrearMesasFisicas from "./Componentes/CrearMesasFisicas";
+import DetallesSede from "./Componentes/DetallesSede";
 
 export default function CongresoSedeView() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ export default function CongresoSedeView() {
 
   return (
     <div className="bg-base-100 p-8 rounded-3xl border border-base-300 shadow-sm min-h-[400px]">
+      <DetallesSede/>
 
 
       <CrearMesasFisicas listaMesas={[]}/>
