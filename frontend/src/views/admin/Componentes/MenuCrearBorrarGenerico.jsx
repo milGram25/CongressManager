@@ -19,10 +19,13 @@ const MenuCrearBorrarGenerico = ({
                                      onRemove,
                                      onAdd,
                                      listaElementos2,
-                                     definirTipoElemento = "ponencia"
+                                     definirTipoElemento = "ponencia",
+                                     listaDatosModal
+                                     
                                  }) => {
 
     const [listaElementos,setListaElementos] = useState(listaElementos2);
+
     const Componente = (props) => {
 
         switch(definirTipoElemento){
@@ -35,7 +38,7 @@ const MenuCrearBorrarGenerico = ({
                 return <ItemInstitucion {...props} />
 
             case "congreso":
-                return <ItemCongreso {...props} />
+                return <ItemCongreso {...props}  />
 
             default:
                 return null;
@@ -120,6 +123,7 @@ const MenuCrearBorrarGenerico = ({
     };
 
     function handleAgregarElemento(elemento){
+        //esto, por el momento, solo funciona para congresos; arreglar también para talleres
         const nuevo = {
             
             nombre_congreso:"RIDMAE 2025",
@@ -177,6 +181,8 @@ const MenuCrearBorrarGenerico = ({
 
     
 
+    
+
     return (
         <div style={containerStyle}>
             <header style={headerStyle}>
@@ -210,6 +216,7 @@ const MenuCrearBorrarGenerico = ({
                     
                    
                     listaDatos={objeto}
+                    //listaDatosModal={listaDatosModal[index]}
                     />
                 ))}
                 {elementosFilaFaltantes.map((item, index)=>(

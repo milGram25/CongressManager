@@ -1,5 +1,8 @@
 import React from 'react';
+import { useState } from 'react';
 import { FiEye, FiCopy, FiEdit2 } from 'react-icons/fi';
+//import Modal from "./Modal";
+//import DetallesCrearCongreso from './DetallesCrearCongreso';
 
 const TarjetaGenerica = ({
                              titulo,
@@ -8,7 +11,9 @@ const TarjetaGenerica = ({
                              onCopy,
                              onEdit,
                              onPublish,
-                             children
+                             children,
+                             definirTipoElemento,
+                             listaDatosModal
                          }) => {
 
     const cardStyle = {
@@ -78,8 +83,35 @@ const TarjetaGenerica = ({
         
     };
 
+    //const [openModal, setOpenModal] = useState(false);
+
+    /*const ComponenteModal = () => {
+    
+        switch(definirTipoElemento){ //terminar los otros modales
+            case "ponencia":
+                return null;
+            case "taller":
+                return null;
+
+            case "institucion":
+                return null;
+
+            case "congreso":
+                return <DetallesCrearCongreso {...listaDatosModal}/>;
+
+            default:
+                return null;
+        }
+    };*/
+
     return (
         <div style={cardStyle}>
+
+            {/*<Modal abierto={openModal} onClose={() => setOpenModal(false)}>
+                <ComponenteModal/>
+
+            </Modal>*/}
+
             <div style={headerStyle}>{titulo}</div>
 
             <div style={contentStyle}>
@@ -87,7 +119,7 @@ const TarjetaGenerica = ({
             </div>
 
             <div style={footerStyle}>
-                <button  className="bg-black hover:bg-gray-500" style={iconBtnStyle} onClick={onView} title="Ver detalles">
+                <button  className="bg-black hover:bg-gray-500" style={iconBtnStyle} onClick={() => setOpenModal(true)} title="Ver detalles">
                     <FiEye size={16} />
                 </button>
 

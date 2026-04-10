@@ -18,7 +18,9 @@ const ItemCongreso = ({
                           fechaFin = "31 oct 2026",
                           fecha = "31 oct 2026",
                           hora = "11:00 pm",
-                          listaDatos
+                          listaDatos,
+                          listaDatosModal
+                          
                       }) => {
 
     const fecha_inicio = listaDatos.fecha_hora_inicio.split("T")[0];
@@ -27,7 +29,7 @@ const ItemCongreso = ({
     const fecha_fin = listaDatos.fecha_hora_final.split("T")[0];
     const hora_fin = listaDatos.fecha_hora_final.split("T")[1];
     return (
-        <TarjetaGenerica titulo={listaDatos.nombre_congreso} botonPublicarTexto="Publicar">
+        <TarjetaGenerica titulo={listaDatos.nombre_congreso} botonPublicarTexto="Publicar">  {/*listaDatosModal={listaDatosModal}*/}
 
             {/* Fila 1: Sede */}
             <div style={rowStyle}>
