@@ -15,15 +15,15 @@ const labelContainer = {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    color: '#4A4A4A', // Gris oscuro para la etiqueta
+    color: '#4A4A4A',
     fontSize: '14px'
 };
 
 const iconCircleBox = {
-    backgroundColor: 'black', // Teal
+    backgroundColor: 'black',
     color: '#FFFFFF',
     padding: '6px',
-    borderRadius: '50%', // Círculo perfecto
+    borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -40,17 +40,13 @@ const valuePillStyle = {
     fontSize: '14px',
     fontWeight: '600',
     textAlign: 'center',
-    minWidth: '60px' // Asegura un ancho mínimo para los valores cortos
+    minWidth: '60px'
 };
 
 const ItemTaller = ({
-                        nombreTaller = "Taller de Ejemplo",
-                        congreso = "CIENU",
-                        tallerista = "Dr. Santos",
-                        cupos = "100/100",
-                        fecha = "30 oct 2026",
-                        hora = "15:00",
-                        listaDatos
+                        // Eliminamos todas las variables sin usar, dejamos solo lo necesario
+                        listaDatos,
+                        onViewItem
                     }) => {
 
     const fecha_inicio = listaDatos.fecha_hora_inicio.split("T")[0];
@@ -60,7 +56,13 @@ const ItemTaller = ({
     const hora_fin = listaDatos.fecha_hora_final.split("T")[1];
 
     return (
-        <TarjetaGenerica titulo={listaDatos.nombre_evento.trim()!==""?listaDatos.nombre_evento:"Undefined"} botonPublicarTexto="Publicar">
+        <TarjetaGenerica
+            titulo={listaDatos.nombre_evento.trim() !== "" ? listaDatos.nombre_evento : "Undefined"}
+            botonPublicarTexto="Publicar"
+            // 👇 AQUÍ ESTÁ LA MAGIA: Le pasamos las funciones a la tarjeta genérica
+            onView={() => onViewItem(listaDatos)}
+            onEdit={() => onViewItem(listaDatos)}
+        >
             {/* Contenido Central */}
 
             {/* Fila 1: Congreso */}
@@ -78,7 +80,7 @@ const ItemTaller = ({
                     <div style={iconCircleBox}><FiUser size={12}/></div>
                     <span>Tallerista</span>
                 </div>
-                <div style={valuePillStyle}>{listaDatos.tallerista.trim()!==""?listaDatos.tallerista:"Undefined"}</div>
+                <div style={valuePillStyle}>{listaDatos.tallerista.trim() !== "" ? listaDatos.tallerista : "Undefined"}</div>
             </div>
 
             {/* Fila 3: Cupos */}
@@ -102,11 +104,10 @@ const ItemTaller = ({
                         <div style={{ backgroundColor: 'black', color: '#FFFFFF', padding: '6px 10px', display: 'flex', alignItems: 'center' }}><FiClock size={14} /></div>
                         <div style={{ padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, fontSize: '13px', color: '#1A1A1A' }}>{hora_inicio}</div>
                     </div>
-
                 </div>
-                
             </div>
-            {/* Fila 4: Fecha y Hora final */}
+
+            {/* Fila 5: Fecha y Hora final */}
             <div style={{ gap: '8px', paddingTop: '2px' }}  title="Fecha y hora de fin del taller">
                 <p className='w-8 text-sm text-gray-700'>Fin</p>
                 <div className='flex gap-3'>
@@ -118,9 +119,7 @@ const ItemTaller = ({
                         <div style={{ backgroundColor: 'black', color: '#FFFFFF', padding: '6px 10px', display: 'flex', alignItems: 'center' }}><FiClock size={14} /></div>
                         <div style={{ padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, fontSize: '13px', color: '#1A1A1A' }}>{hora_fin}</div>
                     </div>
-
                 </div>
-                
             </div>
 
         </TarjetaGenerica>

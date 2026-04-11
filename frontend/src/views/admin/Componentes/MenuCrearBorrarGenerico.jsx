@@ -1,16 +1,11 @@
 import React, { useState } from 'react';
 import { FiDownload, FiMinus, FiPlus } from 'react-icons/fi';
-//import MenuCrearBorrar from "./Componentes/MenuCrearBorrarGenerico";
 import Itemcrearborrargenerico from './itemcrearborrargenerico';
 import ItemPonencia2 from './ItemPonencia2';
-//import ItemTaller from './ItemTaller';
-//import ItemTaller from "./ItemTaller";
 import ItemTaller from './ItemTaller';
 import ItemCongreso from "./ItemCongreso";
 import ItemInstitucion from "./ItemInstitucion";
 import { IoMdAdd } from "react-icons/io";
-
-import { useEffect } from 'react';
 
 const MenuCrearBorrarGenerico = ({
                                      title = "Crear [insertar sustantivo]",
@@ -20,34 +15,27 @@ const MenuCrearBorrarGenerico = ({
                                      onAdd,
                                      listaElementos2,
                                      definirTipoElemento = "ponencia",
-                                     
-                                     
+                                     onViewItem
                                  }) => {
 
     const [listaElementos,setListaElementos] = useState(listaElementos2);
+    const mostrarAgregarEliminar = !["ponencia", "institucion"].includes(definirTipoElemento);
 
-    const Componente = (props) => {
-
+    // 1. SOLUCIÓN AL ERROR ROJO: Función normal que devuelve JSX, no un Componente con mayúscula
+    const renderizarItem = (objeto, index) => {
         switch(definirTipoElemento){
             case "ponencia":
-                return <ItemPonencia2 {...props} />
+                return <ItemPonencia2 key={index} listaDatos={objeto} onViewItem={onViewItem} />;
             case "taller":
-                return <ItemTaller {...props} />
-
+                return <ItemTaller key={index} listaDatos={objeto} onViewItem={onViewItem} />;
             case "institucion":
-                return <ItemInstitucion {...props} />
-
+                return <ItemInstitucion key={index} listaDatos={objeto} onViewItem={onViewItem} />;
             case "congreso":
-                return <ItemCongreso {...props}/>
-
+                return <ItemCongreso key={index} listaDatos={objeto} onViewItem={onViewItem} />;
             default:
                 return null;
         }
     };
-
-    const mostrarAgregarEliminar = !["ponencia", "institucion"].includes(definirTipoElemento);
-      
-
 
     const containerStyle = {
         width: '1000px',
@@ -123,9 +111,7 @@ const MenuCrearBorrarGenerico = ({
     };
 
     function handleAgregarElemento(elemento){
-        //esto, por el momento, solo funciona para congresos; arreglar también para talleres
         const nuevo = {
-            
             nombre_congreso:"RIDMAE 2025",
             sede:"CUALTOS",
             cantidad_eventos:100,
@@ -138,50 +124,31 @@ const MenuCrearBorrarGenerico = ({
 
     function agregarElemento(nuevo){
         setListaElementos([...listaElementos,nuevo]);
-
     }
-    
-    //calculamos la cantidad de elementos faltantes para completar la fila horizontal y que o se vea tan vacío
+
     const elementosFilaFaltantes = [];
-    let i=0;
-    if(mostrarAgregarEliminar){//si el menú de agregar se muestra es porque se pueden crear más
+    let i = 0;
+
+    if(mostrarAgregarEliminar){
         elementosFilaFaltantes.push(
-        <button key={1} className="p-4 flex cursor-pointer text-xl bg-[#F9F8F8] justify-between w-[300px] h-[384px] border rounded-xl border-dashed border-gray-500 border-4
-             bg-[repeating-linear-gradient(45deg,#d1d5db,#d1d5db_10px,#f3f4f6_10px,#f3f4f6_20px)] hover:bg-gray-500"
-             onClick={(e)=>handleAgregarElemento(e)}
-            
-        >
-            <div className='flex flex-col items-center justify-center w-full h-full rounded-xl bg-[#F9F8F8] gap-4'>
-                <p className='font-bold'>Crear {definirTipoElemento}</p>
-                <IoMdAdd className='w-15 h-15'/>
-
-            </div>
-                
-
-            
-
-        </button>
+            <button key="add-btn" className="p-4 flex cursor-pointer text-xl bg-[#F9F8F8] justify-between w-[300px] h-[384px] border rounded-xl border-dashed border-gray-500 border-4
+                 bg-[repeating-linear-gradient(45deg,#d1d5db,#d1d5db_10px,#f3f4f6_10px,#f3f4f6_20px)] hover:bg-gray-500"
+                    onClick={(e)=>handleAgregarElemento(e)}
+            >
+                <div className='flex flex-col items-center justify-center w-full h-full rounded-xl bg-[#F9F8F8] gap-4'>
+                    <p className='font-bold'>Crear {definirTipoElemento}</p>
+                    <IoMdAdd className='w-15 h-15'/>
+                </div>
+            </button>
         );
-        i=1;
+        i = 1;
+    }
 
-
-    };
-    
-
-    for(i; i<(3-(listaElementos.length % 3));i++){
+    for(i; i<(3-(listaElementos.length % 3)); i++){
         elementosFilaFaltantes.push(
-            <div key={i} className='w-[300px] h-[384px] bg-gray-100 rounded-xl'>
-
-            </div>
-        )
-
-    };
-
-    
-
-    
-
-    
+            <div key={`empty-${i}`} className='w-[300px] h-[384px] bg-gray-100 rounded-xl'></div>
+        );
+    }
 
     return (
         <div style={containerStyle}>
@@ -190,40 +157,30 @@ const MenuCrearBorrarGenerico = ({
 
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <button onClick={onDownload} style={iconButtonStyle} title="Descargar">
-                        {/* Ícono de descarga */}
                         <FiDownload size={18} strokeWidth={2} />
                     </button>
-                    
-                    {mostrarAgregarEliminar?
 
-                    (<div style={pillContainerStyle}>
-                        <button onClick={onRemove} style={pillButtonStyle} title="Quitar">
-                            {/* Ícono de menos */}
-                            <FiMinus size={16} strokeWidth={3} />
-                        </button>
-                        <button onClick={(e)=>handleAgregarElemento(e)} style={pillButtonStyle} title="Agregar">
-                            {/* Ícono de más */}
-                            <FiPlus size={16} strokeWidth={3} />
-                        </button>
-                    </div>):""}
+                    {mostrarAgregarEliminar ? (
+                        <div style={pillContainerStyle}>
+                            <button onClick={onRemove} style={pillButtonStyle} title="Quitar">
+                                <FiMinus size={16} strokeWidth={3} />
+                            </button>
+                            <button onClick={(e)=>handleAgregarElemento(e)} style={pillButtonStyle} title="Agregar">
+                                <FiPlus size={16} strokeWidth={3} />
+                            </button>
+                        </div>
+                    ) : ""}
                 </div>
             </header>
 
             <main style={contentAreaStyle}>
-                {listaElementos.map((objeto, index) => (
-                    <Componente
-                    key={index}
-                    
-                   
-                    listaDatos={objeto}
-                    
-                    />
-                ))}
-                {elementosFilaFaltantes.map((item, index)=>(
-                    <div key={index}>
-                        {item}
-                    </div>
+                {/* 2. SOLUCIÓN AL ERROR ROJO: Llamamos a la función directamente en el map */}
+                {listaElementos.map((objeto, index) => renderizarItem(objeto, index))}
 
+                {elementosFilaFaltantes.map((item, index)=>(
+                    <React.Fragment key={`faltante-${index}`}>
+                        {item}
+                    </React.Fragment>
                 ))}
             </main>
         </div>

@@ -6,7 +6,7 @@ import DetallesCrearCongreso from './DetallesCrearCongreso';
 
 const TarjetaGenerica = ({
                              titulo,
-                             botonPublicarTexto, // Si se envía este texto, aparece el botón central
+                             botonPublicarTexto,
                              onView,
                              onCopy,
                              onEdit,
@@ -17,8 +17,7 @@ const TarjetaGenerica = ({
                          }) => {
 
     const cardStyle = {
-        // Proporciones basadas en 329x384 sobre 1440x1200
-        width: '300px', // Usa 100% para que se adapte a la columna del Grid que hicimos antes
+        width: '300px',
         minHeight: '384px',
         backgroundColor: '#F9F8F8',
         border: '1px solid #1A1A1A',
@@ -60,7 +59,6 @@ const TarjetaGenerica = ({
     };
 
     const iconBtnStyle = {
-        
         color: '#FFFFFF',
         border: 'none',
         borderRadius: '50%',
@@ -80,41 +78,37 @@ const TarjetaGenerica = ({
         padding: '6px 16px',
         fontWeight: '600',
         cursor: 'pointer',
-        
     };
 
     const [openModal, setOpenModal] = useState(false);
 
-    const ComponenteModal = () => {
-    
-        switch(definirTipoElemento){ //determinar los otros modales
+    // 1. CAMBIO: Lo nombramos en minúscula porque ahora es una función auxiliar, no un componente independiente.
+    const renderModalContent = () => {
+        switch(definirTipoElemento){
             case "ponencia":
                 return null;
             case "taller":
                 return null;
-
             case "institucion":
                 return null;
-
             case "congreso":
-                return <DetallesCrearCongreso indexDatosModal={indexDatosModal}/>; //indexDatosModal={indexDatosModal}
-
+                return <DetallesCrearCongreso indexDatosModal={indexDatosModal}/>;
             default:
                 return null;
         }
     };
+
     function cerrarModal(){
         setOpenModal(false);
         document.body.style.overflow = "auto";
-
     }
 
     return (
         <div className="static" style={cardStyle}>
 
             <Modal abierto={openModal} onClose={() => cerrarModal()}>
-                <ComponenteModal/>
-
+                {/* 2. CAMBIO: En lugar de usar <ComponenteModal/>, llamamos a la función entre llaves */}
+                {renderModalContent()}
             </Modal>
 
             <div style={headerStyle}>{titulo}</div>
@@ -124,7 +118,7 @@ const TarjetaGenerica = ({
             </div>
 
             <div style={footerStyle}>
-                <button  className="bg-black hover:bg-gray-500" style={iconBtnStyle} onClick={() => setOpenModal(true)} title="Ver detalles">
+                <button  className="bg-black hover:bg-gray-500" style={iconBtnStyle} onClick={onView ? onView : () => setOpenModal(true)} title="Ver detalles">
                     <FiEye size={16} />
                 </button>
 
