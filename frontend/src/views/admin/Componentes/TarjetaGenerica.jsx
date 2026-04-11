@@ -1,8 +1,8 @@
 import React from 'react';
 import { useState } from 'react';
 import { FiEye, FiCopy, FiEdit2 } from 'react-icons/fi';
-//import Modal from "./Modal";
-//import DetallesCrearCongreso from './DetallesCrearCongreso';
+import Modal from "./Modal";
+import DetallesCrearCongreso from './DetallesCrearCongreso';
 
 const TarjetaGenerica = ({
                              titulo,
@@ -13,7 +13,7 @@ const TarjetaGenerica = ({
                              onPublish,
                              children,
                              definirTipoElemento,
-                             listaDatosModal
+                             indexDatosModal
                          }) => {
 
     const cardStyle = {
@@ -83,11 +83,11 @@ const TarjetaGenerica = ({
         
     };
 
-    //const [openModal, setOpenModal] = useState(false);
+    const [openModal, setOpenModal] = useState(false);
 
-    /*const ComponenteModal = () => {
+    const ComponenteModal = () => {
     
-        switch(definirTipoElemento){ //terminar los otros modales
+        switch(definirTipoElemento){ //determinar los otros modales
             case "ponencia":
                 return null;
             case "taller":
@@ -97,20 +97,25 @@ const TarjetaGenerica = ({
                 return null;
 
             case "congreso":
-                return <DetallesCrearCongreso {...listaDatosModal}/>;
+                return <DetallesCrearCongreso indexDatosModal={indexDatosModal}/>; //indexDatosModal={indexDatosModal}
 
             default:
                 return null;
         }
-    };*/
+    };
+    function cerrarModal(){
+        setOpenModal(false);
+        document.body.style.overflow = "auto";
+
+    }
 
     return (
-        <div style={cardStyle}>
+        <div className="static" style={cardStyle}>
 
-            {/*<Modal abierto={openModal} onClose={() => setOpenModal(false)}>
+            <Modal abierto={openModal} onClose={() => cerrarModal()}>
                 <ComponenteModal/>
 
-            </Modal>*/}
+            </Modal>
 
             <div style={headerStyle}>{titulo}</div>
 

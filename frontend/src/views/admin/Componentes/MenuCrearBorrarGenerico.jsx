@@ -20,7 +20,7 @@ const MenuCrearBorrarGenerico = ({
                                      onAdd,
                                      listaElementos2,
                                      definirTipoElemento = "ponencia",
-                                     listaDatosModal
+                                     
                                      
                                  }) => {
 
@@ -38,7 +38,7 @@ const MenuCrearBorrarGenerico = ({
                 return <ItemInstitucion {...props} />
 
             case "congreso":
-                return <ItemCongreso {...props}  />
+                return <ItemCongreso {...props}/>
 
             default:
                 return null;
@@ -216,7 +216,7 @@ const MenuCrearBorrarGenerico = ({
                     
                    
                     listaDatos={objeto}
-                    //listaDatosModal={listaDatosModal[index]}
+                    
                     />
                 ))}
                 {elementosFilaFaltantes.map((item, index)=>(

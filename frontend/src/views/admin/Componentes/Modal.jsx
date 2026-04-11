@@ -1,21 +1,35 @@
+ import { useEffect } from "react";
 
-
-function Modal({ abierto, onClose, children }) {
+export default function Modal({ abierto, onClose, children }) {
     if (!abierto) return null;
 
+   
+
+    useEffect(() => {
+        document.body.style.overflow = "hidden";
+
+        
+    }, []);
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-end">
             
             {/*Fondo oscuro*/}
             <div
-                className="absolute inset-0 bg-black opacity-50"
+                className="w-full absolute inset-0 bg-black opacity-50"
                 onClick={onClose}
             />
 
             {/*Contenido*/}
-            <div className="relative p-6 z-10">
+            
+            <div className="w-310 overflow-y-auto relative max-h-[85vh] rounded-xl mr-5">
                 {children}
+                
             </div>
+                
+
+            
+            
         </div>
     );
 }
