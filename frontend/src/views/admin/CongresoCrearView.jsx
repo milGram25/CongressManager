@@ -41,6 +41,7 @@ export default function CongresoCrearView() {
 
   const congresosModal = [
     {
+      id:1,
         nombre_congreso: "Congreso Internacional de Tecnología 2026",
         nombre_institucion: "Universidad de Guadalajara",
         imagen_institucion: "https://example.com/imagen1.jpg",
@@ -98,6 +99,7 @@ export default function CongresoCrearView() {
         rubrica_referencia: 1
     },
     {
+      id:2,
         nombre_congreso: "Congreso de Ingeniería y Ciencia 2026",
         nombre_institucion: "Instituto Politécnico Nacional",
         imagen_institucion: "https://example.com/imagen2.jpg",
@@ -156,6 +158,7 @@ export default function CongresoCrearView() {
         rubrica_referencia: 2
     },
     {
+      id:3,
         nombre_congreso: "Congreso Latinoamericano de Software 2026",
         nombre_institucion: "Universidad Nacional Autónoma de México",
         imagen_institucion: "https://example.com/imagen3.jpg",
@@ -217,9 +220,9 @@ export default function CongresoCrearView() {
   
   return (
     <div className="bg-base-100 p-8 rounded-3xl border border-base-300 shadow-sm min-h-[400px]">
-      <DetallesCrearCongreso/>
+      {/*<DetallesCrearCongreso/>*/}
 
-      <MenuCrearBorrar title="Crear congresos" listaElementos2={listaEventos} definirTipoElemento="congreso" listaDatosModal={congresosModal}/>
+      <MenuCrearBorrar title="Crear congresos" listaElementos2={listaEventos} definirTipoElemento="congreso"/>
 
 
       
