@@ -9,7 +9,7 @@ import { IoMdTime } from "react-icons/io";
 import { IoWarningOutline } from "react-icons/io5";
 
 
-export default function ListaHistorial({listaElementos}){
+export default function ListaHistorial({listaElementos, onSeleccionarAccion}){
     //lista íconos debe de tener tres elementos
     const listaAlt = 
         {
@@ -275,7 +275,11 @@ export default function ListaHistorial({listaElementos}){
                     <div key={item.id} className="flex items-center justify-between py-3 border-b border-gray-200 ml-4 mr-4">
                         
                         {/* Botón ver detalles */}
-                        <button className="flex items-center justify-center w-10 h-10 rounded-full bg-black hover:bg-gray-500 transition-colors"  title={"Ver detalles"}>
+                        <button 
+                          className="flex items-center justify-center w-10 h-10 rounded-full bg-black hover:bg-gray-500 transition-colors"  
+                          title={"Ver detalles"}
+                          onClick={() => onSeleccionarAccion && onSeleccionarAccion(item)}
+                        >
                         <HiEye className="text-white text-xl" />
                         </button>
 
