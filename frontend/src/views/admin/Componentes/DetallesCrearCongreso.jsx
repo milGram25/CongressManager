@@ -345,8 +345,8 @@ export default function DetallesCrearCongreso({detallesCongreso={nombre_congreso
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
-                                            <label htmlFor="inicio_congreso" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input id="inicio_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <label htmlFor="fin_congreso" className="text-sm text-gray-500 flex-1">Fin</label>
+                                            <input id="fin_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
                                         </div>
 
                                     </div>
@@ -366,13 +366,13 @@ export default function DetallesCrearCongreso({detallesCongreso={nombre_congreso
                                     <div className="flex gap-4 ml-5">
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className=" h-2 w-2 bg-green-500 rounded-full border"></div>
-                                            <label htmlFor="inicio_congreso" className="text-sm text-gray-500 flex-1">Inicio</label>
-                                            <input id="inicio_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
+                                            <label htmlFor="inicio_ponencia" className="text-sm text-gray-500 flex-1">Inicio</label>
+                                            <input id="inicio_ponencia" type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
-                                            <label htmlFor="inicio_congreso" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input id="inicio_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <label htmlFor="fin_ponencia" className="text-sm text-gray-500 flex-1">Fin</label>
+                                            <input id="fin_ponencia" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
                                         </div>
 
                                     </div>
@@ -383,13 +383,13 @@ export default function DetallesCrearCongreso({detallesCongreso={nombre_congreso
                                     <div className="flex gap-4 ml-5">
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className=" h-2 w-2 bg-green-500 rounded-full border"></div>
-                                            <label htmlFor="inicio_congreso" className="text-sm text-gray-500 flex-1">Inicio</label>
-                                            <input id="inicio_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
+                                            <label htmlFor="inicio_inscripcion_dictaminador" className="text-sm text-gray-500 flex-1">Inicio</label>
+                                            <input id="inicio_inscripcion_dictaminador" type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
-                                            <label htmlFor="inicio_congreso" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input id="inicio_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <label htmlFor="fin_inscripcion_dictaminador" className="text-sm text-gray-500 flex-1">Fin</label>
+                                            <input id="fin_inscripcion_dictaminador" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
                                         </div>
 
                                     </div>
@@ -400,13 +400,13 @@ export default function DetallesCrearCongreso({detallesCongreso={nombre_congreso
                                     <div className="flex gap-4 ml-5">
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className=" h-2 w-2 bg-green-500 rounded-full border"></div>
-                                            <label htmlFor="inicio_congreso" className="text-sm text-gray-500 flex-1">Inicio</label>
-                                            <input id="inicio_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
+                                            <label htmlFor="inicio_revision_resumenes" className="text-sm text-gray-500 flex-1">Inicio</label>
+                                            <input id="inicio_revision_resumenes" type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
-                                            <label htmlFor="inicio_congreso" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input id="inicio_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <label htmlFor="fin_revision_resumenes" className="text-sm text-gray-500 flex-1">Fin</label>
+                                            <input id="fin_revision_resumenes" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
                                         </div>
 
                                     </div>
@@ -417,13 +417,13 @@ export default function DetallesCrearCongreso({detallesCongreso={nombre_congreso
                                     <div className="flex gap-4 ml-5">
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className=" h-2 w-2 bg-green-500 rounded-full border"></div>
-                                            <label htmlFor="inicio_congreso" className="text-sm text-gray-500 flex-1">Inicio</label>
-                                            <input id="inicio_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
+                                            <label htmlFor="inicio_envio_extensos" className="text-sm text-gray-500 flex-1">Inicio</label>
+                                            <input id="inicio_envio_extensos" type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
-                                            <label htmlFor="inicio_congreso" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input id="inicio_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <label htmlFor="fin_envio_extensos" className="text-sm text-gray-500 flex-1">Fin</label>
+                                            <input id="fin_envio_extensos" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
                                         </div>
 
                                     </div>
@@ -434,13 +434,13 @@ export default function DetallesCrearCongreso({detallesCongreso={nombre_congreso
                                     <div className="flex gap-4 ml-5">
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className=" h-2 w-2 bg-green-500 rounded-full border"></div>
-                                            <label htmlFor="inicio_congreso" className="text-sm text-gray-500 flex-1">Inicio</label>
-                                            <input id="inicio_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
+                                            <label htmlFor="inicio_inscripcion_evaluador" className="text-sm text-gray-500 flex-1">Inicio</label>
+                                            <input id="inicio_inscripcion_evaluador" type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
-                                            <label htmlFor="inicio_congreso" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input id="inicio_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <label htmlFor="fin_inscripcion_evaluador" className="text-sm text-gray-500 flex-1">Fin</label>
+                                            <input id="fin_inscripcion_evaluador" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
                                         </div>
 
                                     </div>
@@ -451,13 +451,13 @@ export default function DetallesCrearCongreso({detallesCongreso={nombre_congreso
                                     <div className="flex gap-4 ml-5">
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className=" h-2 w-2 bg-green-500 rounded-full border"></div>
-                                            <label htmlFor="inicio_congreso" className="text-sm text-gray-500 flex-1">Inicio</label>
-                                            <input id="inicio_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
+                                            <label htmlFor="inicio_revision_extensos" className="text-sm text-gray-500 flex-1">Inicio</label>
+                                            <input id="inicio_revision_extensos" type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
-                                            <label htmlFor="inicio_congreso" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input id="inicio_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <label htmlFor="fin_revision_extensos" className="text-sm text-gray-500 flex-1">Fin</label>
+                                            <input id="fin_revision_extensos" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
                                         </div>
 
                                     </div>
@@ -468,13 +468,13 @@ export default function DetallesCrearCongreso({detallesCongreso={nombre_congreso
                                     <div className="flex gap-4 ml-5">
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className=" h-2 w-2 bg-green-500 rounded-full border"></div>
-                                            <label htmlFor="inicio_congreso" className="text-sm text-gray-500 flex-1">Inicio</label>
-                                            <input id="inicio_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
+                                            <label htmlFor="inicio_subir_multimedia" className="text-sm text-gray-500 flex-1">Inicio</label>
+                                            <input id="inicio_subir_multimedia" type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
-                                            <label htmlFor="inicio_congreso" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input id="inicio_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <label htmlFor="fin_subir_multimedia" className="text-sm text-gray-500 flex-1">Fin</label>
+                                            <input id="fin_subir_multimedia" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
                                         </div>
 
                                     </div>
@@ -492,13 +492,13 @@ export default function DetallesCrearCongreso({detallesCongreso={nombre_congreso
                                     <div className="flex gap-4 ml-5">
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className=" h-2 w-2 bg-green-500 rounded-full border"></div>
-                                            <label htmlFor="inicio_congreso" className="text-sm text-gray-500 flex-1">Inicio</label>
-                                            <input id="inicio_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
+                                            <label htmlFor="inicio_prepago" className="text-sm text-gray-500 flex-1">Inicio</label>
+                                            <input id="inicio_prepago" type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
-                                            <label htmlFor="inicio_congreso" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input id="inicio_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <label htmlFor="fin_prepago" className="text-sm text-gray-500 flex-1">Fin</label>
+                                            <input id="fin_prepago" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
                                         </div>
 
                                     </div>
@@ -509,13 +509,13 @@ export default function DetallesCrearCongreso({detallesCongreso={nombre_congreso
                                     <div className="flex gap-4 ml-5">
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className=" h-2 w-2 bg-green-500 rounded-full border"></div>
-                                            <label htmlFor="inicio_congreso" className="text-sm text-gray-500 flex-1">Inicio</label>
-                                            <input id="inicio_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
+                                            <label htmlFor="inicio_pago_normal" className="text-sm text-gray-500 flex-1">Inicio</label>
+                                            <input id="inicio_pago_normal" type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
-                                            <label htmlFor="inicio_congreso" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input id="inicio_congreso" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <label htmlFor="fin_pago_normal" className="text-sm text-gray-500 flex-1">Fin</label>
+                                            <input id="fin_pago_normal" type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
                                         </div>
 
                                     </div>
