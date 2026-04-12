@@ -74,7 +74,7 @@ export default function TalleresView() {
         />
 
         {/* 6. RENDERIZADO DEL MODAL */}
-        {isModalOpen && (
+        {/*{isModalOpen && (
             <div style={{
               position: 'fixed',
               top: 0,
@@ -89,10 +89,10 @@ export default function TalleresView() {
               padding: '24px', // Margen en pantallas más pequeñas
               boxSizing: 'border-box'
             }}>
-              {/* Contenedor relativo para el componente y el botón de cerrar */}
+              
               <div style={{ position: 'relative', width: '100%', maxWidth: '900px', maxHeight: '95vh', overflowY: 'auto', borderRadius: '24px' }}>
 
-                {/* Botón flotante para cerrar */}
+               
                 <button
                     onClick={handleCerrarModal}
                     style={{
@@ -113,8 +113,9 @@ export default function TalleresView() {
                 >
                   Cerrar ✕
                 </button>
+                
 
-                {/* Inyectamos el componente limpio, ¡y le pasamos la 'key'! */}
+                
                 <DetallesEditarTaller
                     key={tallerSeleccionado?.id} // Obliga a React a re-montar el componente si el ID cambia
                     tallerData={tallerSeleccionado}
@@ -122,7 +123,7 @@ export default function TalleresView() {
 
               </div>
             </div>
-        )}
+        )}*/}
 
       </div>
   );

@@ -6,6 +6,9 @@ import ItemTaller from './ItemTaller';
 import ItemCongreso from "./ItemCongreso";
 import ItemInstitucion from "./ItemInstitucion";
 import { IoMdAdd } from "react-icons/io";
+import Modal from './Modal';
+import DetallesCrearCongreso from './DetallesCrearCongreso';
+import DetallesEditarTaller from './DetallesEditarTaller';
 
 const MenuCrearBorrarGenerico = ({
                                      title = "Crear [insertar sustantivo]",
@@ -32,6 +35,21 @@ const MenuCrearBorrarGenerico = ({
                 return <ItemInstitucion key={index} listaDatos={objeto} onViewItem={onViewItem} />;
             case "congreso":
                 return <ItemCongreso key={index} listaDatos={objeto} onViewItem={onViewItem} />;
+            default:
+                return null;
+        }
+    };
+
+    const renderizarDetallesItemModal = () => {
+        switch(definirTipoElemento){
+            case "ponencia":
+                return null;
+            case "taller":
+                return <DetallesEditarTaller/>;
+            case "institucion":
+                return null;
+            case "congreso":
+                return <DetallesCrearCongreso modificandoDatos={true} />;
             default:
                 return null;
         }
@@ -109,8 +127,12 @@ const MenuCrearBorrarGenerico = ({
         cursor: 'pointer',
         color: '#ffffff'
     };
+    const [openModal, setOpenModal] = useState(false);
+    const [guardarCambios, setGuardarCambios] = useState(false);
 
     function handleAgregarElemento(elemento){
+        setOpenModal(true);
+        
         const nuevo = {
             nombre_congreso:"RIDMAE 2025",
             sede:"CUALTOS",
@@ -119,7 +141,8 @@ const MenuCrearBorrarGenerico = ({
             fecha_hora_inicio:"2026-04-08T08:00",
             fecha_hora_final:"2026-04-08T10:00"
         };
-        agregarElemento(nuevo);
+        guardarCambios&&agregarElemento(nuevo)
+        //agregarElemento(nuevo);
     }
 
     function agregarElemento(nuevo){
@@ -152,6 +175,11 @@ const MenuCrearBorrarGenerico = ({
 
     return (
         <div style={containerStyle}>
+            <Modal abierto={openModal} onClose={()=>setOpenModal(false)}>
+                {renderizarDetallesItemModal()} {/*Aquí es donde se muestra el modal cuando se ven los detalles o se crea un componente*/}
+
+            </Modal>
+
             <header style={headerStyle}>
                 <h2 style={titleStyle}>{title}</h2>
 

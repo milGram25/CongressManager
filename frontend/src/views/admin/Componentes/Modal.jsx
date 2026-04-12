@@ -1,15 +1,16 @@
  import { useEffect } from "react";
 
 export default function Modal({ abierto, onClose, children }) {
-    if (!abierto) return null;
-
-   
-
+    
     useEffect(() => {
-        document.body.style.overflow = "hidden";
+        document.body.style.overflow = abierto ? "hidden" : "auto";
 
-        
-    }, []);
+        return () => {
+            document.body.style.overflow = "auto";
+        };
+    }, [abierto]);
+
+    if (!abierto) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-end">

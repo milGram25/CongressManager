@@ -4,7 +4,7 @@ import { IoIosCheckmark } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
 
 
-export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, listaPreguntas}){
+export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, listaPreguntas, modificandoDatos=false}){
     const listaRubricasPrueba = [
         {
             nombre: "rúbrica 1"
@@ -89,7 +89,7 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
     };
 
     const [formData, setFormData] = useState(congreso);
-    const [modificando, setModificando] = useState(true);
+    const [modificando, setModificando] = useState(modificandoDatos);
 
     function handleChange(e){
         const { id, value } = e.target;
@@ -116,17 +116,17 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                     <div className="flex-1 flex justify-end">
                         
                         
-                            {modificando?(
+                            {!modificando?(
                             <button onClick={(e)=>setModificando(!modificando)} className="border rounded-full p-2 hover:bg-gray-500 hover:cursor-pointer">
                                 <RiPencilFill />
                             </button>):(                                
                             <div className="bg-white justify-end flex rounded-full gap-2">
                                 
                                 <button onClick={(e)=>setModificando(!modificando)} className="border bg-black rounded-full p-2 hover:bg-gray-500  hover:cursor-pointer">
-                                    <RxCross2 />
+                                    <RxCross2 /> {/*Implementar lógica para que no se guarden los datos */}
                                 </button>
                                 <button onClick={(e)=>setModificando(!modificando)} className="bg-black border rounded-full p-2 hover:bg-gray-500  hover:cursor-pointer">
-                                    <IoIosCheckmark />
+                                    <IoIosCheckmark /> {/*Implementar lógica para que se guarden los datos */}
                                 </button>
                             </div>)}
                         
@@ -143,7 +143,7 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                             <label htmlFor="nombre_congreso" className="text-sm text-gray-500">
                                 Nombre del congreso
                             </label>
-                            <input value={formData.nombre_congreso} id="nombre_congreso" onChange={handleChange} className="w-full border rounded-full px-4 py-2"  readOnly={modificando}/>
+                            <input value={formData.nombre_congreso} id="nombre_congreso" onChange={handleChange} className="w-full border rounded-full px-4 py-2"  readOnly={!modificando}/>
                         </div>
 
                         <div className="flex-1">
@@ -151,7 +151,7 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                             <label htmlFor="nombre_institucion" className="text-sm text-gray-500">
                                 Nombre de la institución
                             </label>
-                            <input value={formData.nombre_institucion} id="nombre_institucion" onChange={handleChange} className="w-full border rounded-full px-4 py-2 "  readOnly={modificando}/>
+                            <input value={formData.nombre_institucion} id="nombre_institucion" onChange={handleChange} className="w-full border rounded-full px-4 py-2 "  readOnly={!modificando}/>
                         </div>
 
                         <div className="flex-1">
@@ -180,7 +180,7 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                                 <label htmlFor="nombre_sede" className="text-sm text-gray-500">
                                     Nombre de la sede
                                 </label>
-                                <input value={formData.nombre_sede} id="nombre_sede" onChange={handleChange} className="w-full border rounded-full px-4 py-2"  readOnly={modificando}/>
+                                <input value={formData.nombre_sede} id="nombre_sede" onChange={handleChange} className="w-full border rounded-full px-4 py-2"  readOnly={!modificando}/>
                             </div>
 
                             <p className="font-semibold">Ubicación</p>
@@ -189,32 +189,32 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
 
                                 <div>
                                     <label htmlFor="pais" className="text-sm text-gray-500">País</label>
-                                    <input value={formData.pais} id="pais" onChange={handleChange} className="border rounded-full px-4 py-2 w-full"  readOnly={modificando}/>
+                                    <input value={formData.pais} id="pais" onChange={handleChange} className="border rounded-full px-4 py-2 w-full"  readOnly={!modificando}/>
                                 </div>
 
                                 <div>
                                     <label htmlFor="estado" className="text-sm text-gray-500">Estado</label>
-                                    <input value={formData.estado}  id="estado" onChange={handleChange} className="border rounded-full px-4 py-2 w-full"  readOnly={modificando}/>
+                                    <input value={formData.estado}  id="estado" onChange={handleChange} className="border rounded-full px-4 py-2 w-full"  readOnly={!modificando}/>
                                 </div>
 
                                 <div>
                                     <label htmlFor="ciudad" className="text-sm text-gray-500">Ciudad</label>
-                                    <input value={formData.ciudad}  id="ciudad" onChange={handleChange} className="border rounded-full px-4 py-2 w-full"  readOnly={modificando}/>
+                                    <input value={formData.ciudad}  id="ciudad" onChange={handleChange} className="border rounded-full px-4 py-2 w-full"  readOnly={!modificando}/>
                                 </div>
 
                                 <div>
                                     <label htmlFor="calle" className="text-sm text-gray-500">Calle</label>
-                                    <input value={formData.calle}  id="calle" onChange={handleChange} className="border rounded-full px-4 py-2 w-full"  readOnly={modificando}/>
+                                    <input value={formData.calle}  id="calle" onChange={handleChange} className="border rounded-full px-4 py-2 w-full"  readOnly={!modificando}/>
                                 </div>
 
                                 <div>
                                     <label htmlFor="numero_exterior" className="text-sm text-gray-500">Número exterior</label>
-                                    <input value={formData.numero_exterior} id="numero_exterior" onChange={handleChange} className="border rounded-full px-4 py-2 w-full"  readOnly={modificando}/>
+                                    <input value={formData.numero_exterior} id="numero_exterior" onChange={handleChange} className="border rounded-full px-4 py-2 w-full"  readOnly={!modificando}/>
                                 </div>
 
                                 <div>
                                     <label htmlFor="numero_interior" className="text-sm text-gray-500">Número interior</label>
-                                    <input value={formData.numero_interior} id="numero_interior" onChange={handleChange} className="border rounded-full px-4 py-2 w-full"  readOnly={modificando}/>
+                                    <input value={formData.numero_interior} id="numero_interior" onChange={handleChange} className="border rounded-full px-4 py-2 w-full"  readOnly={!modificando}/>
                                 </div>
 
                             </div>
@@ -223,12 +223,12 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                                 <label htmlFor="modulo_fisico" className="text-sm text-gray-500">
                                     Módulo físico
                                 </label>
-                                <input value={formData.modulo_fisico} id="modulo_fisico" onChange={handleChange} className="border rounded-full px-4 py-2 w-full"  readOnly={modificando}/>
+                                <input value={formData.modulo_fisico} id="modulo_fisico" onChange={handleChange} className="border rounded-full px-4 py-2 w-full"  readOnly={!modificando}/>
                             </div>
                         </div>
                     </div>
 
-                    {/*derecho*/}
+                    {/*sección derecha*/}
                     <div className="col-span-1 flex flex-col gap-6 border-l pl-6">
 
                         <div className="flex flex-col gap-4">
@@ -238,7 +238,7 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                                 <label htmlFor="tipo_trabajo" className="text-sm text-gray-500">
                                     Tipo de trabajo
                                 </label>
-                               <select id="tipo_trabajo" value={formData.tipo_trabajo}  className="w-full border rounded-full px-4 py-2 mb-2" name="lista_rubricas" onChange={handleChange} disabled={modificando}>
+                               <select id="tipo_trabajo" value={formData.tipo_trabajo}  className="w-full border rounded-full px-4 py-2 mb-2" name="lista_rubricas" onChange={handleChange} disabled={!modificando}>
                                     {listaTiposTrabajo.map((item, index)=>(
                                         <option key={index}value={item.nombre}>{item.nombre} </option>
                                     ))}
@@ -258,7 +258,7 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                                 <label htmlFor="rubrica_referencia" className="text-sm text-gray-500">
                                     Nombre
                                 </label>
-                                <select id="rubrica_referencia" value={formData.rubrica_referencia}  className="w-full border rounded-full px-4 py-2 mb-2" name="lista_rubricas" onChange={handleChange} disabled={modificando}>
+                                <select id="rubrica_referencia" value={formData.rubrica_referencia}  className="w-full border rounded-full px-4 py-2 mb-2" name="lista_rubricas" onChange={handleChange} disabled={!modificando}>
                                     {listaRubricasPrueba.map((item, index)=>(
                                         <option key={index}value={item.nombre}>{item.nombre} </option>
                                     ))}
@@ -272,7 +272,7 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                         </div>
                     </div>
 
-                    {/* SECCIÓN INFERIOR */}
+                    
                     <div className="col-span-3 grid grid-cols-3 gap-6 border-t pt-6">
 
                         {/*fechas*/}
@@ -281,18 +281,19 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
 
                             {/*congreso*/}
                             <div>
+                                <p className="font-medium mb-2">Congreso</p>
                                 <div className="">
                                     <p className="text-sm mb-1 text-gray-500 ml-2">Inicio y fin del congreso</p>
                                     <div className="flex gap-4 ml-5">
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className=" h-2 w-2 bg-green-500 rounded-full border"></div>
                                             <label htmlFor="congreso_inicio" className="text-sm text-gray-500 flex-1">Inicio</label>
-                                            <input value={formData.congreso_inicio}  id="congreso_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
+                                            <input value={formData.congreso_inicio}  id="congreso_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4"  readOnly={!modificando}/>
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
                                             <label htmlFor="congreso_fin" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input value={formData.congreso_fin} id="congreso_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <input value={formData.congreso_fin} id="congreso_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4" readOnly={!modificando}/>
                                         </div>
 
                                     </div>
@@ -305,7 +306,7 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
 
                             {/*ponencias*/}
                             <div className="flex flex-col gap-2">
-                                <p className="font-medium mb-2">Ponencia</p>
+                                <p className="font-medium mb-2">Ponencias</p>
                                
                                 <div className="">
                                     <p className="text-sm mb-1 text-gray-500 ml-2">Envío de ponencias</p>
@@ -313,12 +314,12 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className=" h-2 w-2 bg-green-500 rounded-full border"></div>
                                             <label htmlFor="envio_ponencias_inicio" className="text-sm text-gray-500 flex-1">Inicio</label>
-                                            <input value={formData.envio_ponencias_inicio} id="envio_ponencias_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
+                                            <input value={formData.envio_ponencias_inicio} id="envio_ponencias_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4"  readOnly={!modificando}/>
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
                                             <label htmlFor="envio_ponencias_fin" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input value={formData.envio_ponencias_fin} id="envio_ponencias_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <input value={formData.envio_ponencias_fin} id="envio_ponencias_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4" readOnly={!modificando}/>
                                         </div>
 
                                     </div>
@@ -330,12 +331,12 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className=" h-2 w-2 bg-green-500 rounded-full border"></div>
                                             <label htmlFor="inscripcion_dictaminadores_inicio" className="text-sm text-gray-500 flex-1">Inicio</label>
-                                            <input value={formData.inscripcion_dictaminadores_inicio} id="inscripcion_dictaminadores_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
+                                            <input value={formData.inscripcion_dictaminadores_inicio} id="inscripcion_dictaminadores_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4"  readOnly={!modificando}/>
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
                                             <label htmlFor="inscripcion_dictaminadores_fin" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input value={formData.inscripcion_dictaminadores_fin} id="inscripcion_dictaminadores_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <input value={formData.inscripcion_dictaminadores_fin} id="inscripcion_dictaminadores_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4" readOnly={!modificando}/>
                                         </div>
 
                                     </div>
@@ -347,12 +348,12 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className=" h-2 w-2 bg-green-500 rounded-full border"></div>
                                             <label htmlFor="revision_resumenes_inicio" className="text-sm text-gray-500 flex-1">Inicio</label>
-                                            <input value={formData.revision_resumenes_inicio} id="revision_resumenes_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
+                                            <input value={formData.revision_resumenes_inicio} id="revision_resumenes_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4"  readOnly={!modificando}/>
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
                                             <label htmlFor="revision_resumenes_fin" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input value={formData.revision_resumenes_fin} id="revision_resumenes_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <input value={formData.revision_resumenes_fin} id="revision_resumenes_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4" readOnly={!modificando}/>
                                         </div>
 
                                     </div>
@@ -364,12 +365,12 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className=" h-2 w-2 bg-green-500 rounded-full border"></div>
                                             <label htmlFor="envio_extensos_inicio" className="text-sm text-gray-500 flex-1">Inicio</label>
-                                            <input value={formData.envio_extensos_inicio} id="envio_extensos_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
+                                            <input value={formData.envio_extensos_inicio} id="envio_extensos_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4"  readOnly={!modificando}/>
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
                                             <label htmlFor="envio_extensos_fin" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input value={formData.envio_extensos_fin} id="envio_extensos_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <input value={formData.envio_extensos_fin} id="envio_extensos_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4" readOnly={!modificando}/>
                                         </div>
 
                                     </div>
@@ -381,12 +382,12 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className=" h-2 w-2 bg-green-500 rounded-full border"></div>
                                             <label htmlFor="inscripcion_evaluadores_inicio" className="text-sm text-gray-500 flex-1">Inicio</label>
-                                            <input value={formData.inscripcion_evaluadores_inicio} id="inscripcion_evaluadores_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
+                                            <input value={formData.inscripcion_evaluadores_inicio} id="inscripcion_evaluadores_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4"  readOnly={!modificando}/>
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
                                             <label htmlFor="inscripcion_evaluadores_fin" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input value={formData.inscripcion_evaluadores_fin} id="inscripcion_evaluadores_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <input value={formData.inscripcion_evaluadores_fin} id="inscripcion_evaluadores_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4" readOnly={!modificando}/>
                                         </div>
 
                                     </div>
@@ -398,12 +399,12 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className=" h-2 w-2 bg-green-500 rounded-full border"></div>
                                             <label htmlFor="revision_extensos_inicio" className="text-sm text-gray-500 flex-1">Inicio</label>
-                                            <input value={formData.revision_extensos_inicio} id="revision_extensos_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
+                                            <input value={formData.revision_extensos_inicio} id="revision_extensos_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4"  readOnly={!modificando}/>
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
                                             <label htmlFor="revision_extensos_fin" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input value={formData.revision_extensos_fin} id="revision_extensos_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <input value={formData.revision_extensos_fin} id="revision_extensos_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4" readOnly={!modificando}/>
                                         </div>
 
                                     </div>
@@ -415,12 +416,12 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className=" h-2 w-2 bg-green-500 rounded-full border"></div>
                                             <label htmlFor="subir_multimedia_inicio" className="text-sm text-gray-500 flex-1">Inicio</label>
-                                            <input value={formData.subir_multimedia_inicio} id="subir_multimedia_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
+                                            <input value={formData.subir_multimedia_inicio} id="subir_multimedia_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4"  readOnly={!modificando}/>
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
                                             <label htmlFor="subir_multimedia_fin" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input value={formData.subir_multimedia_fin} id="subir_multimedia_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <input value={formData.subir_multimedia_fin} id="subir_multimedia_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4" readOnly={!modificando}/>
                                         </div>
 
                                     </div>
@@ -439,12 +440,12 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className=" h-2 w-2 bg-green-500 rounded-full border"></div>
                                             <label htmlFor="prepago_inicio" className="text-sm text-gray-500 flex-1">Inicio</label>
-                                            <input value={formData.prepago_inicio} id="prepago_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
+                                            <input value={formData.prepago_inicio} id="prepago_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4"  readOnly={!modificando}/>
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
                                             <label htmlFor="prepago_fin" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input value={formData.prepago_fin} id="prepago_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <input value={formData.prepago_fin} id="prepago_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4" readOnly={!modificando}/>
                                         </div>
 
                                     </div>
@@ -456,12 +457,12 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className=" h-2 w-2 bg-green-500 rounded-full border"></div>
                                             <label htmlFor="pagos_normales_inicio" className="text-sm text-gray-500 flex-1">Inicio</label>
-                                            <input value={formData.pagos_normales_inicio} id="pagos_normales_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60"  readOnly={modificando}/>
+                                            <input value={formData.pagos_normales_inicio} id="pagos_normales_inicio" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4"  readOnly={!modificando}/>
                                         </div>
                                         <div className="flex-1 flex items-center gap-2">
                                             <div className="h-2 w-2 bg-red-500 rounded-full border"></div>
                                             <label htmlFor="pagos_normales_fin" className="text-sm text-gray-500 flex-1">Fin</label>
-                                            <input value={formData.pagos_normales_fin} id="pagos_normales_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 w-60" readOnly={modificando}/>
+                                            <input value={formData.pagos_normales_fin} id="pagos_normales_fin" onChange={handleChange} type="datetime-local" className="border rounded-full px-4 py-2 flex-4" readOnly={!modificando}/>
                                         </div>
 
                                     </div>
@@ -483,13 +484,13 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                                 <p className="font-medium">Costos</p>
 
                                 <label htmlFor="costo_asistente" className="text-sm text-gray-500">Costo por asistente</label>
-                                <input value={formData.costo_asistente} onChange={handleChange} type="number" min="0" id="costo_asistente" className="border rounded-full px-4 py-2 w-full mb-2"  readOnly={modificando}/>
+                                <input value={formData.costo_asistente} onChange={handleChange} type="number" min="0" id="costo_asistente" className="border rounded-full px-4 py-2 w-full mb-2"  readOnly={!modificando}/>
 
                                 <label  htmlFor="costo_ponente" className="text-sm text-gray-500">Costo por ponente</label>
-                                <input value={formData.costo_ponente} onChange={handleChange} type="number" min="0" id="costo_ponente" className="border rounded-full px-4 py-2 w-full mb-2"  readOnly={modificando}/>
+                                <input value={formData.costo_ponente} onChange={handleChange} type="number" min="0" id="costo_ponente" className="border rounded-full px-4 py-2 w-full mb-2"  readOnly={!modificando}/>
 
                                 <label htmlFor="costo_miembro_comite" className="text-sm text-gray-500">Costo por comité</label>
-                                <input value={formData.costo_miembro_comite} onChange={handleChange} type="number" min="0" id="costo_miembro_comite" className="border rounded-full px-4 py-2 w-full"  readOnly={modificando}/>
+                                <input value={formData.costo_miembro_comite} onChange={handleChange} type="number" min="0" id="costo_miembro_comite" className="border rounded-full px-4 py-2 w-full"  readOnly={!modificando}/>
                             </div>
                             {/*Descuentos*/}
 
@@ -497,17 +498,17 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                                 <p className="font-medium">Descuentos</p>
 
                                 <label  htmlFor="descuento_prepago" className="text-sm text-gray-500">Descuento por prepago</label>
-                                <input value={formData.descuento_prepago} onChange={handleChange} type="number" min="0" max="100" id="descuento_prepago" className="border rounded-full px-4 py-2 w-full mb-2"  readOnly={modificando}/>
+                                <input value={formData.descuento_prepago} onChange={handleChange} type="number" min="0" max="100" id="descuento_prepago" className="border rounded-full px-4 py-2 w-full mb-2"  readOnly={!modificando}/>
 
                                 <label  htmlFor="descuento_estudiante" className="text-sm text-gray-500">Descuento estudiante</label>
-                                <input value={formData.descuento_estudiante} onChange={handleChange} type="number" min="0" max="100" id="descuento_estudiante" className="border rounded-full px-4 py-2 w-full mb-2"  readOnly={modificando}/>
+                                <input value={formData.descuento_estudiante} onChange={handleChange} type="number" min="0" max="100" id="descuento_estudiante" className="border rounded-full px-4 py-2 w-full mb-2"  readOnly={!modificando}/>
 
                             </div>
 
                             <div>
                                 <p className="font-medium">Cuenta</p>
                                 <label htmlFor="cuenta_deposito" className="text-sm text-gray-500">Cuenta de depósito</label>
-                                <input value={formData.cuenta_deposito} onChange={handleChange} id="cuenta_deposito" className="border rounded-full px-4 py-2 w-full"  readOnly={modificando}/>
+                                <input value={formData.cuenta_deposito} onChange={handleChange} id="cuenta_deposito" className="border rounded-full px-4 py-2 w-full"  readOnly={!modificando}/>
                             </div>
                         </div>
                     </div>

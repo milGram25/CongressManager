@@ -44,7 +44,7 @@ const valuePillStyle = {
 };
 
 const ItemTaller = ({
-                        // Eliminamos todas las variables sin usar, dejamos solo lo necesario
+                        
                         listaDatos,
                         onViewItem
                     }) => {
@@ -59,7 +59,8 @@ const ItemTaller = ({
         <TarjetaGenerica
             titulo={listaDatos.nombre_evento.trim() !== "" ? listaDatos.nombre_evento : "Undefined"}
             botonPublicarTexto="Publicar"
-            // 👇 AQUÍ ESTÁ LA MAGIA: Le pasamos las funciones a la tarjeta genérica
+            definirTipoElemento="taller"
+            //pasamos las funciones a la tarjeta genérica
             onView={() => onViewItem(listaDatos)}
             onEdit={() => onViewItem(listaDatos)}
         >

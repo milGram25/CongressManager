@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { FiEye, FiCopy, FiEdit2 } from 'react-icons/fi';
 import Modal from "./Modal";
 import DetallesCrearCongreso from './DetallesCrearCongreso';
+import DetallesEditarTaller from './DetallesEditarTaller';
 
 const TarjetaGenerica = ({
                              titulo,
@@ -88,11 +89,11 @@ const TarjetaGenerica = ({
             case "ponencia":
                 return null;
             case "taller":
-                return null;
+                return <DetallesEditarTaller/>;
             case "institucion":
                 return null;
             case "congreso":
-                return <DetallesCrearCongreso indexDatosModal={indexDatosModal}/>;
+                return <DetallesCrearCongreso indexDatosModal={indexDatosModal}/>; //Hacer la búsqueda de datos de la base de datos desde DetallesCrearCongreso
             default:
                 return null;
         }
@@ -100,14 +101,14 @@ const TarjetaGenerica = ({
 
     function cerrarModal(){
         setOpenModal(false);
-        document.body.style.overflow = "auto";
+        //document.body.style.overflow = "auto";
     }
 
     return (
         <div className="static" style={cardStyle}>
 
             <Modal abierto={openModal} onClose={() => cerrarModal()}>
-                {/* 2. CAMBIO: En lugar de usar <ComponenteModal/>, llamamos a la función entre llaves */}
+               
                 {renderModalContent()}
             </Modal>
 
@@ -118,7 +119,7 @@ const TarjetaGenerica = ({
             </div>
 
             <div style={footerStyle}>
-                <button  className="bg-black hover:bg-gray-500" style={iconBtnStyle} onClick={onView ? onView : () => setOpenModal(true)} title="Ver detalles">
+                <button  className="bg-black hover:bg-gray-500" style={iconBtnStyle} onClick={() => setOpenModal(true)} title="Ver detalles">
                     <FiEye size={16} />
                 </button>
 
