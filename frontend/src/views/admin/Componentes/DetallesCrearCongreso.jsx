@@ -117,15 +117,15 @@ export default function DetallesCrearCongreso({indexDatosModal,listaRubricas, li
                         
                         
                             {!modificando?(
-                            <button onClick={(e)=>setModificando(!modificando)} className="border rounded-full p-2 hover:bg-gray-500 hover:cursor-pointer">
+                            <button onClick={(e)=>setModificando(!modificando)} className="border rounded-full p-2 hover:bg-gray-500 hover:cursor-pointer" title="Modificar datos">
                                 <RiPencilFill />
                             </button>):(                                
-                            <div className="bg-white justify-end flex rounded-full gap-2">
+                            <div className="bg-white justify-end flex rounded-full gap-1">
                                 
-                                <button onClick={(e)=>setModificando(!modificando)} className="border bg-black rounded-full p-2 hover:bg-gray-500  hover:cursor-pointer">
+                                <button onClick={(e)=>setModificando(!modificando)} className="border bg-black rounded-full p-2 hover:bg-gray-500  hover:cursor-pointer" title="Cancelar cambios">
                                     <RxCross2 /> {/*Implementar lógica para que no se guarden los datos */}
                                 </button>
-                                <button onClick={(e)=>setModificando(!modificando)} className="bg-black border rounded-full p-2 hover:bg-gray-500  hover:cursor-pointer">
+                                <button onClick={(e)=>setModificando(!modificando)} className="bg-black border rounded-full p-2 hover:bg-gray-500 hover:cursor-pointer" title="Aceptar cambios">
                                     <IoIosCheckmark /> {/*Implementar lógica para que se guarden los datos */}
                                 </button>
                             </div>)}
