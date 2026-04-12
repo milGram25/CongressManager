@@ -53,7 +53,7 @@ const DetallesEditarTaller = ({ tallerData }) => {
         subarea: "Avances en tecnología",
         cupos_maximos_taller: 10,
         nombre_taller: "brutal",
-        tipo_taller: "Programación",
+        tipo_participacion: "Híbrido",
         enlace_videollamada: "ruta video",
         nombre_mesa:"Mesa A",
         cupos_mesa:10,
@@ -169,7 +169,12 @@ const DetallesEditarTaller = ({ tallerData }) => {
                         </div>
                         <div className='col-span-1'style={pairedFieldItemStyle}>
                             <label style={labelStyle}>Tipo de taller</label>
-                            <input id="tipo_taller" type="text" style={textInputStyle} value={formatData.tipo_taller} onChange={(e)  => handleChange(e)} readOnly={!modificando}/>
+                            {/*<input id="tipo_participacion" type="text" style={textInputStyle} value={formatData.tipo_participacion} onChange={(e)  => handleChange(e)} readOnly={!modificando}/>*/}
+                            <select id="tipo_participacion" value={formatData.tipo_participacion}  className="w-full border rounded-full px-4 py-2 bg-white" name="tipo_participacion" onChange={handleChange} disabled={!modificando}>
+                                <option value="Presencial">Presencial</option>
+                                <option value="Virtual">Virtual</option>
+                                <option value="Híbrido">Híbrido</option>
+                            </select>
                         </div>
                         <div className='col-span-1'style={pairedFieldItemStyle}>
                             <label style={labelStyle}>Enlace a videollamada</label>
