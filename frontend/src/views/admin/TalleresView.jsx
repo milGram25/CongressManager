@@ -62,69 +62,35 @@ export default function TalleresView() {
   };
 
   return (
-      // Agregamos 'relative' por si acaso, aunque el fixed del modal cubre toda la pantalla
-      <div className="bg-base-100 p-8 rounded-3xl border border-base-300 shadow-sm min-h-[400px] relative">
-
-        {/* 5. Pasamos la función onViewItem a tu menú */}
+      <div className="w-full h-full p-4 md:p-8">
         <MenuCrearBorrar
-            title="Crear taller"
+            title="Gestión de Talleres"
             listaElementos2={listaEventos}
             definirTipoElemento="taller"
             onViewItem={handleAbrirModal}
         />
 
-        {/* 6. RENDERIZADO DEL MODAL */}
-        {/*{isModalOpen && (
-            <div style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100vw',
-              height: '100vh',
-              backgroundColor: 'rgba(0,0,0,0.6)', // Fondo oscuro
-              zIndex: 9999, // Superposición máxima
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '24px', // Margen en pantallas más pequeñas
-              boxSizing: 'border-box'
-            }}>
-              
-              <div style={{ position: 'relative', width: '100%', maxWidth: '900px', maxHeight: '95vh', overflowY: 'auto', borderRadius: '24px' }}>
-
-               
+        {/* Modal para ver/editar detalles */}
+        {isModalOpen && (
+            <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4 md:p-6 backdrop-blur-sm">
+              <div className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-3xl bg-white shadow-2xl">
                 <button
                     onClick={handleCerrarModal}
-                    style={{
-                      position: 'absolute',
-                      top: '16px',
-                      right: '24px',
-                      color: '#FFFFFF',
-                      background: 'rgba(0,0,0,0.5)',
-                      border: 'none',
-                      fontSize: '14px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold',
-                      padding: '8px 12px',
-                      borderRadius: '8px',
-                      zIndex: 10 // Por encima del header del modal
-                    }}
-                    className="hover:bg-gray-800 transition-colors"
+                    className="absolute top-4 right-6 text-white bg-black/50 hover:bg-black w-10 h-10 rounded-full flex items-center justify-center transition-all z-50 cursor-pointer"
+                    title="Cerrar"
                 >
-                  Cerrar ✕
+                  ✕
                 </button>
                 
-
-                
-                <DetallesEditarTaller
-                    key={tallerSeleccionado?.id} // Obliga a React a re-montar el componente si el ID cambia
-                    tallerData={tallerSeleccionado}
-                />
-
+                <div className="overflow-y-auto h-full">
+                  <DetallesEditarTaller
+                      key={tallerSeleccionado?.id || 'new'} 
+                      tallerData={tallerSeleccionado}
+                  />
+                </div>
               </div>
             </div>
-        )}*/}
-
+        )}
       </div>
   );
 }
