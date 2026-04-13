@@ -20,7 +20,7 @@ export default function ListaRevisores({
         ) : (
           revisores.map((revisor) => (
             <div key={revisor.id} className="flex items-center gap-3 border-b border-slate-200 pb-3 last:border-b-0 last:pb-0">
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#0b7c91] text-white">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#000000] text-white">
                 <FiUser size={15} />
               </div>
 

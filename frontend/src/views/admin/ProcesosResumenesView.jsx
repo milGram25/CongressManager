@@ -211,9 +211,9 @@ export default function ProcesosResumenesView() {
   return (
     <div className="w-full space-y-7">
       <section className="flex flex-wrap items-center gap-3 border-t border-base-300 pt-7">
-        <div className="h-12 w-1.5 rounded-full bg-[#0b7c91]" />
+        <div className="h-12 w-1.5 rounded-full bg-[#000000]" />
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h2 className="text-[42px] font-black leading-none tracking-tight text-[#0b5e78]">Revision</h2>
+          <h2 className="text-[42px] font-black leading-none tracking-tight text-[#000000]">Revision</h2>
           <p className="text-lg font-semibold text-slate-400">Evaluacion de resumenes y asignacion de evaluadores</p>
         </div>
       </section>
