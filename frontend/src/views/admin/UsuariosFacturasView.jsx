@@ -11,14 +11,15 @@ export default function UsuariosFacturasView() {
 
   const loadRequests = () => {
     const savedRequests = JSON.parse(localStorage.getItem("invoice_requests") || "[]");
-    setUsers(savedRequests);
+    const pendingRequests = savedRequests.filter(req => req.status === "red");
+    setUsers(pendingRequests);
     
-    // Si ya hay un seleccionado, actualizamos su objeto por si cambió el estatus
+    // Si ya hay un seleccionado, actualizamos su objeto por si cambió el estatus o si ya no está en la lista de pendientes
     if (selectedUser) {
-      const updated = savedRequests.find(u => u.id === selectedUser.id);
-      if (updated) setSelectedUser(updated);
-    } else if (savedRequests.length > 0) {
-      setSelectedUser(savedRequests[0]);
+      const updated = pendingRequests.find(u => u.id === selectedUser.id);
+      setSelectedUser(updated || (pendingRequests.length > 0 ? pendingRequests[0] : null));
+    } else if (pendingRequests.length > 0) {
+      setSelectedUser(pendingRequests[0]);
     }
   };
 
