@@ -9,15 +9,21 @@ export default function UsuariosFacturasView() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    // Cargar solicitudes de localStorage
+  const loadRequests = () => {
     const savedRequests = JSON.parse(localStorage.getItem("invoice_requests") || "[]");
-    
     setUsers(savedRequests);
     
-    if (savedRequests.length > 0) {
+    // Si ya hay un seleccionado, actualizamos su objeto por si cambió el estatus
+    if (selectedUser) {
+      const updated = savedRequests.find(u => u.id === selectedUser.id);
+      if (updated) setSelectedUser(updated);
+    } else if (savedRequests.length > 0) {
       setSelectedUser(savedRequests[0]);
     }
+  };
+
+  useEffect(() => {
+    loadRequests();
   }, []);
 
   const filteredUsers = users.filter(u => 
@@ -44,7 +50,7 @@ export default function UsuariosFacturasView() {
         {/* Panel Izquierdo: Carga de Factura */}
         <div className="lg:col-span-5 xl:col-span-4 h-full">
           {selectedUser ? (
-            <InvoiceUpload selectedUser={selectedUser} />
+            <InvoiceUpload selectedUser={selectedUser} onUploadSuccess={loadRequests} />
           ) : (
             <div className="bg-[#005a6a]/10 border-2 border-dashed border-[#005a6a]/30 rounded-3xl h-full flex items-center justify-center p-8 text-center">
               <p className="text-[#005a6a] font-medium italic">Selecciona una solicitud del listado para gestionar su factura</p>
@@ -55,7 +61,7 @@ export default function UsuariosFacturasView() {
         {/* Panel Derecho: Lista de Usuarios */}
         <div className="lg:col-span-7 xl:col-span-8 bg-white rounded-3xl shadow-sm border border-gray-100 flex flex-col overflow-hidden h-full">
           <div className="p-6 border-b border-gray-50 flex flex-col sm:flex-row justify-between items-center bg-gray-50/50 gap-4">
-            <h3 className="font-bold text-gray-700">Listado de Participantes</h3>
+            <h3 className="font-bold text-gray-700">Facturas pendientes</h3>
             <div className="relative w-full sm:w-64">
               <HiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input 

@@ -39,16 +39,26 @@ export default function UserInvoiceList({ users, selectedUserId, onSelectUser })
           </div>
 
           <div className="flex-1 min-w-0">
-            <h4 className="font-bold text-gray-800 truncate">{user.nombre}</h4>
-            <div className="flex items-center gap-2 text-xs text-gray-400">
-              <span className="bg-[#005a6a]/10 px-2 py-0.5 rounded-md text-[#005a6a] font-medium">{user.rol}</span>
-              <span className="truncate">RFC: {user.rfc} • {user.email}</span>
+            <div className="flex items-center gap-2 mb-1">
+              <h4 className="font-bold text-gray-800 truncate">{user.nombre}</h4>
+              <span className="bg-[#005a6a]/10 px-2 py-0.5 rounded-md text-[#005a6a] text-[10px] font-bold uppercase tracking-wider">{user.rol}</span>
             </div>
-            {user.razonSocial && user.razonSocial !== user.nombre && (
-              <p className="text-[10px] text-gray-400 italic mt-0.5 truncate">
-                Facturar a: {user.razonSocial}
+            
+            <div className="flex flex-col gap-0.5">
+              <p className="text-xs font-semibold text-gray-600">
+                <span className="text-gray-400 font-normal mr-1 italic">RFC:</span> {user.rfc}
               </p>
-            )}
+              
+              {user.razonSocial && (
+                <p className="text-[11px] text-[#005a6a] font-medium truncate">
+                  <span className="text-gray-400 font-normal mr-1 italic">Facturar a:</span> {user.razonSocial}
+                </p>
+              )}
+              
+              <p className="text-[10px] text-gray-400 truncate mt-0.5">
+                {user.email}
+              </p>
+            </div>
           </div>
 
           <div className="text-right hidden sm:block">
