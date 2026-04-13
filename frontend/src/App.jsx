@@ -38,8 +38,10 @@ import AjustesInstitucionesView from "./views/admin/AjustesInstitucionesView";
 import ProcesosResumenesView from "./views/admin/ProcesosResumenesView";
 import ProcesosExtensosView from "./views/admin/ProcesosExtensosView";
 import TalleresView from "./views/admin/TalleresView";
+import TalleresCrearView from "./views/admin/TalleresCrearView";
 import PonenciasView from "./views/admin/PonenciasView";
 import CongresosView from "./views/admin/CongresosView";
+import CongresoListaView from "./views/admin/CongresoListaView";
 import CongresoDetallesView from "./views/admin/CongresoDetallesView";
 import CongresoCrearView from "./views/admin/CongresoCrearView";
 import CongresoSedeView from "./views/admin/CongresoSedeView";
@@ -366,12 +368,16 @@ function App() {
             </Route>
             <Route path="eventos">
               <Route index element={<EventosView />} />
-              <Route path="talleres" element={<TalleresView />} />
+              <Route path="talleres">
+                <Route index element={<TalleresView />} />
+                <Route path="crear" element={<TalleresCrearView />} />
+              </Route>
               <Route path="ponencias" element={<PonenciasView />} />
               <Route path="congresos">
                 <Route index element={<CongresosView />} />
-                <Route path="detalles" element={<CongresoDetallesView />} />
+                <Route path="lista" element={<CongresoListaView />} />
                 <Route path="crear" element={<CongresoCrearView />} />
+                <Route path="detalles" element={<CongresoDetallesView />} />
                 <Route path="sede" element={<CongresoSedeView />} />
                 <Route path="fechas" element={<CongresoFechasView />} />
                 <Route path="tipos-trabajo" element={<CongresoTiposTrabajoView />} />

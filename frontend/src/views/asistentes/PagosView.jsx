@@ -193,12 +193,22 @@ const isFormValid = useMemo(() => {
   const handleSimularPago = () => setPagoExitoso(true);
   const handleEnviarSolicitudFactura = () => {
     const datosFinales = {
-    ...datosFacturacion,
-    // Si marcó usar alternativo, usa ese; si no, usa el del login
-    correoEnvio: usarCorreoAlternativo ? correoFacturacion : user?.email,
-    fechaSolicitud: new Date().toISOString()
-  };
-    console.log("Enviando datos al administrador:", datosFacturacion);
+      id: Date.now(), // ID temporal
+      nombre: user?.nombre || "Usuario Demo",
+      email: usarCorreoAlternativo ? correoFacturacion : user?.email,
+      institucion: "Institución Demo", // En el futuro vendrá del perfil
+      congreso: "CIENU 2026",
+      rol: PRECIOS[tipoInscripcion].label,
+      status: "red", // Pendiente
+      ...datosFacturacion,
+      fechaSolicitud: new Date().toISOString()
+    };
+
+    // Guardar en localStorage para que el admin lo vea
+    const existingRequests = JSON.parse(localStorage.getItem("invoice_requests") || "[]");
+    localStorage.setItem("invoice_requests", JSON.stringify([...existingRequests, datosFinales]));
+    
+    console.log("Solicitud de factura guardada en localStorage:", datosFinales);
     
     // Cerramos el flujo anterior y mostramos el mensaje final
     setSolicitudEnviada(true);

@@ -5,6 +5,7 @@ import ItemPonencia2 from './ItemPonencia2';
 import ItemTaller from './ItemTaller';
 import ItemCongreso from "./ItemCongreso";
 import ItemInstitucion from "./ItemInstitucion";
+import { useNavigate } from 'react-router-dom';
 import { IoMdAdd } from "react-icons/io";
 import Modal from './Modal';
 import DetallesCrearCongreso from './DetallesCrearCongreso';
@@ -20,7 +21,7 @@ const MenuCrearBorrarGenerico = ({
                                      definirTipoElemento = "ponencia",
                                      onViewItem
                                  }) => {
-
+    const navigate = useNavigate();
     const [listaElementos,setListaElementos] = useState(listaElementos2);
     const mostrarAgregarEliminar = !["ponencia", "institucion"].includes(definirTipoElemento);
 
@@ -56,8 +57,11 @@ const MenuCrearBorrarGenerico = ({
     };
 
     const containerStyle = {
-        width: '1000px',
-        height: '82%',
+        width: '100%',
+        maxWidth: '1200px',
+        margin: '0 auto',
+        height: 'auto',
+        minHeight: '80vh',
         border: '1px solid #1A1A1A',
         borderRadius: '16px',
         display: 'flex',
@@ -71,14 +75,16 @@ const MenuCrearBorrarGenerico = ({
         backgroundColor: 'black',
         padding: '16px 24px',
         display: 'flex',
+        flexWrap: 'wrap',
         justifyContent: 'space-between',
         alignItems: 'center',
+        gap: '12px',
         color: '#ffffff',
     };
 
     const titleStyle = {
         margin: 0,
-        fontSize: '24px',
+        fontSize: 'clamp(18px, 4vw, 24px)',
         fontWeight: '500',
     };
 
@@ -86,11 +92,12 @@ const MenuCrearBorrarGenerico = ({
         flex: 1,
         padding: '24px',
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
         gridAutoRows: 'max-content',
-        gap: '16px',
+        gap: '24px',
         overflowY: 'auto',
         backgroundColor: '#FFFFFF',
+        justifyItems: 'center',
     };
 
     const iconButtonStyle = {
@@ -131,18 +138,17 @@ const MenuCrearBorrarGenerico = ({
     const [guardarCambios, setGuardarCambios] = useState(false);
 
     function handleAgregarElemento(elemento){
+        if (definirTipoElemento === 'taller') {
+            navigate('/admin/eventos/talleres/crear');
+            return;
+        }
+        if (definirTipoElemento === 'congreso') {
+            navigate('/admin/eventos/congresos/crear');
+            return;
+        }
+
         setOpenModal(true);
-        
-        const nuevo = {
-            nombre_congreso:"RIDMAE 2025",
-            sede:"CUALTOS",
-            cantidad_eventos:100,
-            nombre_institucion:"RIDMAE",
-            fecha_hora_inicio:"2026-04-08T08:00",
-            fecha_hora_final:"2026-04-08T10:00"
-        };
-        guardarCambios&&agregarElemento(nuevo)
-        //agregarElemento(nuevo);
+        // ... resto de la lógica para otros tipos
     }
 
     function agregarElemento(nuevo){
