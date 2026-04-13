@@ -1,89 +1,37 @@
-import React from 'react';
-import { FiUser } from 'react-icons/fi';
+import { FiUser } from "react-icons/fi";  //
 
-const ListaRevisores = ({
-                            titulo = "Evaluadores del extenso",
-                            revisores = [
-                                { id: 1, nombre: "Dr. Juan Pérez", especialidad: "Metodología" },
-                                { id: 2, nombre: "Dra. Ana Gómez", especialidad: "Análisis de Datos" }
-                            ]
-                        }) => {
+// Info de ejemplo para dictaminadores
+export default function ListaRevisores({
+  titulo = "DICTAMINADORES",
+  revisores = [],
+  emptyMessage = "No hay evaluadores asignados para este elemento.",
+}) {
+  return (
+    <section className="rounded-[24px] border border-black/55 bg-white px-4 py-4 shadow-sm md:px-5">
+      <div className="border-b border-slate-200 pb-3">
+        <h3 className="text-[18px] font-semibold uppercase tracking-tight text-slate-800">{titulo}</h3>
+      </div>
 
-    const containerStyle = {
-        // Proporciones exactas 560x182 sobre 1440x1200
-        width: '38.88%',
-        height: '15.16%',
-        border: '1px solid #1A1A1A',
-        borderRadius: '16px',
-        backgroundColor: '#FFFFFF',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        fontFamily: 'sans-serif',
-        boxSizing: 'border-box'
-    };
+      <div className="space-y-3 pt-3">
+        {revisores.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-5 text-sm italic text-slate-500">
+            {emptyMessage}
+          </div>
+        ) : (
+          revisores.map((revisor) => (
+            <div key={revisor.id} className="flex items-center gap-3 border-b border-slate-200 pb-3 last:border-b-0 last:pb-0">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#0b7c91] text-white">
+                <FiUser size={15} />
+              </div>
 
-    const headerStyle = {
-        backgroundColor: '#005C70',
-        color: '#FFFFFF',
-        padding: '12px 16px',
-        fontSize: '16px',
-        fontWeight: '600',
-        margin: 0
-    };
-
-    const listStyle = {
-        flex: 1,
-        padding: '12px 16px',
-        overflowY: 'auto',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px'
-    };
-
-    const itemStyle = {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingBottom: '8px',
-        borderBottom: '1px solid #E5E5E5'
-    };
-
-    const btnStyle = {
-        backgroundColor: '#E5E5E5',
-        border: 'none',
-        borderRadius: '20px',
-        padding: '4px 12px',
-        fontSize: '12px',
-        fontWeight: '600',
-        cursor: 'pointer',
-        color: '#1A1A1A'
-    };
-
-    return (
-        <div style={containerStyle}>
-            <h3 style={headerStyle}>{titulo}</h3>
-
-            <div style={listStyle}>
-                {revisores.map((revisor) => (
-                    <div key={revisor.id} style={itemStyle}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <div style={{ backgroundColor: '#F0F0F0', padding: '8px', borderRadius: '50%', color: '#005C70' }}>
-                                <FiUser size={16} />
-                            </div>
-                            <div>
-                                <div style={{ fontWeight: '600', fontSize: '14px', color: '#1A1A1A' }}>{revisor.nombre}</div>
-                                <div style={{ fontSize: '12px', color: '#666666' }}>{revisor.especialidad}</div>
-                            </div>
-                        </div>
-                        <button style={btnStyle} title={`Ver detalles de ${revisor.nombre}`}>
-                            Ver detalles
-                        </button>
-                    </div>
-                ))}
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-slate-800">{revisor.nombre}</p>
+                <p className="truncate text-xs uppercase tracking-wide text-slate-500">{revisor.especialidad}</p>
+              </div>
             </div>
-        </div>
-    );
-};
-
-export default ListaRevisores;
+          ))
+        )}
+      </div>
+    </section>
+  );
+}

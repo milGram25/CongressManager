@@ -1,19 +1,24 @@
 import React from 'react';
+import { useState } from 'react';
 import { FiEye, FiCopy, FiEdit2 } from 'react-icons/fi';
+import Modal from "./Modal";
+import DetallesCrearCongreso from './DetallesCrearCongreso';
+import DetallesEditarTaller from './DetallesEditarTaller';
 
 const TarjetaGenerica = ({
                              titulo,
-                             botonPublicarTexto, // Si se envía este texto, aparece el botón central
+                             botonPublicarTexto,
                              onView,
                              onCopy,
                              onEdit,
                              onPublish,
-                             children
+                             children,
+                             definirTipoElemento,
+                             indexDatosModal
                          }) => {
 
     const cardStyle = {
-        // Proporciones basadas en 329x384 sobre 1440x1200
-        width: '300px', // Usa 100% para que se adapte a la columna del Grid que hicimos antes
+        width: '300px',
         minHeight: '384px',
         backgroundColor: '#F9F8F8',
         border: '1px solid #1A1A1A',
@@ -55,7 +60,6 @@ const TarjetaGenerica = ({
     };
 
     const iconBtnStyle = {
-        backgroundColor: 'black',
         color: '#FFFFFF',
         border: 'none',
         borderRadius: '50%',
@@ -72,13 +76,42 @@ const TarjetaGenerica = ({
         color: '#FFFFFF',
         border: 'none',
         borderRadius: '20px',
-        //padding: '6px 16px',
+        padding: '6px 16px',
         fontWeight: '600',
-        cursor: 'pointer'
+        cursor: 'pointer',
     };
 
+    const [openModal, setOpenModal] = useState(false);
+
+    // 1. CAMBIO: Lo nombramos en minúscula porque ahora es una función auxiliar, no un componente independiente.
+    const renderModalContent = () => {
+        switch(definirTipoElemento){
+            case "ponencia":
+                return null;
+            case "taller":
+                return <DetallesEditarTaller/>;
+            case "institucion":
+                return null;
+            case "congreso":
+                return <DetallesCrearCongreso indexDatosModal={indexDatosModal}/>; //Hacer la búsqueda de datos de la base de datos desde DetallesCrearCongreso
+            default:
+                return null;
+        }
+    };
+
+    function cerrarModal(){
+        setOpenModal(false);
+        //document.body.style.overflow = "auto";
+    }
+
     return (
-        <div style={cardStyle}>
+        <div className="static" style={cardStyle}>
+
+            <Modal abierto={openModal} onClose={() => cerrarModal()}>
+               
+                {renderModalContent()}
+            </Modal>
+
             <div style={headerStyle}>{titulo}</div>
 
             <div style={contentStyle}>
@@ -86,7 +119,7 @@ const TarjetaGenerica = ({
             </div>
 
             <div style={footerStyle}>
-                <button style={iconBtnStyle} onClick={onView} title="Ver detalles">
+                <button  className="bg-black hover:bg-gray-500" style={iconBtnStyle} onClick={() => setOpenModal(true)} title="Ver detalles">
                     <FiEye size={16} />
                 </button>
 
@@ -97,10 +130,10 @@ const TarjetaGenerica = ({
                 )}
 
                 <div style={{ display: 'flex', gap: '8px' }}>
-                    <button style={iconBtnStyle} onClick={onCopy} title="Duplicar">
+                    <button className="bg-black hover:bg-gray-500" style={iconBtnStyle} onClick={onCopy} title="Duplicar">
                         <FiCopy size={16} />
                     </button>
-                    <button style={iconBtnStyle} onClick={onEdit} title="Editar">
+                    <button  className="bg-black hover:bg-gray-500" style={iconBtnStyle} onClick={onEdit} title="Editar">
                         <FiEdit2 size={16} />
                     </button>
                 </div>

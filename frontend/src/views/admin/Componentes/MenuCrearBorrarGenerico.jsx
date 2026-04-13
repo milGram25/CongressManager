@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { FiDownload, FiMinus, FiPlus } from 'react-icons/fi';
-//import MenuCrearBorrar from "./Componentes/MenuCrearBorrarGenerico";
 import Itemcrearborrargenerico from './itemcrearborrargenerico';
 import ItemPonencia2 from './ItemPonencia2';
-//import ItemTaller from './ItemTaller';
-//import ItemTaller from "./ItemTaller";
 import ItemTaller from './ItemTaller';
 import ItemCongreso from "./ItemCongreso";
 import ItemInstitucion from "./ItemInstitucion";
-
-import { useEffect } from 'react';
+import { IoMdAdd } from "react-icons/io";
+import Modal from './Modal';
+import DetallesCrearCongreso from './DetallesCrearCongreso';
+import DetallesEditarTaller from './DetallesEditarTaller';
 
 const MenuCrearBorrarGenerico = ({
                                      title = "Crear [insertar sustantivo]",
@@ -18,29 +17,43 @@ const MenuCrearBorrarGenerico = ({
                                      onRemove,
                                      onAdd,
                                      listaElementos2,
-                                     definirTipoElemento = "ponencia"
+                                     definirTipoElemento = "ponencia",
+                                     onViewItem
                                  }) => {
 
-    const [listaElementos,setListaElementos] = useState([]);
-    const Componente = (props) => {
+    const [listaElementos,setListaElementos] = useState(listaElementos2);
+    const mostrarAgregarEliminar = !["ponencia", "institucion"].includes(definirTipoElemento);
 
-    switch(definirTipoElemento){
-        case "ponencia":
-            return <ItemPonencia2 {...props} />
-        case "taller":
-            return <ItemTaller {...props} />
+    // 1. SOLUCIÓN AL ERROR ROJO: Función normal que devuelve JSX, no un Componente con mayúscula
+    const renderizarItem = (objeto, index) => {
+        switch(definirTipoElemento){
+            case "ponencia":
+                return <ItemPonencia2 key={index} listaDatos={objeto} onViewItem={onViewItem} />;
+            case "taller":
+                return <ItemTaller key={index} listaDatos={objeto} onViewItem={onViewItem} />;
+            case "institucion":
+                return <ItemInstitucion key={index} listaDatos={objeto} onViewItem={onViewItem} />;
+            case "congreso":
+                return <ItemCongreso key={index} listaDatos={objeto} onViewItem={onViewItem} />;
+            default:
+                return null;
+        }
+    };
 
-        case "institucion":
-            return <ItemInstitucion {...props} />
-
-        case "congreso":
-            return <ItemCongreso {...props} />
-
-        default:
-            return null;
-    }
-};
-
+    const renderizarDetallesItemModal = () => {
+        switch(definirTipoElemento){
+            case "ponencia":
+                return null;
+            case "taller":
+                return <DetallesEditarTaller/>;
+            case "institucion":
+                return null;
+            case "congreso":
+                return <DetallesCrearCongreso modificandoDatos={true} />;
+            default:
+                return null;
+        }
+    };
 
     const containerStyle = {
         width: '1000px',
@@ -114,46 +127,88 @@ const MenuCrearBorrarGenerico = ({
         cursor: 'pointer',
         color: '#ffffff'
     };
+    const [openModal, setOpenModal] = useState(false);
+    const [guardarCambios, setGuardarCambios] = useState(false);
 
-    function agregarElemento(){
-        setListaElementos([...listaElementos],onAdd);
-
+    function handleAgregarElemento(elemento){
+        setOpenModal(true);
+        
+        const nuevo = {
+            nombre_congreso:"RIDMAE 2025",
+            sede:"CUALTOS",
+            cantidad_eventos:100,
+            nombre_institucion:"RIDMAE",
+            fecha_hora_inicio:"2026-04-08T08:00",
+            fecha_hora_final:"2026-04-08T10:00"
+        };
+        guardarCambios&&agregarElemento(nuevo)
+        //agregarElemento(nuevo);
     }
 
-    
+    function agregarElemento(nuevo){
+        setListaElementos([...listaElementos,nuevo]);
+    }
+
+    const elementosFilaFaltantes = [];
+    let i = 0;
+
+    if(mostrarAgregarEliminar){
+        elementosFilaFaltantes.push(
+            <button key="add-btn" className="p-4 flex cursor-pointer text-xl bg-[#F9F8F8] justify-between w-[300px] h-[384px] border rounded-xl border-dashed border-gray-500 border-4
+                 bg-[repeating-linear-gradient(45deg,#d1d5db,#d1d5db_10px,#f3f4f6_10px,#f3f4f6_20px)] hover:bg-gray-500"
+                    onClick={(e)=>handleAgregarElemento(e)}
+            >
+                <div className='flex flex-col items-center justify-center w-full h-full rounded-xl bg-[#F9F8F8] gap-4'>
+                    <p className='font-bold'>Crear {definirTipoElemento}</p>
+                    <IoMdAdd className='w-15 h-15'/>
+                </div>
+            </button>
+        );
+        i = 1;
+    }
+
+    for(i; i<(3-(listaElementos.length % 3)); i++){
+        elementosFilaFaltantes.push(
+            <div key={`empty-${i}`} className='w-[300px] h-[384px] bg-gray-100 rounded-xl'></div>
+        );
+    }
 
     return (
         <div style={containerStyle}>
+            <Modal abierto={openModal} onClose={()=>setOpenModal(false)}>
+                {renderizarDetallesItemModal()} {/*Aquí es donde se muestra el modal cuando se ven los detalles o se crea un componente*/}
+
+            </Modal>
+
             <header style={headerStyle}>
                 <h2 style={titleStyle}>{title}</h2>
 
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <button onClick={onDownload} style={iconButtonStyle} title="Descargar">
-                        {/* Ícono de descarga */}
                         <FiDownload size={18} strokeWidth={2} />
                     </button>
 
-                    <div style={pillContainerStyle}>
-                        <button onClick={onRemove} style={pillButtonStyle} title="Quitar">
-                            {/* Ícono de menos */}
-                            <FiMinus size={16} strokeWidth={3} />
-                        </button>
-                        <button onClick={onAdd} style={pillButtonStyle} title="Agregar">
-                            {/* Ícono de más */}
-                            <FiPlus size={16} strokeWidth={3} />
-                        </button>
-                    </div>
+                    {mostrarAgregarEliminar ? (
+                        <div style={pillContainerStyle}>
+                            <button onClick={onRemove} style={pillButtonStyle} title="Quitar">
+                                <FiMinus size={16} strokeWidth={3} />
+                            </button>
+                            <button onClick={(e)=>handleAgregarElemento(e)} style={pillButtonStyle} title="Agregar">
+                                <FiPlus size={16} strokeWidth={3} />
+                            </button>
+                        </div>
+                    ) : ""}
                 </div>
             </header>
 
             <main style={contentAreaStyle}>
-                {listaElementos2.map((objeto) => (
-                    <Componente
-                    key={objeto.id}
-                    
-                   
-                    listaDatos={objeto}
-                    />
+                {/* 2. SOLUCIÓN AL ERROR ROJO: Llamamos a la función directamente en el map */}
+                {listaElementos.map((objeto, index) => renderizarItem(objeto, index))}
+
+                {elementosFilaFaltantes.map((item, index)=>(
+                    <React.Fragment key={`faltante-${index}`}>
+                        {item}
+                    </React.Fragment>
                 ))}
             </main>
         </div>
