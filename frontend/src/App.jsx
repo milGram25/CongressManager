@@ -15,6 +15,7 @@ import SubirMultimediaView from "./views/asistentes/SubirMultimediaView";
 import ConstanciasView from "./views/asistentes/ConstanciasView";
 import Login from "./views/auth/Login";
 import Register from "./views/auth/Register";
+import ForgotPassword from "./views/auth/ForgotPassword";
 import RevisionesView from "./views/revisores/RevisionesView";
 import PlaceholderView from "./views/revisores/PlaceholderView";
 import DetalleRevisionView from "./views/revisores/DetalleRevisionView";
@@ -263,6 +264,7 @@ function App() {
           {/* Ruta pública: login y registro */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Rutas para Asistentes */}
           <Route
