@@ -10,10 +10,12 @@ import {
   MdVisibility,
 } from "react-icons/md";
 
+
+
 // Estilo base para los iconos de cada fila
 const rowIconStyle = {
   color: "#fff",
-  fontSize: 24,
+  fontSize: 16,
 };
 
 // Filas que se mostraran con la informacion del evento
@@ -116,7 +118,7 @@ function DetallesAgenda({ event, onViewField, onDownload, onFavorite }) {
         <h2
           style={{
             margin: 0,
-            fontSize: 27,
+            fontSize: 20,
             lineHeight: 1.2,
             fontWeight: 500,
             color: "#222",
@@ -151,17 +153,7 @@ function DetallesAgenda({ event, onViewField, onDownload, onFavorite }) {
           >
             {/* Icono de la fila */}
             <div
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: "50%",
-                background: "#0b7890",
-                border: "2px solid #0b4d5b",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
+             className=" w-[38px] h-[38px] border rounded-[50%] bg-black text-color: white flex items-center text-white justify-center  flex-shrink-0"
             >
               {row.icon}
             </div>
@@ -170,7 +162,7 @@ function DetallesAgenda({ event, onViewField, onDownload, onFavorite }) {
             <div
               style={{
                 flex: 1,
-                fontSize: 21,
+                fontSize: 16,
                 fontWeight: 700,
                 color: "#111",
               }}
@@ -181,8 +173,7 @@ function DetallesAgenda({ event, onViewField, onDownload, onFavorite }) {
             {/* Valor del campo */}
             <div
               style={{
-                minWidth: 118,
-                maxWidth: 280,
+                width: 400,
                 height: 46,
                 borderRadius: 24,
                 border: "2px solid #6b6b6b",
@@ -191,8 +182,8 @@ function DetallesAgenda({ event, onViewField, onDownload, onFavorite }) {
                 justifyContent: "center",
                 padding: "0 16px",
                 boxSizing: "border-box",
-                fontSize: 18,
-                fontWeight: 700,
+                fontSize: 16,
+                fontWeight: 500,
                 color: "#222",
                 overflow: "hidden",
                 whiteSpace: "nowrap",
@@ -205,46 +196,23 @@ function DetallesAgenda({ event, onViewField, onDownload, onFavorite }) {
 
             {/* Boton para copiar */}
             <button
+            className="hover:bg-gray-500 w-[38px] h-[38px] border rounded-[50%] bg-black text-color: white flex items-center  text-white justify-center cursor-pointer flex-shrink-0"
               type="button"
               onClick={() => copyValue(row.value)}
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: "50%",
-                border: "2px solid #0b4d5b",
-                background: "#0b7890",
-                color: "#fff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                flexShrink: 0,
-              }}
+              
               title={`Copiar ${row.label.toLowerCase()}`}
             >
-              <MdContentCopy size={24} />
+              <MdContentCopy size={18} />
             </button>
 
             {/* Boton para ver visualizar */}
             <button
               type="button"
               onClick={() => viewValue(row)}
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: "50%",
-                border: "2px solid #0b4d5b",
-                background: "#0b7890",
-                color: "#fff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                flexShrink: 0,
-              }}
+              className="hover:bg-gray-500 w-[38px] h-[38px] border rounded-[50%] bg-black text-color: white flex items-center  text-white justify-center cursor-pointer flex-shrink-0"
               title={`Ver ${row.label.toLowerCase()}`}
             >
-              <MdVisibility size={24} />
+              <MdVisibility size={18} />
             </button>
           </div>
         ))}
@@ -270,41 +238,19 @@ function DetallesAgenda({ event, onViewField, onDownload, onFavorite }) {
           <button
             type="button"
             onClick={onDownload}
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: "50%",
-              border: "2px solid #0b4d5b",
-              background: "#0b7890",
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-            }}
+            className="hover:bg-gray-500 w-[38px] h-[38px] border rounded-[50%] bg-black text-color: white flex items-center  text-white justify-center cursor-pointer flex-shrink-0"
             title="Descargar"
           >
-            <MdDownload size={24} />
+            <MdDownload size={18} />
           </button>
           {/* Boton para favoritos */}
           <button
             type="button"
             onClick={onFavorite}
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: "50%",
-              border: "2px solid #0b4d5b",
-              background: "#0b7890",
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-            }}
+            className="hover:bg-gray-500 w-[38px] h-[38px] border rounded-[50%] bg-black text-color: white flex items-center  text-white justify-center cursor-pointer flex-shrink-0"
             title="Destacar"
           >
-            <MdOutlineStarBorder size={24} />
+            <MdOutlineStarBorder size={18} />
           </button>
         </div>
       </div>

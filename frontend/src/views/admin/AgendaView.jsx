@@ -1,5 +1,7 @@
 import { useState } from "react";
 import DetallesAgenda from "./Componentes/detallesagenda"; //Enlace detallesagenda para poder ver los detalles de cada evento al hacer click en ellos
+import { TbUpload } from "react-icons/tb";
+import { FiDownload } from "react-icons/fi";
 
 const DAYS_HEADER = ["D", "L", "M", "M", "J", "V", "S"];
 const MONTHS = [
@@ -12,7 +14,7 @@ const MOCK_EVENTS = {
     {
       id: 4,
       title: "Ponencia: IA aplicada a la gestion de congresos",
-      description: "Sesion enfocada en automatizacion, seguimiento de asistentes y herramientas digitales para la administracion del evento.",
+      description: "Sesión enfocada en automatización, seguimiento de asistentes y herramientas digitales para la administración del evento.",
       cupos: 100,
       lugar: "Auditorio Principal",
       fecha: "06 / Abril / 2026",
@@ -98,15 +100,15 @@ function ClockDisplay({ label, timezone }) {
           <span className="bg-base-200 rounded-lg px-2 py-1 text-2xl font-bold font-mono tracking-wider text-base-content">{mm}</span>
         </div>
         <div className="flex flex-col gap-1 ml-1">
-          <button className={`text-[10px] px-2 py-0.5 rounded-md font-semibold border ${period?.toUpperCase() === "AM" ? "bg-[#e8f5f5] text-[#00868a] border-[#00868a]" : "bg-base-200 text-base-content/40 border-base-300"}`}>AM</button>
-          <button className={`text-[10px] px-2 py-0.5 rounded-md font-semibold border ${period?.toUpperCase() === "PM" ? "bg-[#e8f5f5] text-[#00868a] border-[#00868a]" : "bg-base-200 text-base-content/40 border-base-300"}`}>PM</button>
+          <button className={`text-[10px] px-2 py-0.5 rounded-md font-semibold border ${period?.toUpperCase() === "AM" ? "bg-[#e8f5f5] text-black border-black" : "bg-base-200 text-base-content/40 border-base-300"}`}>AM</button>
+          <button className={`text-[10px] px-2 py-0.5 rounded-md font-semibold border ${period?.toUpperCase() === "PM" ? "bg-[#e8f5f5] text-black border-black" : "bg-base-200 text-base-content/40 border-base-300"}`}>PM</button>
         </div>
       </div>
       <div className="mt-2 bg-base-200 rounded-lg text-center py-1 text-[11px] font-medium text-base-content/70">
         {dateStr}
       </div>
       <div className="flex justify-end mt-1">
-        <button className="w-6 h-6 rounded-full bg-[#00868a] flex items-center justify-center text-white hover:bg-[#006f73] transition-colors">
+        <button className="w-6 h-6 rounded-full bg-black flex items-center justify-center text-white hover:bg-gray-500 transition-colors">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
         </button>
       </div>
@@ -123,7 +125,7 @@ function EventCard({ event, onClose }) {
   ];
 
   return (
-    <div className="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-sm">
+    <div className="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-sm flex">
       <div className="flex items-start justify-between mb-1">
         <div>
           <h3 className="text-sm font-semibold text-base-content">{event.title}</h3>
@@ -139,20 +141,20 @@ function EventCard({ event, onClose }) {
             <div className="w-7 h-7 rounded-full bg-[#e8f5f5] flex items-center justify-center text-xs">{f.icon}</div>
             <span className="text-xs text-base-content/70 flex-1 truncate">{f.label}</span>
             <span className="text-xs font-medium bg-base-200 rounded-full px-3 py-0.5 max-w-[130px] truncate">{f.value}</span>
-            <button className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center text-base-content/40 hover:text-[#00868a] hover:border-[#00868a] transition-colors">
+            <button className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center text-base-content/40 hover:text-black hover:border-black transition-colors">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             </button>
-            <button className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center text-base-content/40 hover:text-[#00868a] hover:border-[#00868a] transition-colors">
+            <button className="w-6 h-6 rounded-full border border-base-300 flex items-center justify-center text-base-content/40 hover:text-black hover:border-black transition-colors">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
           </div>
         ))}
       </div>
       <div className="flex justify-end gap-2 mt-3">
-        <button className="w-7 h-7 rounded-full bg-[#e8f5f5] flex items-center justify-center text-[#00868a] hover:bg-[#00868a] hover:text-white transition-colors">
+        <button className="w-7 h-7 rounded-full bg-[#e8f5f5] flex items-center justify-center text-black hover:bg-black hover:text-red transition-colors">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         </button>
-        <button className="w-7 h-7 rounded-full bg-[#e8f5f5] flex items-center justify-center text-[#00868a] hover:bg-[#00868a] hover:text-white transition-colors">
+        <button className="w-7 h-7 rounded-full bg-[#e8f5f5] flex items-center justify-center text-black hover:bg-black hover:text-white transition-colors">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         </button>
       </div>
@@ -216,7 +218,7 @@ export default function AdminAgendaView() {
           <div className="relative">
             <button
               onClick={() => setNotifOpen(o => !o)}
-              className="w-8 h-8 rounded-full bg-[#00868a] flex items-center justify-center text-white hover:bg-[#006f73] transition-colors relative"
+              className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-white hover:bg-gray-500 transition-colors relative"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
               <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-[9px] text-white font-bold flex items-center justify-center">3</span>
@@ -226,7 +228,7 @@ export default function AdminAgendaView() {
                 <p className="text-xs font-semibold text-base-content/60 mb-2">Notificaciones</p>
                 {["Ponencia confirmada para el 17/Mar", "Nuevo taller registrado", "Recordatorio: evento mañana"].map((n, i) => (
                   <div key={i} className="flex items-start gap-2 py-2 border-b border-base-200 last:border-0">
-                    <div className="w-2 h-2 rounded-full bg-[#00868a] mt-1 flex-shrink-0" />
+                    <div className="w-2 h-2 rounded-full bg-black mt-1 flex-shrink-0" />
                     <span className="text-xs text-base-content/70">{n}</span>
                   </div>
                 ))}
@@ -235,10 +237,10 @@ export default function AdminAgendaView() {
           </div>
         </div>
         <div className="flex gap-2">
-          <button className="w-7 h-7 rounded-full bg-base-200 flex items-center justify-center text-base-content/50 hover:bg-[#e8f5f5] hover:text-[#00868a] transition-colors">
+          <button className="w-7 h-7 rounded-full bg-base-200 flex items-center justify-center text-base-content/50 hover:bg-[#e8f5f5] hover:text-black transition-colors">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </button>
-          <button className="w-7 h-7 rounded-full bg-base-200 flex items-center justify-center text-base-content/50 hover:bg-[#e8f5f5] hover:text-[#00868a] transition-colors">
+          <button className="w-7 h-7 rounded-full bg-base-200 flex items-center justify-center text-base-content/50 hover:bg-[#e8f5f5] hover:text-black transition-colors">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 10 12 15 7 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </button>
         </div>
@@ -252,10 +254,10 @@ export default function AdminAgendaView() {
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-bold text-base-content">{dateLabel}</h3>
               <div className="flex gap-1">
-                <button onClick={prevMonth} className="w-7 h-7 rounded-full bg-base-200 flex items-center justify-center text-base-content/50 hover:bg-[#e8f5f5] hover:text-[#00868a] transition-colors">
+                <button onClick={prevMonth} className="w-7 h-7 rounded-full bg-base-200 flex items-center justify-center text-base-content/50 hover:bg-[#e8f5f5] hover:text-black transition-colors">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="15 18 9 12 15 6"/></svg>
                 </button>
-                <button onClick={nextMonth} className="w-7 h-7 rounded-full bg-base-200 flex items-center justify-center text-base-content/50 hover:bg-[#e8f5f5] hover:text-[#00868a] transition-colors">
+                <button onClick={nextMonth} className="w-7 h-7 rounded-full bg-base-200 flex items-center justify-center text-base-content/50 hover:bg-[#e8f5f5] hover:text-black transition-colors">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="9 18 15 12 9 6"/></svg>
                 </button>
               </div>
@@ -263,7 +265,7 @@ export default function AdminAgendaView() {
 
             {/* Month/year selector */}
             <div className="flex items-center gap-1 mb-3">
-              <button className="text-sm font-medium text-base-content flex items-center gap-1 hover:text-[#00868a] transition-colors">
+              <button className="text-sm font-medium text-base-content flex items-center gap-1 hover:text-black transition-colors">
                 {MONTHS[viewMonth]} {viewYear}
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
               </button>
@@ -285,12 +287,12 @@ export default function AdminAgendaView() {
                     onClick={() => selectDay(day)}
                     className={`
                       relative mx-auto w-8 h-8 rounded-full text-xs font-medium flex items-center justify-center transition-all
-                      ${active ? "bg-[#00868a] text-white shadow-md" : todayMark ? "border-2 border-[#00868a] text-[#00868a]" : "text-base-content/70 hover:bg-base-200"}
+                      ${active ? "bg-black text-white shadow-md" : todayMark ? "border-2 border-black text-black" : "text-base-content/70 hover:bg-base-200"}
                     `}
                   >
                     {day}
                     {hasEv && !active && (
-                      <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#00868a]" />
+                      <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-black" />
                     )}
                   </button>
                 );
@@ -300,11 +302,11 @@ export default function AdminAgendaView() {
 
           {/* Download buttons */}
           <div className="flex gap-2 mt-3">
-            <button className="w-8 h-8 rounded-full bg-[#e8f5f5] flex items-center justify-center text-[#00868a] hover:bg-[#00868a] hover:text-white transition-colors">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <button className="w-8 h-8 rounded-full bg-[#e8f5f5] flex items-center justify-center text-black hover:bg-black hover:text-white transition-colors">
+             <FiDownload />
             </button>
-            <button className="w-8 h-8 rounded-full bg-[#e8f5f5] flex items-center justify-center text-[#00868a] hover:bg-[#00868a] hover:text-white transition-colors">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 10 12 15 7 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <button className="w-8 h-8 rounded-full bg-[#e8f5f5] flex items-center justify-center text-black hover:bg-black hover:text-white transition-colors">
+             <TbUpload />
             </button>
           </div>
         </div>
@@ -330,7 +332,7 @@ export default function AdminAgendaView() {
                   <button
                     key={ev.id}
                     onClick={() => setSelectedEventIdx(idx)}
-                    className={`text-xs px-3 py-1 rounded-full font-medium transition-colors border ${selectedEventIdx === idx ? "bg-[#00868a] text-white border-[#00868a]" : "bg-base-200 text-base-content/60 border-base-300 hover:border-[#00868a] hover:text-[#00868a]"}`}
+                    className={`text-xs px-3 py-1 rounded-full font-medium transition-colors border ${selectedEventIdx === idx ? "bg-black text-white border-black" : "bg-base-200 text-base-content/60 border-base-300 hover:border-black hover:text-black"}`}
                   >
                     {idx + 1}. {ev.title.slice(0, 20)}…
                   </button>
