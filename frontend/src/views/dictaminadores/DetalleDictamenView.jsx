@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MdDescription, MdQuiz, MdCheckCircle, MdCancel, MdAssignment, MdComment, MdClose, MdFileDownload } from 'react-icons/md';
+import EvaluationSuccessModal from '../../components/EvaluationSuccessModal';
 
 export default function DetalleDictamenView() {
   const { id } = useParams();
@@ -25,6 +26,8 @@ export default function DetalleDictamenView() {
   const [confirmingRemoval, setConfirmingRemoval] = useState(null);
   const [comentariosGenerales, setComentariosGenerales] = useState('');
   const [showErrors, setShowErrors] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [finalDecision, setFinalDecision] = useState('');
 
   const handleRadioChange = (preguntaId, valor) => {
     setRespuestas(prev => {
@@ -102,18 +105,23 @@ export default function DetalleDictamenView() {
       }
       return;
     }
-    alert(`Dictamen enviado: ${decision}`);
+    setFinalDecision(decision);
+    setShowSuccessModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowSuccessModal(false);
     navigate('/dictaminador/dictamenes');
   };
 
   return (
     <div className="space-y-8 pb-20">
-      <button 
-        onClick={() => navigate('/dictaminador/dictamenes')}
-        className="text-sm font-bold text-primary hover:underline flex items-center gap-2"
-      >
-        ← Volver a Mis Dictámenes
-      </button>
+      <EvaluationSuccessModal 
+        isOpen={showSuccessModal} 
+        onClose={handleCloseModal} 
+        decision={finalDecision} 
+        type="dictamen" 
+      />
 
       <div className="flex flex-col gap-6">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
