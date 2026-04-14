@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MdFileDownload, MdAssignment, MdComment, MdClose } from 'react-icons/md';
+import EvaluationSuccessModal from '../../components/EvaluationSuccessModal';
 
 export default function DetalleRevisionView() {
   const { id } = useParams();
@@ -9,6 +10,8 @@ export default function DetalleRevisionView() {
   const [comentariosCriterios, setComentariosCriterios] = useState({});
   const [confirmingRemoval, setConfirmingRemoval] = useState(null);
   const [calificaciones, setCalificaciones] = useState({});
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [finalDecision, setFinalDecision] = useState('');
 
   // ESTADO PARA LA RÚBRICA VARIABLE
   const [rubricas, setRubricas] = useState([
@@ -110,19 +113,23 @@ export default function DetalleRevisionView() {
       return;
     }
     // Aquí iría la lógica para enviar la revisión al backend
-    alert(`Revisión enviada como: ${decision}`);
+    setFinalDecision(decision);
+    setShowSuccessModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowSuccessModal(false);
     navigate('/revisor/revisiones');
   };
 
   return (
     <div className="space-y-8 pb-20">
-      {/* Botón Volver */}
-      <button 
-        onClick={() => navigate('/revisor/revisiones')}
-        className="text-sm font-bold text-primary hover:underline flex items-center gap-2"
-      >
-        ← Volver a Mis Revisiones
-      </button>
+      <EvaluationSuccessModal 
+        isOpen={showSuccessModal} 
+        onClose={handleCloseModal} 
+        decision={finalDecision} 
+        type="revision" 
+      />
 
       <div className="flex flex-col gap-6">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -214,17 +221,6 @@ export default function DetalleRevisionView() {
                               </div>
                             </label>
                           ))}
-                          
-                          {/* Botón de limpiar minimalista */}
-                          {calificaciones[rubrica.id] && (
-                            <button 
-                              onClick={() => clearCalificacion(rubrica.id)}
-                              className="ml-1 p-1 text-base-content/20 hover:text-error transition-colors animate-in fade-in zoom-in duration-200"
-                              title="Limpiar selección"
-                            >
-                              <MdClose size={18} />
-                            </button>
-                          )}
                         </div>
                       </div>
                     </div>

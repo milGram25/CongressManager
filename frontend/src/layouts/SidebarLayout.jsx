@@ -1,9 +1,10 @@
-import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import cienuLogo from "../assets/CIENU.jpg";
 import ridmaeLogo from "../assets/ridmae.jpg";
 import { MdLogout } from "react-icons/md";
+import { FiArrowLeft, FiChevronRight } from "react-icons/fi";
 
 export default function SidebarLayout({ 
   roleTitle, 
@@ -16,6 +17,46 @@ export default function SidebarLayout({
   const { pathname } = useLocation();
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const headerRef = useRef(null);
+
+  // Generar migas de pan (breadcrumbs) basadas en la ruta actual
+  const pathSegments = pathname.split('/').filter(Boolean);
+  
+  const breadcrumbs = pathSegments.map((segment, index) => {
+    const to = `/${pathSegments.slice(0, index + 1).join('/')}`;
+    const isLast = index === pathSegments.length - 1;
+    
+    // Formatear el nombre del segmento (ej: "eventos-especiales" -> "Eventos Especiales")
+    const label = segment
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, l => l.toUpperCase());
+
+    return { label, to, isLast };
+  });
+
+  const canGoBack = pathSegments.length > 1;
+  const handleGoBack = () => navigate(-1);
+
+  // Definir qué rutas son consideradas "Menús Principales" donde NO debe aparecer el botón Volver
+  const menuRoutes = [
+    '/admin/dashboard',
+    '/admin/agenda',
+    '/admin/procesos',
+    '/admin/eventos',
+    '/admin/eventos/congresos',
+    '/admin/pagos',
+    '/admin/usuarios',
+    '/admin/ajustes',
+    '/asistente/agenda',
+    '/asistente/catalogo',
+    '/asistente/pagos',
+    '/asistente/facturas',
+    '/asistente/constancias',
+    '/revisor/revisiones',
+    '/dictaminador/dictamenes'
+  ];
+
+  // Ocultar si la ruta actual es un menú o si estamos en el nivel raíz de un rol
+  const shouldHideNavigation = menuRoutes.includes(pathname) || pathSegments.length <= 1;
 
   // Intersection Observer para detectar cuando el header principal sale de la vista
   useEffect(() => {
@@ -65,7 +106,7 @@ export default function SidebarLayout({
 
       {/* Vista principal */}
       <div className="drawer-content flex bg-base-100 flex-col p-6 md:p-10 relative overflow-y-auto">
-        <header ref={headerRef} className="flex items-center gap-6 border-b border-base-300 pb-4 mb-8">
+        <header ref={headerRef} className="flex items-center gap-6 border-b border-base-300 pb-4 mb-4">
           {/* Menu desplegable en móvil */}
           <label
             htmlFor={drawerId}
@@ -88,6 +129,36 @@ export default function SidebarLayout({
           </label>
           <h1 className="text-4xl font-bold">{displayTitle}</h1>
         </header>
+
+        {/* Navegación (Botón Volver + Breadcrumbs) debajo de la línea del header - SOLO SI NO ES MENÚ */}
+        {!shouldHideNavigation && (
+          <div className="flex items-center gap-6 mb-8">
+            {/* Botón Volver Dinámico - MÁS GRANDE */}
+            <button 
+              onClick={handleGoBack}
+              className="flex items-center gap-2 px-4 py-2 bg-base-200 hover:bg-base-300 rounded-full text-sm font-bold transition-all cursor-pointer shadow-sm"
+            >
+              <FiArrowLeft className="text-xl" />
+              <span>Volver</span>
+            </button>
+
+            {/* Breadcrumbs (Migas de pan) - MÁS GRANDES */}
+            <nav className="flex items-center text-xs uppercase tracking-wider text-base-content/50 overflow-x-auto no-scrollbar whitespace-nowrap">
+              {breadcrumbs.map((crumb, index) => (
+                <div key={index} className="flex items-center">
+                  {index > 0 && <FiChevronRight className="mx-2 opacity-30" />}
+                  {crumb.isLast ? (
+                    <span className="font-bold text-primary truncate max-w-[180px]">{crumb.label}</span>
+                  ) : (
+                    <Link to={crumb.to} className="hover:text-primary transition-colors">
+                      {crumb.label}
+                    </Link>
+                  )}
+                </div>
+              ))}
+            </nav>
+          </div>
+        )}
 
         <main className="flex-1 w-full max-w-5xl mx-auto pb-24">
           <Outlet />

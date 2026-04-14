@@ -15,6 +15,7 @@ import SubirMultimediaView from "./views/asistentes/SubirMultimediaView";
 import ConstanciasView from "./views/asistentes/ConstanciasView";
 import Login from "./views/auth/Login";
 import Register from "./views/auth/Register";
+import ForgotPassword from "./views/auth/ForgotPassword";
 import RevisionesView from "./views/revisores/RevisionesView";
 import PlaceholderView from "./views/revisores/PlaceholderView";
 import DetalleRevisionView from "./views/revisores/DetalleRevisionView";
@@ -38,8 +39,10 @@ import AjustesInstitucionesView from "./views/admin/AjustesInstitucionesView";
 import ProcesosResumenesView from "./views/admin/ProcesosResumenesView";
 import ProcesosExtensosView from "./views/admin/ProcesosExtensosView";
 import TalleresView from "./views/admin/TalleresView";
+import TalleresCrearView from "./views/admin/TalleresCrearView";
 import PonenciasView from "./views/admin/PonenciasView";
 import CongresosView from "./views/admin/CongresosView";
+import CongresoListaView from "./views/admin/CongresoListaView";
 import CongresoDetallesView from "./views/admin/CongresoDetallesView";
 import CongresoCrearView from "./views/admin/CongresoCrearView";
 import CongresoSedeView from "./views/admin/CongresoSedeView";
@@ -261,6 +264,7 @@ function App() {
           {/* Ruta pública: login y registro */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Rutas para Asistentes */}
           <Route
@@ -366,12 +370,16 @@ function App() {
             </Route>
             <Route path="eventos">
               <Route index element={<EventosView />} />
-              <Route path="talleres" element={<TalleresView />} />
+              <Route path="talleres">
+                <Route index element={<TalleresView />} />
+                <Route path="crear" element={<TalleresCrearView />} />
+              </Route>
               <Route path="ponencias" element={<PonenciasView />} />
               <Route path="congresos">
                 <Route index element={<CongresosView />} />
-                <Route path="detalles" element={<CongresoDetallesView />} />
+                <Route path="lista" element={<CongresoListaView />} />
                 <Route path="crear" element={<CongresoCrearView />} />
+                <Route path="detalles" element={<CongresoDetallesView />} />
                 <Route path="sede" element={<CongresoSedeView />} />
                 <Route path="fechas" element={<CongresoFechasView />} />
                 <Route path="tipos-trabajo" element={<CongresoTiposTrabajoView />} />

@@ -18,12 +18,13 @@ const TarjetaGenerica = ({
                          }) => {
 
     const cardStyle = {
-        width: '300px',
-        minHeight: '384px',
+        width: '100%',
+        maxWidth: '350px',
+        minHeight: '400px',
         backgroundColor: '#F9F8F8',
         border: '1px solid #1A1A1A',
         borderRadius: '16px',
-        padding: '16px',
+        padding: '20px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -34,15 +35,20 @@ const TarjetaGenerica = ({
     const headerStyle = {
         backgroundColor: 'black',
         color: '#FFFFFF',
-        borderRadius: '30px',
-        padding: '8px 16px',
+        borderRadius: '12px',
+        padding: '10px 16px',
         textAlign: 'center',
         fontWeight: '600',
         fontSize: '16px',
         marginBottom: '16px',
-        whiteSpace: 'nowrap',
+        display: '-webkit-box',
+        WebkitLineClamp: '2',
+        WebkitBoxOrient: 'vertical',
         overflow: 'hidden',
-        textOverflow: 'ellipsis'
+        minHeight: '3em',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
     };
 
     const contentStyle = {

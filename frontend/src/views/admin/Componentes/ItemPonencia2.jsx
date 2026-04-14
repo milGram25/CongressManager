@@ -30,7 +30,7 @@ const ItemPonencia = ({
             {/* Fila 1: Congreso */}
             <div style={rowStyle}>
                 <div style={labelContainer}>
-                    <div style={iconCircleBox}><FiAward size={12}/></div>
+                    <div style={iconCircleBox}><FiAward size={14}/></div>
                     <span>Congreso</span>
                 </div>
                 <div style={valuePillStyle}>{listaDatos.nombre_congreso}</div>
@@ -39,7 +39,7 @@ const ItemPonencia = ({
             {/* Fila 2: Ponente */}
             <div style={rowStyle}>
                 <div style={labelContainer}>
-                    <div style={iconCircleBox}><FiUser size={12}/></div>
+                    <div style={iconCircleBox}><FiUser size={14}/></div>
                     <span>Ponente</span>
                 </div>
                 <div style={valuePillStyle}>{listaDatos.nombre_ponente}</div>
@@ -48,7 +48,7 @@ const ItemPonencia = ({
             {/* Fila 3: Ponente */}
             <div style={rowStyle}>
                 <div style={labelContainer}>
-                    <div style={iconCircleBox}><FiUsers size={12}/></div>
+                    <div style={iconCircleBox}><FiUsers size={14}/></div>
                     <span>Cupos</span>
                 </div>
                 <div style={valuePillStyle}>{listaDatos.cupos}</div>

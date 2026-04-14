@@ -83,9 +83,13 @@ export default function Login() {
                 <label className="text-xs font-bold text-base-content/50 uppercase ml-1">
                   Contraseña
                 </label>
-                <a href="#" className="text-xs text-primary hover:underline">
+                <button 
+                  type="button"
+                  onClick={() => navigate('/forgot-password')}
+                  className="text-xs text-primary hover:underline bg-transparent border-none cursor-pointer p-0"
+                >
                   ¿Olvidaste tu contraseña?
-                </a>
+                </button>
               </div>
               <div className="relative">
                 <input
