@@ -213,16 +213,6 @@ export default function DetalleDictamenView() {
                               {opcion.toUpperCase()}
                             </button>
                           ))}
-                          
-                          {respuestas[p.id] && (
-                            <button 
-                              onClick={() => clearRespuesta(p.id)}
-                              className="ml-1 p-1 text-base-content/20 hover:text-error transition-colors"
-                              title="Limpiar selección"
-                            >
-                              <MdClose size={18} />
-                            </button>
-                          )}
                         </div>
                       </div>
                     </div>

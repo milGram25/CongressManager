@@ -221,17 +221,6 @@ export default function DetalleRevisionView() {
                               </div>
                             </label>
                           ))}
-                          
-                          {/* Botón de limpiar minimalista */}
-                          {calificaciones[rubrica.id] && (
-                            <button 
-                              onClick={() => clearCalificacion(rubrica.id)}
-                              className="ml-1 p-1 text-base-content/20 hover:text-error transition-colors animate-in fade-in zoom-in duration-200"
-                              title="Limpiar selección"
-                            >
-                              <MdClose size={18} />
-                            </button>
-                          )}
                         </div>
                       </div>
                     </div>

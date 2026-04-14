@@ -18,7 +18,7 @@ export default function EvaluationSuccessModal({ isOpen, onClose, decision, type
         </div>
         
         <h3 className="text-2xl font-black text-gray-800 mb-2 uppercase tracking-tight">
-          ¡{type === "dictamen" ? "Dictamen" : "Revisión"} Enviado!
+          ¡{type === "dictamen" ? "Dictamen Enviado" : "Revisión Enviada"}!
         </h3>
         
         <p className="text-gray-500 text-sm mb-8 leading-relaxed px-4">
