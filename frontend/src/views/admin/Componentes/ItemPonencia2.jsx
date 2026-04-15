@@ -18,7 +18,7 @@ const ItemPonencia = ({ listaDatos, onViewItem }) => {
                 </div>
                 <span className="text-[11px] font-black uppercase tracking-[0.1em]">{label}</span>
             </div>
-            <div className="bg-base-200/50 border border-base-300 rounded-xl px-4 py-2 text-sm font-bold text-base-content text-right flex-1 break-words leading-tight">
+            <div className="bg-base-200/50 border border-base-300 rounded-xl px-4 py-2 text-sm font-bold text-base-content text-center flex-1 break-words leading-tight">
                 {value}
             </div>
         </div>
@@ -30,11 +30,11 @@ const ItemPonencia = ({ listaDatos, onViewItem }) => {
             <div className="flex gap-2 mt-1">
                 <div className="flex-1 flex bg-base-100 border border-base-300 rounded-xl overflow-hidden shadow-sm group-hover:border-primary/30 transition-colors">
                     <div className="bg-black text-white px-2 flex items-center justify-center"><FiCalendar size={12} /></div>
-                    <div className="flex-1 py-1.5 text-center text-[10px] font-mono font-bold">{date}</div>
+                    <div className="flex-1 py-1.5 text-center text-[15px] font-mono font-bold">{date}</div>
                 </div>
                 <div className="w-20 flex bg-base-100 border border-base-300 rounded-xl overflow-hidden shadow-sm group-hover:border-primary/30 transition-colors">
                     <div className="bg-black text-white px-2 flex items-center justify-center"><FiClock size={12} /></div>
-                    <div className="flex-1 py-1.5 text-center text-[10px] font-mono font-bold">{time}</div>
+                    <div className="flex-1 py-1.5 text-center text-[15px] font-mono font-bold">{time}</div>
                 </div>
             </div>
         </div>

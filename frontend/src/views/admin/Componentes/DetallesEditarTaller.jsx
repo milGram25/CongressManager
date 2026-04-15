@@ -26,6 +26,64 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
     const [formatData, setFormatData] = useState(initialData);
     const [modificando, setModificando] = useState(initialModificando);
 
+    const instituciones = [
+        {
+            id:1,
+            nombre_institucion: "CIENU"
+        },
+         {
+            id:2,
+            nombre_institucion: "RIDMAE"
+        }
+    ];
+
+    const congresos = [
+        {
+            id:1,
+            nombre_congreso: "CIENU 2026",
+            ruta_imagen: "ruta 1"
+        },
+         {
+            id:2,
+            nombre_congreso: "RIDMAE 2026",
+            ruta_imagen: "ruta 1"
+        }
+    ];
+    const mesas = [
+        {
+            id:1,
+            nombre_mesa: "Mesa A",
+            
+        },
+         {
+            id:2,
+            nombre_mesa: "Mesa B"
+        }
+    ];
+
+    const sedes = [
+        
+            "CUALTOS"
+        
+    ];
+
+    const subareas = [
+        {
+            id:1,
+            subarea:"Matemáticas"
+        },
+        {
+            id:2,
+            subarea:"Programación"
+        },
+        {
+            id:3,
+            subarea:"IA"
+        }
+    ];
+
+    //Es necesario realizar una búsqueda de los datos una vez que se haya seleccionado la institución y congreso
+
     function handleChange(e) {
         const { id, value } = e.target;
         setFormatData(prev => ({
@@ -37,6 +95,7 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
     const inputClasses = `w-full bg-base-100 border border-base-300 rounded-xl px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all ${!modificando ? 'bg-base-200 cursor-not-allowed opacity-70' : 'hover:border-primary/50'}`;
     const labelClasses = "text-[10px] font-bold text-base-content/40 mb-1 block ml-1 uppercase tracking-widest";
     const sectionTitleClasses = "text-lg font-bold text-primary flex items-center gap-2 mb-6 pb-2 border-b border-base-300 mt-8 first:mt-0";
+    const selectClasses = `w-full bg-base-100 border border-base-300 rounded-xl px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all ${!modificando ? 'bg-base-200 cursor-not-allowed opacity-70' : 'hover:border-primary/50'}`;
 
     return (
         <div className={`w-full bg-base-100 ${isFullPage ? '' : 'rounded-3xl shadow-2xl'} overflow-hidden font-sans`}>
@@ -86,29 +145,42 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">
                             <div>
-                                <label className={labelClasses}>Nombre del congreso</label>
-                                <input 
-                                    id="nombre_congreso" 
-                                    type="text" 
-                                    placeholder="Nombre del evento..."
-                                    className={inputClasses} 
-                                    value={formatData.nombre_congreso} 
+                                <label className={labelClasses}>Institución</label>
+                                <select 
+                                    id="nombre_institucion" 
+                                    value={formatData.nombre_institucion}  
+                                    className={inputClasses}
                                     onChange={handleChange} 
-                                    readOnly={!modificando}
-                                />
+                                    disabled={!modificando}
+                                    >
+                                    {
+                                        instituciones.map((item)=>(
+                                            <option value={item.nombre_institucion}>{item.nombre_institucion}</option>
+                                        ))
+                                    }
+
+                                </select>
+                                
                             </div>
                             <div>
-                                <label className={labelClasses}>Institución</label>
-                                <input 
-                                    id="nombre_institucion" 
-                                    type="text" 
-                                    placeholder="Institución organizadora..."
-                                    className={inputClasses} 
-                                    value={formatData.nombre_institucion} 
+                                <label className={labelClasses}>Congreso</label>
+                               
+                                <select 
+                                    id="nombre_congreso" 
+                                    value={formatData.nombre_congreso}  
+                                    className={inputClasses}
                                     onChange={handleChange} 
-                                    readOnly={!modificando}
-                                />
+                                    disabled={!modificando}
+                                    >
+                                    {
+                                        congresos.map((item)=>(
+                                            <option value={item.nombre_congreso}>{item.nombre_congreso}</option>
+                                        ))
+                                    }
+
+                                </select>
                             </div>
+                            
                             <div>
                                 <label className={labelClasses}>Sede</label>
                                 <input 
@@ -116,9 +188,9 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
                                     type="text" 
                                     placeholder="Lugar del evento..."
                                     className={inputClasses} 
-                                    value={formatData.sede} 
-                                    onChange={handleChange} 
-                                    readOnly={!modificando}
+                                    value={sedes}//value={formatData.sede} 
+                                    //onChange={handleChange} 
+                                    readOnly={true}//Solo debe mostrar los datos del congreso seleccionado
                                 />
                             </div>
                         </div>
@@ -128,6 +200,7 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
                                 <div className="text-center p-4">
                                     <FiMapPin size={32} className="mx-auto mb-2 opacity-20" />
                                     [ Imagen de la institución ]
+                                    {/*Aquí insertar la imagen de la institución, que está en congresos.ruta_imagen*/}
                                 </div>
                             </div>
                             <button className='w-full bg-primary text-primary-content rounded-xl py-3 text-xs font-bold uppercase tracking-widest hover:brightness-110 transition-all active:scale-95 shadow-lg shadow-primary/20'>
@@ -174,15 +247,20 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
 
                         <div>
                             <label className={labelClasses}>Subárea</label>
-                            <input 
+                            
+                            <select 
                                 id="subarea" 
-                                type="text" 
-                                placeholder="Área temática..."
-                                className={inputClasses} 
-                                value={formatData.subarea} 
+                                value={formatData.subarea}  
+                                className={inputClasses}
                                 onChange={handleChange} 
-                                readOnly={!modificando}
-                            />
+                                disabled={!modificando}
+                            >
+                            {
+                                subareas.map((item)=>(
+                                    <option value={item.subarea}>{item.subarea}</option>
+                                ))
+                            }
+                            </select>
                         </div>
 
                         <div>
@@ -204,10 +282,12 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
                             <label className={labelClasses}>Cupos máximos</label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FiUsers /></span>
+                                {/*El máximo son los cupos que hay en la mesa */}
                                 <input 
                                     id="cupos_maximos_taller" 
                                     type="number" 
                                     placeholder="25"
+                                    min="0" 
                                     className={`${inputClasses} pl-11 font-mono`} 
                                     value={formatData.cupos_maximos_taller} 
                                     onChange={handleChange} 
@@ -243,21 +323,28 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
                 </section>
 
                 {/* Sección Mesa */}
-                <section>
+                <section className='mb-8'>
                     <h3 className={sectionTitleClasses}>
                         <div className="w-1.5 h-6 bg-primary rounded-full"></div> Ubicación Física (Mesa)
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
                             <label className={labelClasses}>Nombre de la mesa</label>
-                            <input 
+                            
+                            <select 
                                 id="nombre_mesa" 
-                                placeholder="Identificador de la mesa..."
-                                className={inputClasses} 
-                                value={formatData.nombre_mesa} 
+                                value={formatData.nombre_mesa}  
+                                className={inputClasses}
                                 onChange={handleChange} 
-                                readOnly={!modificando}
-                            />
+                                disabled={!modificando}
+                                >
+                                {
+                                    mesas.map((item)=>(
+                                        <option value={item.nombre_mesa}>{item.nombre_mesa}</option>
+                                    ))
+                                }
+
+                            </select>
                         </div>
                         <div>
                             <label className={labelClasses}>Cupos de la mesa</label>
@@ -269,6 +356,8 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
                                 value={formatData.cupos_mesa} 
                                 onChange={handleChange} 
                                 readOnly={!modificando}
+                                min="0"
+                                max={cupos_mesa}
                             />
                         </div>
                     </div>

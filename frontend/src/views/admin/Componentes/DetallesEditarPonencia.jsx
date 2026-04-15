@@ -37,6 +37,61 @@ const DetallesEditarPonencia = ({ ponenciaData, initialModificando = false, isFu
     const labelClasses = "text-[10px] font-bold text-base-content/40 mb-1 block ml-1 uppercase tracking-widest";
     const sectionTitleClasses = "text-lg font-bold text-primary flex items-center gap-2 mb-6 pb-2 border-b border-base-300 mt-8 first:mt-0";
 
+    const instituciones = [
+        {
+            id:1,
+            nombre_institucion: "CIENU"
+        },
+         {
+            id:2,
+            nombre_institucion: "RIDMAE"
+        }
+    ];
+
+    const congresos = [
+        {
+            id:1,
+            nombre_congreso: "CIENU 2026",
+            ruta_imagen: "ruta 1"
+        },
+         {
+            id:2,
+            nombre_congreso: "RIDMAE 2026",
+            ruta_imagen: "ruta 1"
+        }
+    ];
+    const mesas = [
+        {
+            id:1,
+            nombre_mesa: "Mesa A",
+            
+        },
+         {
+            id:2,
+            nombre_mesa: "Mesa B"
+        }
+    ];
+
+    const sedes = [
+        
+            "CUALTOS"
+        
+    ];
+
+    const subareas = [
+        {
+            id:1,
+            subarea:"Matemáticas"
+        },
+        {
+            id:2,
+            subarea:"Programación"
+        },
+        {
+            id:3,
+            subarea:"IA"
+        }
+    ];
     return (
         <div className={`w-full bg-base-100 ${isFullPage ? '' : 'rounded-3xl shadow-2xl'} overflow-hidden font-sans`}>
             {/* Header del Modal (Si no es página completa) */}
@@ -68,7 +123,7 @@ const DetallesEditarPonencia = ({ ponenciaData, initialModificando = false, isFu
             <div className={`p-6 md:p-10 ${isFullPage ? '' : 'max-h-[80vh] overflow-y-auto'}`}>
                 
                 {/* Sección Congreso */}
-                <section>
+                <section className='mb-8'>
                     <h3 className={sectionTitleClasses}>
                         <div className="w-1.5 h-6 bg-primary rounded-full"></div> Información del Congreso
                     </h3>
@@ -76,15 +131,49 @@ const DetallesEditarPonencia = ({ ponenciaData, initialModificando = false, isFu
                         <div className="space-y-4">
                             <div>
                                 <label className={labelClasses}>Nombre del congreso</label>
-                                <input id="nombre_congreso" type="text" className={inputClasses} value={formatData.nombre_congreso} onChange={handleChange} readOnly={!modificando} />
+                                <select 
+                                    id="nombre_congreso" 
+                                    value={formatData.nombre_congreso}  
+                                    className={inputClasses}
+                                    onChange={handleChange} 
+                                    disabled={!modificando}
+                                    >
+                                    {
+                                        congresos.map((item)=>(
+                                            <option value={item.nombre_congreso}>{item.nombre_congreso}</option>
+                                        ))
+                                    }
+
+                                </select>
                             </div>
                             <div>
                                 <label className={labelClasses}>Institución</label>
-                                <input id="nombre_institucion" type="text" className={inputClasses} value={formatData.nombre_institucion} onChange={handleChange} readOnly={!modificando} />
+                                <select 
+                                    id="nombre_institucion" 
+                                    value={formatData.nombre_institucion}  
+                                    className={inputClasses}
+                                    onChange={handleChange} 
+                                    disabled={!modificando}
+                                    >
+                                    {
+                                        instituciones.map((item)=>(
+                                            <option value={item.nombre_institucion}>{item.nombre_institucion}</option>
+                                        ))
+                                    }
+
+                                </select>
                             </div>
                             <div>
                                 <label className={labelClasses}>Sede</label>
-                                <input id="sede" type="text" className={inputClasses} value={formatData.sede} onChange={handleChange} readOnly={!modificando} />
+                                <input 
+                                    id="sede" 
+                                    type="text" 
+                                    placeholder="Lugar del evento..."
+                                    className={inputClasses} 
+                                    value={sedes}//value={formatData.sede} 
+                                    //onChange={handleChange} 
+                                    readOnly={true}//Solo debe mostrar los datos del congreso seleccionado
+                                />
                             </div>
                         </div>
                         <div className="flex flex-col items-center justify-center bg-base-200 border-2 border-dashed border-base-300 rounded-3xl p-8 gap-6 group hover:border-primary/30 transition-all">
@@ -97,7 +186,7 @@ const DetallesEditarPonencia = ({ ponenciaData, initialModificando = false, isFu
                 </section>
 
                 {/* Sección Ponencia */}
-                <section>
+                <section className='mb-8'>
                     <h3 className={sectionTitleClasses}>
                         <div className="w-1.5 h-6 bg-primary rounded-full"></div> Detalles de la Ponencia
                     </h3>
@@ -111,18 +200,30 @@ const DetallesEditarPonencia = ({ ponenciaData, initialModificando = false, isFu
                             <label className={labelClasses}>Ponente Principal</label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FiUser /></span>
-                                <input id="nombre_ponente" type="text" className={`${inputClasses} pl-11`} value={formatData.nombre_ponente} onChange={handleChange} readOnly={!modificando} />
+                                <input id="nombre_ponente" type="text" className={`${inputClasses} pl-11`} value={formatData.nombre_ponente} onChange={handleChange} readOnly={true} />
                             </div>
                         </div>
 
                         <div>
                             <label className={labelClasses}>Subárea</label>
-                            <input id="subarea" type="text" className={inputClasses} value={formatData.subarea} onChange={handleChange} readOnly={!modificando} />
+                            <select 
+                                id="subarea" 
+                                value={formatData.subarea}  
+                                className={inputClasses}
+                                onChange={handleChange} 
+                                disabled={!modificando}
+                            >
+                            {
+                                subareas.map((item)=>(
+                                    <option value={item.subarea}>{item.subarea}</option>
+                                ))
+                            }
+                            </select>
                         </div>
 
                         <div className="md:col-span-2">
                             <label className={labelClasses}>Co-autores (Separados por coma)</label>
-                            <input id="coautores" type="text" placeholder="Ej: Dr. García, Mtra. López..." className={inputClasses} value={formatData.coautores} onChange={handleChange} readOnly={!modificando} />
+                            <input id="coautores" type="text" placeholder="Ej: Dr. García, Mtra. López..." className={inputClasses} value={formatData.coautores} onChange={handleChange} readOnly={true} />
                         </div>
 
                         <div>
@@ -138,13 +239,13 @@ const DetallesEditarPonencia = ({ ponenciaData, initialModificando = false, isFu
                             <label className={labelClasses}>Cupos</label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FiUsers /></span>
-                                <input id="cupos" type="number" className={`${inputClasses} pl-11 font-mono`} value={formatData.cupos} onChange={handleChange} readOnly={!modificando} />
+                                <input id="cupos" type="number" min="0" className={`${inputClasses} pl-11 font-mono`} value={formatData.cupos} onChange={handleChange} readOnly={!modificando} />
                             </div>
                         </div>
 
                         <div className="md:col-span-2">
                             <label className={labelClasses}>Resumen / Abstract</label>
-                            <textarea id="resumen" className={`${inputClasses} min-h-[120px] py-3 resize-none`} value={formatData.resumen} onChange={handleChange} readOnly={!modificando} placeholder="Escribe aquí el resumen de la ponencia..."></textarea>
+                            <textarea id="resumen" className={`${inputClasses} min-h-[120px] py-3 resize-none`} value={formatData.resumen} onChange={handleChange} readOnly={true} placeholder="Escribe aquí el resumen de la ponencia..."></textarea>
                         </div>
 
                         <div className="md:col-span-2">
@@ -165,9 +266,22 @@ const DetallesEditarPonencia = ({ ponenciaData, initialModificando = false, isFu
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="md:col-span-2">
                             <label className={labelClasses}>Mesa Asignada</label>
-                            <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FiMapPin /></span>
-                                <input id="nombre_mesa" type="text" className={`${inputClasses} pl-11`} value={formatData.nombre_mesa} onChange={handleChange} readOnly={!modificando} />
+                            <div className="flex items-center justify-center">
+                                <span className="mr-4 text-gray-500"><FiMapPin /></span>
+                                <select 
+                                id="nombre_mesa" 
+                                value={formatData.nombre_mesa}  
+                                className={inputClasses + "ml-4"}
+                                onChange={handleChange} 
+                                disabled={!modificando}
+                                >
+                                {
+                                    mesas.map((item)=>(
+                                        <option value={item.nombre_mesa}>{item.nombre_mesa}</option>
+                                    ))
+                                }
+
+                            </select>
                             </div>
                         </div>
                         <div>

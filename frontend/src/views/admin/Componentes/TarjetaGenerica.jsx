@@ -5,6 +5,7 @@ import Modal from "./Modal";
 import DetallesCrearCongreso from './DetallesCrearCongreso';
 import DetallesEditarTaller from './DetallesEditarTaller';
 import { useNavigate } from 'react-router-dom';
+import DetallesEditarPonencia from './DetallesEditarPonencia';
 
 const TarjetaGenerica = ({
                              titulo,
@@ -24,7 +25,7 @@ const TarjetaGenerica = ({
     const renderModalContent = () => {
         switch(definirTipoElemento){
             case "ponencia":
-                return null;
+                return <DetallesEditarPonencia/>;
             case "taller":
                 return <DetallesEditarTaller/>;
             case "institucion":

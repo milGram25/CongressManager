@@ -10,6 +10,7 @@ import { IoMdAdd } from "react-icons/io";
 import Modal from './Modal';
 import DetallesCrearCongreso from './DetallesCrearCongreso';
 import DetallesEditarTaller from './DetallesEditarTaller';
+import DetallesEditarPonencia from './DetallesEditarPonencia';
 
 const MenuCrearBorrarGenerico = ({
                                      title = "Crear [insertar sustantivo]",
@@ -41,11 +42,11 @@ const MenuCrearBorrarGenerico = ({
     const renderizarDetallesItemModal = () => {
         switch(definirTipoElemento){
             case "ponencia":
-                return null;
+                return <DetallesEditarPonencia/>;
             case "taller":
-                return <DetallesEditarTaller/>;
-            case "institucion":
                 return null;
+            case "institucion":
+                return <DetallesEditarTaller/>;
             case "congreso":
                 return <DetallesCrearCongreso modificandoDatos={true} />;
             default:
