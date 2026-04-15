@@ -5,10 +5,9 @@ import { IoMdCheckmark } from "react-icons/io";
 
 const RubricasYPreguntas = ({ tipoTrabajoId }) => {
   const tiposTrabajoDisponibles = [
-    { id: 1, nombre: 'Ponencia' },
-    { id: 2, nombre: 'Taller' },
-    { id: 3, nombre: 'Póster' },
-    { id: 4, nombre: 'Mesa redonda' },
+    { id: 1, nombre: 'Avances de tesis' },
+    { id: 2, nombre: 'Investigaciones concluidas' },
+    { id: 3, nombre: 'Experiencias de investigación' }
   ];
 
   const [selectedTipoTrabajo, setSelectedTipoTrabajo] = useState(tiposTrabajoDisponibles[0].id);
@@ -203,7 +202,7 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
                 placeholder="¿Es conciso?"
                 value={pregunta.texto}
                 onChange={(e) => editarPregunta(pregunta.id, e.target.value)}
-                className="input input-bordered input-sm flex-1 bg-white"
+                className="input input-bordered input-sm flex-1 bg-white rounded-full"
                 readOnly={editingIdPregunta !== pregunta.id}
               />
               <button
@@ -271,7 +270,7 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
                     placeholder="Nombre del grupo"
                     value={grupo.texto}
                     onChange={(e) => editarGrupo(grupo.id, e.target.value)}
-                    className="input input-bordered input-sm flex-1 bg-white"
+                    className="input input-bordered input-sm flex-1 bg-white rounded-full"
                     readOnly={editingId !== grupo.id}
                   />
                   <button
@@ -325,7 +324,7 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
                     onChange={(e) =>
                       editarCriterio(criterio.id, e.target.value, criterio.valor)
                     }
-                    className="input input-bordered input-sm flex-1 bg-white"
+                    className="input input-bordered input-sm flex-1 bg-white  rounded-full"
                     readOnly={editingIdCriterio !== criterio.id}
                   />
                   <input
@@ -335,7 +334,7 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
                     onChange={(e) =>
                       editarCriterio(criterio.id, criterio.texto, e.target.value)
                     }
-                    className="input input-bordered input-sm w-20 bg-white"
+                    className="input input-bordered input-sm w-20 bg-white  rounded-full"
                     step="0.01"
                     readOnly={editingIdCriterio !== criterio.id}
                   />
@@ -345,7 +344,7 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
                         editingIdCriterio === criterio.id ? null : criterio.id
                       )
                     }
-                    className="btn btn-sm btn-circle btn-primary text-white"
+                    className="btn btn-sm btn-circle btn-primary text-white "
                   >
                     {editingIdCriterio === criterio.id ? (
                       <IoMdCheckmark />

@@ -104,7 +104,7 @@ export default function CongresoTiposTrabajoComponente() {
                     value={editVal}
                     onChange={e => setEditVal(e.target.value)}
                     onKeyDown={e => { if (e.key === "Enter") confirmEdit(); if (e.key === "Escape") cancelEdit(); }}
-                    className="flex-1 border border-[#00868a] rounded-full px-3 py-1.5 text-sm focus:outline-none bg-base-100"
+                    className="flex-1 border border-black rounded-full px-3 py-1.5 text-sm focus:outline-none bg-white "
                   />
                   <button onClick={confirmEdit} className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0">
                     <MdCheck size={14} />
@@ -115,7 +115,7 @@ export default function CongresoTiposTrabajoComponente() {
                 </>
               ) : (
                 <>
-                  <span className="flex-1 border border-base-300 rounded-full px-3 py-1.5 text-sm text-base-content bg-base-100">
+                  <span className="flex-1 border border-gray-300 rounded-full px-3 py-1.5 text-sm text-base-content bg-white">
                     {tipo}
                   </span>
                   <button

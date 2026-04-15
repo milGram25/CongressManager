@@ -33,7 +33,7 @@ export default function CongresoTiposTrabajoView() {
     <div className=" overflow-hidden">
 
   {/* IZQUIERDA */}
-  <div className="bg-white border border-gray-200 rounded-xl p-4 h-full flex flex-col">
+  {/*<div className="bg-white border border-gray-200 rounded-xl p-4 h-full flex flex-col">
     <div className="flex items-center justify-between mb-3">
       <span className="text-sm font-medium text-gray-800">Tipos de trabajo</span>
       <button className="text-xs border border-gray-200 rounded-lg px-3 py-1 hover:bg-gray-50">
@@ -58,7 +58,7 @@ export default function CongresoTiposTrabajoView() {
         </div>
       ))}
     </div>
-  </div>
+  </div>*/}
 
   {/* DERECHA */}
   <div className="bg-white border border-gray-200 rounded-xl p-4 h-full flex flex-col">
