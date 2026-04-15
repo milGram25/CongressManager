@@ -182,8 +182,7 @@ const AdminLayoutWrapper = () => {
       { to: '/admin/eventos/congresos', label: 'Congresos', icon: MdAccountBalance, className: 'pl-9 opacity-70' },
       // Sub-sub menú de Congresos
       ...(pathname.includes('/admin/eventos/congresos') ? [
-        { to: '/admin/eventos/congresos/detalles', label: 'Detalles', icon: MdInfo, className: 'pl-14 opacity-60' },
-        { to: '/admin/eventos/congresos/crear', label: 'Crear', icon: MdAddCircle, className: 'pl-14 opacity-60' },
+        { to: '/admin/eventos/congresos/lista', label: 'Lista', icon: MdInfo, className: 'pl-14 opacity-60' },
         { to: '/admin/eventos/congresos/sede', label: 'Sede', icon: MdPlace, className: 'pl-14 opacity-60' },
         { to: '/admin/eventos/congresos/fechas', label: 'Fechas', icon: MdEventAvailable, className: 'pl-14 opacity-60' },
         { to: '/admin/eventos/congresos/tipos-trabajo', label: 'Tipos Trabajo', icon: MdWork, className: 'pl-14 opacity-60' },
