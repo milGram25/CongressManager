@@ -30,7 +30,7 @@ export default function CongresoTiposTrabajoView() {
   const [selectedId, setSelectedId] = useState(1);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+    <div className=" overflow-hidden">
 
   {/* IZQUIERDA */}
   <div className="bg-white border border-gray-200 rounded-xl p-4 h-full flex flex-col">
@@ -41,7 +41,7 @@ export default function CongresoTiposTrabajoView() {
       </button>
     </div>
 
-    <div className="flex flex-col gap-2 flex-1 overflow-auto">
+    <div className="flex flex-col gap-2 flex-1">
       {tipos.map(t => (
         <div
           key={t.id}
@@ -62,7 +62,7 @@ export default function CongresoTiposTrabajoView() {
 
   {/* DERECHA */}
   <div className="bg-white border border-gray-200 rounded-xl p-4 h-full flex flex-col">
-    <div className="flex-1 overflow-auto">
+    <div className="flex-1 overflow-hidden">
       <CongresoTiposTrabajoComponente selectedId={selectedId} />
       <RubricasYPreguntas selectedId={selectedId} />
     </div>

@@ -60,7 +60,7 @@ export default function CongresoTiposTrabajoComponente() {
   function cancelAdd() { setAdding(false); setNewVal(""); }
 
   return (
-    <div className="bg-base-100 rounded-3xl border border-base-300 shadow-sm overflow-hidden w-250 mb-10" >
+    <div className="bg-base-100 rounded-3xl border border-base-300 shadow-sm overflow-hidden w-full mb-10" >
 
       {/* Header teal */}
       <div className="flex items-center justify-between px-5 py-4 bg-black">

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { MdDelete, MdAdd, MdEdit } from 'react-icons/md';
 import { HiDownload } from 'react-icons/hi';
+import { IoMdCheckmark } from "react-icons/io";
 
 const RubricasYPreguntas = ({ tipoTrabajoId }) => {
-  // Lista de tipos de trabajo disponibles
   const tiposTrabajoDisponibles = [
     { id: 1, nombre: 'Ponencia' },
     { id: 2, nombre: 'Taller' },
@@ -13,29 +13,45 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
 
   const [selectedTipoTrabajo, setSelectedTipoTrabajo] = useState(tiposTrabajoDisponibles[0].id);
   const [editingId, setEditingId] = useState(null);
+  const [editingIdPregunta, setEditingIdPregunta] = useState(null);
+  const [editingIdCriterio, setEditingIdCriterio] = useState(null);
+
+  const [grupoSeleccionado, setGrupoSeleccionado] = useState(null);
   
-  // Estado para preguntas
   const [preguntas, setPreguntas] = useState([
     { id: 1, texto: '¿Es conciso?' },
     { id: 2, texto: '¿Es relevante?' },
     { id: 3, texto: '¿Está relacionado con el tema?' },
   ]);
 
-  // Estado para rúbricas - grupos
   const [grupos, setGrupos] = useState([
-    { id: 1, texto: 'Concisión' },
-    { id: 2, texto: 'Relevancia' },
-    { id: 3, texto: 'Estructuración' },
+    {
+      id: 1,
+      texto: 'Concisión',
+      criterios: [
+        { id: 1, texto: 'Es conciso', valor: '1.00' },
+        { id: 2, texto: 'No divaga de más', valor: '1.00' },
+        { id: 3, texto: 'Cantidad de contenido', valor: '1.00' }
+      ]
+    },
+    {
+      id: 2,
+      texto: 'Relevancia',
+      criterios: [
+        { id: 1, texto: 'Es bueno', valor: '1.00' },
+        { id: 2, texto: 'Es bonito', valor: '1.00' },
+        { id: 3, texto: 'Es barato', valor: '10.00' }
+      ]
+    },
+    {
+      id: 3,
+      texto: 'Estructuración',
+      criterios: []
+    }
   ]);
 
-  // Estado para rúbricas - criterios
-  const [criterios, setCriterios] = useState([
-    { id: 1, texto: 'Es conciso', valor: '1.00' },
-    { id: 2, texto: 'No divaga de más', valor: '1.00' },
-    { id: 3, texto: 'Cantidad de contenido', valor: '1.00' },
-  ]);
+  const grupoActual = grupos.find(g => g.id === grupoSeleccionado);
 
-  // Agregar pregunta
   const agregarPregunta = () => {
     const newPregunta = {
       id: Date.now(),
@@ -44,64 +60,73 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
     setPreguntas([...preguntas, newPregunta]);
   };
 
-  // Eliminar pregunta
   const eliminarPregunta = (id) => {
     setPreguntas(preguntas.filter((p) => p.id !== id));
   };
 
-  // Editar pregunta
   const editarPregunta = (id, nuevoTexto) => {
     setPreguntas(
       preguntas.map((p) => (p.id === id ? { ...p, texto: nuevoTexto } : p))
     );
   };
 
-  // Agregar grupo
   const agregarGrupo = () => {
     const newGrupo = {
       id: Date.now(),
       texto: '',
+      criterios: []
     };
     setGrupos([...grupos, newGrupo]);
   };
 
-  // Eliminar grupo
   const eliminarGrupo = (id) => {
     setGrupos(grupos.filter((g) => g.id !== id));
+    if (grupoSeleccionado === id) setGrupoSeleccionado(null);
   };
 
-  // Editar grupo
   const editarGrupo = (id, nuevoTexto) => {
     setGrupos(
       grupos.map((g) => (g.id === id ? { ...g, texto: nuevoTexto } : g))
     );
   };
 
-  // Agregar criterio
   const agregarCriterio = () => {
+    if (!grupoSeleccionado) return;
+
     const newCriterio = {
       id: Date.now(),
       texto: '',
       valor: '1.00',
     };
-    setCriterios([...criterios, newCriterio]);
+
+    setGrupos(grupos.map(g =>
+      g.id === grupoSeleccionado
+        ? { ...g, criterios: [...g.criterios, newCriterio] }
+        : g
+    ));
   };
 
-  // Eliminar criterio
   const eliminarCriterio = (id) => {
-    setCriterios(criterios.filter((c) => c.id !== id));
+    setGrupos(grupos.map(g =>
+      g.id === grupoSeleccionado
+        ? { ...g, criterios: g.criterios.filter(c => c.id !== id) }
+        : g
+    ));
   };
 
-  // Editar criterio
   const editarCriterio = (id, nuevoTexto, nuevoValor) => {
-    setCriterios(
-      criterios.map((c) =>
-        c.id === id ? { ...c, texto: nuevoTexto, valor: nuevoValor } : c
-      )
-    );
+    setGrupos(grupos.map(g =>
+      g.id === grupoSeleccionado
+        ? {
+            ...g,
+            criterios: g.criterios.map(c =>
+              c.id === id ? { ...c, texto: nuevoTexto, valor: nuevoValor } : c
+            )
+          }
+        : g
+    ));
   };
 
-  // Descargar preguntas
   const descargarPreguntas = () => {
     const csvContent = [
       'Pregunta',
@@ -120,13 +145,8 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
     document.body.removeChild(element);
   };
 
-  const selectedTipoTrabajoNombre = tiposTrabajoDisponibles.find(
-    (t) => t.id === selectedTipoTrabajo
-  )?.nombre;
-
   return (
     <div className="w-full space-y-6">
-      {/* Header con Selector */}
       <div className="flex items-center justify-between bg-primary text-white p-6 rounded-lg g-10">
         <h2 className="w-100 text-xl font-bold">Seleccionar tipo de trabajo</h2>
         <select
@@ -142,7 +162,6 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
         </select>
       </div>
 
-      {/* Sección Preguntas */}
       <div className="bg-base-100 border border-base-300 rounded-lg p-6">
         <div className="mb-6">
           <h3 className="text-lg font-bold text-primary mb-2">
@@ -153,7 +172,6 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
           </p>
         </div>
 
-        {/* Botones de acción */}
         <div className="flex gap-3 mb-6">
           <button
             onClick={agregarPregunta}
@@ -173,21 +191,35 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
 
         <div className="space-y-3">
           {preguntas.map((pregunta) => (
-            <div key={pregunta.id} className="flex gap-2 items-center">
+            <div
+              key={pregunta.id}
+              className={`flex gap-2 items-center rounded-full py-1 px-3 cursor-pointer
+                ${editingIdPregunta === pregunta.id ? 'bg-gray-300' : 'hover:bg-gray-200'}
+              `}
+            >
               <input
-                ref={editingId === pregunta.id ? (el) => el?.focus() : null}
+                ref={editingIdPregunta === pregunta.id ? (el) => el?.focus() : null}
                 type="text"
                 placeholder="¿Es conciso?"
                 value={pregunta.texto}
                 onChange={(e) => editarPregunta(pregunta.id, e.target.value)}
                 className="input input-bordered input-sm flex-1 bg-white"
+                readOnly={editingIdPregunta !== pregunta.id}
               />
               <button
-                onClick={() => setEditingId(editingId === pregunta.id ? null : pregunta.id)}
+                onClick={() =>
+                  setEditingIdPregunta(
+                    editingIdPregunta === pregunta.id ? null : pregunta.id
+                  )
+                }
                 className="btn btn-sm btn-circle btn-primary text-white"
                 title="Editar"
               >
-                <MdEdit size={16} />
+                {editingIdPregunta === pregunta.id ? (
+                  <IoMdCheckmark />
+                ) : (
+                  <MdEdit size={16} />
+                )}
               </button>
               <button
                 onClick={() => eliminarPregunta(pregunta.id)}
@@ -201,7 +233,6 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
         </div>
       </div>
 
-      {/* Sección Rúbricas */}
       <div className="bg-base-100 border border-base-300 rounded-lg p-6">
         <h3 className="text-lg font-bold text-primary mb-2">
           Creación de rúbricas
@@ -211,7 +242,6 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
         </p>
 
         <div className="grid grid-cols-2 gap-6">
-          {/* Columna Izquierda: Grupos */}
           <div>
             <h4 className="font-semibold text-primary mb-3">Creación de grupos</h4>
             <p className="text-xs text-base-content/60 mb-4">
@@ -226,9 +256,15 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
               Agregar
             </button>
 
-            <div className="space-y-3">
+            <div className="my-0.5">
               {grupos.map((grupo) => (
-                <div key={grupo.id} className="flex gap-2 items-center">
+                <div
+                  key={grupo.id}
+                  className={`flex gap-2 items-center rounded-full py-1 px-3 cursor-pointer
+                    ${grupoSeleccionado === grupo.id ? 'bg-gray-300' : 'hover:bg-gray-200'}
+                  `}
+                  onClick={() => setGrupoSeleccionado(grupo.id)}
+                >
                   <input
                     ref={editingId === grupo.id ? (el) => el?.focus() : null}
                     type="text"
@@ -236,18 +272,23 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
                     value={grupo.texto}
                     onChange={(e) => editarGrupo(grupo.id, e.target.value)}
                     className="input input-bordered input-sm flex-1 bg-white"
+                    readOnly={editingId !== grupo.id}
                   />
                   <button
-                    onClick={() => setEditingId(editingId === grupo.id ? null : grupo.id)}
+                    onClick={() =>
+                      setEditingId(editingId === grupo.id ? null : grupo.id)
+                    }
                     className="btn btn-sm btn-circle btn-primary text-white"
-                    title="Editar"
                   >
-                    <MdEdit size={16} />
+                    {editingId === grupo.id ? (
+                      <IoMdCheckmark />
+                    ) : (
+                      <MdEdit size={16} />
+                    )}
                   </button>
                   <button
                     onClick={() => eliminarGrupo(grupo.id)}
                     className="btn btn-sm btn-circle btn-primary text-white"
-                    title="Eliminar"
                   >
                     <MdDelete size={16} />
                   </button>
@@ -256,7 +297,6 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
             </div>
           </div>
 
-          {/* Columna Derecha: Criterios */}
           <div>
             <h4 className="font-semibold text-primary mb-3">Creación de criterios de rúbrica</h4>
             <p className="text-xs text-base-content/60 mb-4">
@@ -272,10 +312,13 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
             </button>
 
             <div className="space-y-3">
-              {criterios.map((criterio) => (
-                <div key={criterio.id} className="flex gap-2 items-center">
+              {grupoActual?.criterios.map((criterio) => (
+                <div key={criterio.id}
+                  className={`flex gap-2 items-center rounded-full py-1 px-3 cursor-pointer
+                    ${editingIdCriterio === criterio.id ? 'bg-gray-300' : 'hover:bg-gray-200'}
+                  `}>
                   <input
-                    ref={editingId === criterio.id ? (el) => el?.focus() : null}
+                    ref={editingIdCriterio === criterio.id ? (el) => el?.focus() : null}
                     type="text"
                     placeholder="Criterio"
                     value={criterio.texto}
@@ -283,6 +326,7 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
                       editarCriterio(criterio.id, e.target.value, criterio.valor)
                     }
                     className="input input-bordered input-sm flex-1 bg-white"
+                    readOnly={editingIdCriterio !== criterio.id}
                   />
                   <input
                     type="number"
@@ -293,18 +337,25 @@ const RubricasYPreguntas = ({ tipoTrabajoId }) => {
                     }
                     className="input input-bordered input-sm w-20 bg-white"
                     step="0.01"
+                    readOnly={editingIdCriterio !== criterio.id}
                   />
                   <button
-                    onClick={() => setEditingId(editingId === criterio.id ? null : criterio.id)}
+                    onClick={() =>
+                      setEditingIdCriterio(
+                        editingIdCriterio === criterio.id ? null : criterio.id
+                      )
+                    }
                     className="btn btn-sm btn-circle btn-primary text-white"
-                    title="Editar"
                   >
-                    <MdEdit size={16} />
+                    {editingIdCriterio === criterio.id ? (
+                      <IoMdCheckmark />
+                    ) : (
+                      <MdEdit size={16} />
+                    )}
                   </button>
                   <button
                     onClick={() => eliminarCriterio(criterio.id)}
                     className="btn btn-sm btn-circle btn-primary text-white"
-                    title="Eliminar"
                   >
                     <MdDelete size={16} />
                   </button>

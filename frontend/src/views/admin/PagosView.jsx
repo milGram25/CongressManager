@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { MdFilterAlt, MdKeyboardArrowDown, MdSearch, MdClose } from "react-icons/md";
+import { FiDownload, FiCopy } from 'react-icons/fi';
  
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 export const listaPagos = [
@@ -125,11 +126,11 @@ function DetallePanel({ pago }) {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-base font-bold text-base-content">Detalles de pago</h3>
         <div className="flex gap-2">
-          <button className="w-8 h-8 rounded-full bg-[#00868a] text-white flex items-center justify-center hover:bg-[#006f73] transition-colors" title="Copiar">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <button className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center hover:bg-[#006f73] transition-colors" title="Copiar">
+            <FiCopy/>
           </button>
-          <button className="w-8 h-8 rounded-full bg-[#00868a] text-white flex items-center justify-center hover:bg-[#006f73] transition-colors" title="Descargar">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <button className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center hover:bg-[#006f73] transition-colors" title="Descargar">
+            <FiDownload/>
           </button>
         </div>
       </div>
@@ -195,14 +196,14 @@ export default function PagosComponente({ listaPagos: propsPagos }) {
   function Dropdown({ label, value, options, open, onToggle, onSelect }) {
     return (
       <div className="relative">
-        <button onClick={onToggle} className="flex items-center gap-1 text-sm text-base-content/70 hover:text-[#00868a] transition-colors">
+        <button onClick={onToggle} className="flex items-center gap-1 text-sm text-base-content/70 hover:text-gray-800 transition-colors">
           {value} <MdKeyboardArrowDown size={15} className={`transition-transform ${open ? "rotate-180" : ""}`} />
         </button>
         {open && (
           <div className="absolute left-0 top-7 z-50 w-44 bg-base-100 border border-base-300 rounded-2xl shadow-lg overflow-hidden">
             {options.map(o => (
               <button key={o} onClick={() => { onSelect(o); onToggle(); }}
-                className={`w-full text-left px-4 py-2.5 text-sm hover:bg-base-200 transition-colors ${value === o ? "text-[#00868a] font-semibold bg-[#e8f5f5]" : "text-base-content/70"}`}>
+                className={`w-full text-left px-4 py-2.5 text-sm hover:bg-base-200 transition-colors ${value === o ? "text-black font-semibold bg-gray-200" : "text-base-content/70"}`}>
                 {o}
               </button>
             ))}
@@ -216,14 +217,14 @@ export default function PagosComponente({ listaPagos: propsPagos }) {
     <div className="bg-base-100 rounded-3xl border border-base-300 shadow-sm p-5">
  
       {/* Filtros header */}
-      <div className="grid grid-cols-4 gap-4 mb-2">
+      <div className="grid grid-cols-3 gap-4 mb-2">
         <div>
           <p className="text-sm font-bold text-base-content mb-1">Orden de pago</p>
           <div className="relative">
             <MdSearch size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-base-content/40" />
             <input
               type="text"
-              placeholder="Buscar..."
+              placeholder="Buscar ID..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="w-full pl-7 pr-6 py-1 text-sm border-b border-base-300 bg-transparent focus:outline-none focus:border-[#00868a] transition-colors"
@@ -246,18 +247,7 @@ export default function PagosComponente({ listaPagos: propsPagos }) {
             onSelect={setFiltroFecha} />
         </div>
  
-        <div>
-          <p className="text-sm font-bold text-base-content mb-1">Estatus</p>
-          <div className="relative">
-            <select
-              value={filtroEst}
-              onChange={e => setFiltroEst(e.target.value)}
-              className="w-full border border-base-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-[#00868a] bg-base-100 appearance-none"
-            >
-              {ESTATUS.map(o => <option key={o}>{o}</option>)}
-            </select>
-          </div>
-        </div>
+        
       </div>
  
       <div className="border-t border-base-200 my-3" />
@@ -272,8 +262,8 @@ export default function PagosComponente({ listaPagos: propsPagos }) {
             onClick={() => setSelected(s => s?.orden === p.orden ? null : p)}
             className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl border transition-all text-left
               ${selected?.orden === p.orden
-                ? "border-[#00868a] bg-[#e8f5f5]"
-                : "border-base-300 hover:border-[#00868a]/40 hover:bg-base-200/40"}`}
+                ? "border-black bg-gray-200"
+                : "border-base-300 hover:border-gray-400 hover:bg-base-200/40"}`}
           >
             
             {/* Orden */}
@@ -283,10 +273,7 @@ export default function PagosComponente({ listaPagos: propsPagos }) {
             {/* Fecha */}
             <span className="text-sm text-base-content/60 flex-1">{formatFecha(p.fecha)}</span>
             {/* Estatus */}
-            <div className="flex flex-1 items-center gap-1.5">
-              <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${p.estatus === "Pagado" ? "bg-green-500" : "bg-red-500"}`} />
-              <span className={`text-sm font-medium ${p.estatus === "Pagado" ? "text-green-600" : "text-red-500"}`}>{p.estatus}</span>
-            </div>
+           
           </button>
         ))}
       </div>
