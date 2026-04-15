@@ -147,15 +147,25 @@ const RubricasYPreguntas = () => {
             <h3 className="text-lg font-bold text-primary flex items-center gap-2">
               <div className="w-2 h-6 bg-primary rounded-full"></div> Dictaminación (Formato)
             </h3>
-            <button 
-              onClick={guardarDictamen}
-              disabled={!hasChangesDictamen}
-              className={`btn btn-sm rounded-xl px-4 transition-all duration-300 ${
-                !hasChangesDictamen ? 'opacity-30 cursor-not-allowed' : isConfirmingDictamen ? 'bg-warning text-white' : 'bg-success text-white'
-              }`}
-            >
-              {isConfirmingDictamen ? '¿CONFIRMAR?' : hasChangesDictamen ? 'GUARDAR SECCIÓN' : 'SIN CAMBIOS'}
-            </button>
+            <div className="flex items-center gap-2">
+              {hasChangesDictamen && (
+                <button 
+                  onClick={() => { setPreguntas(JSON.parse(JSON.stringify(initialPreguntas))); setIsConfirmingDictamen(false); }}
+                  className="btn btn-sm btn-ghost text-error font-bold rounded-xl px-4"
+                >
+                  DESCARTAR
+                </button>
+              )}
+              <button 
+                onClick={guardarDictamen}
+                disabled={!hasChangesDictamen}
+                className={`btn btn-sm rounded-xl px-4 transition-all duration-300 border-none ${
+                  !hasChangesDictamen ? 'bg-base-200 text-base-content/40 cursor-not-allowed' : isConfirmingDictamen ? 'bg-warning text-white' : 'bg-success text-white'
+                }`}
+              >
+                {isConfirmingDictamen ? '¿CONFIRMAR?' : hasChangesDictamen ? 'GUARDAR SECCIÓN' : 'SIN CAMBIOS'}
+              </button>
+            </div>
           </div>
           
           <button onClick={agregarPregunta} className="btn btn-sm btn-outline btn-primary gap-2 mb-4 w-fit rounded-xl">
@@ -188,13 +198,21 @@ const RubricasYPreguntas = () => {
             <h3 className="text-lg font-bold text-primary flex items-center gap-2">
               <div className="w-2 h-6 bg-primary rounded-full"></div> Revisión (Contenido)
             </h3>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
               <div className="text-[10px] font-bold text-base-content/40 uppercase">Total: {totalPuntos} pts</div>
+              {hasChangesRevision && (
+                <button 
+                  onClick={() => { setGrupos(JSON.parse(JSON.stringify(initialGrupos))); setIsConfirmingRevision(false); }}
+                  className="btn btn-sm btn-ghost text-error font-bold rounded-xl px-4"
+                >
+                  DESCARTAR
+                </button>
+              )}
               <button 
                 onClick={guardarRevision}
                 disabled={!hasChangesRevision}
-                className={`btn btn-sm rounded-xl px-4 transition-all duration-300 ${
-                  !hasChangesRevision ? 'opacity-30 cursor-not-allowed' : isConfirmingRevision ? 'bg-warning text-white' : 'bg-success text-white'
+                className={`btn btn-sm rounded-xl px-4 transition-all duration-300 border-none ${
+                  !hasChangesRevision ? 'bg-base-200 text-base-content/40 cursor-not-allowed' : isConfirmingRevision ? 'bg-warning text-white' : 'bg-success text-white'
                 }`}
               >
                 {isConfirmingRevision ? '¿CONFIRMAR?' : hasChangesRevision ? 'GUARDAR SECCIÓN' : 'SIN CAMBIOS'}
