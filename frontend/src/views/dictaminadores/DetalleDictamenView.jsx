@@ -9,10 +9,10 @@ export default function DetalleDictamenView() {
   
   // ESTADO PARA LAS PREGUNTAS VARIABLES - Se carga de localStorage
   const [preguntas, setPreguntas] = useState(() => {
-    // Por defecto cargamos Ponencia (id 1)
-    const savedData = localStorage.getItem('config_trabajo_1');
+    // Cargamos la configuración del Administrador para el ID 1 (Avances de tesis)
+    const savedData = localStorage.getItem('config_dictamen_1');
     if (savedData) {
-      const { preguntas: savedPreguntas } = JSON.parse(savedData);
+      const savedPreguntas = JSON.parse(savedData);
       if (savedPreguntas && savedPreguntas.length > 0) {
         return savedPreguntas;
       }

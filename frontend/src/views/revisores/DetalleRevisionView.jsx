@@ -15,10 +15,10 @@ export default function DetalleRevisionView() {
 
   // ESTADO PARA LA RÚBRICA VARIABLE - Se carga de localStorage
   const [gruposRubrica, setGruposRubrica] = useState(() => {
-    // Por defecto cargamos Ponencia (id 1) para el demo
-    const savedData = localStorage.getItem('config_trabajo_1');
+    // Cargamos la configuración del Administrador para el ID 1 (Avances de tesis)
+    const savedData = localStorage.getItem('config_revision_1');
     if (savedData) {
-      const { grupos } = JSON.parse(savedData);
+      const grupos = JSON.parse(savedData);
       if (grupos && grupos.length > 0) {
         return grupos.map(g => ({
           ...g,

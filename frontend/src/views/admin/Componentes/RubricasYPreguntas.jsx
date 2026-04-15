@@ -131,7 +131,7 @@ const RubricasYPreguntas = () => {
         <select
           value={selectedTipoTrabajo || ''}
           onChange={(e) => setSelectedTipoTrabajo(Number(e.target.value))}
-          className="select select-bordered select-sm w-full md:w-80 bg-white text-base-content rounded-xl font-bold"
+          className="select select-bordered w-full md:w-80 bg-white text-base-content rounded-xl font-normal text-lg"
         >
           {tiposTrabajoDisponibles.map((tipo) => (
             <option key={tipo.id} value={tipo.id}>{tipo.nombre}</option>
