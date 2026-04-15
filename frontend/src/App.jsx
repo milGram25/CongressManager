@@ -41,6 +41,7 @@ import ProcesosExtensosView from "./views/admin/ProcesosExtensosView";
 import TalleresView from "./views/admin/TalleresView";
 import TalleresCrearView from "./views/admin/TalleresCrearView";
 import PonenciasView from "./views/admin/PonenciasView";
+import PonenciaCrearView from "./views/admin/PonenciaCrearView";
 import CongresosView from "./views/admin/CongresosView";
 import CongresoListaView from "./views/admin/CongresoListaView";
 import CongresoDetallesView from "./views/admin/CongresoDetallesView";
@@ -373,7 +374,10 @@ function App() {
                 <Route index element={<TalleresView />} />
                 <Route path="crear" element={<TalleresCrearView />} />
               </Route>
-              <Route path="ponencias" element={<PonenciasView />} />
+              <Route path="ponencias">
+                <Route index element={<PonenciasView />} />
+                <Route path="crear" element={<PonenciaCrearView />} />
+              </Route>
               <Route path="congresos">
                 <Route index element={<CongresosView />} />
                 <Route path="lista" element={<CongresoListaView />} />
