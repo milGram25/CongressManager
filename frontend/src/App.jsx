@@ -378,7 +378,7 @@ function App() {
                 <Route index element={<CongresosView />} />
                 <Route path="lista" element={<CongresoListaView />} />
                 <Route path="crear" element={<CongresoCrearView />} />
-                <Route path="detalles" element={<CongresoDetallesView />} />
+                <Route path="detalles/:id" element={<CongresoDetallesView />} />
                 <Route path="sede" element={<CongresoSedeView />} />
                 <Route path="fechas" element={<CongresoFechasView />} />
                 <Route path="tipos-trabajo" element={<CongresoTiposTrabajoView />} />

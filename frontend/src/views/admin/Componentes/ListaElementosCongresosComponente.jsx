@@ -4,9 +4,11 @@ import {useState} from "react";
 import { LuDownload } from "react-icons/lu";
 import { MdFilterListAlt } from "react-icons/md";
 import { HiEye, HiPlay, HiCheck } from "react-icons/hi";
+import { useNavigate } from "react-router-dom";
 
 
 export default function ListaElementosCongresosComponente({listaCongresos}){
+    const navigate = useNavigate();
     //lista íconos debe de tener tres elementos
     const [ordenarItem, setOrdenarItem] = useState("todos");
     const fechaActual = new Date();
@@ -146,7 +148,11 @@ export default function ListaElementosCongresosComponente({listaCongresos}){
                     <div key={item.id} className="flex items-center justify-between py-3 border-b border-gray-200 ml-4 mr-4">
                         
                         {/* Botón ver detalles */}
-                        <button className="flex items-center justify-center w-10 h-10 rounded-full bg-black hover:bg-gray-500 transition-colors"  title={"Ver detalles"}>
+                        <button 
+                            onClick={() => navigate('/admin/eventos/congresos/detalles')}
+                            className="flex items-center justify-center w-10 h-10 rounded-full bg-black hover:bg-gray-500 transition-colors"  
+                            title={"Ver detalles"}
+                        >
                         <HiEye className="text-white text-xl" />
                         </button>
 

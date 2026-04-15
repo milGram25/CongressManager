@@ -4,6 +4,7 @@ import { FiEye, FiCopy, FiEdit2 } from 'react-icons/fi';
 import Modal from "./Modal";
 import DetallesCrearCongreso from './DetallesCrearCongreso';
 import DetallesEditarTaller from './DetallesEditarTaller';
+import { useNavigate } from 'react-router-dom';
 
 const TarjetaGenerica = ({
                              titulo,
@@ -17,6 +18,7 @@ const TarjetaGenerica = ({
                              indexDatosModal
                          }) => {
 
+    const navigate = useNavigate();
     const cardStyle = {
         width: '100%',
         maxWidth: '350px',
@@ -125,7 +127,18 @@ const TarjetaGenerica = ({
             </div>
 
             <div style={footerStyle}>
-                <button  className="bg-black hover:bg-gray-500" style={iconBtnStyle} onClick={() => setOpenModal(true)} title="Ver detalles">
+                <button  
+                    className="bg-black hover:bg-gray-500" 
+                    style={iconBtnStyle} 
+                    onClick={() => {
+                        if (definirTipoElemento === 'congreso') {
+                            navigate(`/admin/eventos/congresos/detalles/${indexDatosModal}`);
+                        } else {
+                            setOpenModal(true);
+                        }
+                    }} 
+                    title="Ver detalles"
+                >
                     <FiEye size={16} />
                 </button>
 
@@ -139,7 +152,18 @@ const TarjetaGenerica = ({
                     <button className="bg-black hover:bg-gray-500" style={iconBtnStyle} onClick={onCopy} title="Duplicar">
                         <FiCopy size={16} />
                     </button>
-                    <button  className="bg-black hover:bg-gray-500" style={iconBtnStyle} onClick={onEdit} title="Editar">
+                    <button  
+                        className="bg-black hover:bg-gray-500" 
+                        style={iconBtnStyle} 
+                        onClick={() => {
+                            if (definirTipoElemento === 'congreso') {
+                                navigate(`/admin/eventos/congresos/detalles/${indexDatosModal}?edit=true`);
+                            } else {
+                                onEdit && onEdit();
+                            }
+                        }} 
+                        title="Editar"
+                    >
                         <FiEdit2 size={16} />
                     </button>
                 </div>
