@@ -1,366 +1,288 @@
-import React, { useState } from 'react';
-import { MdDelete, MdAdd, MdEdit } from 'react-icons/md';
-import { HiDownload } from 'react-icons/hi';
-import { IoMdCheckmark } from "react-icons/io";
 
-const RubricasYPreguntas = ({ tipoTrabajoId }) => {
-  const tiposTrabajoDisponibles = [
-    { id: 1, nombre: 'Avances de tesis' },
-    { id: 2, nombre: 'Investigaciones concluidas' },
-    { id: 3, nombre: 'Experiencias de investigación' }
-  ];
+import React, { useState, useEffect } from 'react';
+import { MdDelete, MdAdd, MdSave, MdCheck } from 'react-icons/md';
+import Notification from '../../../components/Notification';
 
-  const [selectedTipoTrabajo, setSelectedTipoTrabajo] = useState(tiposTrabajoDisponibles[0].id);
-  const [editingId, setEditingId] = useState(null);
-  const [editingIdPregunta, setEditingIdPregunta] = useState(null);
-  const [editingIdCriterio, setEditingIdCriterio] = useState(null);
+const RubricasYPreguntas = () => {
+  const [notification, setNotification] = useState(null);
 
-  const [grupoSeleccionado, setGrupoSeleccionado] = useState(null);
-  
-  const [preguntas, setPreguntas] = useState([
-    { id: 1, texto: '¿Es conciso?' },
-    { id: 2, texto: '¿Es relevante?' },
-    { id: 3, texto: '¿Está relacionado con el tema?' },
-  ]);
+  // --- ESTADOS DE TIPOS DE TRABAJO ---
+  const [tiposTrabajoDisponibles, setTiposTrabajoDisponibles] = useState(() => {
+    const saved = localStorage.getItem("congreso_tipos_trabajo");
+    const mock = ["Avances de tesis", "Investigaciones concluidas", "Experiencias de investigación"];
+    const tipos = saved ? JSON.parse(saved) : mock;
+    return tipos.map((nombre, index) => ({ id: index + 1, nombre }));
+  });
 
-  const [grupos, setGrupos] = useState([
-    {
-      id: 1,
-      texto: 'Concisión',
-      criterios: [
-        { id: 1, texto: 'Es conciso', valor: '1.00' },
-        { id: 2, texto: 'No divaga de más', valor: '1.00' },
-        { id: 3, texto: 'Cantidad de contenido', valor: '1.00' }
-      ]
-    },
-    {
-      id: 2,
-      texto: 'Relevancia',
-      criterios: [
-        { id: 1, texto: 'Es bueno', valor: '1.00' },
-        { id: 2, texto: 'Es bonito', valor: '1.00' },
-        { id: 3, texto: 'Es barato', valor: '10.00' }
-      ]
-    },
-    {
-      id: 3,
-      texto: 'Estructuración',
-      criterios: []
+  const [selectedTipoTrabajo, setSelectedTipoTrabajo] = useState(() => {
+    return tiposTrabajoDisponibles.length > 0 ? tiposTrabajoDisponibles[0].id : null;
+  });
+
+  // --- ESTADOS DE DICTAMINACIÓN ---
+  const [preguntas, setPreguntas] = useState([]);
+  const [initialPreguntas, setInitialPreguntas] = useState([]);
+  const [isConfirmingDictamen, setIsConfirmingDictamen] = useState(false);
+
+  // --- ESTADOS DE REVISIÓN ---
+  const [grupos, setGrupos] = useState([]);
+  const [initialGrupos, setInitialGrupos] = useState([]);
+  const [isConfirmingRevision, setIsConfirmingRevision] = useState(false);
+
+  // ESCUCHAR CAMBIOS EN LOS TIPOS DE TRABAJO (Sincronización)
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem("congreso_tipos_trabajo");
+      if (saved) {
+        const nuevosTipos = JSON.parse(saved).map((nombre, index) => ({ id: index + 1, nombre }));
+        setTiposTrabajoDisponibles(nuevosTipos);
+        
+        // Si el tipo seleccionado ya no existe, seleccionar el primero
+        if (nuevosTipos.length > 0) {
+          const existe = nuevosTipos.find(t => t.id === selectedTipoTrabajo);
+          if (!existe) setSelectedTipoTrabajo(nuevosTipos[0].id);
+        } else {
+          setSelectedTipoTrabajo(null);
+        }
+      }
+    };
+
+    window.addEventListener('storage_tipos_trabajo', handleStorageChange);
+    return () => window.removeEventListener('storage_tipos_trabajo', handleStorageChange);
+  }, [selectedTipoTrabajo]);
+
+  // CARGAR DATOS AL CAMBIAR TIPO SELECCIONADO
+  useEffect(() => {
+    if (!selectedTipoTrabajo) return;
+
+    // Cargar Dictaminación
+    const savedDictamen = localStorage.getItem(`config_dictamen_${selectedTipoTrabajo}`);
+    const dataDictamen = savedDictamen ? JSON.parse(savedDictamen) : [];
+    setPreguntas(dataDictamen);
+    setInitialPreguntas(JSON.parse(JSON.stringify(dataDictamen)));
+
+    // Cargar Revisión
+    const savedRevision = localStorage.getItem(`config_revision_${selectedTipoTrabajo}`);
+    const dataRevision = savedRevision ? JSON.parse(savedRevision) : [];
+    setGrupos(dataRevision);
+    setInitialGrupos(JSON.parse(JSON.stringify(dataRevision)));
+
+    setIsConfirmingDictamen(false);
+    setIsConfirmingRevision(false);
+  }, [selectedTipoTrabajo]);
+
+  // DETECCIÓN DE CAMBIOS
+  const hasChangesDictamen = JSON.stringify(preguntas) !== JSON.stringify(initialPreguntas);
+  const hasChangesRevision = JSON.stringify(grupos) !== JSON.stringify(initialGrupos);
+
+  // --- FUNCIONES DE DICTAMINACIÓN ---
+  const guardarDictamen = () => {
+    if (!isConfirmingDictamen) {
+      setIsConfirmingDictamen(true);
+      return;
     }
-  ]);
-
-  const grupoActual = grupos.find(g => g.id === grupoSeleccionado);
-
-  const agregarPregunta = () => {
-    const newPregunta = {
-      id: Date.now(),
-      texto: '',
-    };
-    setPreguntas([...preguntas, newPregunta]);
+    localStorage.setItem(`config_dictamen_${selectedTipoTrabajo}`, JSON.stringify(preguntas));
+    setInitialPreguntas(JSON.parse(JSON.stringify(preguntas)));
+    setIsConfirmingDictamen(false);
+    setNotification({ message: 'Preguntas de dictaminación guardadas.', type: 'success' });
   };
 
-  const eliminarPregunta = (id) => {
-    setPreguntas(preguntas.filter((p) => p.id !== id));
+  const agregarPregunta = () => setPreguntas([...preguntas, { id: Date.now(), texto: '' }]);
+  const eliminarPregunta = (id) => setPreguntas(preguntas.filter(p => p.id !== id));
+  const editarPregunta = (id, texto) => setPreguntas(preguntas.map(p => p.id === id ? { ...p, texto } : p));
+
+  // --- FUNCIONES DE REVISIÓN ---
+  const guardarRevision = () => {
+    if (!isConfirmingRevision) {
+      setIsConfirmingRevision(true);
+      return;
+    }
+    localStorage.setItem(`config_revision_${selectedTipoTrabajo}`, JSON.stringify(grupos));
+    setInitialGrupos(JSON.parse(JSON.stringify(grupos)));
+    setIsConfirmingRevision(false);
+    setNotification({ message: 'Rúbrica de revisión guardada.', type: 'success' });
   };
 
-  const editarPregunta = (id, nuevoTexto) => {
-    setPreguntas(
-      preguntas.map((p) => (p.id === id ? { ...p, texto: nuevoTexto } : p))
-    );
-  };
+  const agregarGrupo = () => setGrupos([...grupos, { id: Date.now(), texto: '', criterios: [] }]);
+  const eliminarGrupo = (id) => setGrupos(grupos.filter(g => g.id !== id));
+  const editarGrupo = (id, texto) => setGrupos(grupos.map(g => g.id === id ? { ...g, texto } : g));
+  
+  const agregarCriterio = (grupoId) => setGrupos(grupos.map(g => 
+    g.id === grupoId ? { ...g, criterios: [...g.criterios, { id: Date.now(), texto: '', valor: '1.00' }] } : g
+  ));
+  const eliminarCriterio = (grupoId, cId) => setGrupos(grupos.map(g => 
+    g.id === grupoId ? { ...g, criterios: g.criterios.filter(c => c.id !== cId) } : g
+  ));
+  const editarCriterio = (gId, cId, texto, valor) => setGrupos(grupos.map(g => 
+    g.id === gId ? { ...g, criterios: g.criterios.map(c => c.id === cId ? { ...c, texto, valor } : c) } : g
+  ));
 
-  const agregarGrupo = () => {
-    const newGrupo = {
-      id: Date.now(),
-      texto: '',
-      criterios: []
-    };
-    setGrupos([...grupos, newGrupo]);
-  };
-
-  const eliminarGrupo = (id) => {
-    setGrupos(grupos.filter((g) => g.id !== id));
-    if (grupoSeleccionado === id) setGrupoSeleccionado(null);
-  };
-
-  const editarGrupo = (id, nuevoTexto) => {
-    setGrupos(
-      grupos.map((g) => (g.id === id ? { ...g, texto: nuevoTexto } : g))
-    );
-  };
-
-  const agregarCriterio = () => {
-    if (!grupoSeleccionado) return;
-
-    const newCriterio = {
-      id: Date.now(),
-      texto: '',
-      valor: '1.00',
-    };
-
-    setGrupos(grupos.map(g =>
-      g.id === grupoSeleccionado
-        ? { ...g, criterios: [...g.criterios, newCriterio] }
-        : g
-    ));
-  };
-
-  const eliminarCriterio = (id) => {
-    setGrupos(grupos.map(g =>
-      g.id === grupoSeleccionado
-        ? { ...g, criterios: g.criterios.filter(c => c.id !== id) }
-        : g
-    ));
-  };
-
-  const editarCriterio = (id, nuevoTexto, nuevoValor) => {
-    setGrupos(grupos.map(g =>
-      g.id === grupoSeleccionado
-        ? {
-            ...g,
-            criterios: g.criterios.map(c =>
-              c.id === id ? { ...c, texto: nuevoTexto, valor: nuevoValor } : c
-            )
-          }
-        : g
-    ));
-  };
-
-  const descargarPreguntas = () => {
-    const csvContent = [
-      'Pregunta',
-      ...preguntas.map((p) => `"${p.texto}"`),
-    ].join('\n');
-
-    const element = document.createElement('a');
-    element.setAttribute(
-      'href',
-      'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent)
-    );
-    element.setAttribute('download', `preguntas.csv`);
-    element.style.display = 'none';
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-  };
+  const totalPuntos = grupos.reduce((acc, g) => 
+    acc + g.criterios.reduce((accC, c) => accC + parseFloat(c.valor || 0), 0)
+  , 0).toFixed(2);
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex items-center justify-between bg-primary text-white p-6 rounded-lg g-10">
-        <h2 className="w-100 text-xl font-bold">Seleccionar tipo de trabajo</h2>
+      {notification && (
+        <Notification message={notification.message} type={notification.type} onClose={() => setNotification(null)} />
+      )}
+
+      {/* Selector de Tipo de Trabajo */}
+      <div className="bg-primary text-white p-6 rounded-2xl shadow-lg flex flex-col md:flex-row items-center gap-4">
+        <h2 className="text-xl font-bold whitespace-nowrap">Configurar para:</h2>
+
         <select
-          value={selectedTipoTrabajo}
+          value={selectedTipoTrabajo || ''}
           onChange={(e) => setSelectedTipoTrabajo(Number(e.target.value))}
-          className="select select-bordered select-sm w-full bg-white text-base-content rounded-full pl-4"
+          className="select select-bordered w-full md:w-80 bg-white text-base-content rounded-xl font-normal text-lg"
         >
           {tiposTrabajoDisponibles.map((tipo) => (
-            <option key={tipo.id} value={tipo.id}>
-              {tipo.nombre}
-            </option>
+            <option key={tipo.id} value={tipo.id}>{tipo.nombre}</option>
           ))}
+          {tiposTrabajoDisponibles.length === 0 && <option value="">No hay tipos creados</option>}
         </select>
       </div>
 
-      <div className="bg-base-100 border border-base-300 rounded-lg p-6">
-        <div className="mb-6">
-          <h3 className="text-lg font-bold text-primary mb-2">
-            Creación de preguntas
-          </h3>
-          <p className="text-sm text-base-content/60">
-            Asigna preguntas a este área general para que los dictaminadores sepan cómo evaluar resúmenes de esta misma área
-          </p>
-        </div>
 
-        <div className="flex gap-3 mb-6">
-          <button
-            onClick={agregarPregunta}
-            className="btn btn-sm btn-primary text-white gap-2"
-          >
-            <MdAdd size={18} />
-            Agregar
-          </button>
-          <button
-            onClick={descargarPreguntas}
-            className="btn btn-sm btn-outline btn-primary gap-2"
-          >
-            <HiDownload size={18} />
-            Descargar
-          </button>
-        </div>
+      <div className="flex flex-col gap-8">
+        {/* SECCIÓN DICTAMINACIÓN */}
+        <div className="bg-base-100 border border-base-300 rounded-2xl p-6 shadow-sm flex flex-col h-fit">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <h3 className="text-lg font-bold text-primary flex items-center gap-2">
+              <div className="w-2 h-6 bg-primary rounded-full"></div> Dictaminación (Formato)
+            </h3>
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              {hasChangesDictamen && (
+                <button 
+                  onClick={() => { setPreguntas(JSON.parse(JSON.stringify(initialPreguntas))); setIsConfirmingDictamen(false); }}
+                  className="btn btn-sm btn-ghost text-error font-bold rounded-xl px-4"
+                >
+                  DESCARTAR
+                </button>
+              )}
+              <button 
+                onClick={guardarDictamen}
+                disabled={!hasChangesDictamen}
+                className={`btn btn-sm rounded-xl px-4 transition-all duration-300 border-none ${
+                  !hasChangesDictamen ? 'bg-base-200 text-base-content/40 cursor-not-allowed' : isConfirmingDictamen ? 'bg-warning text-white' : 'bg-success text-white'
+                }`}
+              >
+                {isConfirmingDictamen ? '¿CONFIRMAR?' : hasChangesDictamen ? 'GUARDAR SECCIÓN' : 'SIN CAMBIOS'}
 
-        <div className="space-y-3">
-          {preguntas.map((pregunta) => (
-            <div
-              key={pregunta.id}
-              className={`flex gap-2 items-center rounded-full py-1 px-3 cursor-pointer
-                ${editingIdPregunta === pregunta.id ? 'bg-gray-300' : 'hover:bg-gray-200'}
-              `}
-            >
-              <input
-                ref={editingIdPregunta === pregunta.id ? (el) => el?.focus() : null}
-                type="text"
-                placeholder="¿Es conciso?"
-                value={pregunta.texto}
-                onChange={(e) => editarPregunta(pregunta.id, e.target.value)}
-                className="input input-bordered input-sm flex-1 bg-white rounded-full"
-                readOnly={editingIdPregunta !== pregunta.id}
-              />
-              <button
-                onClick={() =>
-                  setEditingIdPregunta(
-                    editingIdPregunta === pregunta.id ? null : pregunta.id
-                  )
-                }
-                className="btn btn-sm btn-circle btn-primary text-white"
-                title="Editar"
-              >
-                {editingIdPregunta === pregunta.id ? (
-                  <IoMdCheckmark />
-                ) : (
-                  <MdEdit size={16} />
-                )}
-              </button>
-              <button
-                onClick={() => eliminarPregunta(pregunta.id)}
-                className="btn btn-sm btn-circle btn-primary text-white"
-                title="Eliminar"
-              >
-                <MdDelete size={16} />
               </button>
             </div>
-          ))}
+          </div>
+          
+          <button onClick={agregarPregunta} className="btn btn-sm btn-outline btn-primary gap-2 mb-4 w-fit rounded-xl">
+            <MdAdd size={18} /> Nueva Pregunta
+          </button>
+
+          <div className="space-y-3">
+            {preguntas.map((p, i) => (
+              <div key={p.id} className="flex gap-2 items-center group">
+                <span className="text-xs font-bold text-base-content/30 w-5">{i + 1}</span>
+                <input
+                  type="text"
+                  placeholder="Ej: ¿Cumple con formato APA?"
+                  value={p.texto}
+                  onChange={(e) => { editarPregunta(p.id, e.target.value); setIsConfirmingDictamen(false); }}
+                  className="input input-bordered input-sm flex-1 bg-white rounded-xl"
+                />
+                <button onClick={() => eliminarPregunta(p.id)} className="btn btn-sm btn-circle btn-ghost text-error opacity-0 group-hover:opacity-100">
+                  <MdDelete size={18} />
+                </button>
+              </div>
+            ))}
+            {preguntas.length === 0 && <p className="text-center py-4 text-xs italic text-base-content/40">No hay preguntas de formato.</p>}
+          </div>
         </div>
-      </div>
 
-      <div className="bg-base-100 border border-base-300 rounded-lg p-6">
-        <h3 className="text-lg font-bold text-primary mb-2">
-          Creación de rúbricas
-        </h3>
-        <p className="text-sm text-base-content/60 mb-6">
-          Crea rúbricas para que los evaluadores sepan en base a qué grupos, rubros y ponderaciones deben calificar los extensos
-        </p>
 
-        <div className="grid grid-cols-2 gap-6">
-          <div>
-            <h4 className="font-semibold text-primary mb-3">Creación de grupos</h4>
-            <p className="text-xs text-base-content/60 mb-4">
-              Crea grupos temáticos para saber a qué subtemas específicos pertenece cada criterio de rúbrica.
-            </p>
-
-            <button
-              onClick={agregarGrupo}
-              className="btn btn-sm btn-primary text-white gap-2 mb-4"
-            >
-              <MdAdd size={16} />
-              Agregar
-            </button>
-
-            <div className="my-0.5">
-              {grupos.map((grupo) => (
-                <div
-                  key={grupo.id}
-                  className={`flex gap-2 items-center rounded-full py-1 px-3 cursor-pointer
-                    ${grupoSeleccionado === grupo.id ? 'bg-gray-300' : 'hover:bg-gray-200'}
-                  `}
-                  onClick={() => setGrupoSeleccionado(grupo.id)}
+        {/* SECCIÓN REVISIÓN */}
+        <div className="bg-base-100 border border-base-300 rounded-2xl p-6 shadow-sm flex flex-col h-fit">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <h3 className="text-lg font-bold text-primary flex items-center gap-2">
+              <div className="w-2 h-6 bg-primary rounded-full"></div> Revisión (Contenido)
+            </h3>
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <div className="text-[10px] font-bold text-base-content/40 uppercase">Total: {totalPuntos} pts</div>
+              {hasChangesRevision && (
+                <button 
+                  onClick={() => { setGrupos(JSON.parse(JSON.stringify(initialGrupos))); setIsConfirmingRevision(false); }}
+                  className="btn btn-sm btn-ghost text-error font-bold rounded-xl px-4"
                 >
-                  <input
-                    ref={editingId === grupo.id ? (el) => el?.focus() : null}
-                    type="text"
-                    placeholder="Nombre del grupo"
-                    value={grupo.texto}
-                    onChange={(e) => editarGrupo(grupo.id, e.target.value)}
-                    className="input input-bordered input-sm flex-1 bg-white rounded-full"
-                    readOnly={editingId !== grupo.id}
-                  />
-                  <button
-                    onClick={() =>
-                      setEditingId(editingId === grupo.id ? null : grupo.id)
-                    }
-                    className="btn btn-sm btn-circle btn-primary text-white"
-                  >
-                    {editingId === grupo.id ? (
-                      <IoMdCheckmark />
-                    ) : (
-                      <MdEdit size={16} />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => eliminarGrupo(grupo.id)}
-                    className="btn btn-sm btn-circle btn-primary text-white"
-                  >
-                    <MdDelete size={16} />
-                  </button>
-                </div>
-              ))}
+                  DESCARTAR
+                </button>
+              )}
+              <button 
+                onClick={guardarRevision}
+                disabled={!hasChangesRevision}
+                className={`btn btn-sm rounded-xl px-4 transition-all duration-300 border-none ${
+                  !hasChangesRevision ? 'bg-base-200 text-base-content/40 cursor-not-allowed' : isConfirmingRevision ? 'bg-warning text-white' : 'bg-success text-white'
+                }`}
+              >
+                {isConfirmingRevision ? '¿CONFIRMAR?' : hasChangesRevision ? 'GUARDAR SECCIÓN' : 'SIN CAMBIOS'}
+              </button>
             </div>
           </div>
 
-          <div>
-            <h4 className="font-semibold text-primary mb-3">Creación de criterios de rúbrica</h4>
-            <p className="text-xs text-base-content/60 mb-4">
-              Crea criterios con ponderaciones específicas para asignarle a un grupo de rúbrica
-            </p>
+          <button onClick={agregarGrupo} className="btn btn-sm btn-outline btn-primary gap-2 mb-4 w-fit rounded-xl">
+            <MdAdd size={18} /> Nuevo Grupo
+          </button>
 
-            <button
-              onClick={agregarCriterio}
-              className="btn btn-sm btn-primary text-white gap-2 mb-4"
-            >
-              <MdAdd size={16} />
-              Agregar
-            </button>
-
-            <div className="space-y-3">
-              {grupoActual?.criterios.map((criterio) => (
-                <div key={criterio.id}
-                  className={`flex gap-2 items-center rounded-full py-1 px-3 cursor-pointer
-                    ${editingIdCriterio === criterio.id ? 'bg-gray-300' : 'hover:bg-gray-200'}
-                  `}>
+          <div className="space-y-6">
+            {grupos.map((g) => (
+              <div key={g.id} className="bg-base-200/50 rounded-2xl border border-base-300 overflow-hidden">
+                <div className="bg-base-300/50 p-3 flex items-center gap-2">
                   <input
-                    ref={editingIdCriterio === criterio.id ? (el) => el?.focus() : null}
                     type="text"
-                    placeholder="Criterio"
-                    value={criterio.texto}
-                    onChange={(e) =>
-                      editarCriterio(criterio.id, e.target.value, criterio.valor)
-                    }
-                    className="input input-bordered input-sm flex-1 bg-white  rounded-full"
-                    readOnly={editingIdCriterio !== criterio.id}
+                    placeholder="Nombre del grupo..."
+                    value={g.texto}
+                    onChange={(e) => { editarGrupo(g.id, e.target.value); setIsConfirmingRevision(false); }}
+                    className="input input-bordered input-sm flex-1 font-bold bg-white rounded-xl"
                   />
-                  <input
-                    type="number"
-                    placeholder="1.00"
-                    value={criterio.valor}
-                    onChange={(e) =>
-                      editarCriterio(criterio.id, criterio.texto, e.target.value)
-                    }
-                    className="input input-bordered input-sm w-20 bg-white  rounded-full"
-                    step="0.01"
-                    readOnly={editingIdCriterio !== criterio.id}
-                  />
-                  <button
-                    onClick={() =>
-                      setEditingIdCriterio(
-                        editingIdCriterio === criterio.id ? null : criterio.id
-                      )
-                    }
-                    className="btn btn-sm btn-circle btn-primary text-white "
-                  >
-                    {editingIdCriterio === criterio.id ? (
-                      <IoMdCheckmark />
-                    ) : (
-                      <MdEdit size={16} />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => eliminarCriterio(criterio.id)}
-                    className="btn btn-sm btn-circle btn-primary text-white"
-                  >
-                    <MdDelete size={16} />
-                  </button>
+                  <button onClick={() => agregarCriterio(g.id)} className="btn btn-xs btn-primary text-white px-3 rounded-lg">Criterio</button>
+                  <button onClick={() => eliminarGrupo(g.id)} className="btn btn-xs btn-ghost text-error"><MdDelete size={16} /></button>
+
                 </div>
-              ))}
-            </div>
+                <div className="p-3 space-y-3">
+                  {g.criterios.map((c) => (
+                    <div key={c.id} className="bg-white p-3 rounded-xl border border-base-300 group/item transition-all hover:shadow-sm">
+                      <div className="flex gap-2 mb-2">
+                        <textarea
+                          placeholder="Descripción del criterio..."
+                          value={c.texto}
+                          onChange={(e) => { editarCriterio(g.id, c.id, e.target.value, c.valor); setIsConfirmingRevision(false); }}
+                          className="textarea textarea-bordered textarea-sm flex-1 bg-base-100 rounded-lg text-xs min-h-[60px] leading-tight"
+                        />
+                        <button 
+                          onClick={() => eliminarCriterio(g.id, c.id)} 
+                          className="btn btn-xs btn-circle btn-ghost text-error shrink-0"
+                        >
+                          <MdDelete size={16} />
+                        </button>
+                      </div>
+                      
+                      <div className="flex items-center gap-3 pl-1">
+                        <span className="text-[10px] font-bold text-base-content/40 uppercase tracking-wider">Valor Máximo:</span>
+                        <div className="flex items-center gap-2 bg-base-200 px-3 py-1 rounded-lg border border-base-300">
+                          <input
+                            type="number"
+                            value={c.valor}
+                            onChange={(e) => { editarCriterio(g.id, c.id, c.texto, e.target.value); setIsConfirmingRevision(false); }}
+                            className="w-16 bg-transparent text-center font-bold text-xs outline-none"
+                            step="0.5"
+                          />
+                          <span className="text-[10px] font-bold text-base-content/40">PTS</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {g.criterios.length === 0 && (
+                    <p className="text-center py-2 text-[10px] italic text-base-content/40 uppercase tracking-widest">Sin criterios definidos</p>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

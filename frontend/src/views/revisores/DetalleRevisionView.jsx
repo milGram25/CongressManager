@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MdFileDownload, MdAssignment, MdComment, MdClose } from 'react-icons/md';
+import EvaluationSuccessModal from '../../components/EvaluationSuccessModal';
 
 export default function DetalleRevisionView() {
   const { id } = useParams();
@@ -9,14 +10,42 @@ export default function DetalleRevisionView() {
   const [comentariosCriterios, setComentariosCriterios] = useState({});
   const [confirmingRemoval, setConfirmingRemoval] = useState(null);
   const [calificaciones, setCalificaciones] = useState({});
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [finalDecision, setFinalDecision] = useState('');
 
-  // ESTADO PARA LA RÚBRICA VARIABLE
-  const [rubricas, setRubricas] = useState([
-    { id: 1, criterio: "Originalidad y relevancia del tema", opciones: [1, 2, 3, 4, 5] },
-    { id: 2, criterio: "Calidad metodológica", opciones: [1, 2, 3, 4, 5] },
-    { id: 3, criterio: "Claridad en la exposición de resultados", opciones: [1, 2, 3, 4, 5] },
-    { id: 4, criterio: "Calidad de las referencias bibliográficas", opciones: [1, 2, 3, 4, 5] }
-  ]);
+  // ESTADO PARA LA RÚBRICA VARIABLE - Se carga de localStorage
+  const [gruposRubrica, setGruposRubrica] = useState(() => {
+    // Cargamos la configuración del Administrador para el ID 1 (Avances de tesis)
+    const savedData = localStorage.getItem('config_revision_1');
+    if (savedData) {
+      const grupos = JSON.parse(savedData);
+      if (grupos && grupos.length > 0) {
+        return grupos.map(g => ({
+          ...g,
+          criterios: g.criterios.map(c => ({
+            id: c.id,
+            criterio: c.texto,
+            puntosMax: parseFloat(c.valor) || 1,
+            opciones: [1, 2, 3, 4, 5]
+          }))
+        }));
+      }
+    }
+    // Fallback por si no hay nada en localStorage
+    return [
+      { 
+        id: 1, 
+        texto: "Calidad General", 
+        criterios: [
+          { id: 1, criterio: "Originalidad y relevancia del tema", puntosMax: 5, opciones: [1, 2, 3, 4, 5] },
+          { id: 2, criterio: "Calidad metodológica", puntosMax: 5, opciones: [1, 2, 3, 4, 5] }
+        ]
+      }
+    ];
+  });
+
+  // Flatten rubricas para lógica de cálculos existentes
+  const rubricas = gruposRubrica.flatMap(g => g.criterios);
 
   const handleCalificacionChange = (id, valor) => {
     setCalificaciones(prev => {
@@ -42,10 +71,25 @@ export default function DetalleRevisionView() {
   const calcularPromedio = () => {
     const keys = Object.keys(calificaciones);
     if (keys.length === 0) return "0.0";
-    const suma = keys.reduce((acc, key) => acc + calificaciones[key], 0);
-    // Cada criterio tiene un máximo de 5. Escalamos a base 10:
-    // (Suma / (TotalCriterios * 5)) * 10
-    return ((suma / (rubricas.length * 5)) * 10).toFixed(1);
+    
+    // Calculamos en base a la ponderación
+    // Cada criterio tiene un peso (puntosMax)
+    // El valor seleccionado (1-5) actúa como multiplicador del porcentaje: (valor/5) * puntosMax
+    
+    let sumaPuntajeObtenido = 0;
+    let sumaPuntajeMaximoPosible = 0;
+
+    rubricas.forEach(r => {
+      sumaPuntajeMaximoPosible += r.puntosMax;
+      if (calificaciones[r.id]) {
+        sumaPuntajeObtenido += (calificaciones[r.id] / 5) * r.puntosMax;
+      }
+    });
+
+    if (sumaPuntajeMaximoPosible === 0) return "0.0";
+    
+    // Escalamos a base 10
+    return ((sumaPuntajeObtenido / sumaPuntajeMaximoPosible) * 10).toFixed(1);
   };
 
   const promedioCalculado = calcularPromedio();
@@ -110,19 +154,23 @@ export default function DetalleRevisionView() {
       return;
     }
     // Aquí iría la lógica para enviar la revisión al backend
-    alert(`Revisión enviada como: ${decision}`);
+    setFinalDecision(decision);
+    setShowSuccessModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowSuccessModal(false);
     navigate('/revisor/revisiones');
   };
 
   return (
     <div className="space-y-8 pb-20">
-      {/* Botón Volver */}
-      <button 
-        onClick={() => navigate('/revisor/revisiones')}
-        className="text-sm font-bold text-primary hover:underline flex items-center gap-2"
-      >
-        ← Volver a Mis Revisiones
-      </button>
+      <EvaluationSuccessModal 
+        isOpen={showSuccessModal} 
+        onClose={handleCloseModal} 
+        decision={finalDecision} 
+        type="revision" 
+      />
 
       <div className="flex flex-col gap-6">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -156,120 +204,93 @@ export default function DetalleRevisionView() {
               <span>Rúbrica de Evaluación</span>
             </div>
             
-            <div className="space-y-8">
-              {rubricas.map((rubrica) => (
-                <div 
-                  key={rubrica.id} 
-                  id={`rubrica-${rubrica.id}`}
-                  className={`p-4 rounded-xl transition-all border ${
-                    showErrors && !calificaciones[rubrica.id] 
-                    ? 'border-error/50' 
-                    : 'hover:bg-base-200 border-transparent hover:border-base-300'
-                  }`}
-                >
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="max-w-xl">
-                      <div className="flex items-center gap-3 mb-1">
-                        <p className="text-sm font-bold text-base-content">{rubrica.id}. {rubrica.criterio}</p>
-                        {showErrors && !calificaciones[rubrica.id] && (
-                          <span className="text-[10px] font-black text-error uppercase tracking-tighter bg-base-100 px-2 py-0.5 rounded-full border border-error/20">
-                            ¡Falta responder!
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <button 
-                        onClick={() => toggleComentarioCriterio(rubrica.id)}
-                        className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${
-                          comentariosCriterios[rubrica.id] !== undefined 
-                          ? 'bg-primary/10 border-primary/20 text-primary' 
-                          : 'border-base-300 text-base-content/40 hover:border-primary hover:text-primary'
-                        }`}
-                      >
-                        {comentariosCriterios[rubrica.id] !== undefined ? 'Quitar Comentario' : '+ Comentario'}
-                      </button>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 relative">
-                          {rubrica.opciones.map((opcion) => (
-                            <label key={opcion} className="relative group cursor-pointer">
-                              <input 
-                                type="radio" 
-                                name={`rubrica-${rubrica.id}`} 
-                                className="peer hidden" 
-                                checked={calificaciones[rubrica.id] === opcion}
-                                onChange={() => {}} // Se maneja en el onClick de la caja visual
-                              />
-                              <div 
-                                onClick={() => {
-                                  handleCalificacionChange(rubrica.id, opcion);
-                                  if (showErrors && Object.keys(calificaciones).length + 1 === rubricas.length) {
-                                    setShowErrors(false);
-                                  }
-                                }}
-                                className="w-10 h-10 flex items-center justify-center rounded-lg border-2 border-base-200 text-sm font-bold text-base-content/40 transition-all 
-                                peer-checked:bg-primary peer-checked:border-primary peer-checked:text-white
-                                hover:border-primary hover:text-primary peer-checked:hover:text-white group-active:scale-90">
-                                {opcion}
-                              </div>
-                            </label>
-                          ))}
-                          
-                          {/* Botón de limpiar minimalista */}
-                          {calificaciones[rubrica.id] && (
-                            <button 
-                              onClick={() => clearCalificacion(rubrica.id)}
-                              className="ml-1 p-1 text-base-content/20 hover:text-error transition-colors animate-in fade-in zoom-in duration-200"
-                              title="Limpiar selección"
-                            >
-                              <MdClose size={18} />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+            <div className="space-y-12">
+              {gruposRubrica.map((grupo) => (
+                <div key={grupo.id} className="space-y-4">
+                  <div className="flex items-center gap-3 bg-base-200/50 p-3 rounded-xl border border-base-300">
+                    <div className="w-1.5 h-6 bg-primary rounded-full"></div>
+                    <h4 className="font-bold text-sm text-primary uppercase tracking-wider">{grupo.texto}</h4>
                   </div>
                   
-                  {/* Confirmación integrada */}
-                  {confirmingRemoval === rubrica.id && (
-                    <div className="mt-4 pt-4 border-t border-primary/10 animate-in fade-in slide-in-from-top-1 duration-200">
-                      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></div>
-                          <p className="text-xs font-bold text-base-content/40 uppercase tracking-wider">
-                            ¿Deseas descartar el comentario escrito?
-                          </p>
+                  <div className="space-y-6 pl-4">
+                    {grupo.criterios.map((rubrica) => (
+                      <div 
+                        key={rubrica.id} 
+                        id={`rubrica-${rubrica.id}`}
+                        className={`p-4 rounded-xl transition-all border ${
+                          showErrors && !calificaciones[rubrica.id] 
+                          ? 'border-error/50' 
+                          : 'hover:bg-base-200 border-transparent hover:border-base-300'
+                        }`}
+                      >
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="max-w-xl">
+                            <div className="flex items-center gap-3 mb-1">
+                              <p className="text-sm font-bold text-base-content">{rubrica.criterio}</p>
+                              {showErrors && !calificaciones[rubrica.id] && (
+                                <span className="text-[10px] font-black text-error uppercase tracking-tighter bg-base-100 px-2 py-0.5 rounded-full border border-error/20">
+                                  ¡Falta responder!
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-base-content/40 uppercase font-bold tracking-widest">Valor: {rubrica.puntosMax} PTS</p>
+                          </div>
+                          
+                          <div className="flex items-center gap-4">
+                            <button 
+                              onClick={() => toggleComentarioCriterio(rubrica.id)}
+                              className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${
+                                comentariosCriterios[rubrica.id] !== undefined 
+                                ? 'bg-primary/10 border-primary/20 text-primary' 
+                                : 'border-base-300 text-base-content/40 hover:border-primary hover:text-primary'
+                              }`}
+                            >
+                              {comentariosCriterios[rubrica.id] !== undefined ? 'Quitar Comentario' : '+ Comentario'}
+                            </button>
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-2 relative">
+                                {rubrica.opciones.map((opcion) => (
+                                  <label key={opcion} className="relative group cursor-pointer">
+                                    <input 
+                                      type="radio" 
+                                      name={`rubrica-${rubrica.id}`} 
+                                      className="peer hidden" 
+                                      checked={calificaciones[rubrica.id] === opcion}
+                                      onChange={() => {}}
+                                    />
+                                    <div 
+                                      onClick={() => {
+                                        handleCalificacionChange(rubrica.id, opcion);
+                                        if (showErrors && Object.keys(calificaciones).length + 1 === rubricas.length) {
+                                          setShowErrors(false);
+                                        }
+                                      }}
+                                      className="w-10 h-10 flex items-center justify-center rounded-lg border-2 border-base-200 text-sm font-bold text-base-content/40 transition-all 
+                                      peer-checked:bg-primary peer-checked:border-primary peer-checked:text-white
+                                      hover:border-primary hover:text-primary peer-checked:hover:text-white group-active:scale-90">
+                                      {opcion}
+                                    </div>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <button 
-                            onClick={() => setConfirmingRemoval(null)}
-                            className="px-6 py-2 text-[10px] font-bold text-primary hover:bg-primary hover:text-white border border-primary rounded-lg transition-all uppercase w-28"
-                          >
-                            Mantener
-                          </button>
-                          <button 
-                            onClick={() => forceToggleComentario(rubrica.id)}
-                            className="px-6 py-2 text-[10px] font-bold text-error hover:bg-error hover:text-white border border-error rounded-lg transition-all uppercase w-28"
-                          >
-                            Eliminar
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
 
-                  {/* Campo de comentario desplegable */}
-                  {comentariosCriterios[rubrica.id] !== undefined && confirmingRemoval !== rubrica.id && (
-                    <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                      <textarea
-                        value={comentariosCriterios[rubrica.id]}
-                        onChange={(e) => handleComentarioChange(rubrica.id, e.target.value)}
-                        onInput={autoResize}
-                        placeholder={`Observación específica sobre: ${rubrica.criterio}...`}
-                        className="w-full min-h-[6rem] p-4 bg-base-100 border-2 border-primary/10 rounded-xl outline-none focus:border-primary transition-all text-sm resize-none overflow-hidden"
-                      />
-                    </div>
-                  )}
+                        {comentariosCriterios[rubrica.id] !== undefined && confirmingRemoval !== rubrica.id && (
+                          <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                            <textarea
+                              value={comentariosCriterios[rubrica.id]}
+                              onChange={(e) => handleComentarioChange(rubrica.id, e.target.value)}
+                              onInput={autoResize}
+                              placeholder={`Observación específica sobre: ${rubrica.criterio}...`}
+                              className="w-full min-h-[6rem] p-4 bg-base-100 border-2 border-primary/10 rounded-xl outline-none focus:border-primary transition-all text-sm resize-none overflow-hidden"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>

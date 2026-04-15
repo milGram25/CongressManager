@@ -30,7 +30,20 @@ export default function CongresoTiposTrabajoView() {
   const [selectedId, setSelectedId] = useState(1);
 
   return (
-    <div className=" overflow-hidden">
+    <div className="w-full space-y-6" >
+
+      <div className="flex gap-4">
+        <div className="border bg-black rounded-full h-10 w-2"></div>
+        <h2 className="flex-1 text-2xl font-bold text-start">Tipos de trabajo</h2>
+      </div>
+      <p className="pt-2 pl-12 text-start mb-4">
+        Crea tipos de trabajo y añádeles preguntas o rúbricas para que los dictaminadores o evaluadores realicen sus revisiones, respectivamente
+      </p>
+
+      <CongresoTiposTrabajoComponente/>
+      <RubricasYPreguntas/>
+
+
 
   {/* IZQUIERDA */}
   {/*<div className="bg-white border border-gray-200 rounded-xl p-4 h-full flex flex-col">
@@ -60,13 +73,7 @@ export default function CongresoTiposTrabajoView() {
     </div>
   </div>*/}
 
-  {/* DERECHA */}
-  <div className="bg-white border border-gray-200 rounded-xl p-4 h-full flex flex-col">
-    <div className="flex-1 overflow-hidden">
-      <CongresoTiposTrabajoComponente selectedId={selectedId} />
-      <RubricasYPreguntas selectedId={selectedId} />
-    </div>
-  </div>
+  
 
 </div>
   );

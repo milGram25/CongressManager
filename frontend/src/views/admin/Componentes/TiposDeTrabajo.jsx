@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { MdArrowBack, MdDownload, MdAdd, MdDelete, MdEdit, MdCheck, MdClose } from "react-icons/md";
+import { MdArrowBack, MdAdd, MdDelete, MdEdit, MdCheck, MdClose } from "react-icons/md";
+import Notification from "../../../components/Notification";
 
 const MOCK_TIPOS = [
   "Avances de tesis",
@@ -8,154 +9,153 @@ const MOCK_TIPOS = [
   "Experiencias de investigación",
 ];
 
-function exportToCSV(tipos) {
-  const csv = ["Tipo de trabajo", ...tipos].join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = "tipos_de_trabajo.csv"; a.click();
-  URL.revokeObjectURL(url);
-}
-
 export default function CongresoTiposTrabajoComponente() {
   const navigate = useNavigate();
-  const [tipos, setTipos] = useState(MOCK_TIPOS);
+  const [notification, setNotification] = useState(null);
+  const [tipos, setTipos] = useState(() => {
+    const saved = localStorage.getItem("congreso_tipos_trabajo");
+    return saved ? JSON.parse(saved) : MOCK_TIPOS;
+  });
+  
+  // Estados para doble confirmación
+  const [confirmDeleteIdx, setConfirmDeleteIdx] = useState(null);
+  const [isConfirmingAdd, setIsConfirmingAdd] = useState(false);
+  const [isConfirmingEdit, setIsConfirmingEdit] = useState(false);
+  
   const [editIdx, setEditIdx] = useState(null);
   const [editVal, setEditVal] = useState("");
   const [adding, setAdding] = useState(false);
   const [newVal, setNewVal] = useState("");
 
+  const updateTipos = (newTipos, actionMessage) => {
+    setTipos(newTipos);
+    localStorage.setItem("congreso_tipos_trabajo", JSON.stringify(newTipos));
+    window.dispatchEvent(new Event('storage_tipos_trabajo'));
+    if (actionMessage) setNotification({ message: actionMessage, type: 'success' });
+  };
+
   function startEdit(i) {
     setEditIdx(i);
     setEditVal(tipos[i]);
     setAdding(false);
+    setConfirmDeleteIdx(null);
+    setIsConfirmingEdit(false);
   }
 
-  function confirmEdit() {
+  function handleEditClick() {
     if (!editVal.trim()) return;
-    setTipos(t => t.map((v, i) => i === editIdx ? editVal.trim() : v));
-    setEditIdx(null);
+    if (isConfirmingEdit) {
+      const newTipos = tipos.map((v, i) => i === editIdx ? editVal.trim() : v);
+      updateTipos(newTipos, "Tipo de trabajo actualizado correctamente.");
+      setEditIdx(null);
+      setIsConfirmingEdit(false);
+    } else {
+      setIsConfirmingEdit(true);
+    }
   }
 
-  function cancelEdit() { setEditIdx(null); }
-
-  function deleteTipo(i) {
-    setTipos(t => t.filter((_, idx) => idx !== i));
-    if (editIdx === i) setEditIdx(null);
+  function handleDeleteClick(i) {
+    if (confirmDeleteIdx === i) {
+      const tipoEliminado = tipos[i];
+      const newTipos = tipos.filter((_, idx) => idx !== i);
+      updateTipos(newTipos, `Se eliminó "${tipoEliminado}".`);
+      setConfirmDeleteIdx(null);
+    } else {
+      setConfirmDeleteIdx(i);
+      setEditIdx(null);
+      setAdding(false);
+    }
   }
 
-  function startAdd() {
-    setAdding(true);
-    setNewVal("");
-    setEditIdx(null);
-  }
-
-  function confirmAdd() {
+  function handleAddClick() {
     if (!newVal.trim()) return;
-    setTipos(t => [...t, newVal.trim()]);
-    setAdding(false);
-    setNewVal("");
+    if (isConfirmingAdd) {
+      const newTipos = [...tipos, newVal.trim()];
+      updateTipos(newTipos, "Nuevo tipo de trabajo agregado.");
+      setAdding(false);
+      setNewVal("");
+      setIsConfirmingAdd(false);
+    } else {
+      setIsConfirmingAdd(true);
+    }
   }
 
-  function cancelAdd() { setAdding(false); setNewVal(""); }
+  // Cancelar estados de confirmación al escribir
+  useEffect(() => {
+    setIsConfirmingAdd(false);
+  }, [newVal]);
+
+  useEffect(() => {
+    setIsConfirmingEdit(false);
+  }, [editVal]);
 
   return (
-    <div className="bg-base-100 rounded-3xl border border-base-300 shadow-sm overflow-hidden w-full mb-10" >
+    <div className="bg-base-100 rounded-3xl border border-base-300 shadow-sm overflow-hidden w-full mb-10 relative" >
+      {notification && (
+        <Notification message={notification.message} type={notification.type} onClose={() => setNotification(null)} />
+      )}
 
-      {/* Header teal */}
       <div className="flex items-center justify-between px-5 py-4 bg-black">
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate(-1)}
-            className="text-white/70 hover:text-white transition-colors mr-1"
-            title="Regresar"
-          >
+          <button onClick={() => navigate(-1)} className="text-white/70 hover:text-white transition-colors mr-1">
             <MdArrowBack size={18} />
           </button>
           <h2 className="text-base font-bold text-white">Crear tipos de trabajo</h2>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => exportToCSV(tipos)}
-            title="Descargar Excel/CSV"
-            className="w-8 h-8 rounded-full border-2 border-white/60 text-white flex items-center justify-center hover:bg-white/20 transition-colors"
-          >
-            <MdDownload size={16} />
-          </button>
-          <button
-            onClick={startAdd}
-            title="Agregar tipo"
-            className="w-8 h-8 rounded-full border-2 border-white/60 text-white flex items-center justify-center hover:bg-white/20 transition-colors"
-          >
-            <MdAdd size={18} />
-          </button>
-        </div>
+        <button onClick={() => { setAdding(true); setConfirmDeleteIdx(null); }} className="w-8 h-8 rounded-full border-2 border-white/60 text-white flex items-center justify-center hover:bg-white/20 transition-colors">
+          <MdAdd size={18} />
+        </button>
       </div>
 
-      {/* Lista */}
-      <div className="p-3 space-y-2 overflow-y-auto" style={{ maxHeight: 240 }}>
+      <div className="p-3 space-y-2 overflow-y-auto" style={{ maxHeight: 300 }}>
         {tipos.map((tipo, i) => (
           <div key={i} className="border-b border-base-200 pb-2 last:border-0 last:pb-0">
             <div className="flex items-center gap-2">
               {editIdx === i ? (
                 <>
-                  <input
-                    autoFocus
-                    value={editVal}
-                    onChange={e => setEditVal(e.target.value)}
-                    onKeyDown={e => { if (e.key === "Enter") confirmEdit(); if (e.key === "Escape") cancelEdit(); }}
-                    className="flex-1 border border-black rounded-full px-3 py-1.5 text-sm focus:outline-none bg-white "
-                  />
-                  <button onClick={confirmEdit} className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0">
-                    <MdCheck size={14} />
+                  <input autoFocus value={editVal} onChange={e => setEditVal(e.target.value)} className="flex-1 border border-primary rounded-full px-3 py-1.5 text-sm bg-base-100" />
+                  <button onClick={handleEditClick} className={`btn btn-xs rounded-full px-3 transition-all ${isConfirmingEdit ? 'bg-warning text-white border-none scale-105' : 'bg-black text-white border-none'}`}>
+                    {isConfirmingEdit ? <><MdCheck size={14} /> ¿ACTUALIZAR?</> : <MdCheck size={14} />}
                   </button>
-                  <button onClick={cancelEdit} className="w-7 h-7 rounded-full bg-base-300 text-base-content/50 flex items-center justify-center hover:bg-base-400 transition-colors flex-shrink-0">
-                    <MdClose size={14} />
-                  </button>
+                  <button onClick={() => setEditIdx(null)} className="btn btn-xs btn-circle bg-base-300 text-base-content/50 border-none"><MdClose size={14} /></button>
                 </>
               ) : (
                 <>
-                  <span className="flex-1 border border-gray-300 rounded-full px-3 py-1.5 text-sm text-base-content bg-white">
+                  <span className={`flex-1 border rounded-full px-3 py-1.5 text-sm transition-all ${confirmDeleteIdx === i ? 'border-error bg-error/5 text-error font-bold' : 'border-base-300 bg-base-100'}`}>
                     {tipo}
                   </span>
-                  <button
-                    onClick={() => deleteTipo(i)}
-                    title="Eliminar"
-                    className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0"
-                  >
-                    <MdDelete size={14} />
-                  </button>
-                  <button
-                    onClick={() => startEdit(i)}
-                    title="Editar"
-                    className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0"
-                  >
-                    <MdEdit size={14} />
-                  </button>
+                  
+                  {confirmDeleteIdx === i ? (
+                    <div className="flex items-center gap-1 animate-in fade-in zoom-in duration-200">
+                      <button onClick={() => handleDeleteClick(i)} className="btn btn-xs bg-error text-white border-none rounded-full px-3 gap-1">
+                        <MdDelete size={14} /> ¿ELIMINAR?
+                      </button>
+                      <button onClick={() => setConfirmDeleteIdx(null)} className="btn btn-xs btn-circle bg-base-300 border-none">
+                        <MdClose size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <button onClick={() => handleDeleteClick(i)} className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center hover:bg-error transition-colors"><MdDelete size={14} /></button>
+                      <button onClick={() => startEdit(i)} className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center hover:bg-gray-600 transition-colors"><MdEdit size={14} /></button>
+                    </>
+                  )}
                 </>
               )}
             </div>
           </div>
         ))}
 
-        {/* Fila para agregar */}
         {adding && (
-          <div className="border-b border-base-200 pb-2">
+          <div className="border-b border-base-200 pb-2 animate-in slide-in-from-top-2 duration-200">
             <div className="flex items-center gap-2">
-              <input
-                autoFocus
-                placeholder="Nuevo tipo de trabajo..."
-                value={newVal}
-                onChange={e => setNewVal(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter") confirmAdd(); if (e.key === "Escape") cancelAdd(); }}
-                className="flex-1 border border-b rounded-full px-3 py-1.5 text-sm focus:outline-none bg-base-100"
-              />
-              <button onClick={confirmAdd} className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0">
-                <MdCheck size={14} />
+              <input autoFocus placeholder="Nuevo tipo..." value={newVal} onChange={e => setNewVal(e.target.value)} className="flex-1 border border-primary rounded-full px-3 py-1.5 text-sm bg-base-100" />
+              
+              <button onClick={handleAddClick} className={`btn btn-xs rounded-full px-3 transition-all ${isConfirmingAdd ? 'bg-warning text-white border-none scale-105' : 'bg-black text-white border-none'}`}>
+                {isConfirmingAdd ? <><MdCheck size={14} /> ¿AGREGAR?</> : <MdCheck size={14} />}
               </button>
-              <button onClick={cancelAdd} className="w-7 h-7 rounded-full bg-base-300 text-base-content/50 flex items-center justify-center hover:bg-base-400 transition-colors flex-shrink-0">
-                <MdClose size={14} />
-              </button>
+              
+              <button onClick={() => { setAdding(false); setIsConfirmingAdd(false); }} className="btn btn-xs btn-circle bg-base-300 border-none"><MdClose size={14} /></button>
             </div>
           </div>
         )}

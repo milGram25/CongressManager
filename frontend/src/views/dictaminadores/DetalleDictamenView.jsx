@@ -1,23 +1,37 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MdDescription, MdQuiz, MdCheckCircle, MdCancel, MdAssignment, MdComment, MdClose, MdFileDownload } from 'react-icons/md';
+import EvaluationSuccessModal from '../../components/EvaluationSuccessModal';
 
 export default function DetalleDictamenView() {
   const { id } = useParams();
   const navigate = useNavigate();
   
-  // Datos de ejemplo
-  const ponencia = {
-    id: id || "ART-9920",
-    titulo: "Impacto de la Inteligencia Artificial en la Educación Superior 2026",
-    resumen: "Este trabajo explora cómo las herramientas de IA generativa están transformando los procesos de enseñanza-aprendizaje en las universidades de América Latina. Se analizan casos de estudio en México, Colombia y Argentina, destacando los retos éticos y las oportunidades de personalización educativa que estas tecnologías ofrecen al cuerpo docente y estudiantil.",
-    preguntas: [
+  // ESTADO PARA LAS PREGUNTAS VARIABLES - Se carga de localStorage
+  const [preguntas, setPreguntas] = useState(() => {
+    // Cargamos la configuración del Administrador para el ID 1 (Avances de tesis)
+    const savedData = localStorage.getItem('config_dictamen_1');
+    if (savedData) {
+      const savedPreguntas = JSON.parse(savedData);
+      if (savedPreguntas && savedPreguntas.length > 0) {
+        return savedPreguntas;
+      }
+    }
+    // Fallback
+    return [
       { id: 1, texto: "¿El resumen cumple con la extensión requerida?" },
       { id: 2, texto: "¿Los autores están correctamente adscritos?" },
       { id: 3, texto: "¿El tema es pertinente para el congreso?" },
       { id: 4, texto: "¿La bibliografía sigue el formato APA 7?" },
       { id: 5, texto: "¿Se adjuntaron todos los archivos necesarios?" }
-    ]
+    ];
+  });
+
+  // Datos de ejemplo
+  const ponencia = {
+    id: id || "ART-9920",
+    titulo: "Impacto de la Inteligencia Artificial en la Educación Superior 2026",
+    resumen: "Este trabajo explora cómo las herramientas de IA generativa están transformando los procesos de enseñanza-aprendizaje en las universidades de América Latina. Se analizan casos de estudio en México, Colombia y Argentina, destacando los retos éticos y las oportunidades de personalización educativa que estas tecnologías ofrecen al cuerpo docente y estudiantil.",
   };
 
   const [respuestas, setRespuestas] = useState({});
@@ -25,6 +39,8 @@ export default function DetalleDictamenView() {
   const [confirmingRemoval, setConfirmingRemoval] = useState(null);
   const [comentariosGenerales, setComentariosGenerales] = useState('');
   const [showErrors, setShowErrors] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [finalDecision, setFinalDecision] = useState('');
 
   const handleRadioChange = (preguntaId, valor) => {
     setRespuestas(prev => {
@@ -34,14 +50,6 @@ export default function DetalleDictamenView() {
         return newState;
       }
       return { ...prev, [preguntaId]: valor };
-    });
-  };
-
-  const clearRespuesta = (id) => {
-    setRespuestas(prev => {
-      const newState = { ...prev };
-      delete newState[id];
-      return newState;
     });
   };
 
@@ -76,12 +84,12 @@ export default function DetalleDictamenView() {
   };
 
   const calcularProgreso = () => {
-    const total = ponencia.preguntas.length;
+    const total = preguntas.length;
     const respondidas = Object.keys(respuestas).length;
     const si = Object.values(respuestas).filter(v => v === 'Si').length;
     return {
-      porcentaje: (respondidas / total) * 100,
-      cumplimiento: (si / total) * 100,
+      porcentaje: total > 0 ? (respondidas / total) * 100 : 0,
+      cumplimiento: total > 0 ? (si / total) * 100 : 0,
       respondidas,
       total,
       si
@@ -93,7 +101,7 @@ export default function DetalleDictamenView() {
   const handleDecision = (decision) => {
     if (progreso.respondidas < progreso.total) {
       setShowErrors(true);
-      const primeraFaltante = ponencia.preguntas.find(p => !respuestas[p.id]);
+      const primeraFaltante = preguntas.find(p => !respuestas[p.id]);
       if (primeraFaltante) {
         const element = document.getElementById(`pregunta-${primeraFaltante.id}`);
         if (element) {
@@ -102,18 +110,23 @@ export default function DetalleDictamenView() {
       }
       return;
     }
-    alert(`Dictamen enviado: ${decision}`);
+    setFinalDecision(decision);
+    setShowSuccessModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowSuccessModal(false);
     navigate('/dictaminador/dictamenes');
   };
 
   return (
     <div className="space-y-8 pb-20">
-      <button 
-        onClick={() => navigate('/dictaminador/dictamenes')}
-        className="text-sm font-bold text-primary hover:underline flex items-center gap-2"
-      >
-        ← Volver a Mis Dictámenes
-      </button>
+      <EvaluationSuccessModal 
+        isOpen={showSuccessModal} 
+        onClose={handleCloseModal} 
+        decision={finalDecision} 
+        type="dictamen" 
+      />
 
       <div className="flex flex-col gap-6">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -125,13 +138,11 @@ export default function DetalleDictamenView() {
         </header>
 
         <div className="space-y-6">
-          {/* Información de la Ponencia (Siempre visible) */}
           <section className="bg-base-100 p-8 rounded-2xl shadow-sm border border-base-300">
             <div className="flex items-center gap-2 mb-6 text-base-content font-bold border-b border-base-300 pb-3">
               <MdDescription size={22} className="text-primary" />
               <span>Información de la Ponencia</span>
             </div>
-            
             <div className="space-y-6">
               <div>
                 <label className="text-[10px] font-bold text-base-content/40 uppercase tracking-widest block mb-2">Resumen</label>
@@ -149,7 +160,7 @@ export default function DetalleDictamenView() {
             </div>
 
             <div className="space-y-8">
-              {ponencia.preguntas.map((p) => (
+              {preguntas.map((p, index) => (
                 <div 
                   key={p.id} 
                   id={`pregunta-${p.id}`}
@@ -162,7 +173,7 @@ export default function DetalleDictamenView() {
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="max-w-xl">
                       <div className="flex items-center gap-3 mb-1">
-                        <p className="text-sm font-bold text-base-content">{p.id}. {p.texto}</p>
+                        <p className="text-sm font-bold text-base-content">{index + 1}. {p.texto}</p>
                         {showErrors && !respuestas[p.id] && (
                           <span className="text-[10px] font-black text-error uppercase tracking-tighter bg-base-100 px-2 py-0.5 rounded-full border border-error/20">
                             ¡Falta responder!
@@ -184,7 +195,7 @@ export default function DetalleDictamenView() {
                       </button>
 
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 relative">
+                        <div className="flex items-center gap-2">
                           {['Si', 'No'].map((opcion) => (
                             <button
                               key={opcion}
@@ -205,26 +216,15 @@ export default function DetalleDictamenView() {
                               {opcion.toUpperCase()}
                             </button>
                           ))}
-                          
-                          {respuestas[p.id] && (
-                            <button 
-                              onClick={() => clearRespuesta(p.id)}
-                              className="ml-1 p-1 text-base-content/20 hover:text-error transition-colors"
-                              title="Limpiar selección"
-                            >
-                              <MdClose size={18} />
-                            </button>
-                          )}
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {confirmingRemoval === p.id && (
-                    <div className="mt-4 pt-4 border-t border-primary/10 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <div className="mt-4 pt-4 border-t border-primary/10">
                       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></div>
                           <p className="text-xs font-bold text-base-content/40 uppercase tracking-wider">¿Deseas descartar el comentario?</p>
                         </div>
                         <div className="flex items-center gap-2">

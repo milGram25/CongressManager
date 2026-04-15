@@ -6,8 +6,6 @@ export default function CongresosView() {
 
   const opciones = [
     { id: 'lista', label: 'Lista', icon: MdInfo, desc: 'Ver todos los congresos registrados' },
-    { id: 'crear', label: 'Crear', icon: MdAddCircle, desc: 'Configurar un nuevo congreso' },
-    { id: 'detalles', label: 'Detalles', icon: MdInfo, desc: 'Información general del congreso' },
     { id: 'sede', label: 'Sede', icon: MdPlace, desc: 'Ubicación y logística del evento' },
     { id: 'fechas', label: 'Fechas', icon: MdEventAvailable, desc: 'Cronograma y fechas importantes' },
     { id: 'tipos-trabajo', label: 'Tipos de Trabajo', icon: MdWork, desc: 'Categorías y modalidades aceptadas' }
@@ -17,7 +15,7 @@ export default function CongresosView() {
     <div className="bg-base-100 p-8 rounded-3xl border border-base-300 shadow-sm min-h-[400px]">
       <h2 className="text-2xl font-bold mb-8 text-center">Gestión de Congresos</h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto py-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto py-10">
         {opciones.map((opc) => {
           const Icon = opc.icon;
           return (
