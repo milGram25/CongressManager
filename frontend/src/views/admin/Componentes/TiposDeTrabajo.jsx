@@ -90,7 +90,7 @@ export default function CongresoTiposTrabajoComponente() {
   }, [editVal]);
 
   return (
-    <div className="bg-base-100 rounded-3xl border border-base-300 shadow-sm overflow-hidden w-250 mb-10 relative" >
+    <div className="bg-base-100 rounded-3xl border border-base-300 shadow-sm overflow-hidden w-full mb-10 relative" >
       {notification && (
         <Notification message={notification.message} type={notification.type} onClose={() => setNotification(null)} />
       )}

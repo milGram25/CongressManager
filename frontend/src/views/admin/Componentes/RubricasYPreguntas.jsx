@@ -143,11 +143,11 @@ const RubricasYPreguntas = () => {
       <div className="flex flex-col gap-8">
         {/* SECCIÓN DICTAMINACIÓN */}
         <div className="bg-base-100 border border-base-300 rounded-2xl p-6 shadow-sm flex flex-col h-fit">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <h3 className="text-lg font-bold text-primary flex items-center gap-2">
               <div className="w-2 h-6 bg-primary rounded-full"></div> Dictaminación (Formato)
             </h3>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
               {hasChangesDictamen && (
                 <button 
                   onClick={() => { setPreguntas(JSON.parse(JSON.stringify(initialPreguntas))); setIsConfirmingDictamen(false); }}
@@ -194,11 +194,11 @@ const RubricasYPreguntas = () => {
 
         {/* SECCIÓN REVISIÓN */}
         <div className="bg-base-100 border border-base-300 rounded-2xl p-6 shadow-sm flex flex-col h-fit">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <h3 className="text-lg font-bold text-primary flex items-center gap-2">
               <div className="w-2 h-6 bg-primary rounded-full"></div> Revisión (Contenido)
             </h3>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
               <div className="text-[10px] font-bold text-base-content/40 uppercase">Total: {totalPuntos} pts</div>
               {hasChangesRevision && (
                 <button 

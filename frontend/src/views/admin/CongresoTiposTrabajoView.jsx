@@ -22,7 +22,7 @@ export default function CongresoTiposTrabajoView() {
   
 
   return (
-    <div className=" overflow-hidden w-250" >
+    <div className="w-full space-y-6" >
 
       <div className="flex gap-4">
         <div className="border bg-black rounded-full h-10 w-2"></div>
