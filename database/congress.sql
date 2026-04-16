@@ -55,7 +55,14 @@ CREATE TABLE persona (
     correo_electronico VARCHAR(255) UNIQUE NOT NULL,
     contrasena VARCHAR(255) NOT NULL,
     num_telefono VARCHAR(20) UNIQUE,
-    curp CHAR(18) UNIQUE
+    curp CHAR(18) UNIQUE,
+    genero VARCHAR(50),
+    pais VARCHAR(100),
+    discapacidad VARCHAR(255),
+    last_login TIMESTAMP,
+    is_superuser BOOLEAN DEFAULT FALSE,
+    is_staff BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE
 );
 
 CREATE TABLE costos_congreso (
@@ -265,7 +272,7 @@ CREATE TABLE dictamen_resumen (
 CREATE TABLE evaluacion_pregunta (
     id_evaluacion_pregunta SERIAL PRIMARY KEY,
     id_dictamen INTEGER NOT NULL REFERENCES dictamen_resumen(id_dictamen) ON DELETE CASCADE,
-    id_pregunta INTEGER NOT NULL REFERENCES rubrica_pregunta(id_pregunta),
+    id_pregunta INTEGER NOT NULL REFERENCES dictamen_pregunta(id_pregunta), 
     cumplio BOOLEAN,
     comentario_especifico TEXT,
     UNIQUE(id_dictamen, id_pregunta)
