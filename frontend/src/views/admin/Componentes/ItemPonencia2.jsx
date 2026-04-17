@@ -1,22 +1,8 @@
 import React from 'react';
-import { FiAward, FiUser, FiCalendar, FiClock, FiCheckCircle,FiUsers } from 'react-icons/fi';
+import { FiAward, FiUser, FiCalendar, FiClock, FiUsers } from 'react-icons/fi';
 import TarjetaGenerica from './TarjetaGenerica';
 
-// Reutilizamos estilos base
-const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '4px' };
-const labelContainer = { display: 'flex', alignItems: 'center', gap: '8px', color: '#4A4A4A', fontSize: '14px' };
-const iconCircleBox = { backgroundColor: 'black', color: '#FFFFFF', padding: '6px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '35px', height: '35px' };
-const valuePillStyle = { backgroundColor: '#FFFFFF', border: '1px solid #1A1A1A', borderRadius: '16px', padding: '4px 12px', color: '#1A1A1A', fontSize: '14px', fontWeight: '600', textAlign: 'center', minWidth: '60px' };
-
-const ItemPonencia = ({
-                        listaDatos,
-                          nombrePonencia = "Ponencia de Ejemplo",
-                          congreso = "CIENU",
-                          ponente = "Dr. Santos",
-                          fecha = "30 oct 2026",
-                          hora = "11:00",
-                          estatus = "Aceptado"
-                      }) => {
+const ItemPonencia = ({ listaDatos, onViewItem }) => {
 
     const fecha_inicio = listaDatos.fecha_hora_inicio.split("T")[0];
     const hora_inicio = listaDatos.fecha_hora_inicio.split("T")[1];
@@ -24,72 +10,46 @@ const ItemPonencia = ({
     const fecha_fin = listaDatos.fecha_hora_final.split("T")[0];
     const hora_fin = listaDatos.fecha_hora_final.split("T")[1];
 
+    const Row = ({ icon: Icon, label, value }) => (
+        <div className="flex items-center justify-between gap-6 mb-3">
+            <div className="flex items-center gap-3 text-base-content/60 min-w-[120px]">
+                <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center shrink-0 shadow-md">
+                    <Icon size={18} />
+                </div>
+                <span className="text-[11px] font-black uppercase tracking-[0.1em]">{label}</span>
+            </div>
+            <div className="bg-base-200/50 border border-base-300 rounded-xl px-4 py-2 text-sm font-bold text-base-content text-center flex-1 break-words leading-tight">
+                {value}
+            </div>
+        </div>
+    );
+
+    const DateTimeBox = ({ label, date, time }) => (
+        <div className="mt-2 group">
+            <span className="text-[9px] font-black text-base-content/30 uppercase tracking-[0.2em] ml-1">{label}</span>
+            <div className="flex gap-2 mt-1">
+                <div className="flex-1 flex bg-base-100 border border-base-300 rounded-xl overflow-hidden shadow-sm group-hover:border-primary/30 transition-colors">
+                    <div className="bg-black text-white px-2 flex items-center justify-center"><FiCalendar size={12} /></div>
+                    <div className="flex-1 py-1.5 text-center text-[15px] font-mono font-bold">{date}</div>
+                </div>
+                <div className="w-20 flex bg-base-100 border border-base-300 rounded-xl overflow-hidden shadow-sm group-hover:border-primary/30 transition-colors">
+                    <div className="bg-black text-white px-2 flex items-center justify-center"><FiClock size={12} /></div>
+                    <div className="flex-1 py-1.5 text-center text-[15px] font-mono font-bold">{time}</div>
+                </div>
+            </div>
+        </div>
+    );
+
     return (
-        <TarjetaGenerica className="w-60"  titulo={listaDatos.nombre_evento}> {/* Sin botón de publicar según la imagen */}
+        <TarjetaGenerica titulo={listaDatos.nombre_evento} definingTipoElemento="ponencia" onView={() => onViewItem && onViewItem(listaDatos)}>
+            <Row icon={FiAward} label="Congreso" value={listaDatos.nombre_congreso} />
+            <Row icon={FiUser} label="Ponente" value={listaDatos.nombre_ponente} />
+            <Row icon={FiUsers} label="Cupos" value={listaDatos.cupos} />
 
-            {/* Fila 1: Congreso */}
-            <div style={rowStyle}>
-                <div style={labelContainer}>
-                    <div style={iconCircleBox}><FiAward size={14}/></div>
-                    <span>Congreso</span>
-                </div>
-                <div style={valuePillStyle}>{listaDatos.nombre_congreso}</div>
+            <div className="mt-4 space-y-3">
+                <DateTimeBox label="Inicio" date={fecha_inicio} time={hora_inicio} />
+                <DateTimeBox label="Fin" date={fecha_fin} time={hora_fin} />
             </div>
-
-            {/* Fila 2: Ponente */}
-            <div style={rowStyle}>
-                <div style={labelContainer}>
-                    <div style={iconCircleBox}><FiUser size={14}/></div>
-                    <span>Ponente</span>
-                </div>
-                <div style={valuePillStyle}>{listaDatos.nombre_ponente}</div>
-            </div>
-
-            {/* Fila 3: Ponente */}
-            <div style={rowStyle}>
-                <div style={labelContainer}>
-                    <div style={iconCircleBox}><FiUsers size={14}/></div>
-                    <span>Cupos</span>
-                </div>
-                <div style={valuePillStyle}>{listaDatos.cupos}</div>
-            </div>
-
-
-            {/* Fila 4: Fecha y Hora inicio */}
-            <div style={{ gap: '8px', paddingTop: '2px' }}  title="Fecha y hora de inicio de la ponencia">
-                <p className='w-8 text-sm text-gray-700'>Inicio</p>
-                <div className='flex gap-3'>
-                    <div style={{ flex: 3, display: 'flex', border: '1px solid #1A1A1A', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#FFFFFF' }}>
-                        <div style={{ backgroundColor: 'black', color: '#FFFFFF', padding: '6px 10px', display: 'flex', alignItems: 'center' }}><FiCalendar size={14} /></div>
-                        <div style={{ padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, fontSize: '13px', color: '#1A1A1A' }}>{fecha_inicio}</div>
-                    </div>
-                    <div style={{ flex: 2, display: 'flex', border: '1px solid #1A1A1A', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#FFFFFF' }}>
-                        <div style={{ backgroundColor: 'black', color: '#FFFFFF', padding: '6px 10px', display: 'flex', alignItems: 'center' }}><FiClock size={14} /></div>
-                        <div style={{ padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, fontSize: '13px', color: '#1A1A1A' }}>{hora_inicio}</div>
-                    </div>
-
-                </div>
-                
-            </div>
-
-            {/* Fila 5: Fecha y Hora final */}
-            <div style={{ gap: '8px', paddingTop: '2px' }}  title="Fecha y hora de inicio de la ponencia">
-                <p className='w-8 text-sm text-gray-700'>Fin</p>
-                <div className='flex gap-3'>
-                    <div style={{ flex: 3, display: 'flex', border: '1px solid #1A1A1A', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#FFFFFF' }}>
-                        <div style={{ backgroundColor: 'black', color: '#FFFFFF', padding: '6px 10px', display: 'flex', alignItems: 'center' }}><FiCalendar size={14} /></div>
-                        <div style={{ padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, fontSize: '13px', color: '#1A1A1A' }}>{fecha_fin}</div>
-                    </div>
-                    <div style={{ flex: 2, display: 'flex', border: '1px solid #1A1A1A', borderRadius: '8px', overflow: 'hidden', backgroundColor: '#FFFFFF' }}>
-                        <div style={{ backgroundColor: 'black', color: '#FFFFFF', padding: '6px 10px', display: 'flex', alignItems: 'center' }}><FiClock size={14} /></div>
-                        <div style={{ padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, fontSize: '13px', color: '#1A1A1A' }}>{hora_fin}</div>
-                    </div>
-
-                </div>
-                
-            </div>
-
-
         </TarjetaGenerica>
     );
 };

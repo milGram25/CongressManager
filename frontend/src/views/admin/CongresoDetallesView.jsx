@@ -1,37 +1,29 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { MdArrowBack } from "react-icons/md";
-import ListaElementosCongresosComponente from "./Componentes/ListaElementosCongresosComponente";
-import ListaHistorial from "./Componentes/ListaHistorial";
+import DetallesCrearCongreso from "./Componentes/DetallesCrearCongreso";
 
 export default function CongresoDetallesView() {
   const navigate = useNavigate();
-  const lista = [
-        {
-            id:1,
-            nombre: "CIENU 2025",
-            fecha_inicio: "2025-03-30 23:59:59.00000",
-            fecha_final: "2025-03-31 23:59:59.00000"
-        },
-        {
-            id:2,
-            nombre: "CIENU 2026",
-            fecha_inicio: "2026-02-28 23:59:59.00000",
-            fecha_final: "2026-04-31 23:59:59.00000"
-        },
-        {
-            id:3,
-            nombre: "CIENU 2027",
-            fecha_inicio: "2027-03-30 23:59:59.00000",
-            fecha_final: "2027-03-31 23:59:59.00000"
-        }
-    ];
-  return (
-    
+  const { id } = useParams();
+  const location = useLocation();
+  const isEditing = new URLSearchParams(location.search).get('edit') === 'true';
 
-    <div className="flex bg-base-100 p-8 rounded-3xl border border-base-300 shadow-sm min-h-[400px]">
-      {/*Insertar detalles de congreso aquí*/}
-      <ListaElementosCongresosComponente listaCongresos={lista}/>
+  return (
+    <div className="flex flex-col bg-base-100 p-0 md:p-4 rounded-3xl border border-base-300 shadow-sm min-h-[400px]">
+      <div className="p-4 flex items-center gap-4">
+        <button 
+          onClick={() => navigate(-1)}
+          className="p-2 hover:bg-base-200 rounded-full transition-colors"
+          title="Regresar"
+        >
+          <MdArrowBack size={24} />
+        </button>
+        <h2 className="text-xl font-bold">Detalles del Congreso</h2>
+      </div>
       
+      <div className="flex-1 w-full overflow-hidden">
+        <DetallesCrearCongreso indexDatosModal={id} initialModificando={isEditing} isFullPage={true} />
+      </div>
     </div>
   );
 }

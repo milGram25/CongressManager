@@ -7,29 +7,24 @@ export default function CongresoSedeView() {
   const navigate = useNavigate();
 
   const listaMesas = [
-      { id: 1, nombre: 'Mesa A', subarea: 'POO', capacidad: '50' },
-      { id: 2, nombre: 'Mesa B', subarea: '', capacidad: '' },
-      { id: 3, nombre: 'Mesa C', subarea: '', capacidad: '' }
-    ];
+    { id: 1, nombre: 'Mesa A', subarea: 'POO', capacidad: '50' },
+    { id: 2, nombre: 'Mesa B', subarea: 'Bases de Datos', capacidad: '40' },
+    { id: 3, nombre: 'Mesa C', subarea: 'Redes', capacidad: '30' }
+  ];
 
   return (
-    <div className="bg-base-100 p-8 rounded-3xl border border-base-300 shadow-sm min-h-[400px]">
-      <DetallesSede/>
+    <div className="w-full space-y-8 pb-10">
+      {/* Header */}
+      <div className="mb-2">
+        <div>
+          <h1 className="text-3xl font-bold text-base-content">Sede del Congreso</h1>
+          <p className="text-sm text-base-content/50">Configuración de ubicación, costos y espacios físicos</p>
+        </div>
+      </div>
 
-
-      <CrearMesasFisicas listaMesas={[]}/>
-
-      <button 
-        onClick={() => navigate(-1)} 
-        className="mb-6 p-2 hover:bg-base-200 rounded-full transition-colors flex items-center gap-2 text-base-content/70 hover:text-primary"
-        title="Regresar a la vista anterior"
-      >
-        <MdArrowBack className="text-2xl" />
-        <span className="text-sm font-medium">Regresar</span>
-      </button>
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <h2 className="text-2xl font-bold">Congreso: Sede</h2>
-        <p className="text-base-content/50 mt-2 italic">Sección en proceso de desarrollo...</p>
+      <div className="space-y-10">
+        <DetallesSede />
+        <CrearMesasFisicas listaMesas={listaMesas} />
       </div>
     </div>
   );

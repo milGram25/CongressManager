@@ -41,6 +41,7 @@ import ProcesosExtensosView from "./views/admin/ProcesosExtensosView";
 import TalleresView from "./views/admin/TalleresView";
 import TalleresCrearView from "./views/admin/TalleresCrearView";
 import PonenciasView from "./views/admin/PonenciasView";
+import PonenciaCrearView from "./views/admin/PonenciaCrearView";
 import CongresosView from "./views/admin/CongresosView";
 import CongresoListaView from "./views/admin/CongresoListaView";
 import CongresoDetallesView from "./views/admin/CongresoDetallesView";
@@ -182,8 +183,7 @@ const AdminLayoutWrapper = () => {
       { to: '/admin/eventos/congresos', label: 'Congresos', icon: MdAccountBalance, className: 'pl-9 opacity-70' },
       // Sub-sub menú de Congresos
       ...(pathname.includes('/admin/eventos/congresos') ? [
-        { to: '/admin/eventos/congresos/detalles', label: 'Detalles', icon: MdInfo, className: 'pl-14 opacity-60' },
-        { to: '/admin/eventos/congresos/crear', label: 'Crear', icon: MdAddCircle, className: 'pl-14 opacity-60' },
+        { to: '/admin/eventos/congresos/lista', label: 'Lista', icon: MdInfo, className: 'pl-14 opacity-60' },
         { to: '/admin/eventos/congresos/sede', label: 'Sede', icon: MdPlace, className: 'pl-14 opacity-60' },
         { to: '/admin/eventos/congresos/fechas', label: 'Fechas', icon: MdEventAvailable, className: 'pl-14 opacity-60' },
         { to: '/admin/eventos/congresos/tipos-trabajo', label: 'Tipos Trabajo', icon: MdWork, className: 'pl-14 opacity-60' },
@@ -374,12 +374,15 @@ function App() {
                 <Route index element={<TalleresView />} />
                 <Route path="crear" element={<TalleresCrearView />} />
               </Route>
-              <Route path="ponencias" element={<PonenciasView />} />
+              <Route path="ponencias">
+                <Route index element={<PonenciasView />} />
+                <Route path="crear" element={<PonenciaCrearView />} />
+              </Route>
               <Route path="congresos">
                 <Route index element={<CongresosView />} />
                 <Route path="lista" element={<CongresoListaView />} />
                 <Route path="crear" element={<CongresoCrearView />} />
-                <Route path="detalles" element={<CongresoDetallesView />} />
+                <Route path="detalles/:id" element={<CongresoDetallesView />} />
                 <Route path="sede" element={<CongresoSedeView />} />
                 <Route path="fechas" element={<CongresoFechasView />} />
                 <Route path="tipos-trabajo" element={<CongresoTiposTrabajoView />} />

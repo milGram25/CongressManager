@@ -91,7 +91,7 @@ function IconBtn({ active, title, popoverContent, children }) {
         onClick={() => setOpen((state) => !state)}
         className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
           active
-            ? "bg-[#0b7c91] text-white hover:bg-[#095f6f]"
+            ? "bg-[#000000] text-white hover:bg-gray-500"
             : "bg-[#e6eaed] text-slate-500 hover:bg-[#d8dde2]"
         }`}
       >
@@ -114,7 +114,7 @@ function PopoverAsignado({ item, dictaminadores }) {
         <ul className="space-y-2.5">
           {asignados.map((dictaminador) => (
             <li key={dictaminador.id} className="flex items-start gap-2.5">
-              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#0b7c91] text-[11px] font-semibold text-white">
+              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#000000] text-[11px] font-semibold text-white">
                 {dictaminador.nombre.charAt(0)}
               </div>
               <div className="min-w-0">
@@ -205,7 +205,7 @@ function ResumenRow({ item, dictaminadores, selected, onView }) {
       <button
         type="button"
         onClick={() => onView(item)}
-        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#0b7c91] text-white transition-colors hover:bg-[#095f6f]"
+        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#000000] text-white transition-colors hover:bg-gray-500"
         title={`Ver informacion de ${item.title}`}
       >
         <MdVisibility size={18} />
@@ -290,11 +290,11 @@ export default function ListaResumenes({ listaElementos = [], dictaminadores = [
 
   return (
     <section className="overflow-hidden rounded-[26px] border border-black/55 bg-white shadow-sm">
-      <div className="flex items-center gap-3 bg-[#005f73] px-3 py-2.5">
+      <div className="flex items-center gap-3 bg-[#000000] px-3 py-2.5">
         <label className="relative flex-1">
           <MdSearch size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
-            className="h-11 w-full rounded-full border border-slate-300 bg-white pl-11 pr-12 text-sm font-medium text-slate-700 outline-none transition-colors placeholder:text-slate-500 focus:border-[#0b7c91]"
+            className="h-11 w-full rounded-full border border-slate-300 bg-white pl-11 pr-12 text-sm font-medium text-slate-700 outline-none transition-colors placeholder:text-slate-500 focus:border-[#000000]"
             type="text"
             placeholder="Buscar resumen"
             onChange={(event) => setValorInput(event.target.value)}
@@ -337,7 +337,7 @@ export default function ListaResumenes({ listaElementos = [], dictaminadores = [
             <button
               type="button"
               onClick={() => exportToCSV(listaFiltrada)}
-              className="flex h-11 w-11 items-center justify-center rounded-full bg-[#0b7c91] text-white transition-colors hover:bg-[#095f6f]"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-[#000000] text-white transition-colors hover:bg-gray-500"
               title="Descargar CSV"
             >
               <MdDownload size={20} />
@@ -347,9 +347,9 @@ export default function ListaResumenes({ listaElementos = [], dictaminadores = [
               <button
                 type="button"
                 onClick={() => setFilterOpen((state) => !state)}
-                className="flex h-11 items-center gap-2 rounded-full border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-700 transition-colors hover:border-[#0b7c91]"
+                className="flex h-11 items-center gap-2 rounded-full border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-700 transition-colors hover:border-[#000000]"
               >
-                <MdFilterAlt size={18} className="text-[#0b7c91]" />
+                <MdFilterAlt size={18} className="text-[#]" />
                 <span>{filterLabel}</span>
                 <MdKeyboardArrowDown size={18} className={`transition-transform ${filterOpen ? "rotate-180" : ""}`} />
               </button>
@@ -366,7 +366,7 @@ export default function ListaResumenes({ listaElementos = [], dictaminadores = [
                       }}
                       className={`block w-full px-4 py-2.5 text-left text-sm transition-colors ${
                         ordenarItem === option.value
-                          ? "bg-[#eef8fa] font-semibold text-[#0b7c91]"
+                          ? "bg-[#eef8fa] font-semibold text-[#000000]"
                           : "text-slate-600 hover:bg-slate-100"
                       }`}
                     >

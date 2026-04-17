@@ -43,15 +43,15 @@ function SubAreaRow({ value, onEdit, onDelete }) {
         <>
           <input autoFocus value={val} onChange={e => setVal(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") confirm(); if (e.key === "Escape") cancel(); }}
-            className="flex-1 border border-[#00868a] rounded-full px-3 py-1 text-xs focus:outline-none bg-base-100" />
-          <button onClick={confirm} className="w-6 h-6 rounded-full bg-[#00868a] text-white flex items-center justify-center hover:bg-[#006f73] transition-colors flex-shrink-0"><MdCheck size={12} /></button>
+            className="flex-1 border border-[#000000] rounded-full px-3 py-1 text-xs focus:outline-none bg-base-100" />
+          <button onClick={confirm} className="w-6 h-6 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0"><MdCheck size={12} /></button>
           <button onClick={cancel}  className="w-6 h-6 rounded-full bg-base-300 text-base-content/50 flex items-center justify-center hover:bg-base-400 transition-colors flex-shrink-0"><MdClose size={12} /></button>
         </>
       ) : (
         <>
           <span className="flex-1 border border-base-200 rounded-full px-3 py-1 text-xs text-base-content/70 bg-base-100">{value}</span>
-          <button onClick={() => setEditing(true)} className="w-6 h-6 rounded-full bg-[#00868a] text-white flex items-center justify-center hover:bg-[#006f73] transition-colors flex-shrink-0"><MdEdit size={11} /></button>
-          <button onClick={onDelete}               className="w-6 h-6 rounded-full bg-[#00868a] text-white flex items-center justify-center hover:bg-[#006f73] transition-colors flex-shrink-0"><MdDelete size={11} /></button>
+          <button onClick={() => setEditing(true)} className="w-6 h-6 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0"><MdEdit size={11} /></button>
+          <button onClick={onDelete}               className="w-6 h-6 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500adtion-colors flex-shrink-0"><MdDelete size={11} /></button>
         </>
       )}
     </div>
@@ -86,20 +86,20 @@ function AreaRow({ area, onEdit, onDelete, onAddSubArea, onEditSubArea, onDelete
           <>
             <input autoFocus value={val} onChange={e => setVal(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") confirmEdit(); if (e.key === "Escape") cancelEdit(); }}
-              className="flex-1 border border-[#00868a] rounded-full px-3 py-2 text-sm focus:outline-none bg-base-100" />
-            <button onClick={confirmEdit} className="w-8 h-8 rounded-full bg-[#00868a] text-white flex items-center justify-center hover:bg-[#006f73] transition-colors flex-shrink-0"><MdCheck size={14} /></button>
+              className="flex-1 border border-[#000000] rounded-full px-3 py-2 text-sm focus:outline-none bg-base-100" />
+            <button onClick={confirmEdit} className="w-8 h-8 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0"><MdCheck size={14} /></button>
             <button onClick={cancelEdit}  className="w-8 h-8 rounded-full bg-base-300 text-base-content/50 flex items-center justify-center hover:bg-base-400 transition-colors flex-shrink-0"><MdClose size={14} /></button>
           </>
         ) : (
           <>
             <span className="flex-1 border border-base-300 rounded-full px-3 py-2 text-sm text-base-content bg-base-100 truncate">{area.nombre}</span>
             <button onClick={() => setEditing(true)} title="Editar área"
-              className="w-8 h-8 rounded-full bg-[#00868a] text-white flex items-center justify-center hover:bg-[#006f73] transition-colors flex-shrink-0"><MdEdit size={14} /></button>
+              className="w-8 h-8 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0"><MdEdit size={14} /></button>
             <button onClick={onDelete} title="Eliminar área"
-              className="w-8 h-8 rounded-full bg-[#00868a] text-white flex items-center justify-center hover:bg-[#006f73] transition-colors flex-shrink-0"><MdDelete size={14} /></button>
+              className="w-8 h-8 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0"><MdDelete size={14} /></button>
             <button onClick={handleClipClick} title="Ver/agregar subáreas"
               className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors flex-shrink-0
-                ${showSubs ? "bg-[#006f73] text-white" : "bg-[#00868a] text-white hover:bg-[#006f73]"}`}>
+                ${showSubs ? "bg-[#000000] text-white" : "bg-[#000000] text-white hover:bg-gray-500"}`}>
               <MdAttachFile size={14} />
             </button>
           </>
@@ -108,13 +108,13 @@ function AreaRow({ area, onEdit, onDelete, onAddSubArea, onEditSubArea, onDelete
  
       {/* SubAreas panel */}
       {showSubs && !editing && (
-        <div className="mt-2 ml-2 pl-2 border-l-2 border-[#00868a]/30">
+        <div className="mt-2 ml-2 pl-2 border-l-2 border-[#000000]/30">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[11px] font-semibold text-base-content/40 uppercase tracking-wide">
               Subáreas {area.subAreas.length > 0 && `(${area.subAreas.length})`}
             </span>
             <button onClick={() => setAddingSub(true)} title="Agregar subárea"
-              className="flex items-center gap-1 text-[11px] text-[#00868a] hover:text-[#006f73] font-semibold transition-colors">
+              className="flex items-center gap-1 text-[11px] text-[#000000] hover:text-gray-500 font-semibold transition-colors">
               <MdAdd size={13} /> Agregar
             </button>
           </div>
@@ -135,8 +135,8 @@ function AreaRow({ area, onEdit, onDelete, onAddSubArea, onEditSubArea, onDelete
               <input autoFocus placeholder="Nueva subárea..." value={newSubVal}
                 onChange={e => setNewSubVal(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter") confirmAddSub(); if (e.key === "Escape") cancelAddSub(); }}
-                className="flex-1 border border-[#00868a] rounded-full px-3 py-1 text-xs focus:outline-none bg-base-100" />
-              <button onClick={confirmAddSub} className="w-6 h-6 rounded-full bg-[#00868a] text-white flex items-center justify-center hover:bg-[#006f73] transition-colors flex-shrink-0"><MdCheck size={12} /></button>
+                className="flex-1 border border-[#000000] rounded-full px-3 py-1 text-xs focus:outline-none bg-base-100" />
+              <button onClick={confirmAddSub} className="w-6 h-6 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0"><MdCheck size={12} /></button>
               <button onClick={cancelAddSub} className="w-6 h-6 rounded-full bg-base-300 text-base-content/50 flex items-center justify-center hover:bg-base-400 transition-colors flex-shrink-0"><MdClose size={12} /></button>
             </div>
           )}
@@ -184,7 +184,7 @@ export default function AreasGeneralesView() {
     <div className="bg-base-100 rounded-3xl border border-base-300 shadow-sm overflow-hidden" style={{ width: 565 }}>
  
       {/* Header teal */}
-      <div className="flex items-center justify-between px-5 py-4 bg-[#00868a]">
+      <div className="flex items-center justify-between px-5 py-4 bg-[#000000]">
         <div className="flex items-center gap-2">
           <button onClick={() => navigate(-1)} className="text-white/70 hover:text-white transition-colors" title="Regresar">
             <MdArrowBack size={18} />
@@ -215,8 +215,8 @@ export default function AreasGeneralesView() {
             <input autoFocus placeholder="Nombre del área..." value={newVal}
               onChange={e => setNewVal(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") addArea(); if (e.key === "Escape") { setAdding(false); setNewVal(""); } }}
-              className="flex-1 border border-[#00868a] rounded-full px-3 py-2 text-sm focus:outline-none bg-base-100" />
-            <button onClick={addArea} className="w-8 h-8 rounded-full bg-[#00868a] text-white flex items-center justify-center hover:bg-[#006f73] transition-colors flex-shrink-0"><MdCheck size={14} /></button>
+              className="flex-1 border border-[#000000] rounded-full px-3 py-2 text-sm focus:outline-none bg-base-100" />
+            <button onClick={addArea} className="w-8 h-8 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0"><MdCheck size={14} /></button>
             <button onClick={() => { setAdding(false); setNewVal(""); }} className="w-8 h-8 rounded-full bg-base-300 text-base-content/50 flex items-center justify-center hover:bg-base-400 transition-colors flex-shrink-0"><MdClose size={14} /></button>
           </div>
         )}
@@ -241,7 +241,7 @@ export default function AreasGeneralesView() {
       {/* Footer + button */}
       <div className="flex justify-center py-3 border-t border-base-200">
         <button onClick={() => { setAdding(true); setNewVal(""); }}
-          className="w-10 h-10 rounded-full bg-[#00868a] text-white flex items-center justify-center hover:bg-[#006f73] transition-colors shadow-md"
+          className="w-10 h-10 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors shadow-md"
           title="Agregar área">
           <MdAdd size={20} />
         </button>
