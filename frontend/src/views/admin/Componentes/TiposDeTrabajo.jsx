@@ -16,12 +16,12 @@ export default function CongresoTiposTrabajoComponente() {
     const saved = localStorage.getItem("congreso_tipos_trabajo");
     return saved ? JSON.parse(saved) : MOCK_TIPOS;
   });
-  
+
   // Estados para doble confirmación
   const [confirmDeleteIdx, setConfirmDeleteIdx] = useState(null);
   const [isConfirmingAdd, setIsConfirmingAdd] = useState(false);
   const [isConfirmingEdit, setIsConfirmingEdit] = useState(false);
-  
+
   const [editIdx, setEditIdx] = useState(null);
   const [editVal, setEditVal] = useState("");
   const [adding, setAdding] = useState(false);
@@ -100,9 +100,9 @@ export default function CongresoTiposTrabajoComponente() {
           <button onClick={() => navigate(-1)} className="text-white/70 hover:text-white transition-colors mr-1">
             <MdArrowBack size={18} />
           </button>
-          <h2 className="text-base font-bold text-white">Crear tipos de trabajo</h2>
+          <h2 className="text-lg font-bold text-white">Crear tipos de trabajo</h2>
         </div>
-        <button onClick={() => { setAdding(true); setConfirmDeleteIdx(null); }} className="w-8 h-8 rounded-full border-2 border-white/60 text-white flex items-center justify-center hover:bg-white/20 transition-colors">
+        <button onClick={() => { setAdding(true); setConfirmDeleteIdx(null); }} className="w-8 h-8 rounded-full border-2 border-white/60 text-white flex items-center justify-center hover:bg-white/20 hover:cursor-pointer transition-colors">
           <MdAdd size={18} />
         </button>
       </div>
@@ -113,7 +113,7 @@ export default function CongresoTiposTrabajoComponente() {
             <div className="flex items-center gap-2">
               {editIdx === i ? (
                 <>
-                  <input autoFocus value={editVal} onChange={e => setEditVal(e.target.value)} className="flex-1 border border-primary rounded-full px-3 py-1.5 text-sm bg-base-100" />
+                  <input autoFocus value={editVal} onChange={e => setEditVal(e.target.value)} className="flex-1 border border-primary rounded-full px-3 py-1.5 text-sm bg-white-100" />
                   <button onClick={handleEditClick} className={`btn btn-xs rounded-full px-3 transition-all ${isConfirmingEdit ? 'bg-warning text-white border-none scale-105' : 'bg-black text-white border-none'}`}>
                     {isConfirmingEdit ? <><MdCheck size={14} /> ¿ACTUALIZAR?</> : <MdCheck size={14} />}
                   </button>
@@ -124,7 +124,7 @@ export default function CongresoTiposTrabajoComponente() {
                   <span className={`flex-1 border rounded-full px-3 py-1.5 text-sm transition-all ${confirmDeleteIdx === i ? 'border-error bg-error/5 text-error font-bold' : 'border-base-300 bg-base-100'}`}>
                     {tipo}
                   </span>
-                  
+
                   {confirmDeleteIdx === i ? (
                     <div className="flex items-center gap-1 animate-in fade-in zoom-in duration-200">
                       <button onClick={() => handleDeleteClick(i)} className="btn btn-xs bg-error text-white border-none rounded-full px-3 gap-1">
@@ -150,11 +150,11 @@ export default function CongresoTiposTrabajoComponente() {
           <div className="border-b border-base-200 pb-2 animate-in slide-in-from-top-2 duration-200">
             <div className="flex items-center gap-2">
               <input autoFocus placeholder="Nuevo tipo..." value={newVal} onChange={e => setNewVal(e.target.value)} className="flex-1 border border-primary rounded-full px-3 py-1.5 text-sm bg-base-100" />
-              
+
               <button onClick={handleAddClick} className={`btn btn-xs rounded-full px-3 transition-all ${isConfirmingAdd ? 'bg-warning text-white border-none scale-105' : 'bg-black text-white border-none'}`}>
                 {isConfirmingAdd ? <><MdCheck size={14} /> ¿AGREGAR?</> : <MdCheck size={14} />}
               </button>
-              
+
               <button onClick={() => { setAdding(false); setIsConfirmingAdd(false); }} className="btn btn-xs btn-circle bg-base-300 border-none"><MdClose size={14} /></button>
             </div>
           </div>

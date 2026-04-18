@@ -188,8 +188,7 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
                                     type="text" 
                                     placeholder="Lugar del evento..."
                                     className={inputClasses} 
-                                    value={sedes}//value={formatData.sede} 
-                                    //onChange={handleChange} 
+                                    value={formatData.sede} 
                                     readOnly={true}//Solo debe mostrar los datos del congreso seleccionado
                                 />
                             </div>
@@ -357,7 +356,6 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
                                 onChange={handleChange} 
                                 readOnly={!modificando}
                                 min="0"
-                                max={cupos_mesa}
                             />
                         </div>
                     </div>
