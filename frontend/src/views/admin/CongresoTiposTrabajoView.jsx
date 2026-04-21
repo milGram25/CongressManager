@@ -3,8 +3,8 @@ import CongresoTiposTrabajoComponente from "./Componentes/TiposDeTrabajo";
 import RubricasYPreguntas from "./Componentes/RubricasYPreguntas";
 
 const MOCK_TIPOS = [
-  { id: 1, nombre: "Avances de tesis",            tipo: "rubrica",  count: 3 },
-  { id: 2, nombre: "Investigaciones concluidas",   tipo: "none",     count: 0 },
+  { id: 1, nombre: "Avances de tesis", tipo: "rubrica", count: 3 },
+  { id: 2, nombre: "Investigaciones concluidas", tipo: "none", count: 0 },
   { id: 3, nombre: "Experiencias de investigación", tipo: "pregunta", count: 1 },
 ];
 
@@ -30,23 +30,23 @@ export default function CongresoTiposTrabajoView() {
   const [selectedId, setSelectedId] = useState(1);
 
   return (
-    <div className="w-full space-y-6" >
-
-      <div className="flex gap-4">
-        <div className="border bg-black rounded-full h-10 w-2"></div>
-        <h2 className="flex-1 text-2xl font-bold text-start">Tipos de trabajo</h2>
+    <div className="w-full" >
+      <div>
+        <div className="flex gap-4">
+          <div className="border bg-black rounded-full h-10 w-2"></div>
+          <h2 className="flex-1 text-2xl font-bold text-start">Tipos de trabajo</h2>
+        </div>
+        <p className="pl-12 text-start text-gray-500 mb-10">
+          Crea tipos de trabajo y añádeles preguntas o rúbricas para que los dictaminadores o evaluadores realicen sus revisiones, respectivamente
+        </p>
       </div>
-      <p className="pt-2 pl-12 text-start mb-4">
-        Crea tipos de trabajo y añádeles preguntas o rúbricas para que los dictaminadores o evaluadores realicen sus revisiones, respectivamente
-      </p>
-
-      <CongresoTiposTrabajoComponente/>
-      <RubricasYPreguntas/>
+      <CongresoTiposTrabajoComponente />
+      <RubricasYPreguntas />
 
 
 
-  {/* IZQUIERDA */}
-  {/*<div className="bg-white border border-gray-200 rounded-xl p-4 h-full flex flex-col">
+      {/* IZQUIERDA */}
+      {/*<div className="bg-white border border-gray-200 rounded-xl p-4 h-full flex flex-col">
     <div className="flex items-center justify-between mb-3">
       <span className="text-sm font-medium text-gray-800">Tipos de trabajo</span>
       <button className="text-xs border border-gray-200 rounded-lg px-3 py-1 hover:bg-gray-50">
@@ -73,8 +73,8 @@ export default function CongresoTiposTrabajoView() {
     </div>
   </div>*/}
 
-  
 
-</div>
+
+    </div>
   );
 }

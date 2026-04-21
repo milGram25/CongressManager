@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { MdFilterListAlt, MdAccessTime, MdInfoOutline } from "react-icons/md";
 import { HiEye } from "react-icons/hi";
 
+
 export default function ListaHistorial({ listaElementos }) {
     const [ordenarItem, setOrdenarItem] = useState("todos");
     const [listaFiltrada, setListaFiltrada] = useState(listaElementos);
@@ -36,6 +37,14 @@ export default function ListaHistorial({ listaElementos }) {
         if (diferenciaDias <= 30) return "bg-orange-500";
         return "bg-red-500";
     }
+    function handleTemporalidadFecha(fecha) {
+        const fechaAccion = new Date(fecha);
+        const diferenciaDias = Math.abs(fechaActual - fechaAccion) / 1000 / 60 / 60 / 24;
+        if (diferenciaDias <= 1) return "Hoy";
+        if (diferenciaDias <= 7) return "Esta semana";
+        if (diferenciaDias <= 30) return "Este mes";
+        return "Más de un mes";
+    }
 
     function handleColorImportancia(accion) {
         switch (accion) {
@@ -54,15 +63,32 @@ export default function ListaHistorial({ listaElementos }) {
             default: return "bg-gray-400";
         }
     }
+    function handleNombreImportancia(accion) {
+        switch (accion) {
+            case "crear taller":
+            case "borrar usuario":
+            case "modificar fecha evento":
+            case "crear congreso": return "Crítico";
+            case "crear area general":
+            case "crear subarea especifica": return "Alta";
+            case "revisar resumen":
+            case "revisar extenso":
+            case "solicitar ponencia": return "Media";
+            case "emisión de factura":
+            case "emisión de constancia":
+            case "realizar pago": return "Baja";
+            default: return "";
+        }
+    }
 
     function handleColorRol(rol) {
-        const r = rol.toLowerCase();
-        if (r.includes("comite")) return "bg-red-500";
+        const r = rol.toLowerCase(); //mejor un switch
+        // if (r.includes("comite")) return "bg-red-500";
         if (r.includes("ponente")) return "bg-orange-500";
         if (r.includes("tallerista")) return "bg-yellow-500";
         if (r.includes("dictaminador")) return "bg-blue-500";
         if (r.includes("evaluador")) return "bg-purple-500";
-        return "bg-green-500";
+        return "bg-red-500";
     }
 
     return (
@@ -70,25 +96,25 @@ export default function ListaHistorial({ listaElementos }) {
             {/* Toolbar superior estilizada con bordes resaltados */}
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-gray-50/50 p-4 rounded-2xl border border-gray-200 shadow-sm">
                 <div className="relative w-full sm:w-80">
-                    <input 
-                        className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#005a6a] focus:border-transparent outline-none text-sm transition-all bg-white" 
-                        type="text" 
-                        placeholder="Buscar por nombre..." 
-                        onChange={busquedaInput} 
+                    <input
+                        className="w-full pl-4 pr-10 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#005a6a] focus:border-transparent outline-none text-sm transition-all bg-white"
+                        type="text"
+                        placeholder="Buscar por nombre..."
+                        onChange={busquedaInput}
                         value={valorInput}
                     />
-                    <FaRegTrashAlt 
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 cursor-pointer transition-colors" 
+                    <FaRegTrashAlt
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 cursor-pointer transition-colors"
                         onClick={() => { setValorInput(""); setListaFiltrada(listaElementos); }}
                     />
                 </div>
 
                 <div className="flex items-center gap-3 w-full sm:w-auto">
                     <div className="flex items-center gap-2 bg-white border border-gray-300 rounded-xl px-3 py-1.5 shadow-sm flex-1 sm:flex-none">
-                        <MdFilterListAlt className="text-[#005a6a] text-lg" />
-                        <select 
+                        <MdFilterListAlt className="text-black text-lg" />
+                        <select
                             className="bg-transparent text-sm font-medium outline-none text-gray-600 cursor-pointer w-full"
-                            value={ordenarItem} 
+                            value={ordenarItem}
                             onChange={(e) => setOrdenarItem(e.target.value)}
                         >
                             <option value="todos">Todos los roles</option>
@@ -97,11 +123,11 @@ export default function ListaHistorial({ listaElementos }) {
                         </select>
                     </div>
 
-                    <button className="p-2.5 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 text-gray-600 shadow-sm transition-all active:scale-95" title="Descargar reporte">
+                    <button className="p-2.5 bg-white border border-gray-300 rounded-xl hover:bg-black hover:text-white text-gray-700 shadow-sm transition-all active:scale-95" title="Descargar reporte">
                         <LuDownload />
                     </button>
-                    <button 
-                        className="p-2.5 bg-[#005a6a] border border-[#005a6a] text-white rounded-xl hover:bg-[#004a5a] shadow-sm transition-all active:scale-95"
+                    <button
+                        className="p-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-black hover:text-white shadow-sm transition-all active:scale-95"
                         onClick={() => { setValorInput(""); setListaFiltrada(listaElementos); setOrdenarItem("todos"); }}
                         title="Refrescar lista"
                     >
@@ -131,20 +157,24 @@ export default function ListaHistorial({ listaElementos }) {
                                     <div className="flex items-center gap-2" title={`Rol: ${item.rol}`}>
                                         <div className={`w-2 h-2 rounded-full ${handleColorRol(item.rol)}`}></div>
                                         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tight">{item.rol}</span>
+                                        <FaRegUserCircle className="text-gray-500 text-sm" />
                                     </div>
                                     <div className="w-px h-3 bg-gray-200"></div>
                                     <div className="flex items-center gap-1.5" title="Temporalidad">
-                                        <div className={`w-2 h-2 rounded-full ${handleColorFecha(item.fecha)}`}></div>
+                                        <div className={`w-2 h-2 rounded-full ${handleColorFecha(item.fecha)}`}></div>{/**/}
+
+                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tight">{handleTemporalidadFecha(item.fecha)}</span>
                                         <MdAccessTime className="text-gray-500 text-sm" />
                                     </div>
                                     <div className="w-px h-3 bg-gray-200"></div>
                                     <div className="flex items-center gap-1.5" title="Importancia">
                                         <div className={`w-2 h-2 rounded-full ${handleColorImportancia(item.accion)}`}></div>
+                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-tight">{handleNombreImportancia(item.accion)}</span>
                                         <MdInfoOutline className="text-gray-500 text-sm" />
                                     </div>
                                 </div>
 
-                                <button className="w-9 h-9 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-[#005a6a] hover:text-white hover:border-[#005a6a] transition-all shadow-sm active:scale-90" title="Ver detalles">
+                                <button className="w-9 h-9 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-black hover:text-white hover:border-[#005a6a] transition-all shadow-sm active:scale-90" title="Ver detalles">
                                     <HiEye className="text-lg" />
                                 </button>
                             </div>

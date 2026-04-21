@@ -7,20 +7,20 @@ export default function UsuariosHistorialView() {
 
   const listaEventos = [
     {
-      id:1,
-      nombre_institucion:"CIENU",
+      id: 1,
+      nombre_institucion: "CIENU",
       congresos_totales: 10,
       congresos_activos: 1,
-      ruta_imagen:"ruta imagen"
-      
+      ruta_imagen: "ruta imagen"
+
     },
     {
-      id:2,
-      nombre_institucion:"RIDMAE",
+      id: 2,
+      nombre_institucion: "RIDMAE",
       congresos_totales: 10,
       congresos_activos: 1,
-      ruta_imagen:"ruta imagen"
-      
+      ruta_imagen: "ruta imagen"
+
     }
 
   ];
@@ -28,20 +28,9 @@ export default function UsuariosHistorialView() {
   return (
     <div className="bg-base-100 p-8 rounded-3xl border border-base-300 shadow-sm min-h-[400px]">
 
-      <MenuCrearBorrar title="Ver institución" listaElementos2={listaEventos} definirTipoElemento="institucion"/>
+      <MenuCrearBorrar title="Ver institución" listaElementos2={listaEventos} definirTipoElemento="institucion" />
 
-      <button 
-        onClick={() => navigate(-1)} 
-        className="mb-6 p-2 hover:bg-base-200 rounded-full transition-colors flex items-center gap-2 text-base-content/70 hover:text-primary"
-        title="Regresar a la vista anterior"
-      >
-        <MdArrowBack className="text-2xl" />
-        <span className="text-sm font-medium">Regresar</span>
-      </button>
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <h2 className="text-2xl font-bold">Ajustes: Instituciones</h2>
-        <p className="text-base-content/50 mt-2 italic">Sección en proceso de desarrollo...</p>
-      </div>
+
     </div>
   );
 }

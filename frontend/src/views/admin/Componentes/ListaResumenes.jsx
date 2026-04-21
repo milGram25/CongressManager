@@ -89,11 +89,10 @@ function IconBtn({ active, title, popoverContent, children }) {
         type="button"
         title={title}
         onClick={() => setOpen((state) => !state)}
-        className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
-          active
+        className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${active
             ? "bg-[#000000] text-white hover:bg-gray-500"
             : "bg-[#e6eaed] text-slate-500 hover:bg-[#d8dde2]"
-        }`}
+          }`}
       >
         {children}
       </button>
@@ -235,7 +234,7 @@ function ResumenRow({ item, dictaminadores, selected, onView }) {
   );
 }
 
-export default function ListaResumenes({ listaElementos = [], dictaminadores = [], selectedId = null, onView = () => {} }) {
+export default function ListaResumenes({ listaElementos = [], dictaminadores = [], selectedId = null, onView = () => { } }) {
   const [ordenarItem, setOrdenarItem] = useState("pendientes");
   const [valorInput, setValorInput] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
@@ -325,11 +324,11 @@ export default function ListaResumenes({ listaElementos = [], dictaminadores = [
       <div className="space-y-4 px-4 pb-4 pt-3 md:px-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-[280px]">
-            <h3 className="text-[30px] font-black tracking-tight text-slate-900">RESUMENES</h3>
+            <h3 className="text-[30px] font-black tracking-tight text-slate-900">RESÚMENES</h3>
             <p className="mt-1 text-xs leading-5 text-slate-500">
-              Aqui puede encontrar todos los resumenes.
+              Aquí puede encontrar todos los resúmenes.
               <br />
-              Para filtrarlos, escoja una opcion del filtro
+              Para filtrarlos, escoja una opción del filtro
             </p>
           </div>
 
@@ -364,11 +363,10 @@ export default function ListaResumenes({ listaElementos = [], dictaminadores = [
                         setOrdenarItem(option.value);
                         setFilterOpen(false);
                       }}
-                      className={`block w-full px-4 py-2.5 text-left text-sm transition-colors ${
-                        ordenarItem === option.value
+                      className={`block w-full px-4 py-2.5 text-left text-sm transition-colors ${ordenarItem === option.value
                           ? "bg-[#eef8fa] font-semibold text-[#000000]"
                           : "text-slate-600 hover:bg-slate-100"
-                      }`}
+                        }`}
                     >
                       {option.label}
                     </button>

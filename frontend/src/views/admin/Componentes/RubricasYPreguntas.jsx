@@ -136,7 +136,7 @@ const RubricasYPreguntas = () => {
           className="h-10 pl-2 w-full md:w-80 bg-white text-base-content rounded-xl font-normal"
         >
           {tiposTrabajoDisponibles.map((tipo) => (
-            <option key={tipo.id} value={tipo.id}>{tipo.nombre}</option>
+            <option key={tipo.id} value={tipo.id} className="text_left">{tipo.nombre}</option>
           ))}
           {tiposTrabajoDisponibles.length === 0 && <option value="">No hay tipos creados</option>}
         </select>

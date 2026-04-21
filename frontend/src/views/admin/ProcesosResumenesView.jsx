@@ -158,12 +158,12 @@ function ResumenDetailCard({ resumen, revisores }) {
     <article className="flex min-h-[760px] flex-col rounded-[28px] border border-black/55 bg-white px-5 py-5 shadow-sm md:px-6">
       <div className="space-y-6">
         <section>
-          <h3 className="text-[14px] font-semibold uppercase tracking-wide text-slate-700">Informacion de resumen</h3>
+          <h3 className="text-[14px] font-semibold uppercase tracking-wide text-slate-700">Información de resumen</h3>
           <div className="mt-4 space-y-3 text-[14px] leading-6 text-slate-700">
-            <p><span className="font-semibold text-slate-900">Titulo:</span> {resumen.title}</p>
+            <p><span className="font-semibold text-slate-900">Título:</span> {resumen.title}</p>
             <p><span className="font-semibold text-slate-900">Autores:</span> {resumen.autores.join(" / ")}</p>
             <p><span className="font-semibold text-slate-900">Dictaminadores:</span> {revisores.length > 0 ? revisores.map((revisor) => revisor.nombre).join(" / ") : "Sin asignar"}</p>
-            <p><span className="font-semibold text-slate-900">Subarea:</span> {resumen.subarea}</p>
+            <p><span className="font-semibold text-slate-900">Subárea:</span> {resumen.subarea}</p>
             <p><span className="font-semibold text-slate-900">Tipo de trabajo:</span> {resumen.tipoTrabajo}</p>
           </div>
         </section>
@@ -211,15 +211,19 @@ export default function ProcesosResumenesView() {
   return (
     <div className="w-full space-y-7">
       <section className="flex flex-wrap items-center gap-3 border-t border-base-300 pt-7">
-        <div className="h-12 w-1.5 rounded-full bg-[#000000]" />
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h2 className="text-[42px] font-black leading-none tracking-tight text-[#000000]">Revision</h2>
-          <p className="text-lg font-semibold text-slate-400">Evaluacion de resumenes y asignacion de evaluadores</p>
+        <div>
+          <div className="flex gap-4">
+            <div className="border bg-black rounded-full h-10 w-2"></div>
+            <h2 className="flex-1 text-2xl font-bold text-start">Revisión</h2>
+          </div>
+          <p className="pl-12 text-start text-gray-500 mb-10">
+            Aquí se gestiona la revisión de resúmenes.
+          </p>
         </div>
       </section>
 
-      <section className="grid items-start gap-6 xl:grid-cols-[52.5%_43.5%]">
-        <ResumenDetailCard resumen={viewItem} revisores={revisoresAsignados} />
+      <section className="grid items-start gap-6 xl:grid-cols-2">
+
 
         <div className="space-y-4">
           <ListaResumenes
@@ -229,7 +233,9 @@ export default function ProcesosResumenesView() {
             onView={setViewItem}
           />
           <ListaRevisores titulo="DICTAMINADORES" revisores={revisoresAsignados} />
+
         </div>
+        <ResumenDetailCard resumen={viewItem} revisores={revisoresAsignados} />
       </section>
     </div>
   );

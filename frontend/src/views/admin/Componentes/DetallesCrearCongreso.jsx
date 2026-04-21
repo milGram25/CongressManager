@@ -1,5 +1,7 @@
 import { RiPencilFill, RiSave3Line } from "react-icons/ri";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import Select from 'react-select';
+import countryList from 'react-select-country-list';
 import { IoIosCheckmark, IoMdAlert } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
 import { FiCalendar, FiClock, FiMapPin, FiCreditCard, FiTag, FiFileText } from "react-icons/fi";
@@ -55,7 +57,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
     const listaInstituciones = [
         { nombre_institucion: "CIENU" },
         { nombre_institucion: "RIDMAE" },
-        { nombre_institucion: "Centro Universitario de la Ciénega" }
+
     ];
 
     const emptyFormData = {
@@ -198,6 +200,15 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
     const [formData, setFormData] = useState(getMockData(indexDatosModal));
     const [modificando, setModificando] = useState(initialModificando || modificandoDatos);
 
+    const options = useMemo(() => countryList().getData(), []);
+
+    function handleCountryChange(value) {
+        setFormData(prev => ({
+            ...prev,
+            pais: value.label
+        }));
+    }
+
     function handleChange(e) {
         const { id, value } = e.target;
         setFormData(prev => ({
@@ -305,7 +316,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
                         <div className="md:col-span-1">
                             <label className={labelClasses}>Logo Representativo</label>
                             <div className="border-2 border-dashed border-gray-200 bg-gray-50 rounded-2xl h-[46px] flex items-center justify-center text-gray-400 text-xs font-medium uppercase tracking-tighter">
-                                Seleccionar archivo
+                                Seleccione una institución
                             </div>
                         </div>
                     </div>
@@ -328,7 +339,55 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 md:col-span-2">
                             <div>
                                 <label htmlFor="pais" className={labelClasses}>País</label>
-                                <input value={formData.pais} id="pais" onChange={handleChange} className={inputClasses} readOnly={!modificando} />
+                                {!modificando ? (
+                                    <input value={formData.pais} id="pais" readOnly className={inputClasses} />
+                                ) : (
+                                    <Select
+                                        options={options}
+                                        value={options.find(opt => opt.label === formData.pais) || null}
+                                        onChange={handleCountryChange}
+                                        placeholder="Busca tu país..."
+                                        noOptionsMessage={() => "No se encontraron resultados"}
+                                        styles={{
+                                            control: (base) => ({
+                                                ...base,
+                                                padding: '2px 8px',
+                                                borderRadius: '1rem',
+                                                backgroundColor: 'white',
+                                                border: '1px solid #e5e7eb',
+                                                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                                                '&:hover': { borderColor: '#9ca3af' }
+                                            }),
+                                            placeholder: (base) => ({
+                                                ...base,
+                                                color: '#6b7280',
+                                                fontSize: '0.875rem'
+                                            }),
+                                            singleValue: (base) => ({
+                                                ...base,
+                                                color: '#111827',
+                                                fontSize: '0.875rem'
+                                            }),
+                                            menu: (base) => ({
+                                                ...base,
+                                                backgroundColor: 'white',
+                                                borderRadius: '1rem',
+                                                zIndex: 50
+                                            }),
+                                            option: (base, state) => ({
+                                                ...base,
+                                                backgroundColor: state.isFocused ? '#f3f4f6' : 'transparent',
+                                                color: '#111827',
+                                                fontSize: '0.875rem',
+                                                '&:active': {
+                                                    backgroundColor: 'black',
+                                                    color: 'white'
+                                                }
+                                            })
+                                        }}
+                                        className="w-full transition-all"
+                                    />
+                                )}
                             </div>
                             <div>
                                 <label htmlFor="estado" className={labelClasses}>Estado / Región</label>

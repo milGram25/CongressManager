@@ -5,21 +5,21 @@ import { RxCross2 } from "react-icons/rx";
 
 export default function DetallesSede({
     detalles = {
-        nombre:"Cualtos",
-        pais:"México",
-        estado:"Jalisco",
-        ciudad:"Tepayork",
-        calle:"Av. Ricardo Alcalá",
-        num_exterior:"100",
-        num_interior:"15",
-        mod_fisico:"Edificio G-205",
-        cuenta_deposito:"123456789",
-        costo_evento:1000,
-        descuento_prepago:10,
+        nombre: "Cualtos",
+        pais: "México",
+        estado: "Jalisco",
+        ciudad: "Tepayork",
+        calle: "Av. Ricardo Alcalá",
+        num_exterior: "100",
+        num_interior: "15",
+        mod_fisico: "Edificio G-205",
+        cuenta_deposito: "123456789",
+        costo_evento: 1000,
+        descuento_prepago: 10,
         descuento_estudiante: 50,
         tipo_moneda: "MXN"
     }
-}){
+}) {
 
     const [modificando, setModificando] = useState(true);
     const [formData, setFormData] = useState(detalles);
@@ -31,44 +31,44 @@ export default function DetallesSede({
         }));
     };
 
-    return(
+    return (
 
         <div className="w-full mb-10">
             <div className="flex items-center pl-8 bg-black text-white rounded-t-lg h-15">
                 <p className="text-xl font-bold">Detalles de sede</p>
                 <div className="flex flex-1 justify-end">
-                    {modificando===true?(
-                        
-                    <button
-                        className="flex justify-center rounded-full h-8 w-8 border-2 bg-black text-white border border-white items-center mr-4 hover:bg-gray-500 cursor-pointer"
-                        onClick={() => setModificando(!modificando)}
-                    >
-                        <RiPencilFill />
-                     
-                        
-                    </button>):(
+                    {modificando === true ? (
+
+                        <button
+                            className="flex justify-center rounded-full h-8 w-8 border-2 bg-black text-white border border-white items-center mr-4 hover:bg-gray-500 cursor-pointer"
+                            onClick={() => setModificando(!modificando)}
+                        >
+                            <RiPencilFill />
+
+
+                        </button>) : (
                         <div className="flex bg-white rounded-full mr-4">
                             <button
                                 className="flex justify-center rounded-full h-8 w-8 border-2 bg-black text-white items-center  hover:bg-gray-500 cursor-pointer"
                                 onClick={() => setModificando(!modificando)}
                             >
                                 <RxCross2 />
-                            
-                                
+
+
                             </button>
                             <button
                                 className="flex justify-center rounded-full h-8 w-8 border-2 bg-black text-white   items-center hover:bg-gray-500 cursor-pointer"
                                 onClick={() => setModificando(!modificando)}
                             >
                                 <IoIosCheckmark />
-                            
-                                
+
+
                             </button>
                         </div>
 
-                        
+
                     )}
-                    
+
                 </div>
             </div>
 
@@ -90,7 +90,7 @@ export default function DetallesSede({
                 </div>
 
                 <div className="flex">
-                    <div className="grid flex-1 border-r pr-4 pl-4 pb-4">
+                    <div className="grid flex-1  pr-4 pl-4 pb-4">
                         <p className="pl-4 text-gray-500">Lugar</p>
                         <div className="flex items-center gap-4 h-15 border-b border-gray-400">
                             <p className="flex-1 text-center">País</p>
@@ -163,7 +163,7 @@ export default function DetallesSede({
                         </div>
                     </div>
 
-                    <div className="grid flex-1 content-start pr-4 pl-4">
+                    {/*<div className="grid flex-1 content-start pr-4 pl-4">
                         <p className="pl-4 text-gray-500">Otros detalles</p>
 
                         <div className="flex items-center gap-4 h-15 border-b border-gray-400">
@@ -213,7 +213,7 @@ export default function DetallesSede({
                                 max="100"
                             />
                         </div>
-                    </div>
+                    </div>*/}
                 </div>
             </div>
         </div>

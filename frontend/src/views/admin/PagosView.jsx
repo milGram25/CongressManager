@@ -1,8 +1,45 @@
 import { useState, useMemo } from "react";
 import { MdFilterAlt, MdKeyboardArrowDown, MdSearch, MdClose } from "react-icons/md";
 import { FiDownload, FiCopy } from 'react-icons/fi';
- 
+import ListaDesplegableElementosGenerica from "./Componentes/ListaDesplegableElementosGenerica";
+
 // ─── Mock Data ────────────────────────────────────────────────────────────────
+
+const MOCK_CONGRESOS = [
+  {
+    id: 1,
+    nombre: "CIENU 2024",
+
+  },
+  {
+    id: 2,
+    nombre: "CIENU 2025",
+
+  },
+  {
+    id: 3,
+    nombre: "CIENU 2026",
+
+  },
+  {
+    id: 4,
+    nombre: "CIENU 2027",
+
+  }
+]
+
+const MOCK_INSTITUCIONES = [
+  {
+    id: 1,
+    nombre: "CIENU",
+
+  },
+  {
+    id: 2,
+    nombre: "RIDMAE",
+
+  }
+];
 export const listaPagos = [
   {
     orden: 1001,
@@ -90,21 +127,21 @@ export const listaPagos = [
     monto: 85.00,
   },
 ];
- 
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatFecha(iso) {
   const d = new Date(iso);
-  const dia  = String(d.getDate()).padStart(2, "0");
-  const mes  = d.toLocaleString("es-MX", { month: "long" });
-  const año  = d.getFullYear();
+  const dia = String(d.getDate()).padStart(2, "0");
+  const mes = d.toLocaleString("es-MX", { month: "long" });
+  const año = d.getFullYear();
   const hora = d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
   return `${dia}/${mes}/${año}, ${hora}`;
 }
- 
-const ROLES    = ["Todos", "Ponente", "Asistente", "Comité académico"];
-const FECHAS   = ["Recientes", "Más antiguos"];
-const ESTATUS  = ["Todos", "Pagado", "Pendiente"];
- 
+
+const ROLES = ["Todos", "Ponente", "Asistente", "Comité académico"];
+const FECHAS = ["Recientes", "Más antiguos"];
+const ESTATUS = ["Todos", "Pagado", "Pendiente"];
+
 // ─── Campo de detalle ─────────────────────────────────────────────────────────
 function Campo({ label, value }) {
   return (
@@ -116,7 +153,7 @@ function Campo({ label, value }) {
     </div>
   );
 }
- 
+
 // ─── Panel de detalle ─────────────────────────────────────────────────────────
 function DetallePanel({ pago }) {
   if (!pago) return null;
@@ -127,72 +164,82 @@ function DetallePanel({ pago }) {
         <h3 className="text-base font-bold text-base-content">Detalles de pago</h3>
         <div className="flex gap-2">
           <button className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center hover:bg-[#006f73] transition-colors" title="Copiar">
-            <FiCopy/>
+            <FiCopy />
           </button>
           <button className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center hover:bg-[#006f73] transition-colors" title="Descargar">
-            <FiDownload/>
+            <FiDownload />
           </button>
         </div>
       </div>
- 
-      {/* Evento */}
-      <p className="text-[11px] text-base-content/40 uppercase font-semibold tracking-wide mb-1">Pago de evento</p>
-      <div className="flex items-center gap-3 mb-4">
-        <span className="text-xs text-base-content/50 w-16 flex-shrink-0">Evento</span>
-        <span className="flex-1 border border-base-300 rounded-full px-3 py-1 text-sm text-base-content bg-base-100">{pago.congreso}</span>
-      </div>
- 
-      {/* Dos columnas */}
-      <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-        {/* Columna persona */}
-        <div className="space-y-2">
-          <p className="text-[11px] text-base-content/40 uppercase font-semibold tracking-wide mb-1">Persona</p>
-          <Campo label="Nombre"            value={pago.nombre} />
-          <Campo label="Primer apellido"   value={pago.primerApellido} />
-          <Campo label="Segundo apellido"  value={pago.segundoApellido} />
-          <Campo label="Núm. teléfono"     value={pago.telefono} />
-          <Campo label="CURP"              value={pago.curp} />
-          <Campo label="Correo electrónico" value={pago.correo} />
-          <Campo label="Rol"               value={pago.rol} />
+
+      <div className="ml-4">
+        {/* Evento */}
+        <p className="text-[11px] text-base-content/40 uppercase font-semibold tracking-wide mb-1">Pago de evento</p>
+        <div className="flex items-center gap-3 mb-4 ml-4">
+          <span className="text-xs text-base-content/50 w-16 flex-shrink-0">Evento</span>
+          <span className="flex-1 border border-base-300 rounded-full px-3 py-1 text-sm text-base-content bg-base-100">{pago.congreso}</span>
         </div>
- 
-        {/* Columna otros detalles */}
-        <div className="space-y-2">
-          <p className="text-[11px] text-base-content/40 uppercase font-semibold tracking-wide mb-1">Otros detalles</p>
-          <Campo label="Sede destinatario" value={pago.sede} />
-          <Campo label="Cuenta depósito"   value={`${pago.cuentaDeposito.slice(0, 9)}...`} />
-          <Campo label="Fecha y hora pago" value={formatFecha(pago.fecha)} />
-          <Campo label="Descuento"         value={`${pago.descuento} %`} />
-          <Campo label="Monto"             value={`$${pago.monto.toFixed(2)}`} />
+
+        {/* Dos columnas */}
+        <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+          {/* Columna persona */}
+          <div className="space-y-2">
+            <p className="text-[11px] text-base-content/40 uppercase font-semibold tracking-wide mb-1">Persona</p>
+            <div className="ml-4 space-y-2">
+              <Campo label="Nombre" value={pago.nombre} />
+              <Campo label="Primer apellido" value={pago.primerApellido} />
+              <Campo label="Segundo apellido" value={pago.segundoApellido} />
+              <Campo label="Núm. teléfono" value={pago.telefono} />
+              <Campo label="CURP" value={pago.curp} />
+              <Campo label="Correo electrónico" value={pago.correo} />
+              <Campo label="Rol" value={pago.rol} />
+
+            </div>
+
+          </div>
+
+          {/* Columna otros detalles */}
+          <div className="space-y-2 ml-4">
+            <p className="text-[11px] text-base-content/40 uppercase font-semibold tracking-wide mb-1">Otros detalles</p>
+            <div className="ml-4 space-y-2">
+              <Campo label="Sede destinatario" value={pago.sede} />
+              <Campo label="Cuenta depósito" value={`${pago.cuentaDeposito.slice(0, 9)}...`} />
+              <Campo label="Fecha y hora pago" value={formatFecha(pago.fecha)} />
+              <Campo label="Descuento" value={`${pago.descuento} %`} />
+              <Campo label="Monto" value={`$${pago.monto.toFixed(2)}`} />
+            </div>
+          </div>
         </div>
+
       </div>
+
     </div>
   );
 }
- 
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function PagosComponente({ listaPagos: propsPagos }) {
   const pagos = propsPagos ?? listaPagos;
- 
-  const [selected,    setSelected]    = useState(null);
-  const [search,      setSearch]      = useState("");
-  const [filtroRol,   setFiltroRol]   = useState("Todos");
+
+  const [selected, setSelected] = useState(null);
+  const [search, setSearch] = useState("");
+  const [filtroRol, setFiltroRol] = useState("Todos");
   const [filtroFecha, setFiltroFecha] = useState("Recientes");
-  const [filtroEst,   setFiltroEst]   = useState("Todos");
- 
-  const [openRol,  setOpenRol]  = useState(false);
+  const [filtroEst, setFiltroEst] = useState("Todos");
+
+  const [openRol, setOpenRol] = useState(false);
   const [openFech, setOpenFech] = useState(false);
-  const [openEst,  setOpenEst]  = useState(false);
- 
+  const [openEst, setOpenEst] = useState(false);
+
   const filtrados = useMemo(() => {
     let list = [...pagos];
     if (search.trim()) list = list.filter(p => String(p.orden).includes(search) || p.nombre.toLowerCase().includes(search.toLowerCase()));
-    if (filtroRol  !== "Todos")    list = list.filter(p => p.rol === filtroRol);
-    if (filtroEst  !== "Todos")    list = list.filter(p => p.estatus === filtroEst);
+    if (filtroRol !== "Todos") list = list.filter(p => p.rol === filtroRol);
+    if (filtroEst !== "Todos") list = list.filter(p => p.estatus === filtroEst);
     list.sort((a, b) => filtroFecha === "Recientes" ? b.orden - a.orden : a.orden - b.orden);
     return list;
   }, [pagos, search, filtroRol, filtroFecha, filtroEst]);
- 
+
   function Dropdown({ label, value, options, open, onToggle, onSelect }) {
     return (
       <div className="relative">
@@ -212,74 +259,87 @@ export default function PagosComponente({ listaPagos: propsPagos }) {
       </div>
     );
   }
- 
+
   return (
-    <div className="bg-base-100 rounded-3xl border border-base-300 shadow-sm p-5">
- 
-      {/* Filtros header */}
-      <div className="grid grid-cols-3 gap-4 mb-2">
-        <div>
-          <p className="text-sm font-bold text-base-content mb-1">Orden de pago</p>
-          <div className="relative">
-            <MdSearch size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-base-content/40" />
-            <input
-              type="text"
-              placeholder="Buscar ID..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full pl-7 pr-6 py-1 text-sm border-b border-base-300 bg-transparent focus:outline-none focus:border-[#00868a] transition-colors"
-            />
-            {search && <button onClick={() => setSearch("")} className="absolute right-1 top-1/2 -translate-y-1/2 text-base-content/30"><MdClose size={12} /></button>}
+    <div className="bg-base-100 rounded-3xl p-5">
+
+      <div className="flex gap-4 mb-10">
+        <ListaDesplegableElementosGenerica titulo="Instituciones" lista={MOCK_INSTITUCIONES} />
+        <ListaDesplegableElementosGenerica titulo="Congresos" lista={MOCK_CONGRESOS} />
+      </div>
+      <div className="flex justify-between bg-black rounded-t-2xl p-4 h-20 items-center pl-8">
+        <p className=" font-bold text-base-content text-white text-2xl">Órdenes de pago</p>
+      </div>
+      <div className="border border-base-300 p-4 rounded-b-2xl">
+
+        {/* Filtros header */}
+        <div className="grid grid-cols-3 gap-4 mb-2">
+          <div>
+            <p className="text-sm font-bold text-base-content mb-1">Orden de pago</p>
+            <div className="relative">
+              <MdSearch size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-base-content/40" />
+              <input
+                type="text"
+                placeholder="Buscar ID..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full pl-7 pr-6 py-1 text-sm border-b border-base-300 bg-transparent focus:outline-none focus:border-[#00868a] transition-colors"
+              />
+              {search && <button onClick={() => setSearch("")} className="absolute right-1 top-1/2 -translate-y-1/2 text-base-content/30"><MdClose size={12} /></button>}
+            </div>
           </div>
+
+          <div>
+            <p className="text-sm font-bold text-base-content mb-1">Rol</p>
+            <Dropdown label="Rol" value={filtroRol} options={ROLES} open={openRol}
+              onToggle={() => { setOpenRol(o => !o); setOpenFech(false); setOpenEst(false); }}
+              onSelect={setFiltroRol} />
+          </div>
+
+          <div>
+            <p className="text-sm font-bold text-base-content mb-1">Fecha</p>
+            <Dropdown label="Fecha" value={filtroFecha} options={FECHAS} open={openFech}
+              onToggle={() => { setOpenFech(o => !o); setOpenRol(false); setOpenEst(false); }}
+              onSelect={setFiltroFecha} />
+          </div>
+
+
         </div>
- 
-        <div>
-          <p className="text-sm font-bold text-base-content mb-1">Rol</p>
-          <Dropdown label="Rol" value={filtroRol} options={ROLES} open={openRol}
-            onToggle={() => { setOpenRol(o => !o); setOpenFech(false); setOpenEst(false); }}
-            onSelect={setFiltroRol} />
-        </div>
- 
-        <div>
-          <p className="text-sm font-bold text-base-content mb-1">Fecha</p>
-          <Dropdown label="Fecha" value={filtroFecha} options={FECHAS} open={openFech}
-            onToggle={() => { setOpenFech(o => !o); setOpenRol(false); setOpenEst(false); }}
-            onSelect={setFiltroFecha} />
-        </div>
- 
-        
-      </div>
- 
-      <div className="border-t border-base-200 my-3" />
- 
-      {/* Lista */}
-      <div className="space-y-2 overflow-y-auto" style={{ maxHeight: 300 }}>
-        {filtrados.length === 0 ? (
-          <p className="text-center py-8 text-sm text-base-content/40 italic">Sin resultados</p>
-        ) : filtrados.map(p => (
-          <button
-            key={p.orden}
-            onClick={() => setSelected(s => s?.orden === p.orden ? null : p)}
-            className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl border transition-all text-left
+
+        <div className="border-t border-base-200 my-3" />
+
+        {/* Lista */}
+        <div className="space-y-2 overflow-y-auto" style={{ maxHeight: 300 }}>
+          {filtrados.length === 0 ? (
+            <p className="text-center py-8 text-sm text-base-content/40 italic">Sin resultados</p>
+          ) : filtrados.map(p => (
+            <button
+              key={p.orden}
+              onClick={() => setSelected(s => s?.orden === p.orden ? null : p)}
+              className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl border transition-all text-left
               ${selected?.orden === p.orden
-                ? "border-black bg-gray-200"
-                : "border-base-300 hover:border-gray-400 hover:bg-base-200/40"}`}
-          >
-            
-            {/* Orden */}
-            <span className="text-sm font-bold text-base-content flex-1">#{p.orden}</span>
-            {/* Rol */}
-            <span className="text-sm text-base-content/70 flex-1">{p.rol}</span>
-            {/* Fecha */}
-            <span className="text-sm text-base-content/60 flex-1">{formatFecha(p.fecha)}</span>
-            {/* Estatus */}
-           
-          </button>
-        ))}
+                  ? "border-black bg-gray-200"
+                  : "border-base-300 hover:border-gray-400 hover:bg-base-200/40"}`}
+            >
+
+              {/* Orden */}
+              <span className="text-sm font-bold text-base-content flex-1">#{p.orden}</span>
+              {/* Rol */}
+              <span className="text-sm text-base-content/70 flex-1">{p.rol}</span>
+              {/* Fecha */}
+              <span className="text-sm text-base-content/60 flex-1">{formatFecha(p.fecha)}</span>
+              {/* Estatus */}
+
+            </button>
+          ))}
+        </div>
+
+        {/* Panel detalle */}
+        <DetallePanel pago={selected} />
+
       </div>
- 
-      {/* Panel detalle */}
-      <DetallePanel pago={selected} />
+
+
     </div>
   );
 }
