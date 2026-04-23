@@ -190,6 +190,7 @@ CREATE TABLE evento (
     id_mesas_trabajo INTEGER REFERENCES mesas_trabajo(id_mesas_trabajo),
     fecha_hora_inicio TIMESTAMP NOT NULL,
     fecha_hora_final TIMESTAMP NOT NULL,
+    sinopsis TEXT,
     cupos SMALLINT DEFAULT 0,
     enlace VARCHAR(255)
 );
