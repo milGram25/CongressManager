@@ -1,4 +1,7 @@
+from datetime import datetime, timedelta
+from calendar import monthrange
 from django.db import connection, transaction
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -186,6 +189,76 @@ def _is_close(value_a, value_b):
     return abs(float(value_a) - float(value_b)) < 0.01
 
 
+def _fetch_events_between(start_dt, end_dt):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT DISTINCT ON (e.id_evento)
+                   e.id_evento,
+                   e.nombre_evento,
+                   e.tipo_evento::text,
+                   e.fecha_hora_inicio,
+                   e.fecha_hora_final,
+                   COALESCE(m.nombre, 'Por definir') AS lugar,
+                   COALESCE(sa.nombre, 'Sin eje') AS eje,
+                   COALESCE(TRIM(CONCAT(pers.nombre, ' ', pers.primer_apellido)), 'Sin autor') AS autor,
+                   COALESCE(r.retroalimentacion, '') AS abstract_text,
+                   COALESCE(e.enlace, '') AS enlace
+            FROM evento e
+            LEFT JOIN mesas_trabajo m ON m.id_mesas_trabajo = e.id_mesas_trabajo
+            LEFT JOIN ponencia po ON po.id_evento = e.id_evento
+            LEFT JOIN subareas sa ON sa.id_subareas = po.id_subarea
+            LEFT JOIN resumen r ON r.id_resumen = po.id_resumen
+            LEFT JOIN ponente_has_ponencia php ON php.id_ponencia = po.id_ponencia
+            LEFT JOIN ponente p ON p.id_ponente = php.id_ponente
+            LEFT JOIN persona pers ON pers.id_persona = p.id_persona
+            WHERE e.fecha_hora_inicio >= %s
+              AND e.fecha_hora_inicio < %s
+            ORDER BY e.id_evento, e.fecha_hora_inicio ASC
+            """,
+            [start_dt, end_dt],
+        )
+        rows = cursor.fetchall()
+
+    events = []
+    for row in rows:
+        event_id, title, event_type, start_at, end_at, location, eje, author, abstract_text, link = row
+        time_text = start_at.strftime('%I:%M %p').lstrip('0')
+        abstract_value = abstract_text if abstract_text else 'Sin abstract disponible.'
+        description = f"{title} en {location}."
+        if link:
+            description = f"{description} Enlace: {link}"
+
+        events.append({
+            'id': event_id,
+            'title': title,
+            'type': event_type,
+            'start_iso': start_at.isoformat(),
+            'end_iso': end_at.isoformat(),
+            'time': time_text,
+            'location': location,
+            'eje': eje,
+            'author': author,
+            'abstract': abstract_value,
+            'description': description,
+            'link': link,
+        })
+
+    return events
+
+
+def _parse_month(month_value):
+    if not month_value:
+        today = timezone.localdate()
+        return today.year, today.month
+
+    try:
+        parsed = datetime.strptime(month_value, '%Y-%m')
+        return parsed.year, parsed.month
+    except ValueError:
+        return None, None
+
+
 class PagosResumenView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -320,4 +393,49 @@ class RegistrarPagoView(APIView):
                 'summary': updated_summary,
             },
             status=status.HTTP_201_CREATED,
+        )
+
+
+class AgendaHoyView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        today = timezone.localdate()
+        start_dt = datetime.combine(today, datetime.min.time())
+        end_dt = start_dt + timedelta(days=1)
+        events = _fetch_events_between(start_dt, end_dt)
+
+        return Response(
+            {
+                'date': today.isoformat(),
+                'events': events,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class AgendaCalendarioView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        month_value = request.query_params.get('month')
+        year, month = _parse_month(month_value)
+
+        if not year or not month:
+            return Response(
+                {'detail': 'Formato de mes inválido. Usa YYYY-MM.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        start_dt = datetime(year, month, 1)
+        _, days = monthrange(year, month)
+        end_dt = start_dt + timedelta(days=days)
+        events = _fetch_events_between(start_dt, end_dt)
+
+        return Response(
+            {
+                'month': f'{year:04d}-{month:02d}',
+                'events': events,
+            },
+            status=status.HTTP_200_OK,
         )
