@@ -40,6 +40,12 @@ def listar_catalogo_ponencias(request):
     try:
         from congresos.models import Evento
         from .serializers import CatalogoEventoSerializer
+        from users.models import Asistente
+        from .models import AsistenteEvento
+
+        user = request.user
+        asistente = Asistente.objects.filter(id_persona=user).first()
+
         # Filtrar solo eventos de tipo ponencia (o los que estén disponibles)
         eventos = Evento.objects.filter(tipo_evento='ponencia')
         serializer = CatalogoEventoSerializer(eventos, many=True)
@@ -49,6 +55,12 @@ def listar_catalogo_ponencias(request):
             item['id'] = item.pop('id_evento', item.get('id', None))
             if item['id'] is None and hasattr(eventos.filter(nombre_evento=item['titulo']).first(), 'id_evento'):
                 item['id'] = eventos.filter(nombre_evento=item['titulo']).first().id_evento
+            
+            if asistente and item['id'] is not None:
+                item['registrado'] = AsistenteEvento.objects.filter(id_asistente=asistente, id_evento_id=item['id']).exists()
+            else:
+                item['registrado'] = False
+
             data.append(item)
         return Response(data, status=status.HTTP_200_OK)
     except Exception as e:

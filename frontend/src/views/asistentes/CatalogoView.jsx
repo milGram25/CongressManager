@@ -45,6 +45,13 @@ export default function CatalogoView() {
       const token = localStorage.getItem("congress_access");
       await registrarPonenciaApi(ponenciaARegistrar.id, token);
       setPasoConfirmacion(true); // Pasamos al paso 2 (Éxito)
+      
+      // Actualizar el estado local para mostrar el mensaje inmediatamente
+      setPonencias((prevPonencias) => 
+        prevPonencias.map((p) => 
+          p.id === ponenciaARegistrar.id ? { ...p, registrado: true } : p
+        )
+      );
     } catch (err) {
       setErrorRegistro(err.message);
     } finally {
@@ -97,13 +104,28 @@ export default function CatalogoView() {
               </p>
 
               {/* Footer de la tarjeta con botón usando el color Primary (#001219) */}
-              <div className="flex justify-between items-center mt-6 pt-4 border-t border-base-200">
-                
-                <button 
-                onClick={() => manejarRegistro(p)}
-                className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300">
-                  Registrarme
-                </button>
+              <div className="flex justify-end items-center mt-6 pt-4 border-t border-base-200">
+                {p.registrado ? (
+                  <div className="flex w-full justify-between items-center bg-alt/10 p-4 rounded-lg border border-alt/30">
+                    <span className="text-alt font-bold flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-alt" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Ya estás registrado a este evento
+                    </span>
+                    <button 
+                      onClick={() => navigate('/asistente/agenda')}
+                      className="btn bg-transparent border-alt text-alt hover:bg-alt hover:text-white hover:border-alt uppercase font-bold px-6">
+                      Ir a Agenda
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                  onClick={() => manejarRegistro(p)}
+                  className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300">
+                    Registrarme
+                  </button>
+                )}
               </div>
             </div>
           </div>
