@@ -146,13 +146,19 @@ export default function PagosView() {
   const basePrice = Number(userPayment?.base_price || 0);
   const pendingSlots = Number(userPayment?.pending_slots || 0);
   const overflowPonencias = Number(userPayment?.overflow_ponencias_count || 0);
+  const alreadyPaid = Boolean(userPayment?.already_paid);
+  const backendTotalDue = Number(userPayment?.total_due || 0);
 
   const finalPrice = useMemo(() => {
     if (!userPayment) return 0;
     if (isPonente) return Number(userPayment.total_due || 0);
-    if (role === "asistente" && isVerified) return basePrice * 0.5;
-    return basePrice;
-  }, [userPayment, isPonente, role, isVerified, basePrice]);
+    if (role === "asistente") {
+      if (alreadyPaid) return 0;
+      if (isVerified) return basePrice * 0.5;
+      return backendTotalDue;
+    }
+    return backendTotalDue;
+  }, [userPayment, isPonente, role, isVerified, alreadyPaid, basePrice, backendTotalDue]);
 
   const canSubmitPayment = useMemo(() => {
     if (!userPayment) return false;
@@ -266,6 +272,13 @@ export default function PagosView() {
               <div className="mb-6 p-4 rounded-xl border border-alt/30 bg-alt/10 text-sm space-y-2">
                 <div className="font-bold text-alt">Pago de ponencias</div>
                 <p>El primer pago cubre hasta 2 ponencias, de la ponencia 3 a 5 se paga cuota completa por cada una.</p>
+              </div>
+            )}
+
+            {!isPonente && alreadyPaid && (
+              <div className="mb-6 p-4 rounded-xl border border-secondary/40 bg-secondary/10 text-sm space-y-2">
+                <div className="font-bold text-secondary">Pago registrado</div>
+                <p>Ya cuentas con un pago registrado para tu rol y no tienes pagos pendientes por ahora.</p>
               </div>
             )}
 
