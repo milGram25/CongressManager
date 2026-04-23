@@ -14,14 +14,18 @@ def get_tokens_for_user(user):
     # inyectar el rol en el token
     if user.is_superuser or user.is_staff:
         rol = 'administrador'
-    elif hasattr(user, 'dictaminador'):
-        rol = 'dictaminador'
-    elif hasattr(user, 'evaluador'):
-        rol = 'revisor'
-    elif hasattr(user, 'ponente'):
-        rol = 'ponente'
     else:
         rol = 'asistente'
+        try:
+            if user.dictaminador: rol = 'dictaminador'
+        except Exception:
+            try:
+                if user.evaluador: rol = 'revisor'
+            except Exception:
+                try:
+                    if user.ponente: rol = 'ponente'
+                except Exception:
+                    pass
     
     refresh['rol'] = rol
 

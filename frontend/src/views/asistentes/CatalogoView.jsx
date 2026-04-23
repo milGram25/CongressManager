@@ -1,7 +1,8 @@
 // Aqui se inserta el apartado de catalogo
 
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import { useNavigate } from 'react-router-dom'; // navegación entre componentes(ir a pagos)
+import { registrarPonenciaApi, obtenerCatalogoApi } from '../../api/ponenciasApi';
 
 export default function CatalogoView() {
   // Estado para navegar
@@ -9,44 +10,59 @@ export default function CatalogoView() {
   //Estados agregados para botón registrar, controlando el flujo
   const [ponenciaARegistrar, setPonenciaARegistrar] = useState(null);
   const [pasoConfirmacion, setPasoConfirmacion] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorRegistro, setErrorRegistro] = useState(null);
   
   
-  // Datos de las ponencias (puedes añadir más aquí siguiendo el mismo formato)
-  const ponencias = [
-    {
-      id: 1,
-      titulo: "Movilización del conocimiento y la ciencia abierta: Horizontes en el presente y futuro de la educación",
-      ponente: "Juan González Ruiz",
-      modalidad: "Presencial",
-      lugar: "Centro Universitario de Ciencias Económico Administrativas (CUCEA)",
-      fecha: "30 - Abril - 2026",
-      hora: "10:00 am",
-      sinopsis: "Se verá la importancia de compartir, difundir y aplicar el conocimiento científico de manera accesible y colaborativa. Analizaremos cómo la ciencia abierta transforma los procesos de enseñanza, aprendizaje e investigación.",
-    },
-    {
-      id: 2,
-      titulo: "Ética, Regulación y Transparencia en los Sistemas de Inteligencia Artificial de Nueva Generación",
-      ponente: "Luis Cabrera Donosa",
-      modalidad: "Presencial",
-      lugar: "Centro Universitario de los Altos (CUALTOS)",
-      fecha: "13 - Mayo - 2026",
-      hora: "12:00 pm",
-      sinopsis: "Reunirá políticas públicas para analizar los desafíos éticos del uso creciente de la inteligencia artificial en sectores como salud, educación e industria.",
-    }
-  ];
+  const [loadingCatalogo, setLoadingCatalogo] = useState(true);
+  const [errorCatalogo, setErrorCatalogo] = useState(null);
+  const [ponencias, setPonencias] = useState([]);
+
+  useEffect(() => {
+    const fetchPonencias = async () => {
+      try {
+        const token = localStorage.getItem("congress_access");
+        const data = await obtenerCatalogoApi(token);
+        setPonencias(data);
+      } catch (err) {
+        setErrorCatalogo(err.message);
+      } finally {
+        setLoadingCatalogo(false);
+      }
+    };
+    fetchPonencias();
+  }, []);
 
   const manejarRegistro = (p) => {
     setPonenciaARegistrar(p);
     setPasoConfirmacion(false); // Reiniciamos al paso 1 (Confirmación)
   };
 
-  const confirmarFinal = () => {
-    setPasoConfirmacion(true); // Pasamos al paso 2 (Éxito)
+  const confirmarFinal = async () => {
+    setLoading(true);
+    setErrorRegistro(null);
+    try {
+      const token = localStorage.getItem("congress_access");
+      await registrarPonenciaApi(ponenciaARegistrar.id, token);
+      setPasoConfirmacion(true); // Pasamos al paso 2 (Éxito)
+      
+      // Actualizar el estado local para mostrar el mensaje inmediatamente
+      setPonencias((prevPonencias) => 
+        prevPonencias.map((p) => 
+          p.id === ponenciaARegistrar.id ? { ...p, registrado: true } : p
+        )
+      );
+    } catch (err) {
+      setErrorRegistro(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const cerrarModal = () => {
     setPonenciaARegistrar(null);
     setPasoConfirmacion(false);
+    setErrorRegistro(null);
   };
 
   return (
@@ -58,6 +74,15 @@ export default function CatalogoView() {
       </div>
 
       {/* Contenedor de las tarjetas */}
+      {loadingCatalogo ? (
+        <div className="flex justify-center items-center py-20">
+          <span className="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+      ) : errorCatalogo ? (
+        <div className="text-center text-error font-bold">{errorCatalogo}</div>
+      ) : ponencias.length === 0 ? (
+        <div className="text-center text-neutral/70 font-bold py-10">No hay ponencias disponibles en este momento.</div>
+      ) : (
       <div className="flex flex-col items-center gap-8">
         {ponencias.map((p) => (
           <div key={p.id} className="card bg-base-100 border border-base-300 shadow-sm max-w-3xl w-full rounded-md p-8 hover:shadow-md transition-all">
@@ -79,18 +104,34 @@ export default function CatalogoView() {
               </p>
 
               {/* Footer de la tarjeta con botón usando el color Primary (#001219) */}
-              <div className="flex justify-between items-center mt-6 pt-4 border-t border-base-200">
-                
-                <button 
-                onClick={() => manejarRegistro(p)}
-                className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300">
-                  Registrarme
-                </button>
+              <div className="flex justify-end items-center mt-6 pt-4 border-t border-base-200">
+                {p.registrado ? (
+                  <div className="flex w-full justify-between items-center bg-alt/10 p-4 rounded-lg border border-alt/30">
+                    <span className="text-alt font-bold flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-alt" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Ya estás registrado a este evento
+                    </span>
+                    <button 
+                      onClick={() => navigate('/asistente/agenda')}
+                      className="btn bg-transparent border-alt text-alt hover:bg-alt hover:text-white hover:border-alt uppercase font-bold px-6">
+                      Ir a Agenda
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                  onClick={() => manejarRegistro(p)}
+                  className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300">
+                    Registrarme
+                  </button>
+                )}
               </div>
             </div>
           </div>
         ))}
       </div>
+      )}
     
   {/* --- MODAL DE REGISTRO  --- */}
       {ponenciaARegistrar && (
@@ -110,13 +151,16 @@ export default function CatalogoView() {
                   <span className="font-bold italic">"{ponenciaARegistrar.titulo}"</span>?
                 </p>
                 <div className="flex gap-4 justify-center pt-2">
-                  <button onClick={cerrarModal} className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300">
+                  <button onClick={cerrarModal} className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300" disabled={loading}>
                     Rechazar
                   </button>
-                  <button onClick={confirmarFinal} className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300">
-                    Confirmar
+                  <button onClick={confirmarFinal} className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300" disabled={loading}>
+                    {loading ? 'Confirmando...' : 'Confirmar'}
                   </button>
                 </div>
+                {errorRegistro && (
+                  <div className="text-error text-sm font-semibold mt-2">{errorRegistro}</div>
+                )}
               </div>
             ) : (
               /* PASO 2: ÉXITO Y REDIRECCIÓN */
