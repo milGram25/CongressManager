@@ -78,14 +78,24 @@ class UserSerializer(serializers.ModelSerializer):
         # Determinar rol verificando relaciones
         if obj.is_superuser or obj.is_staff:
             return 'administrador'
-        if hasattr(obj, 'dictaminador'):
-            return 'dictaminador'
-        if hasattr(obj, 'evaluador'):
-            return 'revisor'
-        if hasattr(obj, 'ponente'):
-            return 'ponente'
-        if hasattr(obj, 'asistente'):
-            return 'asistente'
+        
+        try:
+            if obj.dictaminador: return 'dictaminador'
+        except Exception:
+            pass
+        try:
+            if obj.evaluador: return 'revisor'
+        except Exception:
+            pass
+        try:
+            if obj.ponente: return 'ponente'
+        except Exception:
+            pass
+        try:
+            if obj.asistente: return 'asistente'
+        except Exception:
+            pass
+            
         return 'asistente' # Por defecto
 
     def get_nombre_completo(self, obj):
