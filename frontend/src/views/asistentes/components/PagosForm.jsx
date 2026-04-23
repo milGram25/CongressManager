@@ -7,7 +7,7 @@ import {
 } from "@stripe/react-stripe-js";
 // https://docs.stripe.com/payments/link/card-element-link#enable-link
 
-export default function PagosForm({ total }) {
+export default function PagosForm({ total, onSuccess }) {
   const stripe = useStripe();
   const elements = useElements();
 
@@ -26,7 +26,9 @@ export default function PagosForm({ total }) {
       console.log("[error]", error);
     } else {
       console.log("[PaymentMethod]", paymentMethod);
-      alert("pago realizado");
+      if (onSuccess) {
+        onSuccess(paymentMethod);
+      }
     }
   };
 

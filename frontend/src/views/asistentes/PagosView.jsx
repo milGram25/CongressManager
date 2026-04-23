@@ -1,44 +1,51 @@
-import { useState, useMemo, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { useNavigate } from 'react-router-dom'; // navegación entre componentes(ir a facturas)
 import PagosForm from "./components/PagosForm";
+import { getPagosResumenApi, registrarPagoApi } from "../../api/pagosApi";
 import {
   MdSchool,
   MdEmail,
   MdVpnKey,
   MdCheckCircle,
   MdInfoOutline,
-  MdAccountBalance,
 } from "react-icons/md";
 
 const stripePromise = loadStripe("pk_test_tu_llave_aqui");
 
+function roleLabel(role) {
+  if (role === "ponente") return "Ponente";
+  if (role === "asistente") return "Asistente";
+  if (role === "dictaminador") return "Dictaminador";
+  if (role === "revisor") return "Revisor";
+  if (role === "administrador") return "Administrador";
+  return "Usuario";
+}
+
 export default function PagosView() {
   const { user } = useAuth();
- 
-  //Navegación
   const navigate = useNavigate();
 
-  // Pilot: Selección de tipo de inscripción (Esto vendrá del backend en el futuro)
-  const [tipoInscripcion, setTipoInscripcion] = useState("asistente");
-  const [esCuotaReducida, setEsCuotaReducida] = useState(true);
+  const [resumen, setResumen] = useState(null);
+  const [loadingResumen, setLoadingResumen] = useState(true);
+  const [resumenError, setResumenError] = useState("");
+  const [registrandoPago, setRegistrandoPago] = useState(false);
+  const [pagoError, setPagoError] = useState("");
 
-  // Estados para el flujo de estudiante
-  const [isStudent, setIsStudent] = useState(null); // null, true, false
+  const [isStudent, setIsStudent] = useState(null);
   const [studentEmail, setStudentEmail] = useState("");
   const [showVerification, setShowVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
-  const [isVerified, setIsVerified] = useState(false);
   const [error, setError] = useState("");
+  const [isVerified, setIsVerified] = useState(false);
 
-  // Estados de facturación
   const [pagoExitoso, setPagoExitoso] = useState(false);
   const [quiereFactura, setQuiereFactura] = useState(false);
   const [solicitudEnviada, setSolicitudEnviada] = useState(false);
   const [usarCorreoAlternativo, setUsarCorreoAlternativo] = useState(false);
-  const[correoFacturacion, setCorreoFacturacion] = useState("");
+  const [correoFacturacion, setCorreoFacturacion] = useState("");
   const [datosFacturacion, setDatosFacturacion] = useState({
     rfc: "",
     razonSocial: "",
@@ -47,7 +54,6 @@ export default function PagosView() {
     usoCFDI: "G03",
   });
 
-  // Catálogos simplificados del SAT
   const REGIMENES = [
     { code: "601", label: "General de Ley Personas Morales" },
     { code: "603", label: "Personas Morales con Fines no Lucrativos" },
@@ -67,14 +73,13 @@ export default function PagosView() {
     { code: "623", label: "Opcional para Grupos de Sociedades" },
     { code: "624", label: "Coordinados" },
     { code: "625", label: "Régimen de las Actividades Empresariales con ingresos a través de Plataformas Tecnológicas" },
-    { code: "626", label: "Régimen Simplificado de Confianza" }
+    { code: "626", label: "Régimen Simplificado de Confianza" },
   ];
 
   const USOS = [
     { code: "G01", label: "Adquisición de mercancías" },
     { code: "G02", label: "Devoluciones, descuentos o bonificaciones" },
     { code: "G03", label: "Gastos en general" },
-
     { code: "I01", label: "Construcciones" },
     { code: "I02", label: "Mobiliario y equipo de oficina por inversiones" },
     { code: "I03", label: "Equipo de transporte" },
@@ -83,7 +88,6 @@ export default function PagosView() {
     { code: "I06", label: "Comunicaciones telefónicas" },
     { code: "I07", label: "Comunicaciones satelitales" },
     { code: "I08", label: "Otra maquinaria y equipo" },
-
     { code: "D01", label: "Honorarios médicos, dentales y gastos hospitalarios" },
     { code: "D02", label: "Gastos médicos por incapacidad o discapacidad" },
     { code: "D03", label: "Gastos funerales" },
@@ -94,87 +98,76 @@ export default function PagosView() {
     { code: "D08", label: "Gastos de transportación escolar obligatoria" },
     { code: "D09", label: "Depósitos en cuentas para el ahorro, primas de planes de pensiones" },
     { code: "D10", label: "Pagos por servicios educativos (colegiaturas)" },
-
     { code: "S01", label: "Sin efectos fiscales" },
     { code: "CP01", label: "Pagos" },
-    { code: "CN01", label: "Nómina" }
+    { code: "CN01", label: "Nómina" },
   ];
 
-  // Función de validación para habilitar el botón
-const isFormValid = useMemo(() => {
-  // Regex para RFC (México)
-  const rfcRegex = /^([A-ZÑ&]{3,4}) ?(?:- ?)?(\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])) ?(?:- ?)?([A-Z\d]{2}[A-Z\d])$/;
-  // Regex para Email estándar
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  // Regex para CP (5 dígitos)
-  const cpRegex = /^\d{5}$/;
+  useEffect(() => {
+    const loadResumen = async () => {
+      setLoadingResumen(true);
+      setResumenError("");
+      try {
+        const token = localStorage.getItem("congress_access");
+        if (!token) throw new Error("No hay sesión activa.");
+        const data = await getPagosResumenApi(token);
+        setResumen(data);
+      } catch (err) {
+        setResumenError(err.message || "No se pudo cargar la información de pagos.");
+      } finally {
+        setLoadingResumen(false);
+      }
+    };
 
-  const camposFiscalesValidos = 
-    rfcRegex.test(datosFacturacion.rfc) &&
-    datosFacturacion.razonSocial.length >= 3 &&
-    cpRegex.test(datosFacturacion.cp) &&
-    datosFacturacion.regimenFiscal !== "";
+    loadResumen();
+  }, []);
 
-  // Si el usuario marcó "usar correo alternativo", validamos que el input tenga un email real
-  // Si no lo marcó, el correo es válido por defecto (porque el del login ya se supone validado)
-  const correoValido = usarCorreoAlternativo 
-    ? emailRegex.test(correoFacturacion) 
-    : true;
+  const isFormValid = useMemo(() => {
+    const rfcRegex = /^([A-ZÑ&]{3,4}) ?(?:- ?)?(\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])) ?(?:- ?)?([A-Z\d]{2}[A-Z\d])$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const cpRegex = /^\d{5}$/;
 
-  return camposFiscalesValidos && correoValido;
-}, [datosFacturacion, usarCorreoAlternativo, correoFacturacion]);
+    const camposFiscalesValidos =
+      rfcRegex.test(datosFacturacion.rfc) &&
+      datosFacturacion.razonSocial.length >= 3 &&
+      cpRegex.test(datosFacturacion.cp) &&
+      datosFacturacion.regimenFiscal !== "";
 
-  // Estructura de precios CIENU 2026
-  const PRECIOS = {
-    ponente_no_asociado: {
-      reducida: 2500,
-      regular: 2800,
-      label: "Ponente no asociado",
-    },
-    ponente_ridmae: {
-      reducida: 2000,
-      regular: 2300,
-      label: "Ponente asociado a RIDMAE",
-    },
-    coautor_no_asociado: {
-      reducida: 1500,
-      regular: 1800,
-      label: "Co-autor no asociado",
-    },
-    coautor_ridmae: {
-      reducida: 1000,
-      regular: 1300,
-      label: "Co-autor asociado a RIDMAE",
-    },
-    asistente: {
-      reducida: 1000,
-      regular: 1300,
-      label: "Estudiantes / Asistentes",
-    },
-  };
+    const correoValido = usarCorreoAlternativo
+      ? emailRegex.test(correoFacturacion)
+      : true;
 
-  // Cálculo de precio base según piloto
-  const basePrice = useMemo(() => {
-    const seleccion = PRECIOS[tipoInscripcion] || PRECIOS.asistente;
-    return esCuotaReducida ? seleccion.reducida : seleccion.regular;
-  }, [tipoInscripcion, esCuotaReducida]);
+    return camposFiscalesValidos && correoValido;
+  }, [datosFacturacion, usarCorreoAlternativo, correoFacturacion]);
 
-  // Cálculo de precio final con descuento extra de estudiante si aplica (solo si es tarifa de estudiante)
+  const userPayment = resumen?.user_payment;
+  const role = userPayment?.role || user?.rol || "asistente";
+  const isPonente = role === "ponente";
+  const basePrice = Number(userPayment?.base_price || 0);
+  const pendingSlots = Number(userPayment?.pending_slots || 0);
+  const overflowPonencias = Number(userPayment?.overflow_ponencias_count || 0);
+
   const finalPrice = useMemo(() => {
-    if (isVerified && tipoInscripcion === "asistente") {
-      return basePrice * 0.5;
-    }
+    if (!userPayment) return 0;
+    if (isPonente) return Number(userPayment.total_due || 0);
+    if (role === "asistente" && isVerified) return basePrice * 0.5;
     return basePrice;
-  }, [basePrice, isVerified, tipoInscripcion]);
+  }, [userPayment, isPonente, role, isVerified, basePrice]);
+
+  const canSubmitPayment = useMemo(() => {
+    if (!userPayment) return false;
+    if (isPonente) {
+      return overflowPonencias === 0 && pendingSlots > 0 && finalPrice > 0;
+    }
+    return finalPrice > 0;
+  }, [userPayment, isPonente, overflowPonencias, pendingSlots, finalPrice]);
 
   const handleEmailSubmit = (e) => {
     e.preventDefault();
     setError("");
     const eduRegex = /(\.edu(\.[a-z]{2,3})?|alumnos\.udg\.mx)$/i;
     if (!eduRegex.test(studentEmail)) {
-      setError(
-        "El correo debe ser institucional válido (.edu, .edu.mx, alumnos.udg.mx, etc).",
-      );
+      setError("El correo debe ser institucional válido (.edu, .edu.mx, alumnos.udg.mx, etc).");
       return;
     }
     setShowVerification(true);
@@ -190,129 +183,93 @@ const isFormValid = useMemo(() => {
     }
   };
 
-  const handleSimularPago = () => setPagoExitoso(true);
-  const handleEnviarSolicitudFactura = () => {
-    const datosFinales = {
-      id: Date.now(), // ID temporal
-      nombre: user?.nombre || "Usuario Demo",
-      email: usarCorreoAlternativo ? correoFacturacion : user?.email,
-      institucion: "Institución Demo", // En el futuro vendrá del perfil
-      congreso: "CIENU 2026",
-      rol: PRECIOS[tipoInscripcion].label,
-      status: "red", // Pendiente
-      ...datosFacturacion,
-      fechaSolicitud: new Date().toISOString()
-    };
+  const handleRegistrarPago = async () => {
+    setPagoError("");
+    setRegistrandoPago(true);
+    try {
+      const token = localStorage.getItem("congress_access");
+      if (!token) throw new Error("No hay sesión activa.");
 
-    // Guardar en localStorage para que el admin lo vea
-    const existingRequests = JSON.parse(localStorage.getItem("invoice_requests") || "[]");
-    localStorage.setItem("invoice_requests", JSON.stringify([...existingRequests, datosFinales]));
-    
-    console.log("Solicitud de factura guardada en localStorage:", datosFinales);
-    
-    // Cerramos el flujo anterior y mostramos el mensaje final
-    setSolicitudEnviada(true);
-    setQuiereFactura(false); 
+      const payload = {
+        requiere_factura: false,
+        monto: finalPrice,
+      };
+      const response = await registrarPagoApi(token, payload);
+      setResumen(response.summary);
+      setPagoExitoso(true);
+    } catch (err) {
+      setPagoError(err.message || "No se pudo registrar el pago.");
+    } finally {
+      setRegistrandoPago(false);
+    }
   };
 
+  const handleEnviarSolicitudFactura = () => {
+    const datosFinales = {
+      id: Date.now(),
+      nombre: user?.nombre || "Usuario Demo",
+      email: usarCorreoAlternativo
+        ? correoFacturacion
+        : user?.correo_electronico || user?.email,
+      institucion: "Institución Demo",
+      congreso: "CIENU 2026",
+      rol: roleLabel(role),
+      status: "red",
+      ...datosFacturacion,
+      fechaSolicitud: new Date().toISOString(),
+    };
+
+    const existingRequests = JSON.parse(localStorage.getItem("invoice_requests") || "[]");
+    localStorage.setItem("invoice_requests", JSON.stringify([...existingRequests, datosFinales]));
+
+    setSolicitudEnviada(true);
+    setQuiereFactura(false);
+  };
+
+  if (loadingResumen) {
+    return <div className="max-w-4xl mx-auto p-4">Cargando información de pagos...</div>;
+  }
+
+  if (resumenError) {
+    return (
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="bg-error/10 border border-error/20 text-error text-sm px-4 py-3 rounded-xl">
+          {resumenError}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <h2 className="text-3xl font-bold mb-8 text-neutral">
-        CIENU 2026 (titulo congreso)
-      </h2>
-
-      {/* Alerta de Piloto con color ALT */}
-      <div className="bg-alt border border-alt/20 text-white p-6 rounded-2xl mb-8 flex items-start gap-4 shadow-sm">
-        <MdInfoOutline className="text-2xl shrink-0 mt-1" />
-        <div>
-          <h3 className="font-bold">Modo Piloto</h3>
-          <p className="text-sm opacity-90">
-            En la versión final, el tipo de participación y validación RIDMAE se
-            cargarán automáticamente desde el backend.
-          </p>
-        </div>
-      </div>
+      <h2 className="text-3xl font-bold mb-8 text-neutral">CIENU 2026 (titulo congreso)</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2 space-y-6">
-          {/* Selector de Piloto */}
-          <div className="bg-base-200 p-6 rounded-2xl border border-base-300 space-y-4">
-            <h3 className="font-bold text-lg flex items-center gap-2 text-neutral">
-              <MdAccountBalance className="text-secondary" /> Simulación
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="form-control">
-                <label className="label text-xs font-bold opacity-60">
-                  TIPO DE PARTICIPANTE
-                </label>
-                <select
-                  className="select select-bordered select-sm w-full bg-base-100"
-                  value={tipoInscripcion}
-                  onChange={(e) => {
-                    setTipoInscripcion(e.target.value);
-                    if (e.target.value !== "asistente") {
-                      setIsVerified(false);
-                      setIsStudent(null);
-                    }
-                  }}
-                >
-                  {Object.entries(PRECIOS).map(([key, value]) => (
-                    <option key={key} value={key}>
-                      {value.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-control">
-                <label className="label text-xs font-bold opacity-60">
-                  PERIODO DE INSCRIPCIÓN
-                </label>
-                <div className="flex gap-2 p-1 bg-base-100 rounded-lg border border-base-300">
-                  <button
-                    onClick={() => setEsCuotaReducida(true)}
-                    className={`flex-1 py-1 px-2 rounded-md text-[10px] font-bold transition-all ${esCuotaReducida ? "bg-secondary text-white" : "hover:bg-base-200 text-neutral"}`}
-                  >
-                    CUOTA REDUCIDA
-                  </button>
-                  <button
-                    onClick={() => setEsCuotaReducida(false)}
-                    className={`flex-1 py-1 px-2 rounded-md text-[10px] font-bold transition-all ${!esCuotaReducida ? "bg-secondary text-white" : "hover:bg-base-200 text-neutral"}`}
-                  >
-                    CUOTA REGULAR
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tarjeta de Información General */}
           <div className="bg-base-100 p-8 rounded-2xl border-2 border-base-300 shadow-sm">
             <h3 className="text-xl font-bold border-b border-base-200 pb-2 mb-4 text-neutral">
               Detalle de Inscripción
             </h3>
+
             <div className="grid grid-cols-2 gap-4 text-sm mb-6">
               <div>
-                <p className="opacity-50 uppercase font-bold text-[10px] tracking-widest">
-                  Nombre
-                </p>
-                <p className="font-medium text-neutral">
-                  {user?.nombre || "Usuario Demo"}
-                </p>
+                <p className="opacity-50 uppercase font-bold text-[10px] tracking-widest">Nombre</p>
+                <p className="font-medium text-neutral">{user?.nombre || "Usuario Demo"}</p>
               </div>
               <div>
-                <p className="opacity-50 uppercase font-bold text-[10px] tracking-widest">
-                  Categoría Seleccionada
-                </p>
-                <p className="font-bold text-alt">
-                  {PRECIOS[tipoInscripcion].label.toUpperCase()}
-                </p>
+                <p className="opacity-50 uppercase font-bold text-[10px] tracking-widest">Categoría</p>
+                <p className="font-bold text-alt">{roleLabel(role).toUpperCase()}</p>
               </div>
             </div>
 
-            {/* Sección de Descuento  estudiante */}
-            {tipoInscripcion === "asistente" && isStudent !== false && (
+            {isPonente && (
+              <div className="mb-6 p-4 rounded-xl border border-alt/30 bg-alt/10 text-sm space-y-2">
+                <div className="font-bold text-alt">Pago de ponencias</div>
+                <p>El primer pago cubre hasta 2 ponencias, de la ponencia 3 a 5 se paga cuota completa por cada una.</p>
+              </div>
+            )}
+
+            {role === "asistente" && isStudent !== false && (
               <div
                 className={`p-6 rounded-2xl border-2 transition-all ${isVerified ? "border-secondary bg-alt/5" : "border-dashed border-base-300"}`}
               >
@@ -321,12 +278,9 @@ const isFormValid = useMemo(() => {
                     {isStudent === null && (
                       <div className="text-center space-y-4">
                         <MdSchool className="text-4xl mx-auto text-secondary opacity-80" />
-                        <h4 className="font-bold text-neutral">
-                          ¿Eres estudiante activo?
-                        </h4>
+                        <h4 className="font-bold text-neutral">¿Eres estudiante activo?</h4>
                         <p className="text-sm opacity-70 text-neutral">
-                          Obtén un 50% de descuento adicional validando tu
-                          correo institucional.
+                          Obtén un 50% de descuento adicional validando tu correo institucional.
                         </p>
                         <div className="flex justify-center gap-4">
                           <button
@@ -346,10 +300,7 @@ const isFormValid = useMemo(() => {
                     )}
 
                     {isStudent === true && !showVerification && (
-                      <form
-                        onSubmit={handleEmailSubmit}
-                        className="space-y-4 text-neutral"
-                      >
+                      <form onSubmit={handleEmailSubmit} className="space-y-4 text-neutral">
                         <div className="flex items-center gap-2 mb-2">
                           <button
                             type="button"
@@ -358,9 +309,7 @@ const isFormValid = useMemo(() => {
                           >
                             ← Volver
                           </button>
-                          <span className="text-sm font-bold">
-                            Validación Institucional
-                          </span>
+                          <span className="text-sm font-bold">Validación Institucional</span>
                         </div>
                         <div className="relative">
                           <MdEmail className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary" />
@@ -373,9 +322,7 @@ const isFormValid = useMemo(() => {
                             onChange={(e) => setStudentEmail(e.target.value)}
                           />
                         </div>
-                        {error && (
-                          <p className="text-error text-[10px] px-2">{error}</p>
-                        )}
+                        {error && <p className="text-error text-[10px] px-2">{error}</p>}
                         <button
                           type="submit"
                           className="btn bg-secondary hover:bg-secondary/80 border-none w-full text-white rounded-xl"
@@ -386,17 +333,10 @@ const isFormValid = useMemo(() => {
                     )}
 
                     {showVerification && (
-                      <form
-                        onSubmit={handleVerifyCode}
-                        className="space-y-4 text-neutral"
-                      >
+                      <form onSubmit={handleVerifyCode} className="space-y-4 text-neutral">
                         <div className="text-center">
-                          <p className="text-sm font-bold mb-1">
-                            Verifica tu correo
-                          </p>
-                          <p className="text-[10px] opacity-60">
-                            Enviamos un código a {studentEmail}
-                          </p>
+                          <p className="text-sm font-bold mb-1">Verifica tu correo</p>
+                          <p className="text-[10px] opacity-60">Enviamos un código a {studentEmail}</p>
                         </div>
                         <div className="relative">
                           <MdVpnKey className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary" />
@@ -406,14 +346,10 @@ const isFormValid = useMemo(() => {
                             placeholder="Introduce el código (123456)"
                             className="w-full pl-12 pr-4 py-3 rounded-xl bg-base-200 border-none outline-none focus:ring-2 focus:ring-secondary text-sm font-bold"
                             value={verificationCode}
-                            onChange={(e) =>
-                              setVerificationCode(e.target.value)
-                            }
+                            onChange={(e) => setVerificationCode(e.target.value)}
                           />
                         </div>
-                        {error && (
-                          <p className="text-error text-[10px] px-2">{error}</p>
-                        )}
+                        {error && <p className="text-error text-[10px] px-2">{error}</p>}
                         <button
                           type="submit"
                           className="btn bg-secondary hover:bg-secondary/80 border-none w-full text-white rounded-xl"
@@ -434,28 +370,20 @@ const isFormValid = useMemo(() => {
                   <div className="flex items-center gap-4 py-2">
                     <MdCheckCircle className="text-5xl text-secondary" />
                     <div>
-                      <h4 className="font-bold text-alt uppercase tracking-tight">
-                        Descuento Aplicado
-                      </h4>
-                      <p className="text-xs opacity-70 text-neutral">
-                        Validado vía: {studentEmail}
-                      </p>
+                      <h4 className="font-bold text-alt uppercase tracking-tight">Descuento Aplicado</h4>
+                      <p className="text-xs opacity-70 text-neutral">Validado vía: {studentEmail}</p>
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Resumen de costos */}
             <div className="mt-8 pt-6 border-t border-base-200 space-y-2 text-neutral">
               <div className="flex justify-between text-sm">
-                <span className="opacity-60">
-                  Cuota {esCuotaReducida ? "Reducida" : "Regular"} (
-                  {PRECIOS[tipoInscripcion].label})
-                </span>
+                <span className="opacity-60">Precio base ({roleLabel(role)})</span>
                 <span>${basePrice.toFixed(2)} MXN</span>
               </div>
-              {isVerified && tipoInscripcion === "asistente" && (
+              {role === "asistente" && isVerified && (
                 <div className="flex justify-between text-sm text-alt font-bold">
                   <span>Descuento Estudiante (50%)</span>
                   <span>-${(basePrice * 0.5).toFixed(2)} MXN</span>
@@ -463,45 +391,44 @@ const isFormValid = useMemo(() => {
               )}
               <div className="flex justify-between items-end pt-4">
                 <span className="text-lg font-bold">Total Final</span>
-                <span className="text-3xl font-black text-primary">
-                  ${finalPrice.toFixed(2)} MXN
-                </span>
+                <span className="text-3xl font-black text-primary">${finalPrice.toFixed(2)} MXN</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Stripe Sidebar */}
         <div className="md:col-span-1">
           <div className="bg-base-200 p-6 rounded-2xl sticky top-24 shadow-sm text-neutral">
             <h3 className="font-bold text-xl mb-6">Resumen de Pago</h3>
             <div className="flex justify-between text-xs mb-4 opacity-70 italic">
               <span>Categoría:</span>
-              <span className="text-right">
-                {PRECIOS[tipoInscripcion].label}
-              </span>
+              <span className="text-right">{roleLabel(role)}</span>
             </div>
+            {pagoError && (
+              <div className="bg-error/10 border border-error/20 text-error text-xs px-3 py-2 rounded-lg mb-4">
+                {pagoError}
+              </div>
+            )}
             <Elements stripe={stripePromise}>
               <PagosForm
                 total={finalPrice}
-                onSuccess={() => setPagoExitoso(true)}
+                onSuccess={handleRegistrarPago}
               />
-              <button
-                onClick={handleSimularPago}
-                className="btn btn-ghost btn-xs w-full mt-2 opacity-30 text-neutral"
-              >
-                Simular Éxito
-              </button>
             </Elements>
+            <button
+              disabled={!canSubmitPayment || registrandoPago}
+              onClick={handleRegistrarPago}
+              className="btn btn-outline btn-sm w-full mt-3"
+            >
+              {registrandoPago ? "Registrando..." : "Registrar pago"}
+            </button>
             <p className="text-[10px] mt-6 opacity-40 text-center italic">
-              Al realizar el pago, confirmas que tu información de registro es
-              correcta.
+              Al realizar el pago, confirmas que tu información de registro es correcta.
             </p>
           </div>
         </div>
       </div>
 
-      {/* MODAL 1: ÉXITO Y PREGUNTA DE FACTURACIÓN */}
       {pagoExitoso && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
@@ -512,9 +439,7 @@ const isFormValid = useMemo(() => {
                   ✓
                 </div>
                 <h2 className="text-2xl font-bold">¡Pago Exitoso!</h2>
-                <p className="text-sm opacity-70">
-                  ¿Deseas generar tu factura ahora mismo?
-                </p>
+                <p className="text-sm opacity-70">¿Deseas generar tu factura ahora mismo?</p>
                 <div className="flex gap-3 pt-4">
                   <button
                     onClick={() => setQuiereFactura(true)}
@@ -532,195 +457,179 @@ const isFormValid = useMemo(() => {
               </div>
             ) : (
               <div className="space-y-4 overflow-y-auto max-h-[70vh] px-2">
-              <h3 className="text-xl font-bold text-center">Datos Fiscales</h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
-                {/* RFC */}
-                <div className="form-control col-span-1">
-                  <label className="color primary text-[12px] font-bold  opacity-90">RFC</label>
-                  <input
-                    type="text"
-                    placeholder="XAXX010101000"
-                    maxLength={13}
-                    className={`input input-sm input-bordered uppercase bg-base-100 ${
-                      datosFacturacion.rfc && !/^([A-ZÑ&]{3,4}) ?(?:- ?)?(\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])) ?(?:- ?)?([A-Z\d]{2}[A-Z\d])$/.test(datosFacturacion.rfc) 
-                      ? "border-error" 
-                      : ""
-                    }`}
-                    value={datosFacturacion.rfc}
-                    onChange={(e) => setDatosFacturacion({...datosFacturacion, rfc: e.target.value.toUpperCase().trim()})}
-                  />
-                  {/* Mensaje de error dinámico */}
-                  {datosFacturacion.rfc && !/^([A-ZÑ&]{3,4}) ?(?:- ?)?(\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])) ?(?:- ?)?([A-Z\d]{2}[A-Z\d])$/.test(datosFacturacion.rfc) && (
-                    <p className="text-error text-[10px] mt-1 font-medium italic">
-                      Formato de RFC inválido.
-                    </p>
+                <h3 className="text-xl font-bold text-center">Datos Fiscales</h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+                  <div className="form-control col-span-1">
+                    <label className="color primary text-[12px] font-bold  opacity-90">RFC</label>
+                    <input
+                      type="text"
+                      placeholder="XAXX010101000"
+                      maxLength={13}
+                      className={`input input-sm input-bordered uppercase bg-base-100 ${
+                        datosFacturacion.rfc && !/^([A-ZÑ&]{3,4}) ?(?:- ?)?(\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])) ?(?:- ?)?([A-Z\d]{2}[A-Z\d])$/.test(datosFacturacion.rfc)
+                          ? "border-error"
+                          : ""
+                      }`}
+                      value={datosFacturacion.rfc}
+                      onChange={(e) => setDatosFacturacion({ ...datosFacturacion, rfc: e.target.value.toUpperCase().trim() })}
+                    />
+                    {datosFacturacion.rfc && !/^([A-ZÑ&]{3,4}) ?(?:- ?)?(\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])) ?(?:- ?)?([A-Z\d]{2}[A-Z\d])$/.test(datosFacturacion.rfc) && (
+                      <p className="text-error text-[10px] mt-1 font-medium italic">Formato de RFC inválido.</p>
+                    )}
+                  </div>
+
+                  <div className="form-control col-span-1">
+                    <label className="color primary text-[12px] font-bold  opacity-90">CÓDIGO POSTAL</label>
+                    <input
+                      type="text"
+                      placeholder="00000"
+                      maxLength={5}
+                      className={`input input-sm input-bordered bg-base-100 ${
+                        datosFacturacion.cp && !/^\d{5}$/.test(datosFacturacion.cp) ? "border-error" : ""
+                      }`}
+                      value={datosFacturacion.cp}
+                      onChange={(e) => setDatosFacturacion({ ...datosFacturacion, cp: e.target.value.replace(/\D/g, "") })}
+                    />
+                    {datosFacturacion.cp && !/^\d{5}$/.test(datosFacturacion.cp) && (
+                      <p className="text-error text-[10px] mt-1 font-medium italic">Deben ser 5 dígitos.</p>
+                    )}
+                  </div>
+
+                  <div className="form-control col-span-full">
+                    <label className="color primary text-[12px] font-bold  opacity-90">NOMBRE O RAZÓN SOCIAL (Sin régimen capital)</label>
+                    <input
+                      type="text"
+                      placeholder="Tal cual aparece en Constancia"
+                      className="input input-sm input-bordered uppercase bg-base-100"
+                      value={datosFacturacion.razonSocial}
+                      onChange={(e) => setDatosFacturacion({ ...datosFacturacion, razonSocial: e.target.value.toUpperCase() })}
+                    />
+                  </div>
+
+                  <div className="form-control col-span-full">
+                    <label className="color primary text-[12px] font-bold  opacity-90">RÉGIMEN FISCAL</label>
+                    <select
+                      className="select select-sm select-bordered bg-base-100"
+                      value={datosFacturacion.regimenFiscal}
+                      onChange={(e) => setDatosFacturacion({ ...datosFacturacion, regimenFiscal: e.target.value })}
+                    >
+                      {REGIMENES.map((r) => <option key={r.code} value={r.code}>{r.code} - {r.label}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="form-control col-span-full">
+                    <label className="color primary text-[12px] font-bold  opacity-90">USO DE CFDI</label>
+                    <select
+                      className="select select-sm select-bordered bg-base-100"
+                      value={datosFacturacion.usoCFDI}
+                      onChange={(e) => setDatosFacturacion({ ...datosFacturacion, usoCFDI: e.target.value })}
+                    >
+                      {USOS.map((u) => <option key={u.code} value={u.code}>{u.code} - {u.label}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-control col-span-full border-t border-base-200 mt-4 pt-4">
+                  <label className="label cursor-pointer justify-start gap-3">
+                    <input
+                      type="checkbox"
+                      className="checkbox-secondary checkbox"
+                      checked={usarCorreoAlternativo}
+                      onChange={(e) => setUsarCorreoAlternativo(e.target.checked)}
+                    />
+                    <span className="text-base-content text-[12px] font-bold opacity-90">
+                      ¿ENVIAR A OTRO CORREO DISTINTO AL DEL REGISTRO?
+                    </span>
+                  </label>
+
+                  {usarCorreoAlternativo && (
+                    <div className="mt-2 animate-in fade-in slide-in-from-top-1">
+                      <input
+                        type="email"
+                        placeholder="ejemplo@correo.com"
+                        className={`input input-sm input-bordered w-full bg-base-100 ${
+                          correoFacturacion && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoFacturacion)
+                            ? "border-error"
+                            : ""
+                        }`}
+                        value={correoFacturacion}
+                        onChange={(e) => setCorreoFacturacion(e.target.value.trim())}
+                      />
+                      {correoFacturacion && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoFacturacion) && (
+                        <p className="text-error text-[10px] mt-1 font-medium italic">
+                          Por favor ingresa un correo electrónico válido.
+                        </p>
+                      )}
+                      <p className="text-[10px] mt-1 opacity-100 italic">
+                        Escribe el correo donde deseas recibir el PDF y XML.
+                      </p>
+                    </div>
                   )}
                 </div>
 
-                {/* CP */}
-                <div className="form-control col-span-1">
-                  <label className="color primary text-[12px] font-bold  opacity-90">CÓDIGO POSTAL</label>
-                  <input
-                    type="text"
-                    placeholder="00000"
-                    maxLength={5}
-                    className={`input input-sm input-bordered bg-base-100 ${
-                      datosFacturacion.cp && !/^\d{5}$/.test(datosFacturacion.cp) ? "border-error" : ""
-                    }`}
-                    value={datosFacturacion.cp}
-                    onChange={(e) => setDatosFacturacion({...datosFacturacion, cp: e.target.value.replace(/\D/g, "")})}
-                  />
-                  {/* Mensaje de error dinámico */}
-                  {datosFacturacion.cp && !/^\d{5}$/.test(datosFacturacion.cp) && (
-                    <p className="text-error text-[10px] mt-1 font-medium italic">
-                      Deben ser 5 dígitos.
-                    </p>
-                  )}
-                </div>
-
-                {/* RAZÓN SOCIAL */}
-                <div className="form-control col-span-full">
-                  <label className="color primary text-[12px] font-bold  opacity-90">NOMBRE O RAZÓN SOCIAL (Sin régimen capital)</label>
-                  <input
-                    type="text"
-                    placeholder="Tal cual aparece en Constancia"
-                    className="input input-sm input-bordered uppercase bg-base-100"
-                    value={datosFacturacion.razonSocial}
-                    onChange={(e) => setDatosFacturacion({...datosFacturacion, razonSocial: e.target.value.toUpperCase()})}
-                  />
-                </div>
-
-                {/* RÉGIMEN FISCAL */}
-                <div className="form-control col-span-full">
-                  <label className="color primary text-[12px] font-bold  opacity-90">RÉGIMEN FISCAL</label>
-                  <select 
-                    className="select select-sm select-bordered bg-base-100"
-                    value={datosFacturacion.regimenFiscal}
-                    onChange={(e) => setDatosFacturacion({...datosFacturacion, regimenFiscal: e.target.value})}
-                  >
-                    {REGIMENES.map(r => <option key={r.code} value={r.code}>{r.code} - {r.label}</option>)}
-                  </select>
-                </div>
-
-                {/* USO CFDI */}
-                <div className="form-control col-span-full">
-                  <label className="color primary text-[12px] font-bold  opacity-90">USO DE CFDI</label>
-                  <select 
-                    className="select select-sm select-bordered bg-base-100"
-                    value={datosFacturacion.usoCFDI}
-                    onChange={(e) => setDatosFacturacion({...datosFacturacion, usoCFDI: e.target.value})}
-                  >
-                    {USOS.map(u => <option key={u.code} value={u.code}>{u.code} - {u.label}</option>)}
-                  </select>
-                </div>
+                <button
+                  disabled={!isFormValid}
+                  onClick={handleEnviarSolicitudFactura}
+                  className={`btn w-full mt-4 text-white ${
+                    isFormValid ? "bg-alt hover:bg-alt/80 border-none" : "bg-gray-400 cursor-not-allowed"
+                  }`}
+                >
+                  Enviar Solicitud Factura
+                </button>
+                <button
+                  onClick={() => setQuiereFactura(false)}
+                  className="btn btn-link btn-sm w-full opacity-50 text-neutral"
+                >
+                  Volver
+                </button>
               </div>
-
-              {/* CORREO PARA FACTURA */}
-              <div className="form-control col-span-full border-t border-base-200 mt-4 pt-4">
-              <label className="label cursor-pointer justify-start gap-3">
-              <input 
-                type="checkbox" 
-                className="checkbox-secondary checkbox" 
-                checked={usarCorreoAlternativo}
-                onChange={(e) => setUsarCorreoAlternativo(e.target.checked)}
-              />
-              <span className="text-base-content text-[12px] font-bold opacity-90">
-                ¿ENVIAR A OTRO CORREO DISTINTO AL DEL REGISTRO?
-              </span>
-            </label>
-
-             {usarCorreoAlternativo && (
-              <div className="mt-2 animate-in fade-in slide-in-from-top-1">
-              <input
-                type="email"
-                placeholder="ejemplo@correo.com"
-                className={`input input-sm input-bordered w-full bg-base-100 ${
-                  correoFacturacion && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoFacturacion) 
-                  ? "border-error" 
-                  : ""
-                }`}
-                value={correoFacturacion} // <--- IMPORTANTE
-                onChange={(e) => setCorreoFacturacion(e.target.value.trim())} // <--- IMPORTANTE
-              />
-              
-              {/* Mensaje de error dinámico para el correo */}
-              {correoFacturacion && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoFacturacion) && (
-                <p className="text-error text-[10px] mt-1 font-medium italic">
-                  Por favor ingresa un correo electrónico válido.
-                </p>
-              )}
-              
-              <p className="text-[10px] mt-1 opacity-100 italic">
-                Escribe el correo donde deseas recibir el PDF y XML.
-              </p>
-            </div>
-          )}
-          </div>
-              
-
-              <button
-                disabled={!isFormValid}
-                onClick={handleEnviarSolicitudFactura} // Solo llama a la función, ella se encarga del resto
-                className={`btn w-full mt-4 text-white ${
-                  isFormValid ? "bg-alt hover:bg-alt/80 border-none" : "bg-gray-400 cursor-not-allowed"
-                }`}
-              >
-                Enviar Solicitud Factura
-              </button>
-              <button onClick={() => setQuiereFactura(false)} className="btn btn-link btn-sm w-full opacity-50 text-neutral">
-                Volver
-              </button>
-            </div>
             )}
           </div>
         </div>
       )}
 
-     {solicitudEnviada && (
-      <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-        <div className="relative bg-base-100 p-8 rounded-2xl shadow-2xl max-w-md w-full text-center border border-base-300">
-          
-          <div className="w-16 h-16 bg-secondary/20 text-alt rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
-            <MdCheckCircle />
-          </div>
+      {solicitudEnviada && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+          <div className="relative bg-base-100 p-8 rounded-2xl shadow-2xl max-w-md w-full text-center border border-base-300">
+            <div className="w-16 h-16 bg-secondary/20 text-alt rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
+              <MdCheckCircle />
+            </div>
 
-          <h3 className="text-xl font-bold mb-2 text-primary">¡Solicitud Recibida!</h3>
-          
-          <p className="text-sm text-neutral opacity-70 mb-6">
-            Tus datos han sido enviados al área administrativa. 
-            Puedes dar seguimiento al estatus de tu CFDI desde tu panel.
-          </p>
+            <h3 className="text-xl font-bold mb-2 text-primary">¡Solicitud Recibida!</h3>
 
-          <div className="flex flex-col gap-3">
-            {/* BOTÓN PRINCIPAL: Ir a mis facturas */}
-            <button 
-              onClick={() => {
-                setSolicitudEnviada(false);
-                setPagoExitoso(false);
-                navigate("/asistente/facturas"); // Ajusta la ruta según tu App.jsx
-              }} 
-              className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300"
-            >
-              Ir a Mis Facturas
-            </button>
+            <p className="text-sm text-neutral opacity-70 mb-6">
+              Tus datos han sido enviados al área administrativa.
+              Puedes dar seguimiento al estatus de tu CFDI desde tu panel.
+            </p>
 
-            {/* BOTÓN SECUNDARIO: Solo cerrar */}
-            <button 
-              onClick={() => {
-                setSolicitudEnviada(false);
-                setPagoExitoso(false);
-                setUsarCorreoAlternativo(false);
-              }} 
-              className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300"
-            >
-              Cerrar
-            </button>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  setSolicitudEnviada(false);
+                  setPagoExitoso(false);
+                  navigate("/asistente/facturas");
+                }}
+                className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300"
+              >
+                Ir a Mis Facturas
+              </button>
+
+              <button
+                onClick={() => {
+                  setSolicitudEnviada(false);
+                  setPagoExitoso(false);
+                  setUsarCorreoAlternativo(false);
+                }}
+                className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300"
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
     </div>
- );
+  );
 }
