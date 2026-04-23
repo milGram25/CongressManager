@@ -4,7 +4,7 @@ import ListaRevisores from "./Componentes/ListaRevisores";
 
 // Datos de ejemplo para dictaminadores y extensos
 const MOCK_DICTAMINADORES = [
-{
+  {
     id: 1,
     nombre: "Ana García",
     grado: "Dr. en Ciencias Computacionales",
@@ -41,31 +41,31 @@ const MOCK_DICTAMINADORES = [
     email: "carli_loi9@gmail.com",
   },
   {
-  id: 5,
-  nombre: "Pedro Ruiz",
-  grado: "M.C. en Sistemas Computacionales",
-  institucion: "ITESM",
-  especialidad: "Ciberseguridad y Redes",
-  perfil: "Consultor en seguridad informática con experiencia en protección de infraestructuras críticas.",
-  email: "pedro.ruiz@itesm.mx",
+    id: 5,
+    nombre: "Pedro Ruiz",
+    grado: "M.C. en Sistemas Computacionales",
+    institucion: "ITESM",
+    especialidad: "Ciberseguridad y Redes",
+    perfil: "Consultor en seguridad informática con experiencia en protección de infraestructuras críticas.",
+    email: "pedro.ruiz@itesm.mx",
   },
   {
-  id: 6,
-  nombre: "Elena Torres",
-  grado: "Dra. en Matemáticas Aplicadas",
-  institucion: "BUAP",
-  especialidad: "Modelado Estadístico",
-  perfil: "Investigadora en análisis de datos masivos y modelos predictivos aplicados a salud pública.",
-  email: "e.torres@buap.mx",
+    id: 6,
+    nombre: "Elena Torres",
+    grado: "Dra. en Matemáticas Aplicadas",
+    institucion: "BUAP",
+    especialidad: "Modelado Estadístico",
+    perfil: "Investigadora en análisis de datos masivos y modelos predictivos aplicados a salud pública.",
+    email: "e.torres@buap.mx",
   },
   {
-  id: 7,
-  nombre: "Roberto Díaz",
-  grado: "Dr. en Ingeniería Eléctrica",
-  institucion: "UAM Iztapalapa",
-  especialidad: "Robótica e Automatización",
-  perfil: "Especialista en diseño de sistemas embebidos y robótica industrial con enfoque en manufactura.",
-  email: "r.diaz@uam.mx",
+    id: 7,
+    nombre: "Roberto Díaz",
+    grado: "Dr. en Ingeniería Eléctrica",
+    institucion: "UAM Iztapalapa",
+    especialidad: "Robótica e Automatización",
+    perfil: "Especialista en diseño de sistemas embebidos y robótica industrial con enfoque en manufactura.",
+    email: "r.diaz@uam.mx",
   },
 ];
 
@@ -88,7 +88,7 @@ const MOCK_EXTENSOS = [
       { id: 2, texto: "Redaccion", calificacion: 0, maximo: 5 },
       { id: 3, texto: "Claridad", calificacion: 0, maximo: 5 },
     ],
-    comentario: "La informacion presentada es pertinente, pero todavia requiere fortalecer la seccion metodologica y la definicion del aporte.",
+    comentario: "La información presentada es pertinente, pero todavía requiere fortalecer la sección metodológica y la definición del aporte.",
   },
   {
     id: 2,
@@ -200,9 +200,8 @@ function RubricaStatusRow({ rubrica }) {
           return (
             <div
               key={value}
-              className={`flex h-6 w-6 items-center justify-center rounded-full border text-[11px] font-semibold ${
-                active ? "border-[#0b7c91] bg-[#0b7c91] text-white" : "border-slate-800 bg-white text-slate-700"
-              }`}
+              className={`flex h-6 w-6 items-center justify-center rounded-full border text-[11px] font-semibold ${active ? "border-[#0b7c91] bg-black text-white" : "border-slate-800 bg-white text-slate-700"
+                }`}
             >
               {value}
             </div>
@@ -227,21 +226,21 @@ function ExtensoDetailCard({ extenso, revisores }) {
     <article className="flex min-h-[760px] flex-col rounded-[28px] border border-black/55 bg-white px-5 py-5 shadow-sm md:px-6">
       <div className="space-y-6">
         <section>
-          <h3 className="text-[14px] font-semibold uppercase tracking-wide text-slate-700">Informacion de extenso</h3>
+          <h3 className="text-[14px] font-semibold uppercase tracking-wide text-slate-700">Información de extenso</h3>
           <div className="mt-4 space-y-3 text-[14px] leading-6 text-slate-700">
-            <p><span className="font-semibold text-slate-900">Titulo:</span> {extenso.title}</p>
+            <p><span className="font-semibold text-slate-900">Título:</span> {extenso.title}</p>
             <p><span className="font-semibold text-slate-900">Autores:</span> {extenso.autores.join(" / ")}</p>
             <p><span className="font-semibold text-slate-900">Evaluadores:</span> {revisores.length > 0 ? revisores.map((revisor) => revisor.nombre).join(" / ") : "Sin asignar"}</p>
-            <p><span className="font-semibold text-slate-900">Subarea:</span> {extenso.subarea}</p>
+            <p><span className="font-semibold text-slate-900">Subárea:</span> {extenso.subarea}</p>
             <p><span className="font-semibold text-slate-900">Tipo de trabajo:</span> {extenso.tipoTrabajo}</p>
           </div>
         </section>
 
         <section>
           <div className="flex items-end justify-between gap-4">
-            <h3 className="text-[14px] font-semibold uppercase tracking-wide text-slate-700">Rubricas de evaluacion</h3>
+            <h3 className="text-[14px] font-semibold uppercase tracking-wide text-slate-700">Rúbricas de evaluación</h3>
             <div className="text-right">
-              <p className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">Puntuacion</p>
+              <p className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">Puntuación</p>
               <p className="text-[34px] font-black leading-none text-slate-800">
                 {extenso.puntuacion.obtenida}
                 <span className="text-[22px] text-slate-500">/{extenso.puntuacion.total}</span>
@@ -280,15 +279,19 @@ export default function ProcesosExtensosView() {
   return (
     <div className="w-full space-y-7">
       <section className="flex flex-wrap items-center gap-3 border-t border-base-300 pt-7">
-        <div className="h-12 w-1.5 rounded-full bg-[#000000]" />
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h2 className="text-[42px] font-black leading-none tracking-tight text-[#000000]">Revision</h2>
-          <p className="text-lg font-semibold text-slate-400">Evaluacion de extensos y asignacion de evaluadores</p>
+        <div>
+          <div className="flex gap-4">
+            <div className="border bg-black rounded-full h-10 w-2"></div>
+            <h2 className="flex-1 text-2xl font-bold text-start">Revisión</h2>
+          </div>
+          <p className="pl-12 text-start text-gray-500 mb-3">
+            Aquí se gestiona la revisión de extensos
+          </p>
         </div>
       </section>
 
-      <section className="grid items-start gap-6 xl:grid-cols-[52.5%_43.5%]">
-        <ExtensoDetailCard extenso={viewItem} revisores={revisoresAsignados} />
+      <section className="grid items-start gap-6 xl:grid-cols-2">
+
 
         <div className="space-y-4">
           <ListaExtensos
@@ -299,6 +302,7 @@ export default function ProcesosExtensosView() {
           />
           <ListaRevisores titulo="EVALUADORES" revisores={revisoresAsignados} />
         </div>
+        <ExtensoDetailCard extenso={viewItem} revisores={revisoresAsignados} />
       </section>
     </div>
   );

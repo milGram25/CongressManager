@@ -52,9 +52,9 @@ const CrearMesasFisicas = ({ listaMesas }) => {
   };
 
   return (
-    <div className="w-full space-y-6 min-h-[400px]">
+    <div className="w-full min-h-[400px]">
       {/* Header */}
-      <div className="flex items-center justify-between bg-black text-white p-6 rounded-lg">
+      <div className="flex items-center justify-between bg-black text-white p-6 rounded-t-lg">
         <h2 className="text-xl font-bold">Mesas físicas</h2>
         <div className="flex gap-2">
           <button onClick={descargarMesas} className="btn btn-sm btn-circle bg-black border-2 border-white text-white hover:bg-gray-800" title="Descargar">
@@ -67,7 +67,7 @@ const CrearMesasFisicas = ({ listaMesas }) => {
       </div>
 
       {/* Sección */}
-      <div className="bg-base-100 border border-base-300 rounded-lg p-6 h-full">
+      <div className="bg-base-100 border border-black rounded-b-lg p-6 h-full">
         <h3 className="text-lg font-bold text-black mb-2">Mesas</h3>
         <p className="text-sm text-base-content/60 mb-6">
           Crea mesas de trabajo para posteriormente enlazar los eventos (ponencias y talleres) del congreso a un espacio físico (la mesa)
@@ -95,46 +95,46 @@ const CrearMesasFisicas = ({ listaMesas }) => {
 
             <div className="space-y-3 pr-5 border-r">
 
-              
-              {
-              mesas.length>0?mesas.map((mesa) => (
-                <div
-                  key={mesa.id}
-                  className="flex gap-2 items-center"
-                  onClick={() => setMesaSeleccionada(mesa.id)}
-                >
-                  {/* 
-                  Indicador de selección*/}
-                  <div className={`w-2 h-2 rounded-full flex-shrink-0 border ${mesaSeleccionada === mesa.id ? 'bg-black border-black' : 'bg-transparent border-gray-400'}`} />
 
-                  <input
-                    ref={editandoId === mesa.id ? (el) => el?.focus() : null}
-                    type="text"
-                    placeholder="Nombre de la mesa"
-                    value={mesa.nombre}
-                    onChange={(e) => editarNombreMesa(mesa.id, e.target.value)}
-                    onBlur={() => setEditandoId(null)}
-                    readOnly={editandoId !== mesa.id}
-                    className={`input input-bordered input-sm flex-1 rounded-full bg-white cursor-pointer ${mesaSeleccionada === mesa.id ? 'border-black border-2' : ''}`}
-                  />
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setEditandoId(editandoId === mesa.id ? null : mesa.id); }}
-                    className="btn btn-sm btn-circle bg-black text-white hover:bg-gray-700"
-                    title="Editar"
+              {
+                mesas.length > 0 ? mesas.map((mesa) => (
+                  <div
+                    key={mesa.id}
+                    className="flex gap-2 items-center"
+                    onClick={() => setMesaSeleccionada(mesa.id)}
                   >
-                    <MdEdit size={14} />
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); eliminarMesa(mesa.id); }}
-                    className="btn btn-sm btn-circle bg-black text-white hover:bg-gray-700"
-                    title="Eliminar"
-                  >
-                    <MdDelete size={14} />
-                  </button>
-                </div>
-              )):<div className='text-gray-500 text-center'>
-                <br/>
-                <p className=' italic text-sm'>Aún no hay mesas existentes: crea una</p>
+                    {/* 
+                  Indicador de selección*/}
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 border ${mesaSeleccionada === mesa.id ? 'bg-black border-black' : 'bg-transparent border-gray-400'}`} />
+
+                    <input
+                      ref={editandoId === mesa.id ? (el) => el?.focus() : null}
+                      type="text"
+                      placeholder="Nombre de la mesa"
+                      value={mesa.nombre}
+                      onChange={(e) => editarNombreMesa(mesa.id, e.target.value)}
+                      onBlur={() => setEditandoId(null)}
+                      readOnly={editandoId !== mesa.id}
+                      className={`input input-bordered input-sm flex-1 rounded-full bg-white cursor-pointer ${mesaSeleccionada === mesa.id ? 'border-black border-2' : ''}`}
+                    />
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setEditandoId(editandoId === mesa.id ? null : mesa.id); }}
+                      className="btn btn-sm btn-circle bg-black text-white hover:bg-gray-700"
+                      title="Editar"
+                    >
+                      <MdEdit size={14} />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); eliminarMesa(mesa.id); }}
+                      className="btn btn-sm btn-circle bg-black text-white hover:bg-gray-700"
+                      title="Eliminar"
+                    >
+                      <MdDelete size={14} />
+                    </button>
+                  </div>
+                )) : <div className='text-gray-500 text-center'>
+                  <br />
+                  <p className=' italic text-sm'>Aún no hay mesas existentes: crea una</p>
                 </div>}
             </div>
           </div>

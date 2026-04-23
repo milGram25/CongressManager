@@ -15,11 +15,14 @@ export default function CongresoSedeView() {
   return (
     <div className="w-full space-y-8 pb-10">
       {/* Header */}
-      <div className="mb-2">
-        <div>
-          <h1 className="text-3xl font-bold text-base-content">Sede del Congreso</h1>
-          <p className="text-sm text-base-content/50">Configuración de ubicación, costos y espacios físicos</p>
+      <div>
+        <div className="flex gap-4">
+          <div className="border bg-black rounded-full h-10 w-2"></div>
+          <h2 className="flex-1 text-2xl font-bold text-start">Revisión</h2>
         </div>
+        <p className="pl-12 text-start text-gray-500 mb-3">
+          Aquí se gestiona la revisión de extensos
+        </p>
       </div>
 
       <div className="space-y-10">

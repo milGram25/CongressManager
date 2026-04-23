@@ -36,22 +36,22 @@ const TalleresCrearView = () => {
 
             {/* Formulario */}
             <div className="bg-base-100 rounded-3xl border border-base-300 shadow-sm overflow-hidden">
-                <DetallesEditarTaller 
-                    tallerData={emptyTallerData} 
+                <DetallesEditarTaller
+                    tallerData={emptyTallerData}
                     initialModificando={true}
                     isFullPage={true}
                 />
             </div>
-            
+
             {/* Botones de acción adicionales al final */}
             <div className="flex justify-end gap-4">
-                <button 
+                <button
                     onClick={() => navigate('/admin/eventos/talleres')}
                     className="px-8 py-3 rounded-xl border border-base-300 text-base-content/60 font-bold hover:bg-base-200 transition-all active:scale-95 uppercase tracking-wider text-xs"
                 >
                     Cancelar
                 </button>
-                <button 
+                <button
                     className="px-10 py-3 rounded-xl bg-primary text-primary-content font-bold shadow-lg shadow-primary/20 hover:brightness-110 transition-all active:scale-95 uppercase tracking-wider text-xs"
                 >
                     Guardar Taller

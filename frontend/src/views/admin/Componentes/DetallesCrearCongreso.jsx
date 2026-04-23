@@ -1,5 +1,7 @@
 import { RiPencilFill, RiSave3Line } from "react-icons/ri";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import Select from 'react-select';
+import countryList from 'react-select-country-list';
 import { IoIosCheckmark, IoMdAlert } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
 import { FiCalendar, FiClock, FiMapPin, FiCreditCard, FiTag, FiFileText } from "react-icons/fi";
@@ -18,13 +20,13 @@ const ConfirmDialog = ({ isOpen, onConfirm, onCancel, title, message }) => {
                     <h3 className="text-2xl font-bold text-gray-900 mb-2">{title}</h3>
                     <p className="text-gray-500 mb-8 leading-relaxed">{message}</p>
                     <div className="flex w-full gap-3">
-                        <button 
+                        <button
                             onClick={onCancel}
                             className="flex-1 px-6 py-3 rounded-2xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 transition-all cursor-pointer"
                         >
                             Cancelar
                         </button>
-                        <button 
+                        <button
                             onClick={onConfirm}
                             className="flex-1 px-6 py-3 rounded-2xl bg-black text-white font-bold hover:bg-gray-800 transition-all shadow-md cursor-pointer"
                         >
@@ -39,7 +41,7 @@ const ConfirmDialog = ({ isOpen, onConfirm, onCancel, title, message }) => {
 
 export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, listaPreguntas, modificandoDatos = false, initialModificando = false, isFullPage = false }) {
     const [showConfirm, setShowConfirm] = useState(false);
-    
+
     const listaRubricasPrueba = [
         { nombre: "rúbrica 1" },
         { nombre: "rúbrica 2" },
@@ -50,6 +52,12 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
         { nombre: "Tesis" },
         { nombre: "Avances de investigación" },
         { nombre: "Otros laburos" }
+    ];
+
+    const listaInstituciones = [
+        { nombre_institucion: "CIENU" },
+        { nombre_institucion: "RIDMAE" },
+
     ];
 
     const emptyFormData = {
@@ -192,6 +200,15 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
     const [formData, setFormData] = useState(getMockData(indexDatosModal));
     const [modificando, setModificando] = useState(initialModificando || modificandoDatos);
 
+    const options = useMemo(() => countryList().getData(), []);
+
+    function handleCountryChange(value) {
+        setFormData(prev => ({
+            ...prev,
+            pais: value.label
+        }));
+    }
+
     function handleChange(e) {
         const { id, value } = e.target;
         setFormData(prev => ({
@@ -223,8 +240,8 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
 
     return (
         <div className={`w-full bg-gray-50/50 ${isFullPage ? '' : 'rounded-[32px] shadow-2xl'} overflow-hidden font-sans relative`}>
-            
-            <ConfirmDialog 
+
+            <ConfirmDialog
                 isOpen={showConfirm}
                 onConfirm={handleConfirmSave}
                 onCancel={() => setShowConfirm(false)}
@@ -233,7 +250,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
             />
 
             {/* Header */}
-            <div className="sticky top-0 bg-black text-white flex items-center justify-between px-8 py-5 z-40 shadow-xl">
+            <div className="sticky top-0 bg-black text-white flex items-center justify-between px-8 py-5 z-40 shadow-xl rounded-t-[32px]">
                 <div>
                     <h2 className="text-lg md:text-xl font-bold tracking-tight">
                         {modificando ? 'Panel de Edición' : 'Vista de Detalles'}
@@ -242,25 +259,25 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
                 </div>
                 <div className="flex items-center gap-3">
                     {!modificando ? (
-                        <button 
-                            onClick={() => setModificando(true)} 
-                            className="w-11 h-11 rounded-2xl bg-white/10 text-white border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all cursor-pointer group" 
+                        <button
+                            onClick={() => setModificando(true)}
+                            className="w-11 h-11 rounded-2xl bg-white/10 text-white border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all cursor-pointer group"
                             title="Modificar datos"
                         >
                             <RiPencilFill size={20} className="group-hover:scale-110 transition-transform" />
                         </button>
                     ) : (
                         <div className="flex bg-white/10 backdrop-blur-md rounded-2xl p-1 border border-white/10 gap-1">
-                            <button 
-                                onClick={handleCancel} 
-                                className="w-9 h-9 rounded-xl bg-black/40 text-white flex items-center justify-center hover:bg-red-500 transition-all cursor-pointer group" 
+                            <button
+                                onClick={handleCancel}
+                                className="w-9 h-9 rounded-xl bg-black/40 text-white flex items-center justify-center hover:bg-red-500 transition-all cursor-pointer group"
                                 title="Cancelar cambios"
                             >
                                 <RxCross2 size={20} className="group-hover:rotate-90 transition-transform" />
                             </button>
-                            <button 
-                                onClick={initiateSave} 
-                                className="w-9 h-9 rounded-xl bg-white text-black flex items-center justify-center hover:bg-green-500 hover:text-white transition-all cursor-pointer group" 
+                            <button
+                                onClick={initiateSave}
+                                className="w-9 h-9 rounded-xl bg-white text-black flex items-center justify-center hover:bg-green-500 hover:text-white transition-all cursor-pointer group"
                                 title="Aceptar cambios"
                             >
                                 <IoIosCheckmark size={28} className="group-hover:scale-125 transition-transform" />
@@ -272,12 +289,12 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
 
             {/* Body */}
             <div className={`p-6 md:p-10 ${isFullPage ? '' : 'max-h-[80vh] overflow-y-auto'}`}>
-                
+
                 {/* Sección Congreso */}
                 <section className={sectionContainerClasses}>
                     <h3 className={sectionTitleClasses}>
                         <div className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center shadow-lg">
-                            <FiFileText size={20}/>
+                            <FiFileText size={20} />
                         </div>
                         Información General
                     </h3>
@@ -288,12 +305,18 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
                         </div>
                         <div className="md:col-span-1">
                             <label htmlFor="nombre_institucion" className={labelClasses}>Institución</label>
-                            <input value={formData.nombre_institucion} id="nombre_institucion" onChange={handleChange} className={inputClasses} readOnly={!modificando} />
+                            {/*<input value={formData.nombre_institucion} id="nombre_institucion" onChange={handleChange} className={inputClasses} readOnly={!modificando} />*/}
+                            <select id="nombre_institucion" value={formData.nombre_institucion} className={inputClasses} onChange={handleChange} disabled={!modificando}>
+                                {listaInstituciones.map((item, index) => (
+                                    <option key={index} value={item.nombre_institucion}>{item.nombre_institucion}</option>
+                                ))}
+                            </select>
+
                         </div>
                         <div className="md:col-span-1">
                             <label className={labelClasses}>Logo Representativo</label>
                             <div className="border-2 border-dashed border-gray-200 bg-gray-50 rounded-2xl h-[46px] flex items-center justify-center text-gray-400 text-xs font-medium uppercase tracking-tighter">
-                                Seleccionar archivo
+                                Seleccione una institución
                             </div>
                         </div>
                     </div>
@@ -303,7 +326,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
                 <section className={sectionContainerClasses}>
                     <h3 className={sectionTitleClasses}>
                         <div className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center shadow-lg">
-                            <FiMapPin size={20}/>
+                            <FiMapPin size={20} />
                         </div>
                         Ubicación y Sede
                     </h3>
@@ -312,11 +335,59 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
                             <label htmlFor="nombre_sede" className={labelClasses}>Nombre de la sede principal</label>
                             <input value={formData.nombre_sede} id="nombre_sede" onChange={handleChange} className={inputClasses} readOnly={!modificando} />
                         </div>
-                        
+
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 md:col-span-2">
                             <div>
                                 <label htmlFor="pais" className={labelClasses}>País</label>
-                                <input value={formData.pais} id="pais" onChange={handleChange} className={inputClasses} readOnly={!modificando} />
+                                {!modificando ? (
+                                    <input value={formData.pais} id="pais" readOnly className={inputClasses} />
+                                ) : (
+                                    <Select
+                                        options={options}
+                                        value={options.find(opt => opt.label === formData.pais) || null}
+                                        onChange={handleCountryChange}
+                                        placeholder="Busca tu país..."
+                                        noOptionsMessage={() => "No se encontraron resultados"}
+                                        styles={{
+                                            control: (base) => ({
+                                                ...base,
+                                                padding: '2px 8px',
+                                                borderRadius: '1rem',
+                                                backgroundColor: 'white',
+                                                border: '1px solid #e5e7eb',
+                                                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                                                '&:hover': { borderColor: '#9ca3af' }
+                                            }),
+                                            placeholder: (base) => ({
+                                                ...base,
+                                                color: '#6b7280',
+                                                fontSize: '0.875rem'
+                                            }),
+                                            singleValue: (base) => ({
+                                                ...base,
+                                                color: '#111827',
+                                                fontSize: '0.875rem'
+                                            }),
+                                            menu: (base) => ({
+                                                ...base,
+                                                backgroundColor: 'white',
+                                                borderRadius: '1rem',
+                                                zIndex: 50
+                                            }),
+                                            option: (base, state) => ({
+                                                ...base,
+                                                backgroundColor: state.isFocused ? '#f3f4f6' : 'transparent',
+                                                color: '#111827',
+                                                fontSize: '0.875rem',
+                                                '&:active': {
+                                                    backgroundColor: 'black',
+                                                    color: 'white'
+                                                }
+                                            })
+                                        }}
+                                        className="w-full transition-all"
+                                    />
+                                )}
                             </div>
                             <div>
                                 <label htmlFor="estado" className={labelClasses}>Estado / Región</label>
@@ -345,7 +416,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
 
                         <div className="md:col-span-2">
                             <label htmlFor="modulo_fisico" className={labelClasses}>Referencia específica (Módulo/Edificio)</label>
-                            <input value={formData.modulo_fisico} id="modulo_fisico" onChange={handleChange} className={inputClasses} readOnly={!modificando} />
+                            <input value={formData.modulo_fisico} id="modulo_fisico" onChange={handleChange} className={inputClasses} readOnly={!modificando} placeholder="Edificio A, Salón 123, Auditorio Central, etc." />
                         </div>
                     </div>
                 </section>
@@ -354,13 +425,13 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
                 <section className={sectionContainerClasses}>
                     <h3 className={sectionTitleClasses}>
                         <div className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center shadow-lg">
-                            <FiTag size={20}/>
+                            <FiTag size={20} />
                         </div>
                         Evaluaciones y Rúbricas
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div>
-                            <label htmlFor="tipo_trabajo" className={labelClasses}>Modalidad de trabajo</label>
+                            <label htmlFor="tipo_trabajo" className={labelClasses}>Tipos de trabajo</label>
                             <select id="tipo_trabajo" value={formData.tipo_trabajo} className={inputClasses} onChange={handleChange} disabled={!modificando}>
                                 {listaTiposTrabajo.map((item, index) => (
                                     <option key={index} value={item.nombre}>{item.nombre}</option>
@@ -368,7 +439,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
                             </select>
                         </div>
                         <div>
-                            <label className={labelClasses}>Banco de Preguntas</label>
+                            <label className={labelClasses}>Preguntas</label>
                             <button className="bg-black text-white w-full py-3 rounded-2xl text-xs font-bold hover:bg-gray-800 transition-all shadow-md active:scale-95 cursor-pointer">
                                 GESTIONAR PREGUNTAS
                             </button>
@@ -381,7 +452,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
                                         <option key={index} value={item.nombre}>{item.nombre}</option>
                                     ))}
                                 </select>
-                                <button className="bg-white text-black border border-black w-full py-2.5 rounded-xl text-[10px] font-bold hover:bg-gray-50 transition-all cursor-pointer uppercase tracking-wider">
+                                <button className="bg-black text-white w-full py-3 rounded-xl text-xs font-bold hover:bg-gray-800 transition-all cursor-pointer uppercase tracking-wider active:scale-95">
                                     Ver rúbrica actual
                                 </button>
                             </div>
@@ -393,24 +464,24 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
                 <section className={sectionContainerClasses}>
                     <h3 className={sectionTitleClasses}>
                         <div className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center shadow-lg">
-                            <FiCalendar size={20}/>
+                            <FiCalendar size={20} />
                         </div>
                         Cronograma de Actividades
                     </h3>
-                    
+
                     {/* Congreso Principal */}
                     <div className="mb-10 bg-gray-50 p-6 rounded-3xl border border-gray-100">
                         <div className="flex items-center gap-2 mb-6">
                             <div className="w-1.5 h-6 bg-black rounded-full"></div>
-                            <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Evento Principal</h4>
+                            <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Congreso</h4>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className={labelClasses}>Ceremonia de Apertura</label>
+                                <label className={labelClasses}>Inicio</label>
                                 <input value={formData.congreso_inicio} id="congreso_inicio" onChange={handleChange} type="datetime-local" className={inputClasses} readOnly={!modificando} />
                             </div>
                             <div>
-                                <label className={labelClasses}>Clausura</label>
+                                <label className={labelClasses}>Fin</label>
                                 <input value={formData.congreso_fin} id="congreso_fin" onChange={handleChange} type="datetime-local" className={inputClasses} readOnly={!modificando} />
                             </div>
                         </div>
@@ -424,12 +495,14 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
                             {[
-                                { label: "Convocatoria y Envío", startId: "envio_ponencias_inicio", endId: "envio_ponencias_fin" },
-                                { label: "Dictaminadores", startId: "inscripcion_dictaminadores_inicio", endId: "inscripcion_dictaminadores_fin" },
+                                { label: "Inscripción de dictaminadores", startId: "inscripcion_dictaminadores_inicio", endId: "inscripcion_dictaminadores_fin" },
+                                { label: "Inscripción evaluadores", startId: "inscripcion_evaluadores_inicio", endId: "inscripcion_evaluadores_fin" },
+                                { label: "Convocatoria de ponencias", startId: "envio_ponencias_inicio", endId: "envio_ponencias_fin" },
+
                                 { label: "Revisión Resúmenes", startId: "revision_resumenes_inicio", endId: "revision_resumenes_fin" },
+
                                 { label: "Recepción de Extensos", startId: "envio_extensos_inicio", endId: "envio_extensos_fin" },
-                                { label: "Evaluación de Extensos", startId: "inscripcion_evaluadores_inicio", endId: "inscripcion_evaluadores_fin" },
-                                { label: "Dictamen Final", startId: "revision_extensos_inicio", endId: "revision_extensos_fin" },
+                                { label: "Revisión de extensos", startId: "revision_extensos_inicio", endId: "revision_extensos_fin" },
                                 { label: "Carga Multimedia", startId: "subir_multimedia_inicio", endId: "subir_multimedia_fin" },
                             ].map((item, idx) => (
                                 <div key={idx} className="group">
@@ -455,11 +528,11 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
                 <section className={sectionContainerClasses}>
                     <h3 className={sectionTitleClasses}>
                         <div className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center shadow-lg">
-                            <FiCreditCard size={20}/>
+                            <FiCreditCard size={20} />
                         </div>
                         Estructura de Costos
                     </h3>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                         {/* Costos */}
                         <div className="space-y-5 bg-gray-50/50 p-6 rounded-3xl border border-gray-100">
@@ -512,7 +585,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
                             <div className="p-6 bg-black text-white rounded-[32px] shadow-xl">
                                 <label htmlFor="cuenta_deposito" className="text-[10px] font-bold text-gray-400 mb-3 block uppercase">Número de Cuenta / CLABE</label>
                                 <div className="flex items-center gap-3 mb-6">
-                                    <FiCreditCard className="text-white/40" size={24}/>
+                                    <FiCreditCard className="text-white/40" size={24} />
                                     <input value={formData.cuenta_deposito} onChange={handleChange} id="cuenta_deposito" className="bg-transparent border-none text-xl font-mono tracking-[0.2em] w-full focus:outline-none" readOnly={!modificando} />
                                 </div>
                                 <div className="text-[9px] text-gray-400 italic">
@@ -526,11 +599,11 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
                 {/* Botón Final en modo creación (FullPage) */}
                 {isFullPage && modificando && (
                     <div className="flex justify-center pt-4 pb-10">
-                        <button 
+                        <button
                             onClick={initiateSave}
                             className="bg-black text-white px-12 py-4 rounded-3xl font-bold text-lg hover:bg-gray-800 transition-all shadow-2xl hover:shadow-black/20 active:scale-95 flex items-center gap-3 cursor-pointer group"
                         >
-                            <RiSave3Line size={24} className="group-hover:rotate-12 transition-transform"/>
+                            <RiSave3Line size={24} className="group-hover:rotate-12 transition-transform" />
                             GUARDAR CONFIGURACIÓN FINAL
                         </button>
                     </div>
