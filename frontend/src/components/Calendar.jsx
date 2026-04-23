@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   format,
   addMonths,
@@ -13,55 +13,51 @@ import {
 } from "date-fns";
 import { es } from "date-fns/locale";
 import TodayEventsModal from "./TodayEventsModal";
+import { getAgendaCalendarioApi } from "../api/agendaApi";
+
+function mapBackendEventsToCalendar(events) {
+  return events.map((event) => ({
+    id: event.id,
+    date: new Date(event.start_iso),
+    type: event.type,
+    title: event.title,
+    time: event.time,
+    description: event.description,
+    author: event.author,
+    location: event.location,
+    abstract: event.abstract,
+    eje: event.eje,
+    link: event.link,
+  }));
+}
 
 export default function Calendar() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const mockEvents = [
-    {
-      date: new Date(2026, 2, 25),
-      type: "taller",
-      title: "Titulo taller",
-      time: "10:00 AM",
-      description: "descripcion",
-    },
-    {
-      date: new Date(2026, 2, 15),
-      type: "taller",
-      title: "Titulo taller",
-      time: "10:00 AM",
-      description: "descripcion",
-    },
-    {
-      date: new Date(2026, 2, 15),
-      type: "ponencia",
-      title: "Titulo ponencia",
-      time: "02:00 PM",
-      description: "descripcion",
-    },
-    {
-      date: new Date(2026, 2, 13),
-      type: "taller",
-      title: "Titulo taller",
-      time: "02:00 PM",
-      description: "descripcion",
-    },
-    {
-      date: new Date(2026, 2, 17),
-      type: "ponencia",
-      title: "Titulo ponencia",
-      time: "02:00 PM",
-      description: "descripcion",
-    },
-    {
-      date: new Date(2026, 2, 27),
-      type: "ponencia",
-      title: "titulo ponencia",
-      time: "05:00 PM",
-      description: "descripcion",
-    },
-  ];
+  useEffect(() => {
+    const loadMonthEvents = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const token = localStorage.getItem("congress_access");
+        if (!token) throw new Error("No hay sesión activa.");
+        const month = format(currentMonth, "yyyy-MM");
+        const data = await getAgendaCalendarioApi(token, month);
+        setEvents(mapBackendEventsToCalendar(data.events || []));
+      } catch (err) {
+        setError(err.message || "No se pudo cargar el calendario.");
+        setEvents([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMonthEvents();
+  }, [currentMonth]);
 
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
   const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
@@ -83,9 +79,10 @@ export default function Calendar() {
     document.getElementById("events_modal").showModal();
   };
 
-  const selectedEvents = selectedDate
-    ? mockEvents.filter((e) => isSameDay(e.date, selectedDate))
-    : [];
+  const selectedEvents = useMemo(
+    () => (selectedDate ? events.filter((e) => isSameDay(e.date, selectedDate)) : []),
+    [events, selectedDate],
+  );
 
   return (
     <div className="max-w-3xl mx-auto w-full bg-base-100 rounded-xl shadow-sm border border-base-300 overflow-hidden">
@@ -119,45 +116,51 @@ export default function Calendar() {
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-2 pt-2">
-          {calendarDays.map((calDay, index) => {
-            const dayEvents = mockEvents.filter((e) =>
-              isSameDay(e.date, calDay),
-            );
-            const hasTaller = dayEvents.some((e) => e.type === "taller");
-            const hasPonencia = dayEvents.some((e) => e.type === "ponencia");
-            const isCurrentMonth = isSameMonth(calDay, currentMonth);
+        {loading ? (
+          <div className="text-center py-8 opacity-50">Cargando calendario...</div>
+        ) : error ? (
+          <div className="text-center py-8 text-error">{error}</div>
+        ) : (
+          <div className="grid grid-cols-7 gap-2 pt-2">
+            {calendarDays.map((calDay, index) => {
+              const dayEvents = events.filter((e) =>
+                isSameDay(e.date, calDay),
+              );
+              const hasTaller = dayEvents.some((e) => e.type === "taller");
+              const hasPonencia = dayEvents.some((e) => e.type === "ponencia");
+              const isCurrentMonth = isSameMonth(calDay, currentMonth);
 
-            return (
-              <div
-                key={index}
-                onClick={() => handleDayClick(calDay)}
-                className={`
-                  aspect-square flex flex-col items-center justify-center rounded-lg text-sm
-                  transition-all duration-200 cursor-pointer border border-transparent relative
-                  ${!isCurrentMonth ? "opacity-30" : "hover:border-base-300"}
-                  ${isCurrentMonth && !hasTaller && !hasPonencia ? "hover:bg-base-300" : ""}
-                  ${hasTaller && !hasPonencia ? "bg-secondary/60 hover:bg-secondary" : ""}
-                  ${!hasTaller && hasPonencia ? "bg-accent/60 hover:bg-accent" : ""}
-                  ${hasTaller && hasPonencia ? "bg-gradient-to-br from-secondary/60 to-accent/60 text-base-content hover:from-secondary hover:to-accent" : ""}
-                `}
-              >
-                <span className="font-medium">{format(calDay, "d")}</span>
+              return (
+                <div
+                  key={index}
+                  onClick={() => handleDayClick(calDay)}
+                  className={`
+                    aspect-square flex flex-col items-center justify-center rounded-lg text-sm
+                    transition-all duration-200 cursor-pointer border border-transparent relative
+                    ${!isCurrentMonth ? "opacity-30" : "hover:border-base-300"}
+                    ${isCurrentMonth && !hasTaller && !hasPonencia ? "hover:bg-base-300" : ""}
+                    ${hasTaller && !hasPonencia ? "bg-secondary/60 hover:bg-secondary" : ""}
+                    ${!hasTaller && hasPonencia ? "bg-accent/60 hover:bg-accent" : ""}
+                    ${hasTaller && hasPonencia ? "bg-gradient-to-br from-secondary/60 to-accent/60 text-base-content hover:from-secondary hover:to-accent" : ""}
+                  `}
+                >
+                  <span className="font-medium">{format(calDay, "d")}</span>
 
-                {dayEvents.length > 0 && (
-                  <div className="absolute bottom-1 flex gap-1">
-                    {hasTaller && (
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
-                    )}
-                    {hasPonencia && (
-                      <div className="w-1.5 h-1.5 rounded-full bg-base-content"></div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                  {dayEvents.length > 0 && (
+                    <div className="absolute bottom-1 flex gap-1">
+                      {hasTaller && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                      )}
+                      {hasPonencia && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-base-content"></div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-6 mt-8 pt-4 border-t border-base-200">
           <div className="flex items-center gap-2">
