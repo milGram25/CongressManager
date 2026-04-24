@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import FacturasView from "./views/asistentes/FacturasView";
@@ -83,13 +84,38 @@ import {
 
 const AsistenteLayoutWrapper = () => {
   const { user } = useAuth();
+  const [tienePonenciaAceptada, setTienePonenciaAceptada] = useState(false);
+
+  // Roles especiales siempre ven "Mis Ponencias" sin necesidad de fetch
+  const esRolEspecial = user?.rol === 'administrador' || user?.rol === 'revisor' || user?.rol === 'dictaminador' || user?.rol === 'ponente';
+
+  useEffect(() => {
+    // Solo consultamos si es asistente puro (roles especiales siempre tienen acceso)
+    if (esRolEspecial) {
+      setTienePonenciaAceptada(true);
+      return;
+    }
+    const token = localStorage.getItem('congress_access');
+    if (!token) return;
+    fetch('http://localhost:8000/api/ponencias/mis-ponencias/', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const aceptada = Array.isArray(data) && data.some(
+          (rel) => rel.ponencia_detalle?.resumen_detalle?.estatus === 'Aceptado'
+        );
+        setTienePonenciaAceptada(aceptada);
+      })
+      .catch(() => setTienePonenciaAceptada(false));
+  }, [esRolEspecial]);
 
   const menuItems = [
     // Accesos rápidos para roles con permisos extra
     ...((user?.rol === 'administrador' || user?.rol === 'revisor' || user?.rol === 'dictaminador') ? [
       { type: 'subheader', label: 'Vistas de Rol' },
-      { 
-        type: 'role-icons', 
+      {
+        type: 'role-icons',
         roles: [
           ...(user?.rol === 'administrador' ? [
             { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
@@ -109,6 +135,8 @@ const AsistenteLayoutWrapper = () => {
     { to: '/asistente/facturas', label: 'Mis Facturas', icon: MdReceipt },
     { to: '/asistente/constancias', label: 'Mis Constancias', icon: MdBadge },
     { type: 'header', label: 'Ponente' },
+    // Solo visible si tiene al menos una ponencia aceptada
+    ...(tienePonenciaAceptada ? [{ to: '/asistente/mis-ponencias', label: 'Mis Ponencias', icon: MdCoPresent }] : []),
     { to: '/asistente/enviar-ponencia', label: 'Enviar Ponencia', icon: MdUploadFile },
   ];
 
@@ -122,8 +150,8 @@ const PonenteLayoutWrapper = () => {
     // Accesos rápidos para roles con permisos extra
     ...((user?.rol === 'administrador' || user?.rol === 'revisor' || user?.rol === 'dictaminador') ? [
       { type: 'subheader', label: 'Vistas de Rol' },
-      { 
-        type: 'role-icons', 
+      {
+        type: 'role-icons',
         roles: [
           ...(user?.rol === 'administrador' ? [
             { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
@@ -153,21 +181,21 @@ const PonenteLayoutWrapper = () => {
 
 const AdminLayoutWrapper = () => {
   const { pathname } = useLocation();
-  
+
   const menuItems = [
     { type: 'subheader', label: 'Vistas de Rol' },
-    { 
-      type: 'role-icons', 
+    {
+      type: 'role-icons',
       roles: [
         { to: '/asistente/agenda', label: 'Asistente', icon: MdPerson },
         { to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview },
         { to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel },
       ]
     },
-    
+
     { to: '/admin/dashboard', label: 'Dashboard', icon: MdDashboard },
     { to: '/admin/agenda', label: 'Agenda', icon: MdCalendarMonth },
-    
+
     // Procesos con sub-menú dinámico
     { to: '/admin/procesos', label: 'Procesos', icon: MdAssignment },
     ...(pathname.includes('/admin/procesos') ? [
@@ -211,8 +239,8 @@ const RevisorLayoutWrapper = () => {
   const { user } = useAuth();
   const menuItems = [
     { type: 'subheader', label: 'Vistas de Rol' },
-    { 
-      type: 'role-icons', 
+    {
+      type: 'role-icons',
       roles: [
         ...(user?.rol === 'administrador' ? [
           { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
@@ -235,8 +263,8 @@ const DictaminadorLayoutWrapper = () => {
   const { user } = useAuth();
   const menuItems = [
     { type: 'subheader', label: 'Vistas de Rol' },
-    { 
-      type: 'role-icons', 
+    {
+      type: 'role-icons',
       roles: [
         ...(user?.rol === 'administrador' ? [
           { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
@@ -280,6 +308,7 @@ function App() {
             <Route path="catalogo" element={<CatalogoView />} />
             <Route path="pagos" element={<PagosView />} />
             <Route path="facturas" element={<FacturasView />} />
+            <Route path="mis-ponencias" element={<MisPonenciasView />} />
             <Route path="enviar-ponencia" element={<EnviarPonenciaView />} />
             <Route
               path="constancias"

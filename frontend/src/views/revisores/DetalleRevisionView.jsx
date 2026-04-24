@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MdFileDownload, MdAssignment, MdComment, MdClose } from 'react-icons/md';
 import EvaluationSuccessModal from '../../components/EvaluationSuccessModal';
+import { enviarRevision } from '../../api/ponenciasApi';
 
 export default function DetalleRevisionView() {
   const { id } = useParams();
@@ -33,9 +34,9 @@ export default function DetalleRevisionView() {
     }
     // Fallback por si no hay nada en localStorage
     return [
-      { 
-        id: 1, 
-        texto: "Calidad General", 
+      {
+        id: 1,
+        texto: "Calidad General",
         criterios: [
           { id: 1, criterio: "Originalidad y relevancia del tema", puntosMax: 5, opciones: [1, 2, 3, 4, 5] },
           { id: 2, criterio: "Calidad metodológica", puntosMax: 5, opciones: [1, 2, 3, 4, 5] }
@@ -71,11 +72,11 @@ export default function DetalleRevisionView() {
   const calcularPromedio = () => {
     const keys = Object.keys(calificaciones);
     if (keys.length === 0) return "0.0";
-    
+
     // Calculamos en base a la ponderación
     // Cada criterio tiene un peso (puntosMax)
     // El valor seleccionado (1-5) actúa como multiplicador del porcentaje: (valor/5) * puntosMax
-    
+
     let sumaPuntajeObtenido = 0;
     let sumaPuntajeMaximoPosible = 0;
 
@@ -87,7 +88,7 @@ export default function DetalleRevisionView() {
     });
 
     if (sumaPuntajeMaximoPosible === 0) return "0.0";
-    
+
     // Escalamos a base 10
     return ((sumaPuntajeObtenido / sumaPuntajeMaximoPosible) * 10).toFixed(1);
   };
@@ -98,7 +99,7 @@ export default function DetalleRevisionView() {
 
   const toggleComentarioCriterio = (id) => {
     const hasContent = comentariosCriterios[id] && comentariosCriterios[id].trim().length > 0;
-    
+
     if (comentariosCriterios[id] !== undefined && hasContent) {
       setConfirmingRemoval(id);
       return;
@@ -140,10 +141,10 @@ export default function DetalleRevisionView() {
 
   const [showErrors, setShowErrors] = useState(false);
 
-  const handleAction = (decision) => {
+  const handleAction = async (decision) => {
+    // Si falta calificar algo, te lo marca de rojo
     if (totalEvaluados < rubricas.length) {
       setShowErrors(true);
-      // Encontrar el primer criterio no evaluado para hacer scroll
       const primeroFaltante = rubricas.find(r => !calificaciones[r.id]);
       if (primeroFaltante) {
         const element = document.getElementById(`rubrica-${primeroFaltante.id}`);
@@ -153,9 +154,20 @@ export default function DetalleRevisionView() {
       }
       return;
     }
-    // Aquí iría la lógica para enviar la revisión al backend
-    setFinalDecision(decision);
-    setShowSuccessModal(true);
+    //conexion a la base de datos
+    try {
+      const token = localStorage.getItem("congress_access");
+      const cleanId = id.replace('EXT-', '');
+
+      await enviarRevision(cleanId, decision.toLowerCase(), comentarios, token);
+
+      setFinalDecision(decision);
+      setShowSuccessModal(true);
+
+    } catch (err) {
+      alert("Error crítico. No pudimos llegar a la base de datos de PostgreSQL.");
+      console.error(err);
+    }
   };
 
   const handleCloseModal = () => {
@@ -165,11 +177,11 @@ export default function DetalleRevisionView() {
 
   return (
     <div className="space-y-8 pb-20">
-      <EvaluationSuccessModal 
-        isOpen={showSuccessModal} 
-        onClose={handleCloseModal} 
-        decision={finalDecision} 
-        type="revision" 
+      <EvaluationSuccessModal
+        isOpen={showSuccessModal}
+        onClose={handleCloseModal}
+        decision={finalDecision}
+        type="revision"
       />
 
       <div className="flex flex-col gap-6">
@@ -179,7 +191,7 @@ export default function DetalleRevisionView() {
             <h1 className="text-3xl font-bold text-base-content mt-1">{ponencia.titulo}</h1>
             <p className="text-sm text-base-content/40 font-mono mt-1">ID: {ponencia.id}</p>
           </div>
-          
+
           {/* Extenso movido al header de forma compacta */}
           <div className="flex-shrink-0">
             <div className="bg-base-100 p-4 rounded-2xl shadow-sm border border-base-300 flex items-center gap-4 hover:border-primary transition-colors cursor-pointer group">
@@ -196,14 +208,14 @@ export default function DetalleRevisionView() {
         </header>
 
         <div className="space-y-6">
-          
+
           {/* Rúbricas: Ahora ocupan todo el ancho */}
           <section className="bg-base-100 p-8 rounded-2xl shadow-sm border border-base-300">
             <div className="flex items-center gap-2 mb-6 text-base-content font-bold border-b border-base-300 pb-2">
               <MdAssignment size={22} />
               <span>Rúbrica de Evaluación</span>
             </div>
-            
+
             <div className="space-y-12">
               {gruposRubrica.map((grupo) => (
                 <div key={grupo.id} className="space-y-4">
@@ -211,17 +223,16 @@ export default function DetalleRevisionView() {
                     <div className="w-1.5 h-6 bg-primary rounded-full"></div>
                     <h4 className="font-bold text-sm text-primary uppercase tracking-wider">{grupo.texto}</h4>
                   </div>
-                  
+
                   <div className="space-y-6 pl-4">
                     {grupo.criterios.map((rubrica) => (
-                      <div 
-                        key={rubrica.id} 
+                      <div
+                        key={rubrica.id}
                         id={`rubrica-${rubrica.id}`}
-                        className={`p-4 rounded-xl transition-all border ${
-                          showErrors && !calificaciones[rubrica.id] 
-                          ? 'border-error/50' 
-                          : 'hover:bg-base-200 border-transparent hover:border-base-300'
-                        }`}
+                        className={`p-4 rounded-xl transition-all border ${showErrors && !calificaciones[rubrica.id]
+                            ? 'border-error/50'
+                            : 'hover:bg-base-200 border-transparent hover:border-base-300'
+                          }`}
                       >
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                           <div className="max-w-xl">
@@ -235,15 +246,14 @@ export default function DetalleRevisionView() {
                             </div>
                             <p className="text-[10px] text-base-content/40 uppercase font-bold tracking-widest">Valor: {rubrica.puntosMax} PTS</p>
                           </div>
-                          
+
                           <div className="flex items-center gap-4">
-                            <button 
+                            <button
                               onClick={() => toggleComentarioCriterio(rubrica.id)}
-                              className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${
-                                comentariosCriterios[rubrica.id] !== undefined 
-                                ? 'bg-primary/10 border-primary/20 text-primary' 
-                                : 'border-base-300 text-base-content/40 hover:border-primary hover:text-primary'
-                              }`}
+                              className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${comentariosCriterios[rubrica.id] !== undefined
+                                  ? 'bg-primary/10 border-primary/20 text-primary'
+                                  : 'border-base-300 text-base-content/40 hover:border-primary hover:text-primary'
+                                }`}
                             >
                               {comentariosCriterios[rubrica.id] !== undefined ? 'Quitar Comentario' : '+ Comentario'}
                             </button>
@@ -251,14 +261,14 @@ export default function DetalleRevisionView() {
                               <div className="flex items-center gap-2 relative">
                                 {rubrica.opciones.map((opcion) => (
                                   <label key={opcion} className="relative group cursor-pointer">
-                                    <input 
-                                      type="radio" 
-                                      name={`rubrica-${rubrica.id}`} 
-                                      className="peer hidden" 
+                                    <input
+                                      type="radio"
+                                      name={`rubrica-${rubrica.id}`}
+                                      className="peer hidden"
                                       checked={calificaciones[rubrica.id] === opcion}
-                                      onChange={() => {}}
+                                      onChange={() => { }}
                                     />
-                                    <div 
+                                    <div
                                       onClick={() => {
                                         handleCalificacionChange(rubrica.id, opcion);
                                         if (showErrors && Object.keys(calificaciones).length + 1 === rubricas.length) {
@@ -342,7 +352,7 @@ export default function DetalleRevisionView() {
                 <MdComment size={22} />
                 <span>Comentarios del Revisor</span>
               </div>
-              <textarea 
+              <textarea
                 value={comentarios}
                 onChange={(e) => setComentarios(e.target.value)}
                 onInput={autoResize}
@@ -354,19 +364,19 @@ export default function DetalleRevisionView() {
 
           {/* Botones de Acción */}
           <div className="flex flex-col md:flex-row gap-4 pt-4">
-            <button 
+            <button
               onClick={() => handleAction('ACEPTADO')}
               className="flex-1 bg-success hover:brightness-95 text-white font-bold py-4 rounded-xl shadow-lg shadow-success/20 transition-all active:scale-95 uppercase tracking-wider text-sm"
             >
               Aceptar
             </button>
-            <button 
+            <button
               onClick={() => handleAction('SOLICITUD DE CAMBIOS')}
               className="flex-1 bg-warning hover:brightness-95 text-white font-bold py-4 rounded-xl shadow-lg shadow-warning/20 transition-all active:scale-95 uppercase tracking-wider text-sm"
             >
               Solicitud de cambios
             </button>
-            <button 
+            <button
               onClick={() => handleAction('RECHAZADO')}
               className="flex-1 bg-error hover:brightness-95 text-white font-bold py-4 rounded-xl shadow-lg shadow-error/20 transition-all active:scale-95 uppercase tracking-wider text-sm"
             >

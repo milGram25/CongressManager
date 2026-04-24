@@ -1,9 +1,11 @@
 // Aqui se inserta el apartado de enviar ponencia
 
-import React, {useState} from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FaTrashCan } from "react-icons/fa6";
+import { enviarNuevaPonencia } from '../../api/ponenciasApi';
 //campos a llenar 
-export default function EnviarPonenciaView(){
+export default function EnviarPonenciaView() {
   const [tipoParticipacion, setTipoParticipacion] = useState('');
   const [ejeTematico, setEjeTematico] = useState('');
   const [tipoTrabajo, setTipoTrabajo] = useState('');
@@ -12,40 +14,43 @@ export default function EnviarPonenciaView(){
   const [palabrasClave, setPalabrasClaves] = useState('');
   const [resumen, setResumen] = useState('');
   //coautor(es)
-  const [coautores, setCoautores]=useState([]);
-  const [mostrarCoautores, setMostrarCoautores]=useState(false);
+  const [coautores, setCoautores] = useState([]);
+  const [mostrarCoautores, setMostrarCoautores] = useState(false);
 
   //inicia coautores, crea un espacio vacio para que aparezca el primer input
-  const parteCoautores=()=>{
+  const parteCoautores = () => {
     setMostrarCoautores(true);
-    if(coautores.length==0){
+    if (coautores.length == 0) {
       setCoautores([""]);
     }
   }
   //se agregan al arreglo los coautores que se necesiten
-  const agregarCoautor=() => {
+  const agregarCoautor = () => {
     setCoautores([...coautores, ""]);
   };
   //actualiza el arreglo para ir agregando los nuevos
-  const actualizaCoautor=(index, valor) => {
-    const nuevos=[...coautores];
+  const actualizaCoautor = (index, valor) => {
+    const nuevos = [...coautores];
     nuevos[index] = valor;
     setCoautores(nuevos);
   };
   //elimina los coautores por posicion
-  const eliminarCoautor=(indexEliminar)=> {
-    const nuevos = coautores.filter((_, index)=> index!==indexEliminar);
+  const eliminarCoautor = (indexEliminar) => {
+    const nuevos = coautores.filter((_, index) => index !== indexEliminar);
     setCoautores(nuevos);
     //por si no hay coautores regresa al boton inicial de agregar coautores
-    if(nuevos.length==0){
+    if (nuevos.length == 0) {
       setMostrarCoautores(false);
     }
   };
 
-  const handleSubmit=(e) => {
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(
-      {
+    try {
+      const token = localStorage.getItem('congress_access');
+      await enviarNuevaPonencia({
         titulo,
         autor,
         coautores,
@@ -54,10 +59,16 @@ export default function EnviarPonenciaView(){
         tipoTrabajo,
         palabrasClave,
         resumen
-      }
-    );
+      }, token);
+      alert('¡Ponencia enviada al Dictaminador exitosamente!');
+      navigate('/asistente/mis-ponencias');
+    } catch (error) {
+      console.error(error);
+      alert('Hubo un error al enviar la ponencia.');
+    }
   };
-  return(
+
+  return (
     <div className="p-8 bg-base-100 min-h-screen">
       <h1 className="text-3xl font-bold mb-6">Enviar Ponencia</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
@@ -68,26 +79,26 @@ export default function EnviarPonenciaView(){
           type="text"
           placeholder="Autor de la ponencia"
           value={autor}
-          onChange={(e)=>setAutor(e.target.value)}
+          onChange={(e) => setAutor(e.target.value)}
           className="input input-bordered w-full"
           required
         />
         {/*espacio, boton para coautor o caoutores*/}
-        {!mostrarCoautores &&(
+        {!mostrarCoautores && (
           <button type="button" onClick={parteCoautores} className="btn btn-primary w-fit">
             Agregar Coautor
           </button>
         )}
-        {mostrarCoautores &&(
+        {mostrarCoautores && (
           <div className="flex flex-col gap-2">
-            {coautores.map((coautor, index)=>(
+            {coautores.map((coautor, index) => (
               <div key={index} className='flex items-end gap-2'>
                 <label className="font-bold">{index + 1}.</label>
                 <input
                   type="text"
                   placeholder={`Nombre Coautor ${index + 1}`}
                   value={coautor}
-                  onChange={(e)=>actualizaCoautor(index, e.target.value)}
+                  onChange={(e) => actualizaCoautor(index, e.target.value)}
                   className="input input-bordered w-full"
                 />
                 <button type="button" onClick={() => eliminarCoautor(index)} className="btn btn-base btn-sm">
@@ -106,14 +117,14 @@ export default function EnviarPonenciaView(){
           type="text"
           placeholder="Título de la ponencia"
           value={titulo}
-          onChange={(e)=>setTitulo(e.target.value)}
+          onChange={(e) => setTitulo(e.target.value)}
           className="input input-bordered w-full"
           required
         />
         {/*espacio de la parte de tipo de participacin*/}
         <label className="font-bold">Tipo de participación *</label>
         <select value={tipoParticipacion} onChange={(e) => setTipoParticipacion(e.target.value)}
-        className="input input-bordered w-full" required>
+          className="input input-bordered w-full" required>
           <option value="">Selecciona una opción</option>
           <option value="presencial">Presencial</option>
           <option value="virtual">Virtual</option>
@@ -121,7 +132,7 @@ export default function EnviarPonenciaView(){
         {/*espacio de la parte de eje tematico*/}
         <label className="font-bold">Eje Temático *</label>
         <select value={ejeTematico} onChange={(e) => setEjeTematico(e.target.value)}
-        className="input input-bordered w-full" required>
+          className="input input-bordered w-full" required>
           <option value="">Selecciona una opción</option>
           <option value="alfabetizacion digital">Alfabetización Digital</option>
           <option value="brecha digital">Brecha Digital</option>
@@ -165,7 +176,7 @@ export default function EnviarPonenciaView(){
         {/*espacio de la parte de tipo de trabajo*/}
         <label className="font-bold">Tipo de trabajo *</label>
         <select value={tipoTrabajo} onChange={(e) => setTipoTrabajo(e.target.value)}
-        className="input input-bordered w-full" required>
+          className="input input-bordered w-full" required>
           <option value="">Selecciona una opción</option>
           <option value="reflexiones o experiencias">Reflexiones o experiencias: expondrán observaciones, experiencias y conclusiones de los autores sobre la docencia universitaria y media superior. Para el caso de las experiencias se puede integrar</option>
           <option value="Investigacion en educacion">Investigación en educación: trabajos de investigaciones concluidas.</option>
@@ -177,7 +188,7 @@ export default function EnviarPonenciaView(){
           type="text"
           placeholder="Palabras clave"
           value={palabrasClave}
-          onChange={(e)=>setPalabrasClaves(e.target.value)}
+          onChange={(e) => setPalabrasClaves(e.target.value)}
           className="input input-bordered w-full"
           required
         />
@@ -186,7 +197,7 @@ export default function EnviarPonenciaView(){
         <textarea
           placeholder="Escribe tu resumen (abstract) de máximo 250 palabras"
           value={resumen}
-          onChange={(e)=>setResumen(e.target.value)}
+          onChange={(e) => setResumen(e.target.value)}
           className="textarea textarea-bordered w-full"
           rows={5}
           required

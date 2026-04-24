@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MdDescription, MdQuiz, MdCheckCircle, MdCancel, MdAssignment, MdComment, MdClose, MdFileDownload } from 'react-icons/md';
 import EvaluationSuccessModal from '../../components/EvaluationSuccessModal';
+import { enviarDictamen } from '../../api/ponenciasApi';
 
 export default function DetalleDictamenView() {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   // ESTADO PARA LAS PREGUNTAS VARIABLES - Se carga de localStorage
   const [preguntas, setPreguntas] = useState(() => {
     // Cargamos la configuración del Administrador para el ID 1 (Avances de tesis)
@@ -98,7 +99,8 @@ export default function DetalleDictamenView() {
 
   const progreso = calcularProgreso();
 
-  const handleDecision = (decision) => {
+  const handleDecision = async (decision) => {
+    // Si faltan preguntas por responder, las marcamos
     if (progreso.respondidas < progreso.total) {
       setShowErrors(true);
       const primeraFaltante = preguntas.find(p => !respuestas[p.id]);
@@ -110,8 +112,20 @@ export default function DetalleDictamenView() {
       }
       return;
     }
-    setFinalDecision(decision);
-    setShowSuccessModal(true);
+
+    try {
+      const token = localStorage.getItem("congress_access");
+      const cleanId = id.replace('ART-', '');
+
+      await enviarDictamen(cleanId, decision.toLowerCase(), comentariosGenerales, token);
+
+      setFinalDecision(decision);
+      setShowSuccessModal(true);
+
+    } catch (err) {
+      alert("Uh oh... Hubo un problema al guardar tu dictamen en la base de datos.");
+      console.error(err);
+    }
   };
 
   const handleCloseModal = () => {
@@ -121,11 +135,11 @@ export default function DetalleDictamenView() {
 
   return (
     <div className="space-y-8 pb-20">
-      <EvaluationSuccessModal 
-        isOpen={showSuccessModal} 
-        onClose={handleCloseModal} 
-        decision={finalDecision} 
-        type="dictamen" 
+      <EvaluationSuccessModal
+        isOpen={showSuccessModal}
+        onClose={handleCloseModal}
+        decision={finalDecision}
+        type="dictamen"
       />
 
       <div className="flex flex-col gap-6">
@@ -161,14 +175,13 @@ export default function DetalleDictamenView() {
 
             <div className="space-y-8">
               {preguntas.map((p, index) => (
-                <div 
-                  key={p.id} 
+                <div
+                  key={p.id}
                   id={`pregunta-${p.id}`}
-                  className={`p-4 rounded-xl transition-all border ${
-                    showErrors && !respuestas[p.id] 
-                    ? 'border-error/50' 
-                    : 'hover:bg-base-200 border-transparent hover:border-base-300'
-                  }`}
+                  className={`p-4 rounded-xl transition-all border ${showErrors && !respuestas[p.id]
+                      ? 'border-error/50'
+                      : 'hover:bg-base-200 border-transparent hover:border-base-300'
+                    }`}
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="max-w-xl">
@@ -181,15 +194,14 @@ export default function DetalleDictamenView() {
                         )}
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-4">
-                      <button 
+                      <button
                         onClick={() => toggleComentarioCriterio(p.id)}
-                        className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${
-                          comentariosCriterios[p.id] !== undefined 
-                          ? 'bg-primary/10 border-primary/20 text-primary' 
-                          : 'border-base-300 text-base-content/40 hover:border-primary hover:text-primary'
-                        }`}
+                        className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${comentariosCriterios[p.id] !== undefined
+                            ? 'bg-primary/10 border-primary/20 text-primary'
+                            : 'border-base-300 text-base-content/40 hover:border-primary hover:text-primary'
+                          }`}
                       >
                         {comentariosCriterios[p.id] !== undefined ? 'Quitar Comentario' : '+ Comentario'}
                       </button>
@@ -205,13 +217,12 @@ export default function DetalleDictamenView() {
                                   setShowErrors(false);
                                 }
                               }}
-                              className={`w-16 h-10 flex items-center justify-center rounded-lg border-2 text-xs font-bold transition-all ${
-                                respuestas[p.id] === opcion
-                                  ? opcion === 'Si' 
-                                    ? 'bg-primary border-primary text-white' 
+                              className={`w-16 h-10 flex items-center justify-center rounded-lg border-2 text-xs font-bold transition-all ${respuestas[p.id] === opcion
+                                  ? opcion === 'Si'
+                                    ? 'bg-primary border-primary text-white'
                                     : 'bg-error border-error text-white'
                                   : 'border-base-200 text-base-content/40 hover:border-primary hover:text-primary'
-                              }`}
+                                }`}
                             >
                               {opcion.toUpperCase()}
                             </button>
@@ -285,7 +296,7 @@ export default function DetalleDictamenView() {
                 <MdComment size={22} className="text-primary" />
                 <span>Observaciones Finales</span>
               </div>
-              <textarea 
+              <textarea
                 value={comentariosGenerales}
                 onChange={(e) => setComentariosGenerales(e.target.value)}
                 onInput={autoResize}
@@ -296,21 +307,21 @@ export default function DetalleDictamenView() {
           </div>
 
           <div className="flex flex-col md:flex-row gap-4 pt-4">
-            <button 
+            <button
               onClick={() => handleDecision('ACEPTADO')}
               className="flex-1 bg-success hover:brightness-95 text-white font-bold py-4 rounded-xl shadow-lg shadow-success/20 transition-all active:scale-95 uppercase tracking-wider text-sm flex items-center justify-center gap-2"
             >
               <MdCheckCircle size={20} />
               Aceptar Formato
             </button>
-            <button 
+            <button
               onClick={() => handleDecision('SOLICITUD DE CAMBIOS')}
               className="flex-1 bg-warning hover:brightness-95 text-white font-bold py-4 rounded-xl shadow-lg shadow-warning/20 transition-all active:scale-95 uppercase tracking-wider text-sm flex items-center justify-center gap-2"
             >
               <MdAssignment size={20} />
               Solicitar Cambios
             </button>
-            <button 
+            <button
               onClick={() => handleDecision('RECHAZADO')}
               className="flex-1 bg-error hover:brightness-95 text-white font-bold py-4 rounded-xl shadow-lg shadow-error/20 transition-all active:scale-95 uppercase tracking-wider text-sm flex items-center justify-center gap-2"
             >
