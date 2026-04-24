@@ -839,14 +839,23 @@ class EliminarCongresoView(APIView):
     def delete(self, request, id_congreso):
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT COUNT(*) FROM evento WHERE id_congreso = %s",
-                [id_congreso],
+                """
+                SELECT
+                    (SELECT COUNT(*) FROM evento WHERE id_congreso = %s),
+                    (SELECT COUNT(*) FROM libros WHERE id_congreso = %s)
+                """,
+                [id_congreso, id_congreso],
             )
-            eventos_asociados = cursor.fetchone()[0]
+            eventos_asociados, libros_asociados = cursor.fetchone()
 
-        if eventos_asociados:
+        if eventos_asociados or libros_asociados:
+            partes = []
+            if eventos_asociados:
+                partes.append(f'{eventos_asociados} evento(s)')
+            if libros_asociados:
+                partes.append(f'{libros_asociados} libro(s)')
             return Response(
-                {'detail': f'No se puede eliminar: el congreso tiene {eventos_asociados} evento(s) asociado(s).'},
+                {'detail': f'No se puede eliminar: el congreso tiene {" y ".join(partes)} asociado(s).'},
                 status=status.HTTP_409_CONFLICT,
             )
 
