@@ -1,7 +1,7 @@
 -- DROP SCHEMA public CASCADE; CREATE SCHEMA public;
 
 -- 1. TIPOS DE DATOS PERSONALIZADOS (ENUMS)
-CREATE TYPE tipo_evento_enum AS ENUM ('ponencia', 'taller');
+CREATE TYPE tipo_evento_enum AS ENUM ('ponencia','ponencia magistral', 'taller');
 CREATE TYPE estatus_extenso_enum AS ENUM ('aceptado', 'aceptado con ligeras modificaciones', 'aceptado con modificaciones mayores', 'rechazado');
 CREATE TYPE estatus_resumen_enum AS ENUM ('aceptado', 'rechazado');
 CREATE TYPE tipo_participacion_enum AS ENUM ('presencial', 'virtual', 'hibrida');
@@ -94,7 +94,9 @@ CREATE TABLE fechas_congreso (
     fecha_inicio_evaluar_extensos TIMESTAMP NOT NULL,
     fecha_fin_evaluar_extensos TIMESTAMP NOT NULL,
     fecha_inicio_subir_multimedia TIMESTAMP NOT NULL,
-    fecha_fin_subir_multimedia TIMESTAMP NOT NULL
+    fecha_fin_subir_multimedia TIMESTAMP NOT NULL,
+    fecha_inicio_subir_extenso_final TIMESTAMP NOT NULL,
+    fecha_fin_subir_extenso_final TIMESTAMP NOT NULL
 );
 
 -- 3. SISTEMA DE RÚBRICAS (Plantillas de evaluación)

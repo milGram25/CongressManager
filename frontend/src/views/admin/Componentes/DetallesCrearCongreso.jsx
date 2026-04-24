@@ -503,6 +503,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
 
                                 { label: "Recepción de Extensos", startId: "envio_extensos_inicio", endId: "envio_extensos_fin" },
                                 { label: "Revisión de extensos", startId: "revision_extensos_inicio", endId: "revision_extensos_fin" },
+                                { label: "Envío de extenso final", startId: "envio_extensos_final_inicio", endId: "envio_extensos_final_fin" },
                                 { label: "Carga Multimedia", startId: "subir_multimedia_inicio", endId: "subir_multimedia_fin" },
                             ].map((item, idx) => (
                                 <div key={idx} className="group">
@@ -586,7 +587,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, listaRubricas, 
                                 <label htmlFor="cuenta_deposito" className="text-[10px] font-bold text-gray-400 mb-3 block uppercase">Número de Cuenta / CLABE</label>
                                 <div className="flex items-center gap-3 mb-6">
                                     <FiCreditCard className="text-white/40" size={24} />
-                                    <input value={formData.cuenta_deposito} onChange={handleChange} id="cuenta_deposito" className="bg-transparent border-none text-xl font-mono tracking-[0.2em] w-full focus:outline-none" readOnly={!modificando} />
+                                    <input value={formData.cuenta_deposito} onChange={handleChange} id="cuenta_deposito" className="bg-transparent border-none text-xl font-mono tracking-[0.2em] w-full focus:outline-none" readOnly={!modificando} title="Escriba la cuenta de depósito" />
                                 </div>
                                 <div className="text-[9px] text-gray-400 italic">
                                     * Esta cuenta será visible para los usuarios en el panel de pagos.

@@ -90,7 +90,7 @@ export default function PonenciasView() {
           <div className="border bg-black rounded-full h-10 w-2"></div>
           <h2 className="flex-1 text-2xl font-bold text-start">Revisión</h2>
         </div>
-        <p className="pl-12 text-start text-gray-500 mb-3">
+        <p className="pl-12 text-start text-gray-500 mb-10">
           Aquí se gestiona la revisión de extensos
         </p>
       </div>

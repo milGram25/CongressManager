@@ -123,9 +123,9 @@ const MOCK_RESUMENES = [
     tipoTrabajo: "revision documental",
     puntuacion: { obtenida: 2, total: 3 },
     preguntas: [
-      { id: 1, texto: "Es conciso?", aprobado: true },
-      { id: 2, texto: "Es util?", aprobado: false },
-      { id: 3, texto: "Es claro?", aprobado: true },
+      { id: 1, texto: "Es conciso?", aprobado: true, comentario: "Bien" },
+      { id: 2, texto: "Es util?", aprobado: false, comentario: "Meh" },
+      { id: 3, texto: "Es claro?", aprobado: true, comentario: "Claro" },
     ],
     comentario: "El trabajo presenta contexto suficiente, aunque conviene profundizar el valor academico de las fuentes consultadas.",
   },
@@ -134,8 +134,16 @@ const MOCK_RESUMENES = [
 // Apartado de preguntas con estatus aprobado o no aprobado
 function QuestionStatusRow({ pregunta }) {
   return (
-    <div className="flex items-center justify-between border-b border-slate-200 py-3 last:border-b-0">
-      <span className="text-sm font-medium text-slate-700">{pregunta.texto}</span>
+    <div className="flex items-start justify-between border-b border-slate-200 py-3 last:border-b-0">
+      <div className="flex flex-1 items-center gap-2">
+        <span className="flex-1 text-sm font-medium text-slate-700">{pregunta.texto}</span>
+        <input
+          className="flex-[3] text-sm font-medium text-black bg-white border border-slate-200 rounded px-2 py-1 placeholder:text-slate-400"
+          value={pregunta.comentario || ""}
+          placeholder="Sin comentarios"
+          readOnly
+        />
+      </div>
       <div className="flex items-center gap-3">
         <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Estatus</span>
         <span className={`h-2.5 w-2.5 rounded-full ${pregunta.aprobado ? "bg-green-500" : "bg-red-500"}`} />
@@ -214,9 +222,9 @@ export default function ProcesosResumenesView() {
         <div>
           <div className="flex gap-4">
             <div className="border bg-black rounded-full h-10 w-2"></div>
-            <h2 className="flex-1 text-2xl font-bold text-start">Revisión</h2>
+            <h2 className="flex-1 text-2xl font-bold text-start">Revision de resúmenes</h2>
           </div>
-          <p className="pl-12 text-start text-gray-500 mb-10">
+          <p className="pl-12 text-start text-gray-500 mb-3">
             Aquí se gestiona la revisión de resúmenes.
           </p>
         </div>

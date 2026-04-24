@@ -6,30 +6,30 @@ import CongresosFechasGen from "./Componentes/CongresosFechasGenericoV2";
 import ListaDesplegableElementosGenerica from "./Componentes/ListaDesplegableElementosGenerica";
 
 export default function CongresoFechasView() {
-  
+
 
   const listaCongresos = [{
-      id: 1,
-      nombre: "CIENU 2025"
-    },
-    {
-      id: 2,
-      nombre: "CIENU 2026"
-    },
+    id: 1,
+    nombre: "CIENU 2025"
+  },
+  {
+    id: 2,
+    nombre: "CIENU 2026"
+  },
   ];
 
   const listaInstituciones = [{
-      id: 1,
-      nombre: "CIENU"
-    },
-    {
-      id: 2,
-      nombre: "RIDMAE"
-    },
+    id: 1,
+    nombre: "CIENU"
+  },
+  {
+    id: 2,
+    nombre: "RIDMAE"
+  },
   ];
 
- 
- 
+
+
 
   return (
     <div>
@@ -42,12 +42,12 @@ export default function CongresoFechasView() {
           Administra las fechas de todo el congreso seleccionado. Pero, primero, escoja la institución y su respectivo congreso
         </p>
         <div className="flex gap-10 justify-center mt-10">
-            <ListaDesplegableElementosGenerica titulo={"Instituciones"} lista={listaInstituciones}/>
-            <ListaDesplegableElementosGenerica titulo={"Congresos"} lista={listaCongresos}/>
+          <ListaDesplegableElementosGenerica titulo={"Instituciones"} lista={listaInstituciones} />
+          <ListaDesplegableElementosGenerica titulo={"Congresos"} lista={listaCongresos} />
         </div>
 
       </div>
-      
+
 
       <div className="flex flex-col items-center justify-center py-10 text-center">
         <div className="w-240">
@@ -63,14 +63,14 @@ export default function CongresoFechasView() {
           <div className="">
             <div className="flex gap-4 items-center">
               <div className="h-10 w-10 rounded-full bg-green-800"></div>
-              <CongresosFechasGen className="flex-1" titulo={"Fecha prepago"} descripcion_fecha={"Si se paga en este rango de fechas, se realiza el descuento especificado en el congreso"}/>
+              <CongresosFechasGen className="flex-1" titulo={"Fecha prepago"} descripcion_fecha={"Si se paga en este rango de fechas, se realiza el descuento especificado en el congreso"} />
             </div>
             <div className="flex gap-4 items-center">
               <div className="h-10 w-10 rounded-full bg-green-800"></div>
-              <CongresosFechasGen titulo={"Fecha pago normal"} descripcion_fecha={"En este rango de fechas todos los eventos se pagan igual, sin descuento alguno."}/>
+              <CongresosFechasGen titulo={"Fecha pago normal"} descripcion_fecha={"En este rango de fechas todos los eventos se pagan igual, sin descuento alguno."} />
             </div>
           </div>
-          <hr/>
+          <hr />
         </div>
 
         <div className="w-240">
@@ -86,14 +86,14 @@ export default function CongresoFechasView() {
           <div className="">
             <div className="flex gap-4 items-center">
               <div className="h-10 w-10 rounded-full bg-green-800"></div>
-              <CongresosFechasGen className="flex-1" titulo={"Inscripción dictaminadores"} descripcion_fecha={"Entre estas fechas deberán inscribirse los dictaminadores invitados. Si no, serán rechazados"}/>
+              <CongresosFechasGen className="flex-1" titulo={"Inscripción dictaminadores"} descripcion_fecha={"Entre estas fechas deberán inscribirse los dictaminadores invitados. Si no, serán rechazados"} />
             </div>
             <div className="flex gap-4 items-center">
               <div className="h-10 w-10 rounded-full bg-green-800"></div>
-              <CongresosFechasGen titulo={"Inscripción evaluadores"} descripcion_fecha={"Entre estas fechas deberán inscribirse los evaluadores de extensos invitados. Si no, serán rechazados"}/>
+              <CongresosFechasGen titulo={"Inscripción evaluadores"} descripcion_fecha={"Entre estas fechas deberán inscribirse los evaluadores de extensos invitados. Si no, serán rechazados"} />
             </div>
           </div>
-          <hr/>
+          <hr />
         </div>
 
         <div className="w-240">
@@ -109,30 +109,38 @@ export default function CongresoFechasView() {
           <div className="">
             <div className="flex gap-4 items-center">
               <div className="h-10 w-10 rounded-full bg-green-800"></div>
-              <CongresosFechasGen titulo={"Envío de ponencias"} descripcion_fecha={"Entre estas fechas los ponentes podrán enviar sus solicitudes de ponencias al congreso"}/>
+              <CongresosFechasGen titulo={"Envío de ponencias"} descripcion_fecha={"Entre estas fechas los ponentes podrán enviar sus solicitudes de ponencias al congreso"} />
             </div>
             <div className="flex gap-4 items-center">
               <div className="h-10 w-10 rounded-full bg-green-800"></div>
-              <CongresosFechasGen titulo={"Revisión de resúmenes"} descripcion_fecha={"Entre estas fechas dictaminadores evaluarán los resúmenes con las preguntas propuestas"}/>
+              <CongresosFechasGen titulo={"Revisión de resúmenes"} descripcion_fecha={"Entre estas fechas dictaminadores evaluarán los resúmenes con las preguntas propuestas"} />
             </div>
 
             <div className="flex gap-4 items-center">
               <div className="h-10 w-10 rounded-full bg-green-800"></div>
-              <CongresosFechasGen titulo={"Envío de extensos"} descripcion_fecha={"Si el resumen es aceptado, entre estas fechas los ponentes podrán enviar su extenso"}/>
+              <CongresosFechasGen titulo={"Envío de extensos"} descripcion_fecha={"Si el resumen es aceptado, entre estas fechas los ponentes podrán enviar su extenso"} />
             </div>
             <div className="flex gap-4 items-center">
               <div className="h-10 w-10 rounded-full bg-green-800"></div>
-              <CongresosFechasGen titulo={"Revisión de extensos"} descripcion_fecha={"Una vez se hayan recibido los extensos de las ponencias, los evaluadores se encargarán de revisarlos"}/>
+              <CongresosFechasGen titulo={"Revisión de extensos"} descripcion_fecha={"Una vez se hayan recibido los extensos de las ponencias, los evaluadores se encargarán de revisarlos"} />
             </div>
             <div className="flex gap-4 items-center">
               <div className="h-10 w-10 rounded-full bg-green-800"></div>
-              <CongresosFechasGen titulo={"Envío de multimedia"} descripcion_fecha={"Si el resumen y extenso son aceptados, los ponentes deberán enviar el contenido multimedia que usará durante la exposición"}/>
+              <CongresosFechasGen titulo={"Envío de extenso final"} descripcion_fecha={"En caso de que se haya aceptado el extenso, pero con ciertas modificaciones, se dará un plazo para enviarse la última versión"} />
             </div>
+            <div className="flex gap-4 items-center">
+              <div className="h-10 w-10 rounded-full bg-green-800"></div>
+              <CongresosFechasGen titulo={"Envío de multimedia"} descripcion_fecha={"Si el resumen y extenso son aceptados, los ponentes deberán enviar el contenido multimedia que usará durante la exposición"} />
+            </div>
+
+
           </div>
-          
+
         </div>
 
+
       </div>
+
     </div>
   );
 }

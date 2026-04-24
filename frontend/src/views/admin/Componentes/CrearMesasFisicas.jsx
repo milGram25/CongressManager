@@ -115,7 +115,7 @@ const CrearMesasFisicas = ({ listaMesas }) => {
                       onChange={(e) => editarNombreMesa(mesa.id, e.target.value)}
                       onBlur={() => setEditandoId(null)}
                       readOnly={editandoId !== mesa.id}
-                      className={`input input-bordered input-sm flex-1 rounded-full bg-white cursor-pointer ${mesaSeleccionada === mesa.id ? 'border-black border-2' : ''}`}
+                      className={`input border border-black input-sm flex-1 rounded-full bg-white cursor-pointer ${mesaSeleccionada === mesa.id ? 'border-black border-2' : ''}`}
                     />
                     <button
                       onClick={(e) => { e.stopPropagation(); setEditandoId(editandoId === mesa.id ? null : mesa.id); }}
@@ -160,7 +160,7 @@ const CrearMesasFisicas = ({ listaMesas }) => {
                   <label className="w-24 text-sm font-medium text-black flex-shrink-0">Subárea</label>
                   <div className="flex flex-1 items-center gap-2">
                     <input
-                      className="flex-1 h-9 bg-white border border-gray-300 pl-3 pr-3 rounded-full text-sm focus:outline-none focus:border-black"
+                      className="flex-1 h-9 bg-white border border-black pl-3 pr-3 rounded-full text-sm focus:outline-none focus:border-black"
                       placeholder="p. ej.: Programación estructurada"
                       type="text"
                       value={mesaActual.subarea}
@@ -177,7 +177,7 @@ const CrearMesasFisicas = ({ listaMesas }) => {
                   <label className="w-24 text-sm font-medium text-black flex-shrink-0">Cap. máx.</label>
                   <div className="flex flex-1 items-center gap-2">
                     <input
-                      className="flex-1 h-9 bg-white border border-gray-300 pl-3 pr-3 rounded-full text-sm focus:outline-none focus:border-black"
+                      className="flex-1 h-9 bg-white border border-black pl-3 pr-3 rounded-full text-sm focus:outline-none focus:border-black"
                       placeholder="p. ej.: 50"
                       type="number"
                       value={mesaActual.capacidad}
@@ -188,6 +188,8 @@ const CrearMesasFisicas = ({ listaMesas }) => {
                     </button>
                   </div>
                 </div>
+
+                {/*posiblemente agregar aquí un cupo máximo de eventos por mesa */}
               </div>
             ) : (
               <p className="text-sm text-gray-500 italic">Selecciona una mesa para ver sus características</p>
