@@ -90,8 +90,8 @@ function IconBtn({ active, title, popoverContent, children }) {
         title={title}
         onClick={() => setOpen((state) => !state)}
         className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${active
-            ? "bg-[#000000] text-white hover:bg-gray-500"
-            : "bg-[#e6eaed] text-slate-500 hover:bg-[#d8dde2]"
+          ? "bg-[#000000] text-white hover:bg-gray-500"
+          : "bg-[#e6eaed] text-slate-500 hover:bg-[#d8dde2]"
           }`}
       >
         {children}
@@ -200,7 +200,7 @@ function PopoverAceptado({ item }) {
 // Info de ejemplo para resumenes
 function ResumenRow({ item, dictaminadores, selected, onView }) {
   return (
-    <div className={`flex items-center gap-3 rounded-2xl border border-transparent px-3 py-3 transition-colors ${selected ? "bg-[#eef8fa] ring-1 ring-[#0b7c91]/25" : "hover:bg-base-200/50"}`}>
+    <div className={`flex items-center gap-3 rounded-2xl border border-transparent px-3 py-3 transition-colors ml-1 ${selected ? "bg-[#eef8fa] ring-1 ring-[#0b7c91]/25" : "hover:bg-base-200/50"}`}>
       <button
         type="button"
         onClick={() => onView(item)}
@@ -364,8 +364,8 @@ export default function ListaResumenes({ listaElementos = [], dictaminadores = [
                         setFilterOpen(false);
                       }}
                       className={`block w-full px-4 py-2.5 text-left text-sm transition-colors ${ordenarItem === option.value
-                          ? "bg-[#eef8fa] font-semibold text-[#000000]"
-                          : "text-slate-600 hover:bg-slate-100"
+                        ? "bg-[#eef8fa] font-semibold text-[#000000]"
+                        : "text-slate-600 hover:bg-slate-100"
                         }`}
                     >
                       {option.label}
@@ -382,7 +382,7 @@ export default function ListaResumenes({ listaElementos = [], dictaminadores = [
           <span className="text-xs font-medium text-slate-400">{listaFiltrada.length} resultado(s)</span>
         </div>
 
-        <div className="max-h-[395px] space-y-2 overflow-y-auto pr-1">
+        <div className="max-h-[395px] space-y-2 overflow-y-auto pr-1 pb-1 pt-1">
           {listaFiltrada.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-10 text-center text-sm italic text-slate-400">
               No se encontraron resumenes con ese filtro.

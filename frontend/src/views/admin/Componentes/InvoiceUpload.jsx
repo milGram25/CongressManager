@@ -44,7 +44,7 @@ export default function InvoiceUpload({ selectedUser, onUploadSuccess }) {
 
   const handleConfirmSend = () => {
     setIsUploading(true);
-    
+
     // Simulación de envío y actualización de localStorage
     setTimeout(() => {
       const allRequests = JSON.parse(localStorage.getItem("invoice_requests") || "[]");
@@ -56,12 +56,12 @@ export default function InvoiceUpload({ selectedUser, onUploadSuccess }) {
       });
 
       localStorage.setItem("invoice_requests", JSON.stringify(updatedRequests));
-      
+
       setIsUploading(false);
       setShowConfirmModal(false);
       setFile(null);
       if (onUploadSuccess) onUploadSuccess();
-      
+
       // Feedback opcional (podría ser un toast)
       console.log("Factura enviada con éxito");
     }, 1500);
@@ -76,7 +76,7 @@ export default function InvoiceUpload({ selectedUser, onUploadSuccess }) {
         </p>
       </div>
 
-      <div 
+      <div
         className={`relative border-2 border-dashed rounded-2xl p-8 transition-all flex flex-col items-center justify-center gap-4 text-center min-h-[250px]
           ${dragActive ? "bg-white/10 border-white scale-105" : "border-white/30 hover:border-white/60"}`}
         onDragEnter={handleDrag}
@@ -95,9 +95,9 @@ export default function InvoiceUpload({ selectedUser, onUploadSuccess }) {
             </div>
             <label className="mt-2 px-6 py-2 bg-white text-[#005a6a] rounded-full font-bold text-sm cursor-pointer hover:bg-blue-50 transition-colors shadow-lg">
               Seleccionar Archivo
-              <input 
-                type="file" 
-                className="hidden" 
+              <input
+                type="file"
+                className="hidden"
                 onChange={(e) => handleFile(e.target.files[0])}
                 accept=".pdf,.jpg,.png"
               />
@@ -115,8 +115,8 @@ export default function InvoiceUpload({ selectedUser, onUploadSuccess }) {
                 <HiTrash className="text-xl text-red-300" />
               </button>
             </div>
-            
-            <button 
+
+            <button
               onClick={() => setShowConfirmModal(true)}
               className="w-full mt-6 py-3 bg-white text-[#005a6a] rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-50 transition-all shadow-lg active:scale-95"
             >
@@ -128,7 +128,7 @@ export default function InvoiceUpload({ selectedUser, onUploadSuccess }) {
 
       <div className="mt-auto pt-6 border-t border-white/10">
         <div className="flex justify-between items-center text-xs opacity-70">
-          <span>Participante ID: #{selectedUser?.id.toString().substring(0,6)}</span>
+          <span>Participante ID: #{selectedUser?.id.toString().substring(0, 6)}</span>
           <span>{selectedUser?.rol}</span>
         </div>
       </div>
@@ -136,18 +136,18 @@ export default function InvoiceUpload({ selectedUser, onUploadSuccess }) {
       {/* MODAL DE SEGUNDA CONFIRMACIÓN CON PREVIEW */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300" 
+          <div
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300"
             onClick={() => !isUploading && setShowConfirmModal(false)}
           ></div>
-          
+
           <div className="relative bg-white text-gray-800 w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in duration-300 flex flex-col h-[90vh]">
             <div className="p-4 border-b flex justify-between items-center bg-gray-50">
               <div>
                 <h3 className="text-lg font-bold text-[#005a6a]">Confirmar Envío de Factura</h3>
               </div>
-              <button 
-                onClick={() => !isUploading && setShowConfirmModal(false)} 
+              <button
+                onClick={() => !isUploading && setShowConfirmModal(false)}
                 className="p-2 hover:bg-gray-200 rounded-full transition-colors"
               >
                 <HiX className="text-xl text-gray-400" />
@@ -171,9 +171,9 @@ export default function InvoiceUpload({ selectedUser, onUploadSuccess }) {
               {/* Área de Preview Maximizada */}
               <div className="flex-1 bg-white rounded-xl border border-gray-200 p-1 flex items-center justify-center overflow-hidden shadow-inner">
                 {file.type === "application/pdf" ? (
-                  <iframe 
-                    src={previewUrl} 
-                    className="w-full h-full rounded-lg border-none" 
+                  <iframe
+                    src={previewUrl}
+                    className="w-full h-full rounded-lg border-none"
                     title="Vista previa PDF"
                   />
                 ) : (
@@ -183,17 +183,17 @@ export default function InvoiceUpload({ selectedUser, onUploadSuccess }) {
             </div>
 
             <div className="p-4 bg-white border-t flex flex-col sm:flex-row gap-3">
-              <button 
+              <button
                 disabled={isUploading}
-                onClick={() => setShowConfirmModal(false)} 
+                onClick={() => setShowConfirmModal(false)}
                 className="py-3 px-6 border border-gray-200 rounded-xl font-bold hover:bg-gray-50 transition-colors disabled:opacity-50 text-gray-600 order-2 sm:order-1"
               >
                 Cancelar
               </button>
-              <button 
+              <button
                 disabled={isUploading}
                 onClick={handleConfirmSend}
-                className="flex-1 py-3 bg-[#005a6a] text-white rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-[#004a5a] transition-all shadow-lg shadow-blue-900/20 disabled:bg-gray-400 order-1 sm:order-2"
+                className="flex-1 py-3 bg-[#005a6a] text-white rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-black transition-all shadow-lg shadow-blue-900/20 disabled:bg-gray-400 order-1 sm:order-2"
               >
                 {isUploading ? (
                   <span className="loading loading-spinner loading-sm"></span>

@@ -39,57 +39,57 @@ const DetallesEditarPonencia = ({ ponenciaData, initialModificando = false, isFu
 
     const instituciones = [
         {
-            id:1,
+            id: 1,
             nombre_institucion: "CIENU"
         },
-         {
-            id:2,
+        {
+            id: 2,
             nombre_institucion: "RIDMAE"
         }
     ];
 
     const congresos = [
         {
-            id:1,
+            id: 1,
             nombre_congreso: "CIENU 2026",
             ruta_imagen: "ruta 1"
         },
-         {
-            id:2,
+        {
+            id: 2,
             nombre_congreso: "RIDMAE 2026",
             ruta_imagen: "ruta 1"
         }
     ];
     const mesas = [
         {
-            id:1,
+            id: 1,
             nombre_mesa: "Mesa A",
-            
+
         },
-         {
-            id:2,
+        {
+            id: 2,
             nombre_mesa: "Mesa B"
         }
     ];
 
     const sedes = [
-        
-            "CUALTOS"
-        
+
+        "CUALTOS"
+
     ];
 
     const subareas = [
         {
-            id:1,
-            subarea:"Matemáticas"
+            id: 1,
+            subarea: "Matemáticas"
         },
         {
-            id:2,
-            subarea:"Programación"
+            id: 2,
+            subarea: "Programación"
         },
         {
-            id:3,
-            subarea:"IA"
+            id: 3,
+            subarea: "IA"
         }
     ];
     return (
@@ -100,8 +100,8 @@ const DetallesEditarPonencia = ({ ponenciaData, initialModificando = false, isFu
                     <h2 className="text-lg md:text-xl font-bold truncate pr-4 uppercase tracking-wider">Detalles de la Ponencia</h2>
                     <div className='flex items-center gap-2'>
                         {!modificando ? (
-                            <button 
-                                className="w-10 h-10 rounded-full bg-primary-content text-primary flex items-center justify-center hover:brightness-110 transition-all active:scale-95 cursor-pointer shadow-md" 
+                            <button
+                                className="w-10 h-10 rounded-full bg-primary-content text-primary flex items-center justify-center hover:brightness-110 transition-all active:scale-95 cursor-pointer shadow-md"
                                 onClick={() => setModificando(true)}
                             >
                                 <FiEdit2 size={18} />
@@ -121,7 +121,7 @@ const DetallesEditarPonencia = ({ ponenciaData, initialModificando = false, isFu
             )}
 
             <div className={`p-6 md:p-10 ${isFullPage ? '' : 'max-h-[80vh] overflow-y-auto'}`}>
-                
+
                 {/* Sección Congreso */}
                 <section className='mb-8'>
                     <h3 className={sectionTitleClasses}>
@@ -131,15 +131,15 @@ const DetallesEditarPonencia = ({ ponenciaData, initialModificando = false, isFu
                         <div className="space-y-4">
                             <div>
                                 <label className={labelClasses}>Nombre del congreso</label>
-                                <select 
-                                    id="nombre_congreso" 
-                                    value={formatData.nombre_congreso}  
+                                <select
+                                    id="nombre_congreso"
+                                    value={formatData.nombre_congreso}
                                     className={inputClasses}
-                                    onChange={handleChange} 
+                                    onChange={handleChange}
                                     disabled={!modificando}
-                                    >
+                                >
                                     {
-                                        congresos.map((item)=>(
+                                        congresos.map((item) => (
                                             <option value={item.nombre_congreso}>{item.nombre_congreso}</option>
                                         ))
                                     }
@@ -148,15 +148,15 @@ const DetallesEditarPonencia = ({ ponenciaData, initialModificando = false, isFu
                             </div>
                             <div>
                                 <label className={labelClasses}>Institución</label>
-                                <select 
-                                    id="nombre_institucion" 
-                                    value={formatData.nombre_institucion}  
+                                <select
+                                    id="nombre_institucion"
+                                    value={formatData.nombre_institucion}
                                     className={inputClasses}
-                                    onChange={handleChange} 
+                                    onChange={handleChange}
                                     disabled={!modificando}
-                                    >
+                                >
                                     {
-                                        instituciones.map((item)=>(
+                                        instituciones.map((item) => (
                                             <option value={item.nombre_institucion}>{item.nombre_institucion}</option>
                                         ))
                                     }
@@ -165,14 +165,14 @@ const DetallesEditarPonencia = ({ ponenciaData, initialModificando = false, isFu
                             </div>
                             <div>
                                 <label className={labelClasses}>Sede</label>
-                                <input 
-                                    id="sede" 
-                                    type="text" 
+                                <input
+                                    id="sede"
+                                    type="text"
                                     placeholder="Lugar del evento..."
-                                    className={inputClasses} 
+                                    className={inputClasses}
                                     value={sedes}//value={formatData.sede} 
                                     //onChange={handleChange} 
-                                    readOnly={true}//Solo debe mostrar los datos del congreso seleccionado
+                                    readOnly={!modificando}//Solo debe mostrar los datos del congreso seleccionado
                                 />
                             </div>
                         </div>
@@ -195,35 +195,35 @@ const DetallesEditarPonencia = ({ ponenciaData, initialModificando = false, isFu
                             <label className={labelClasses}>Título de la ponencia</label>
                             <input id="nombre_evento" type="text" className={`${inputClasses} font-bold text-base`} value={formatData.nombre_evento} onChange={handleChange} readOnly={!modificando} />
                         </div>
-                        
+
                         <div>
                             <label className={labelClasses}>Ponente Principal</label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FiUser /></span>
-                                <input id="nombre_ponente" type="text" className={`${inputClasses} pl-11`} value={formatData.nombre_ponente} onChange={handleChange} readOnly={true} />
+                                <input id="nombre_ponente" type="text" className={`${inputClasses} pl-11`} value={formatData.nombre_ponente} onChange={handleChange} readOnly={!modificando} />
                             </div>
                         </div>
 
                         <div>
                             <label className={labelClasses}>Subárea</label>
-                            <select 
-                                id="subarea" 
-                                value={formatData.subarea}  
+                            <select
+                                id="subarea"
+                                value={formatData.subarea}
                                 className={inputClasses}
-                                onChange={handleChange} 
+                                onChange={handleChange}
                                 disabled={!modificando}
                             >
-                            {
-                                subareas.map((item)=>(
-                                    <option value={item.subarea}>{item.subarea}</option>
-                                ))
-                            }
+                                {
+                                    subareas.map((item) => (
+                                        <option value={item.subarea}>{item.subarea}</option>
+                                    ))
+                                }
                             </select>
                         </div>
 
                         <div className="md:col-span-2">
                             <label className={labelClasses}>Co-autores (Separados por coma)</label>
-                            <input id="coautores" type="text" placeholder="Ej: Dr. García, Mtra. López..." className={inputClasses} value={formatData.coautores} onChange={handleChange} readOnly={true} />
+                            <input id="coautores" type="text" placeholder="Ej: Dr. García, Mtra. López..." className={inputClasses} value={formatData.coautores} onChange={handleChange} readOnly={!modificando} />
                         </div>
 
                         <div>
@@ -245,7 +245,7 @@ const DetallesEditarPonencia = ({ ponenciaData, initialModificando = false, isFu
 
                         <div className="md:col-span-2">
                             <label className={labelClasses}>Resumen / Abstract</label>
-                            <textarea id="resumen" className={`${inputClasses} min-h-[120px] py-3 resize-none`} value={formatData.resumen} onChange={handleChange} readOnly={true} placeholder="Escribe aquí el resumen de la ponencia..."></textarea>
+                            <textarea id="resumen" className={`${inputClasses} min-h-[120px] py-3 resize-none`} value={formatData.resumen} onChange={handleChange} readOnly={!modificando} placeholder="Escribe aquí el resumen de la ponencia..."></textarea>
                         </div>
 
                         <div className="md:col-span-2">
@@ -268,20 +268,20 @@ const DetallesEditarPonencia = ({ ponenciaData, initialModificando = false, isFu
                             <label className={labelClasses}>Mesa Asignada</label>
                             <div className="flex items-center justify-center">
                                 <span className="mr-4 text-gray-500"><FiMapPin /></span>
-                                <select 
-                                id="nombre_mesa" 
-                                value={formatData.nombre_mesa}  
-                                className={inputClasses + "ml-4"}
-                                onChange={handleChange} 
-                                disabled={!modificando}
+                                <select
+                                    id="nombre_mesa"
+                                    value={formatData.nombre_mesa}
+                                    className={inputClasses + "ml-4"}
+                                    onChange={handleChange}
+                                    disabled={!modificando}
                                 >
-                                {
-                                    mesas.map((item)=>(
-                                        <option value={item.nombre_mesa}>{item.nombre_mesa}</option>
-                                    ))
-                                }
+                                    {
+                                        mesas.map((item) => (
+                                            <option value={item.nombre_mesa}>{item.nombre_mesa}</option>
+                                        ))
+                                    }
 
-                            </select>
+                                </select>
                             </div>
                         </div>
                         <div>

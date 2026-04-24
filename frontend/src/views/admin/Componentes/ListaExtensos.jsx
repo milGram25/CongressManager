@@ -52,7 +52,7 @@ function formatDate(value) {
   return `${day}/${month}/${year}`;
 }
 
-// Info de click en los iconos de asignacion, revision y aceptacion
+// Info de click en los iconos de asignacion, revisión y aceptación
 function Popover({ children, onClose }) {
   const ref = useRef(null);
 
@@ -90,8 +90,8 @@ function IconBtn({ active, title, popoverContent, children }) {
         title={title}
         onClick={() => setOpen((state) => !state)}
         className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${active
-            ? "bg-[#000000] text-white hover:bg-gray-500"
-            : "bg-[#e6eaed] text-slate-500 hover:bg-[#d8dde2]"
+          ? "bg-[#000000] text-white hover:bg-gray-500"
+          : "bg-[#e6eaed] text-slate-500 hover:bg-[#d8dde2]"
           }`}
       >
         {children}
@@ -132,17 +132,17 @@ function PopoverAsignado({ item, dictaminadores }) {
   );
 }
 
-//Info al clickear en en la revision del extenso, si esta revisado o no y fecha limite
+//Info al clickear en en la revisión del extenso, si esta revisado o no y fecha limite
 function PopoverRevisado({ item }) {
   return (
     <div>
-      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-base-content/50">Estado de revision</p>
+      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-base-content/50">Estado de revisión</p>
       {item.revisado ? (
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100">
             <MdCheck size={14} className="text-green-600" />
           </div>
-          <span className="text-xs font-semibold text-green-700">Revision completada</span>
+          <span className="text-xs font-semibold text-green-700">revisión completada</span>
         </div>
       ) : (
         <div className="space-y-2">
@@ -150,7 +150,7 @@ function PopoverRevisado({ item }) {
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100">
               <MdPanTool size={13} className="text-amber-600" />
             </div>
-            <span className="text-xs font-semibold text-amber-700">Pendiente de revision</span>
+            <span className="text-xs font-semibold text-amber-700">Pendiente de revisión</span>
           </div>
           {item.fechaLimite ? (
             <div className="flex items-center gap-2 rounded-2xl bg-red-50 px-2.5 py-2">
@@ -167,11 +167,11 @@ function PopoverRevisado({ item }) {
   );
 }
 
-//Info al clickear en aceptacion del extenso, si esta aceptado, pendiente o aun no revisado
+//Info al clickear en aceptación del extenso, si esta aceptado, pendiente o aun no revisado
 function PopoverAceptado({ item }) {
   return (
     <div>
-      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-base-content/50">Estado de aceptacion</p>
+      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-base-content/50">Estado de aceptación</p>
       {item.aceptado ? (
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100">
@@ -184,14 +184,14 @@ function PopoverAceptado({ item }) {
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100">
             <MdPanTool size={13} className="text-amber-600" />
           </div>
-          <span className="text-xs font-semibold text-amber-700">En espera de aceptacion</span>
+          <span className="text-xs font-semibold text-amber-700">En espera de aceptación</span>
         </div>
       ) : (
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-base-200">
             <MdClose size={13} className="text-base-content/40" />
           </div>
-          <span className="text-xs text-base-content/55">Aun no revisado</span>
+          <span className="text-xs text-base-content/55">Aún no revisado</span>
         </div>
       )}
     </div>
@@ -201,7 +201,7 @@ function PopoverAceptado({ item }) {
 // Info de ejemplo para extensos
 function ExtensoRow({ item, dictaminadores, selected, onView }) {
   return (
-    <div className={`flex items-center gap-3 rounded-2xl border border-transparent px-3 py-3 transition-colors ${selected ? "bg-[#eef8fa] ring-1 ring-[#000000]/25" : "hover:bg-base-200/50"}`}>
+    <div className={`flex items-center gap-3 rounded-2xl border border-transparent px-3 py-3 transition-colors ml-1 ${selected ? "bg-[#eef8fa] ring-1 ring-[#000000]/25" : "hover:bg-base-200/50"}`}>
       <button
         type="button"
         onClick={() => onView(item)}
@@ -222,12 +222,12 @@ function ExtensoRow({ item, dictaminadores, selected, onView }) {
         </IconBtn>
 
         <StatusDot active={item.revisado} />
-        <IconBtn active={item.revisado} title="Ver estado de revision" popoverContent={<PopoverRevisado item={item} />}>
+        <IconBtn active={item.revisado} title="Ver estado de revisión" popoverContent={<PopoverRevisado item={item} />}>
           <MdPanTool size={15} />
         </IconBtn>
 
         <StatusDot active={item.aceptado} />
-        <IconBtn active={item.aceptado} title="Ver estado de aceptacion" popoverContent={<PopoverAceptado item={item} />}>
+        <IconBtn active={item.aceptado} title="Ver estado de aceptación" popoverContent={<PopoverAceptado item={item} />}>
           <MdCheck size={16} />
         </IconBtn>
       </div>
@@ -366,8 +366,8 @@ export default function ListaExtensos({ listaElementos = [], dictaminadores = []
                         setFilterOpen(false);
                       }}
                       className={`block w-full px-4 py-2.5 text-left text-sm transition-colors ${ordenarItem === option.value
-                          ? "bg-[#eef8fa] font-semibold text-[#000000]"
-                          : "text-slate-600 hover:bg-slate-100"
+                        ? "bg-[#eef8fa] font-semibold text-[#000000]"
+                        : "text-slate-600 hover:bg-slate-100"
                         }`}
                     >
                       {option.label}
@@ -381,7 +381,7 @@ export default function ListaExtensos({ listaElementos = [], dictaminadores = []
 
         <div className="border-t border-slate-200 pt-3" />
 
-        <div className="max-h-[395px] space-y-2 overflow-y-auto pr-1">
+        <div className="max-h-[395px] space-y-2 overflow-y-auto pr-1 pb-1 pt-1">
           {listaFiltrada.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-10 text-center text-sm italic text-slate-400">
               No se encontraron extensos con ese filtro.
