@@ -282,7 +282,7 @@ export default function ProcesosExtensosView() {
         <div>
           <div className="flex gap-4">
             <div className="border bg-black rounded-full h-10 w-2"></div>
-            <h2 className="flex-1 text-2xl font-bold text-start">Revisión</h2>
+            <h2 className="flex-1 text-2xl font-bold text-start">Revisión de extensos</h2>
           </div>
           <p className="pl-12 text-start text-gray-500 mb-3">
             Aquí se gestiona la revisión de extensos

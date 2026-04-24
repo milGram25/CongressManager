@@ -50,6 +50,8 @@ import CongresoSedeView from "./views/admin/CongresoSedeView";
 import CongresoFechasView from "./views/admin/CongresoFechasView";
 import CongresoTiposTrabajoView from "./views/admin/CongresoTiposTrabajoView";
 
+import LibrosView from "./views/admin/LibrosView";
+
 import { GrStatusGood } from "react-icons/gr";
 import {
   MdCalendarMonth,
@@ -80,7 +82,7 @@ import {
   MdArticle,
   MdReceipt,
 } from "react-icons/md";
-
+import { FaBook } from "react-icons/fa6";
 const AsistenteLayoutWrapper = () => {
   const { user } = useAuth();
 
@@ -88,8 +90,8 @@ const AsistenteLayoutWrapper = () => {
     // Accesos rápidos para roles con permisos extra
     ...((user?.rol === 'administrador' || user?.rol === 'revisor' || user?.rol === 'dictaminador') ? [
       { type: 'subheader', label: 'Vistas de Rol' },
-      { 
-        type: 'role-icons', 
+      {
+        type: 'role-icons',
         roles: [
           ...(user?.rol === 'administrador' ? [
             { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
@@ -122,8 +124,8 @@ const PonenteLayoutWrapper = () => {
     // Accesos rápidos para roles con permisos extra
     ...((user?.rol === 'administrador' || user?.rol === 'revisor' || user?.rol === 'dictaminador') ? [
       { type: 'subheader', label: 'Vistas de Rol' },
-      { 
-        type: 'role-icons', 
+      {
+        type: 'role-icons',
         roles: [
           ...(user?.rol === 'administrador' ? [
             { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
@@ -153,21 +155,21 @@ const PonenteLayoutWrapper = () => {
 
 const AdminLayoutWrapper = () => {
   const { pathname } = useLocation();
-  
+
   const menuItems = [
     { type: 'subheader', label: 'Vistas de Rol' },
-    { 
-      type: 'role-icons', 
+    {
+      type: 'role-icons',
       roles: [
         { to: '/asistente/agenda', label: 'Asistente', icon: MdPerson },
         { to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview },
         { to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel },
       ]
     },
-    
+
     { to: '/admin/dashboard', label: 'Dashboard', icon: MdDashboard },
     { to: '/admin/agenda', label: 'Agenda', icon: MdCalendarMonth },
-    
+
     // Procesos con sub-menú dinámico
     { to: '/admin/procesos', label: 'Procesos', icon: MdAssignment },
     ...(pathname.includes('/admin/procesos') ? [
@@ -187,6 +189,7 @@ const AdminLayoutWrapper = () => {
         { to: '/admin/eventos/congresos/sede', label: 'Sede', icon: MdPlace, className: 'pl-14 opacity-60' },
         { to: '/admin/eventos/congresos/fechas', label: 'Fechas', icon: MdEventAvailable, className: 'pl-14 opacity-60' },
         { to: '/admin/eventos/congresos/tipos-trabajo', label: 'Tipos Trabajo', icon: MdWork, className: 'pl-14 opacity-60' },
+        { to: '/admin/eventos/congresos/libros', label: 'Libros', icon: FaBook, className: 'pl-14 opacity-70' },
       ] : [])
     ] : []),
 
@@ -201,6 +204,7 @@ const AdminLayoutWrapper = () => {
     ...(pathname.includes('/admin/ajustes') ? [
       { to: '/admin/ajustes/instituciones', label: 'Instituciones', icon: MdAccountBalance, className: 'pl-9 opacity-70' },
       { to: '/admin/ajustes/areas', label: 'Áreas', icon: MdWork, className: 'pl-9 opacity-70' },
+
     ] : []),
   ];
 
@@ -211,8 +215,8 @@ const RevisorLayoutWrapper = () => {
   const { user } = useAuth();
   const menuItems = [
     { type: 'subheader', label: 'Vistas de Rol' },
-    { 
-      type: 'role-icons', 
+    {
+      type: 'role-icons',
       roles: [
         ...(user?.rol === 'administrador' ? [
           { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
@@ -235,8 +239,8 @@ const DictaminadorLayoutWrapper = () => {
   const { user } = useAuth();
   const menuItems = [
     { type: 'subheader', label: 'Vistas de Rol' },
-    { 
-      type: 'role-icons', 
+    {
+      type: 'role-icons',
       roles: [
         ...(user?.rol === 'administrador' ? [
           { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
@@ -386,6 +390,7 @@ function App() {
                 <Route path="sede" element={<CongresoSedeView />} />
                 <Route path="fechas" element={<CongresoFechasView />} />
                 <Route path="tipos-trabajo" element={<CongresoTiposTrabajoView />} />
+                <Route path="libros" element={<LibrosView title="Gestión de Libros" />} />
               </Route>
             </Route>
             <Route path="pagos" element={<AdminPagosView />} />
@@ -399,6 +404,7 @@ function App() {
               <Route index element={<AjustesView />} />
               <Route path="instituciones" element={<AjustesInstitucionesView title="Gestión de Instituciones" />} />
               <Route path="areas" element={<AjustesAreasView title="Gestión de Áreas" />} />
+
             </Route>
           </Route>
 

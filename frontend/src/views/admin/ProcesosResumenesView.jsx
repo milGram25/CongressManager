@@ -28,11 +28,10 @@ const MOCK_RESUMENES = [
     tipoTrabajo: "tesis",
     puntuacion: { obtenida: 2, total: 3 },
     preguntas: [
-      { id: 1, texto: "Es conciso?", aprobado: false },
-      { id: 2, texto: "Es util?", aprobado: true },
-      { id: 3, texto: "Es claro?", aprobado: true },
+      { id: 1, texto: "¿Es conciso?", aprobado: false, comentario: "Es conciso, pero falla en aterrizar el punto" },
+      { id: 2, texto: "¿Es util?", aprobado: true, comentario: "En relación al congreso, es bastante relevante" },
+      { id: 3, texto: "¿Es claro?", aprobado: true, comentario: "Hay ciertas inconsistencias en la redacción" },
     ],
-    comentario: "La informacion presentada es pertinente, pero requiere una conclusion mas precisa y mejor conexion con el objetivo principal.",
   },
   {
     id: 2,
@@ -47,11 +46,11 @@ const MOCK_RESUMENES = [
     tipoTrabajo: "prototipo",
     puntuacion: { obtenida: 1, total: 3 },
     preguntas: [
-      { id: 1, texto: "Es conciso?", aprobado: false },
-      { id: 2, texto: "Es util?", aprobado: false },
-      { id: 3, texto: "Es claro?", aprobado: true },
+      { id: 1, texto: "Es conciso?", aprobado: false, comentario: "Bastante" },
+      { id: 2, texto: "Es util?", aprobado: false, comentario: "Mucho" },
+      { id: 3, texto: "Es claro?", aprobado: true, comentario: "Bien" },
     ],
-    comentario: "La propuesta tiene potencial, aunque todavia necesita delimitar el problema y mejorar la estructura de resultados esperados.",
+
   },
   {
     id: 3,
@@ -66,11 +65,10 @@ const MOCK_RESUMENES = [
     tipoTrabajo: "investigacion",
     puntuacion: { obtenida: 3, total: 3 },
     preguntas: [
-      { id: 1, texto: "Es conciso?", aprobado: true },
-      { id: 2, texto: "Es util?", aprobado: true },
-      { id: 3, texto: "Es claro?", aprobado: true },
+      { id: 1, texto: "Es conciso?", aprobado: true, comentario: "Excelente" },
+      { id: 2, texto: "Es util?", aprobado: true, comentario: "Muy util" },
+      { id: 3, texto: "Es claro?", aprobado: true, comentario: "Muy claro" },
     ],
-    comentario: "El resumen tiene una estructura consistente y el aporte metodologico esta bien justificado.",
   },
   {
     id: 4,
@@ -85,11 +83,10 @@ const MOCK_RESUMENES = [
     tipoTrabajo: "articulo breve",
     puntuacion: { obtenida: 0, total: 3 },
     preguntas: [
-      { id: 1, texto: "Es conciso?", aprobado: false },
-      { id: 2, texto: "Es util?", aprobado: false },
-      { id: 3, texto: "Es claro?", aprobado: false },
+      { id: 1, texto: "Es conciso?", aprobado: false, comentario: "Excelente" },
+      { id: 2, texto: "Es util?", aprobado: false, comentario: "No es tan útil" },
+      { id: 3, texto: "Es claro?", aprobado: false, comentario: "Más o menos" },
     ],
-    comentario: "Sin comentarios disponibles. El trabajo aun no cuenta con dictaminacion activa.",
   },
   {
     id: 5,
@@ -104,11 +101,10 @@ const MOCK_RESUMENES = [
     tipoTrabajo: "estudio de caso",
     puntuacion: { obtenida: 3, total: 3 },
     preguntas: [
-      { id: 1, texto: "Es conciso?", aprobado: true },
-      { id: 2, texto: "Es util?", aprobado: true },
-      { id: 3, texto: "Es claro?", aprobado: true },
+      { id: 1, texto: "Es conciso?", aprobado: true, comentario: "Bien" },
+      { id: 2, texto: "Es util?", aprobado: true, comentario: "Bien" },
+      { id: 3, texto: "Es claro?", aprobado: true, comentario: "Bien" },
     ],
-    comentario: "Trabajo aceptado. La propuesta es clara, consistente y con una aplicacion directa bien documentada.",
   },
   {
     id: 6,
@@ -123,19 +119,26 @@ const MOCK_RESUMENES = [
     tipoTrabajo: "revision documental",
     puntuacion: { obtenida: 2, total: 3 },
     preguntas: [
-      { id: 1, texto: "Es conciso?", aprobado: true },
-      { id: 2, texto: "Es util?", aprobado: false },
-      { id: 3, texto: "Es claro?", aprobado: true },
+      { id: 1, texto: "Es conciso?", aprobado: true, comentario: "Bien" },
+      { id: 2, texto: "Es util?", aprobado: false, comentario: "Meh" },
+      { id: 3, texto: "Es claro?", aprobado: true, comentario: "Claro" },
     ],
-    comentario: "El trabajo presenta contexto suficiente, aunque conviene profundizar el valor academico de las fuentes consultadas.",
   },
 ];
 
 // Apartado de preguntas con estatus aprobado o no aprobado
 function QuestionStatusRow({ pregunta }) {
   return (
-    <div className="flex items-center justify-between border-b border-slate-200 py-3 last:border-b-0">
-      <span className="text-sm font-medium text-slate-700">{pregunta.texto}</span>
+    <div className="flex items-start justify-between border-b border-slate-200 py-3 last:border-b-0">
+      <div className="flex flex-1 items-center gap-2">
+        <span className="flex-1 text-sm font-medium text-slate-700">{pregunta.texto}</span>
+        <input
+          className="flex-[3] text-sm  text-black bg-white border border-slate-400 rounded-full px-3 mr-2 py-1 placeholder:text-slate-400 text-gray-800"
+          value={pregunta.comentario || ""} //Comentario específico
+          placeholder="Sin comentarios"
+          readOnly
+        />
+      </div>
       <div className="flex items-center gap-3">
         <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Estatus</span>
         <span className={`h-2.5 w-2.5 rounded-full ${pregunta.aprobado ? "bg-green-500" : "bg-red-500"}`} />
@@ -170,9 +173,9 @@ function ResumenDetailCard({ resumen, revisores }) {
 
         <section>
           <div className="flex items-end justify-between gap-4">
-            <h3 className="text-[14px] font-semibold uppercase tracking-wide text-slate-700">Preguntas de evaluacion</h3>
+            <h3 className="text-[14px] font-semibold uppercase tracking-wide text-slate-700">Preguntas de evaluación</h3>
             <div className="text-right">
-              <p className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">Puntuacion</p>
+              <p className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">Puntuación</p>
               <p className="text-[34px] font-black leading-none text-slate-800">
                 {resumen.puntuacion.obtenida}
                 <span className="text-[22px] text-slate-500">/{resumen.puntuacion.total}</span>
@@ -214,9 +217,9 @@ export default function ProcesosResumenesView() {
         <div>
           <div className="flex gap-4">
             <div className="border bg-black rounded-full h-10 w-2"></div>
-            <h2 className="flex-1 text-2xl font-bold text-start">Revisión</h2>
+            <h2 className="flex-1 text-2xl font-bold text-start">Revision de resúmenes</h2>
           </div>
-          <p className="pl-12 text-start text-gray-500 mb-10">
+          <p className="pl-12 text-start text-gray-500 mb-3">
             Aquí se gestiona la revisión de resúmenes.
           </p>
         </div>

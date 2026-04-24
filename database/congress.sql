@@ -1,7 +1,7 @@
 -- DROP SCHEMA public CASCADE; CREATE SCHEMA public;
 
 -- 1. TIPOS DE DATOS PERSONALIZADOS (ENUMS)
-CREATE TYPE tipo_evento_enum AS ENUM ('ponencia', 'taller');
+CREATE TYPE tipo_evento_enum AS ENUM ('ponencia','ponencia magistral', 'taller');
 CREATE TYPE estatus_extenso_enum AS ENUM ('aceptado', 'aceptado con ligeras modificaciones', 'aceptado con modificaciones mayores', 'rechazado');
 CREATE TYPE estatus_resumen_enum AS ENUM ('aceptado', 'rechazado');
 CREATE TYPE tipo_participacion_enum AS ENUM ('presencial', 'virtual', 'hibrida');
@@ -94,7 +94,9 @@ CREATE TABLE fechas_congreso (
     fecha_inicio_evaluar_extensos TIMESTAMP NOT NULL,
     fecha_fin_evaluar_extensos TIMESTAMP NOT NULL,
     fecha_inicio_subir_multimedia TIMESTAMP NOT NULL,
-    fecha_fin_subir_multimedia TIMESTAMP NOT NULL
+    fecha_fin_subir_multimedia TIMESTAMP NOT NULL,
+    fecha_inicio_subir_extenso_final TIMESTAMP NOT NULL,
+    fecha_fin_subir_extenso_final TIMESTAMP NOT NULL
 );
 
 -- 3. SISTEMA DE RÚBRICAS (Plantillas de evaluación)
@@ -321,3 +323,35 @@ CREATE TABLE constancia (
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona),
     ruta_constancia VARCHAR(255) NOT NULL
 );
+
+CREATE TABLE libros(
+    id_libro SERIAL PRIMARY KEY,
+    titulo VARCHAR(255) NOT NULL,
+    descripcion TEXT NOT NULL,
+    fecha_publicacion DATE NOT NULL,
+    id_congreso INTEGER NOT NULL REFERENCES congreso(id_congreso)
+);
+
+CREATE TABLE libro_has_ponencia(
+    id_libro_has_ponencia SERIAL PRIMARY KEY,
+    id_libro INTEGER NOT NULL REFERENCES libros(id_libro),
+    id_ponencia INTEGER NOT NULL REFERENCES ponencia(id_ponencia),
+    UNIQUE(id_libro, id_ponencia)
+);
+
+CREATE TABLE ponencia_magistral{
+    id_ponencia_magistral SERIAL PRIMARY KEY
+    titulo VARCHAR(255) NOT NULL,
+    tipo_participacion tipo_participacion_enum, 
+    id_subarea INTEGER NOT NULL REFERENCES subareas(id_subareas),
+    fecha_inicio TIMESTAMP,
+    fecha_fin TIMESTAMP,
+    id_congreso REFERENCES congreso(id_congreso),
+    id_multimedia INTEGER REFERENCES multimedia(id_material)
+};
+
+CREATE TABLE ponencia_magistral_has_ponente_magistral{
+    id_ponencia_magistral_has_ponente_magistral SERIAL PRIMARY KEY,
+    nombre_persona VARCHAR(100) NOT NULL,
+    id_ponencia_magistral INTEGER NOT NULL REFERENCES ponencia_magistral(id_ponencia_magistral),
+};
