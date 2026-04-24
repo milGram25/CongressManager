@@ -339,7 +339,7 @@ CREATE TABLE libro_has_ponencia(
     UNIQUE(id_libro, id_ponencia)
 );
 
-CREATE TABLE ponencia_magistral{
+CREATE TABLE ponencia_magistral(
     id_ponencia_magistral SERIAL PRIMARY KEY
     titulo VARCHAR(255) NOT NULL,
     tipo_participacion tipo_participacion_enum, 
@@ -348,10 +348,10 @@ CREATE TABLE ponencia_magistral{
     fecha_fin TIMESTAMP,
     id_congreso REFERENCES congreso(id_congreso),
     id_multimedia INTEGER REFERENCES multimedia(id_material)
-};
+);
 
-CREATE TABLE ponencia_magistral_has_ponente_magistral{
+CREATE TABLE ponencia_magistral_has_ponente_magistral(
     id_ponencia_magistral_has_ponente_magistral SERIAL PRIMARY KEY,
     nombre_persona VARCHAR(100) NOT NULL,
     id_ponencia_magistral INTEGER NOT NULL REFERENCES ponencia_magistral(id_ponencia_magistral),
-};
+);
