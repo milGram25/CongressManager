@@ -340,18 +340,18 @@ CREATE TABLE libro_has_ponencia(
 );
 
 CREATE TABLE ponencia_magistral(
-    id_ponencia_magistral SERIAL PRIMARY KEY
+    id_ponencia_magistral SERIAL PRIMARY KEY,
     titulo VARCHAR(255) NOT NULL,
     tipo_participacion tipo_participacion_enum, 
     id_subarea INTEGER NOT NULL REFERENCES subareas(id_subareas),
     fecha_inicio TIMESTAMP,
     fecha_fin TIMESTAMP,
-    id_congreso REFERENCES congreso(id_congreso),
+    id_congreso INTEGER REFERENCES congreso(id_congreso),
     id_multimedia INTEGER REFERENCES multimedia(id_material)
 );
 
 CREATE TABLE ponencia_magistral_has_ponente_magistral(
     id_ponencia_magistral_has_ponente_magistral SERIAL PRIMARY KEY,
     nombre_persona VARCHAR(100) NOT NULL,
-    id_ponencia_magistral INTEGER NOT NULL REFERENCES ponencia_magistral(id_ponencia_magistral),
+    id_ponencia_magistral INTEGER NOT NULL REFERENCES ponencia_magistral(id_ponencia_magistral)
 );
