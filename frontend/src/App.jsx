@@ -310,6 +310,7 @@ function App() {
             <Route path="facturas" element={<FacturasView />} />
             <Route path="mis-ponencias" element={<MisPonenciasView />} />
             <Route path="enviar-ponencia" element={<EnviarPonenciaView />} />
+            <Route path="subir-extenso/:id" element={<SubirExtensoView />} />
             <Route
               path="constancias"
               element={<ConstanciasView title="Mis Constancias" />}
@@ -335,7 +336,7 @@ function App() {
             <Route path="estatus-ponencia" element={<EstatusPonenciaView />} />
             <Route path="subir-multimedia" element={<SubirMultimediaView />} />
             <Route path="subir-correccion" element={<SubirModificadoView />} />
-            <Route path="subir-extenso" element={<SubirExtensoView />} />
+            <Route path="subir-extenso/:id" element={<SubirExtensoView />} />
             <Route
               path="constancias"
               element={<ConstanciasView title="Mis Constancias" />}

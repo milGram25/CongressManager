@@ -80,3 +80,86 @@ export async function enviarNuevaPonencia(datosIn, accessToken) {
     if (!res.ok) throw new Error('Error al enviar la ponencia');
     return res.json();
 }
+
+export async function getDetallePonencia(idPonencia, accessToken) {
+    const res = await fetch(`${API_URL}/api/ponencias/detalle-ponencia/${idPonencia}/`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+    });
+    if (!res.ok) throw new Error('Error al cargar detalles de la ponencia');
+    return res.json();
+}
+
+export async function subirExtenso(idPonencia, titulo, accessToken) {
+    const res = await fetch(`${API_URL}/api/ponencias/subir-extenso/${idPonencia}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({ titulo })
+    });
+    if (!res.ok) throw new Error('Error al subir el extenso');
+    return res.json();
+}
+
+// ============================================
+// SERVICIOS PARA ADMINISTRADOR
+// ============================================
+
+export async function getAdminResumenes(accessToken) {
+    const res = await fetch(`${API_URL}/api/ponencias/admin/resumenes/`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+    });
+    if (!res.ok) throw new Error('Error al cargar los resúmenes');
+    return res.json();
+}
+
+export async function getAdminDictaminadores(accessToken) {
+    const res = await fetch(`${API_URL}/api/ponencias/admin/dictaminadores/`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+    });
+    if (!res.ok) throw new Error('Error al cargar los dictaminadores');
+    return res.json();
+}
+
+export async function asignarDictaminador(idResumen, idDictaminador, accessToken) {
+    const res = await fetch(`${API_URL}/api/ponencias/admin/asignar-dictaminador/${idResumen}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({ id_dictaminador: idDictaminador })
+    });
+    if (!res.ok) throw new Error('Error al asignar el dictaminador');
+    return res.json();
+}
+
+export async function getAdminExtensos(accessToken) {
+    const res = await fetch(`${API_URL}/api/ponencias/admin/extensos/`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+    });
+    if (!res.ok) throw new Error('Error al cargar los extensos');
+    return res.json();
+}
+
+export async function getAdminEvaluadores(accessToken) {
+    const res = await fetch(`${API_URL}/api/ponencias/admin/evaluadores/`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+    });
+    if (!res.ok) throw new Error('Error al cargar los evaluadores');
+    return res.json();
+}
+
+export async function asignarEvaluador(idExtenso, idEvaluador, accessToken) {
+    const res = await fetch(`${API_URL}/api/ponencias/admin/asignar-evaluador/${idExtenso}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({ id_evaluador: idEvaluador })
+    });
+    if (!res.ok) throw new Error('Error al asignar el evaluador');
+    return res.json();
+}

@@ -1,12 +1,14 @@
 // Aqui se inserta el apartado de mis ponencias
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getMisPonencias } from '../../api/ponenciasApi';
 
 export default function MisPonenciasView() {
   const [ponenciaSeleccionada, setPonenciaSeleccionada] = useState(null);
   const [misPonencias, setMisPonencias] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const cargarMisPonencias = async () => {
@@ -39,6 +41,9 @@ export default function MisPonenciasView() {
           misPonencias.map((relacion) => {
             const p = relacion.ponencia_detalle || {};
             const e = relacion.evento_info || {};
+            const estatus = (p.resumen_detalle?.estatus || '').toLowerCase();
+            const tieneExtenso = p.id_extenso !== null;
+
             return (
               <div key={relacion.id_ponente_has_ponencia} className="card bg-base-100 border border-base-300 p-8 max-w-2xl w-full relative shadow-sm hover:shadow-md transition-all">
                 <div className="text-center space-y-4">
@@ -56,10 +61,27 @@ export default function MisPonenciasView() {
                   {/* Etiqueta para Estatus de Dictamen */}
                   <div className="mt-4 flex flex-col items-center">
                     <span className="text-xs font-bold uppercase tracking-widest text-primary">Estado del Dictamen:</span>
-                    <div className="badge badge-lg bg-base-200 mt-2 font-bold uppercase">
+                    <div className={`badge badge-lg mt-2 font-bold uppercase ${estatus === 'aceptado' ? 'badge-success text-white' : 'bg-base-200'}`}>
                       {p.resumen_detalle?.estatus || 'EN REVISIÓN'}
                     </div>
                   </div>
+
+                  {/* Botón para subir extenso condicional */}
+                  {estatus === 'aceptado' && !tieneExtenso && (
+                    <div className="pt-4">
+                      <button 
+                        onClick={() => navigate(`/asistente/subir-extenso/${p.id_ponencia}`)}
+                        className="btn btn-primary btn-wide font-bold"
+                      >
+                        Subir Extenso
+                      </button>
+                    </div>
+                  )}
+                  {tieneExtenso && (
+                    <div className="pt-2 text-xs font-bold text-success uppercase">
+                      ✓ Documento Extenso Entregado
+                    </div>
+                  )}
                 </div>
 
                 {/* Botón + para abrir el modal */}
