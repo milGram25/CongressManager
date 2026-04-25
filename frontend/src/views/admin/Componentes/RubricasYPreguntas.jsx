@@ -260,7 +260,7 @@ const RubricasYPreguntas = () => {
                         </button>
                       </div>
 
-                      <div className="flex items-center gap-3 pl-1">
+                      {/*<div className="flex items-center gap-3 pl-1">
                         <span className="text-[10px] font-bold text-base-content/40 uppercase tracking-wider">Ponderación:</span>
                         <div className="flex items-center gap-2 bg-base-200 px-3 py-1 rounded-lg border border-base-300">
                           <input
@@ -272,7 +272,7 @@ const RubricasYPreguntas = () => {
                           />
                           <span className="text-[10px] font-bold text-base-content/40">PTS</span>
                         </div>
-                      </div>
+                      </div>*/}
                     </div>
                   ))}
                   {g.criterios.length === 0 && (
