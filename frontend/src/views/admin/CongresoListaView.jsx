@@ -1,37 +1,40 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import MenuCrearBorrar from "./Componentes/MenuCrearBorrarGenerico";
 import ListaDesplegableElementosGenerica from "./Componentes/ListaDesplegableElementosGenerica";
+import { getCongresosApi, getInstitucionesApi } from "../../api/adminApi";
 
 export default function CongresoListaView() {
+  const [instituciones, setInstituciones] = useState([]);
+  const [congresos, setCongresos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const accessToken = localStorage.getItem('congress_access');
 
-  const MOCK_INSTITUCIONES = [
-    { id: 1, nombre: "CIENU" },
-    { id: 2, nombre: "RIDMAE" }
-  ];
-  const listaEventos = [
-    {
-      id: 1,
-      nombre_congreso: "RIDMAE 2025",
-      sede: "CUALTOS",
-      cantidad_eventos: 100,
-      nombre_institucion: "RIDMAE",
-      fecha_hora_inicio: "2026-04-08T08:00",
-      fecha_hora_final: "2026-04-08T10:00"
-    },
-    {
-      id: 2,
-      nombre_congreso: "CIENU 2026",
-      sede: "CUALTOS",
-      cantidad_eventos: 120,
-      nombre_institucion: "CIENU",
-      fecha_hora_inicio: "2026-05-10T09:00",
-      fecha_hora_final: "2026-05-15T18:00"
-    }
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [instData, congData] = await Promise.all([
+          getInstitucionesApi(accessToken),
+          getCongresosApi(accessToken)
+        ]);
+        setInstituciones(instData);
+        setCongresos(congData);
+      } catch (error) {
+        console.error("Error al cargar datos:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (loading) return (
+    <div className="flex justify-center items-center h-full">
+      <span className="loading loading-spinner loading-lg text-[#005a6a]"></span>
+    </div>
+  );
 
   return (
     <div className="flex flex-col  w-full h-full p-4 md:p-8">
-
       <div>
         <div className="flex gap-4">
           <div className="border bg-black rounded-full h-10 w-2"></div>
@@ -42,12 +45,11 @@ export default function CongresoListaView() {
         </p>
       </div>
       <div className="w-full px-30 mb-5 items-center justify-center ">
-        <ListaDesplegableElementosGenerica titulo={"Instituciones"} lista={MOCK_INSTITUCIONES} />
-
+        <ListaDesplegableElementosGenerica titulo={"Instituciones"} lista={instituciones} />
       </div>
       <MenuCrearBorrar
         title="Gestión de Congresos"
-        listaElementos2={listaEventos}
+        listaElementos2={congresos}
         definirTipoElemento="congreso"
       />
     </div>

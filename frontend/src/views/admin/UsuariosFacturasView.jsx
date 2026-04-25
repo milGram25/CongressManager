@@ -3,23 +3,41 @@ import { HiSearch } from "react-icons/hi";
 import InvoiceUpload from "./Componentes/InvoiceUpload";
 import UserInvoiceList from "./Componentes/UserInvoiceList";
 import FilterHeader from "./Componentes/FilterHeader";
+import { getParticipantsApi } from "../../api/adminApi";
 
 export default function UsuariosFacturasView() {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [idCongreso] = useState(1); // TODO: Dinámico
 
-  const loadRequests = () => {
-    const savedRequests = JSON.parse(localStorage.getItem("invoice_requests") || "[]");
-    const pendingRequests = savedRequests.filter(req => req.status === "red");
-    setUsers(pendingRequests);
-    
-    // Si ya hay un seleccionado, actualizamos su objeto por si cambió el estatus o si ya no está en la lista de pendientes
-    if (selectedUser) {
-      const updated = pendingRequests.find(u => u.id === selectedUser.id);
-      setSelectedUser(updated || (pendingRequests.length > 0 ? pendingRequests[0] : null));
-    } else if (pendingRequests.length > 0) {
-      setSelectedUser(pendingRequests[0]);
+  const accessToken = localStorage.getItem('congress_access');
+
+  const loadRequests = async () => {
+    try {
+      const data = await getParticipantsApi(accessToken, idCongreso);
+      // Filtrar usuarios que tienen factura pendiente o solicitada
+      const pendingRequests = data
+        .filter(u => u.factura?.estatus === 'pendiente')
+        .map(u => ({
+          id: u.id_persona,
+          nombre: u.nombre_completo,
+          email: u.correo_electronico,
+          rol: u.rol,
+          status: 'red',
+          rfc: u.factura?.rfc
+        }));
+      
+      setUsers(pendingRequests);
+      
+      if (selectedUser) {
+        const updated = pendingRequests.find(u => u.id === selectedUser.id);
+        setSelectedUser(updated || (pendingRequests.length > 0 ? pendingRequests[0] : null));
+      } else if (pendingRequests.length > 0) {
+        setSelectedUser(pendingRequests[0]);
+      }
+    } catch (error) {
+      console.error(error);
     }
   };
 

@@ -149,7 +149,10 @@ CREATE TABLE congreso (
     id_institucion INTEGER NOT NULL REFERENCES institucion(id_institucion),
     id_fechas_congreso INTEGER NOT NULL REFERENCES fechas_congreso(id_fechas_congreso),
     id_costos_congreso INTEGER NOT NULL REFERENCES costos_congreso(id_costos_congreso),
-    id_rubrica_default INTEGER REFERENCES rubrica(id_rubrica) -- Rubrica global del congreso
+    id_rubrica_default INTEGER REFERENCES rubrica(id_rubrica), -- Rubrica global del congreso
+    firma_organizador VARCHAR(255),
+    firma_secretaria VARCHAR(255),
+    firmas_bloqueadas BOOLEAN DEFAULT FALSE
 );
 
 -- 5. ROLES Y LOGÍSTICA
@@ -292,11 +295,15 @@ CREATE TABLE ponente_has_ponencia (
 CREATE TABLE factura (
     id_factura SERIAL PRIMARY KEY,
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona),
+    id_congreso INTEGER REFERENCES congreso(id_congreso),
     rfc VARCHAR(13),
     razon_social VARCHAR(255),
     codigo_postal VARCHAR(10),
     regimen_fiscal VARCHAR(255),
-    ruta_pdf_xml VARCHAR(255) NOT NULL
+    ruta_pdf_xml VARCHAR(255),
+    estatus VARCHAR(20) DEFAULT 'pendiente', -- 'pendiente', 'enviada'
+    fecha_solicitud TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_envio TIMESTAMP
 );
 
 CREATE TABLE pagos (
@@ -321,7 +328,11 @@ CREATE TABLE historial_acciones (
 CREATE TABLE constancia (
     id_constancia SERIAL PRIMARY KEY,
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona),
-    ruta_constancia VARCHAR(255) NOT NULL
+    id_congreso INTEGER REFERENCES congreso(id_congreso),
+    ruta_constancia VARCHAR(255),
+    tipo_constancia VARCHAR(50), -- 'Asistente', 'Ponente', etc.
+    estatus VARCHAR(20) DEFAULT 'generada', -- 'generada', 'enviada'
+    fecha_emision TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE libros(

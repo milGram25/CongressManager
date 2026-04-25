@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { HiCloudUpload, HiDocumentText, HiTrash, HiCheckCircle, HiX, HiEye } from "react-icons/hi";
+import { uploadFacturaApi } from "../../../api/adminApi";
 
 export default function InvoiceUpload({ selectedUser, onUploadSuccess }) {
   const [dragActive, setDragActive] = useState(false);
@@ -7,6 +8,9 @@ export default function InvoiceUpload({ selectedUser, onUploadSuccess }) {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [idCongreso] = useState(1); // TODO
+
+  const accessToken = localStorage.getItem('congress_access');
 
   // Generar vista previa del archivo
   useEffect(() => {
@@ -42,29 +46,21 @@ export default function InvoiceUpload({ selectedUser, onUploadSuccess }) {
     }
   };
 
-  const handleConfirmSend = () => {
+  const handleConfirmSend = async () => {
     setIsUploading(true);
 
-    // Simulación de envío y actualización de localStorage
-    setTimeout(() => {
-      const allRequests = JSON.parse(localStorage.getItem("invoice_requests") || "[]");
-      const updatedRequests = allRequests.map(req => {
-        if (req.id === selectedUser.id) {
-          return { ...req, status: "green", fechaEnvio: new Date().toISOString() };
-        }
-        return req;
-      });
-
-      localStorage.setItem("invoice_requests", JSON.stringify(updatedRequests));
-
+    try {
+      await uploadFacturaApi(accessToken, selectedUser.id, idCongreso, file);
+      
       setIsUploading(false);
       setShowConfirmModal(false);
       setFile(null);
       if (onUploadSuccess) onUploadSuccess();
-
-      // Feedback opcional (podría ser un toast)
       console.log("Factura enviada con éxito");
-    }, 1500);
+    } catch (error) {
+      alert("Error al subir factura");
+      setIsUploading(false);
+    }
   };
 
   return (

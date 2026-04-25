@@ -2,20 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MdArrowBack, MdAdd, MdDelete, MdEdit, MdCheck, MdClose } from "react-icons/md";
 import Notification from "../../../components/Notification";
+import { getTiposTrabajoApi, createTipoTrabajoApi, deleteTipoTrabajoApi } from "../../../api/adminApi";
 
-const MOCK_TIPOS = [
-  "Avances de tesis",
-  "Investigaciones concluidas",
-  "Experiencias de investigación",
-];
-
-export default function CongresoTiposTrabajoComponente() {
+export default function CongresoTiposTrabajoComponente({ idCongreso }) {
   const navigate = useNavigate();
   const [notification, setNotification] = useState(null);
-  const [tipos, setTipos] = useState(() => {
-    const saved = localStorage.getItem("congreso_tipos_trabajo");
-    return saved ? JSON.parse(saved) : MOCK_TIPOS;
-  });
+  const [tipos, setTipos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Estados para doble confirmación
   const [confirmDeleteIdx, setConfirmDeleteIdx] = useState(null);
@@ -27,26 +20,35 @@ export default function CongresoTiposTrabajoComponente() {
   const [adding, setAdding] = useState(false);
   const [newVal, setNewVal] = useState("");
 
-  const updateTipos = (newTipos, actionMessage) => {
-    setTipos(newTipos);
-    localStorage.setItem("congreso_tipos_trabajo", JSON.stringify(newTipos));
-    window.dispatchEvent(new Event('storage_tipos_trabajo'));
-    if (actionMessage) setNotification({ message: actionMessage, type: 'success' });
+  const accessToken = localStorage.getItem('congress_access');
+
+  useEffect(() => {
+    fetchTipos();
+  }, [idCongreso]);
+
+  const fetchTipos = async () => {
+    setLoading(true);
+    try {
+      const data = await getTiposTrabajoApi(accessToken, idCongreso);
+      setTipos(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   function startEdit(i) {
     setEditIdx(i);
-    setEditVal(tipos[i]);
+    setEditVal(tipos[i].tipo_trabajo);
     setAdding(false);
     setConfirmDeleteIdx(null);
     setIsConfirmingEdit(false);
   }
 
-  function handleEditClick() {
+  async function handleEditClick() {
     if (!editVal.trim()) return;
     if (isConfirmingEdit) {
-      const newTipos = tipos.map((v, i) => i === editIdx ? editVal.trim() : v);
-      updateTipos(newTipos, "Tipo de trabajo actualizado correctamente.");
       setEditIdx(null);
       setIsConfirmingEdit(false);
     } else {
@@ -54,12 +56,17 @@ export default function CongresoTiposTrabajoComponente() {
     }
   }
 
-  function handleDeleteClick(i) {
+  async function handleDeleteClick(i) {
     if (confirmDeleteIdx === i) {
-      const tipoEliminado = tipos[i];
-      const newTipos = tipos.filter((_, idx) => idx !== i);
-      updateTipos(newTipos, `Se eliminó "${tipoEliminado}".`);
-      setConfirmDeleteIdx(null);
+        try {
+            await deleteTipoTrabajoApi(accessToken, tipos[i].id_tipo_trabajo);
+            setNotification({ message: "Tipo de trabajo eliminado.", type: 'success' });
+            setConfirmDeleteIdx(null);
+            fetchTipos();
+            window.dispatchEvent(new Event('storage_tipos_trabajo'));
+        } catch (error) {
+            setNotification({ message: "Error al eliminar tipo.", type: 'error' });
+        }
     } else {
       setConfirmDeleteIdx(i);
       setEditIdx(null);
@@ -67,27 +74,24 @@ export default function CongresoTiposTrabajoComponente() {
     }
   }
 
-  function handleAddClick() {
+  async function handleAddClick() {
     if (!newVal.trim()) return;
     if (isConfirmingAdd) {
-      const newTipos = [...tipos, newVal.trim()];
-      updateTipos(newTipos, "Nuevo tipo de trabajo agregado.");
-      setAdding(false);
-      setNewVal("");
-      setIsConfirmingAdd(false);
+      try {
+          await createTipoTrabajoApi(accessToken, { nombre: newVal.trim(), id_congreso: idCongreso });
+          setNotification({ message: "Nuevo tipo de trabajo agregado.", type: 'success' });
+          setAdding(false);
+          setNewVal("");
+          setIsConfirmingAdd(false);
+          fetchTipos();
+          window.dispatchEvent(new Event('storage_tipos_trabajo'));
+      } catch (error) {
+          setNotification({ message: "Error al agregar tipo.", type: 'error' });
+      }
     } else {
       setIsConfirmingAdd(true);
     }
   }
-
-  // Cancelar estados de confirmación al escribir
-  useEffect(() => {
-    setIsConfirmingAdd(false);
-  }, [newVal]);
-
-  useEffect(() => {
-    setIsConfirmingEdit(false);
-  }, [editVal]);
 
   return (
     <div className="bg-base-100 rounded-3xl border border-base-300 shadow-sm overflow-hidden w-full mb-10 relative" >
@@ -100,7 +104,7 @@ export default function CongresoTiposTrabajoComponente() {
           <button onClick={() => navigate(-1)} className="text-white/70 hover:text-white transition-colors mr-1">
             <MdArrowBack size={18} />
           </button>
-          <h2 className="text-lg font-bold text-white">Crear tipos de trabajo</h2>
+          <h2 className="text-lg font-bold text-white uppercase tracking-tight">Crear tipos de trabajo</h2>
         </div>
         <button onClick={() => { setAdding(true); setConfirmDeleteIdx(null); }} className="w-8 h-8 rounded-full border-2 border-white/60 text-white flex items-center justify-center hover:bg-white/20 hover:cursor-pointer transition-colors">
           <MdAdd size={18} />
@@ -108,8 +112,10 @@ export default function CongresoTiposTrabajoComponente() {
       </div>
 
       <div className="p-3 space-y-2 overflow-y-auto" style={{ maxHeight: 300 }}>
-        {tipos.map((tipo, i) => (
-          <div key={i} className="border-b border-base-200 pb-2 last:border-0 last:pb-0">
+        {loading ? (
+           <div className="flex justify-center p-5"><span className="loading loading-spinner text-primary"></span></div>
+        ) : tipos.map((tipo, i) => (
+          <div key={tipo.id_tipo_trabajo} className="border-b border-base-200 pb-2 last:border-0 last:pb-0">
             <div className="flex items-center gap-2">
               {editIdx === i ? (
                 <>
@@ -122,7 +128,7 @@ export default function CongresoTiposTrabajoComponente() {
               ) : (
                 <>
                   <span className={`flex-1 border rounded-full px-3 py-1.5 text-sm transition-all ${confirmDeleteIdx === i ? 'border-error bg-error/5 text-error font-bold' : 'border-base-300 bg-base-100'}`}>
-                    {tipo}
+                    {tipo.tipo_trabajo}
                   </span>
 
                   {confirmDeleteIdx === i ? (
@@ -160,7 +166,7 @@ export default function CongresoTiposTrabajoComponente() {
           </div>
         )}
 
-        {tipos.length === 0 && !adding && (
+        {tipos.length === 0 && !adding && !loading && (
           <p className="text-center py-6 text-sm text-base-content/40 italic">Sin tipos de trabajo. Presiona + para agregar.</p>
         )}
       </div>

@@ -4,32 +4,63 @@ import ConstanciaUpload from "./Componentes/ConstanciaUpload";
 import UserConstanciaList from "./Componentes/UserConstanciaList";
 import FilterHeader from "./Componentes/FilterHeader";
 import SignatureUpload from "./Componentes/SignatureUpload";
-
-const ALL_PARTICIPANTS = [
-  { id: 101, nombre: "Dr. Roberto Jiménez", institucion: "CUCEI", congreso: "RIDMAE 2025", rol: "Ponente", status: "red", email: "roberto.j@udg.mx" },
-  { id: 102, nombre: "Mtra. Elena Salas", institucion: "CUALTOS", congreso: "CIENU 2026", rol: "Asistente", status: "green", email: "elena.salas@udg.mx" },
-  { id: 103, nombre: "Ing. Arturo Peña", institucion: "UNAM", congreso: "RIDMAE 2025", rol: "Dictaminador", status: "red", email: "arturo.p@unam.mx" },
-  { id: 104, nombre: "Dra. Lucía Torres", institucion: "ITESM", congreso: "CIENU 2026", rol: "Evaluador", status: "red", email: "l.torres@itesm.mx" },
-  { id: 105, nombre: "Mtro. Javier Ortiz", institucion: "CUALTOS", congreso: "RIDMAE 2025", rol: "Tallerista", status: "green", email: "j.ortiz@udg.mx" },
-  { id: 106, nombre: "Dra. Martha Revelo", institucion: "UDG", congreso: "CIENU 2026", rol: "Revisor", status: "red", email: "martha.r@udg.mx" },
-];
+import { getParticipantsApi, bulkConstanciaActionApi, getCongresoSignaturesApi, updateCongresoSignaturesApi } from "../../api/adminApi";
 
 export default function UsuariosConstanciasView() {
-  const [users, setUsers] = useState(ALL_PARTICIPANTS);
-  const [selectedUser, setSelectedUser] = useState(ALL_PARTICIPANTS[0]);
+  const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
   const [bulkActionType, setBulkActionType] = useState(null); 
   const [processedCount, setProcessedCount] = useState(0);
   const [signatures, setSignatures] = useState({ organizador: null, secretaria: null });
   const [areSignaturesValid, setAreSignaturesValid] = useState(false);
+  const [idCongreso] = useState(1); // TODO: Obtener del contexto del congreso actual
+
+  const accessToken = localStorage.getItem('congress_access');
+
+  useEffect(() => {
+    fetchParticipants();
+    fetchSignatures();
+  }, []);
+
+  const fetchParticipants = async () => {
+    try {
+      const data = await getParticipantsApi(accessToken, idCongreso);
+      const mappedData = data.map(u => ({
+        id: u.id_persona,
+        nombre: u.nombre_completo,
+        email: u.correo_electronico,
+        rol: u.rol,
+        institucion: u.institucion,
+        status: u.constancia?.estatus === 'enviada' ? 'green' : (u.constancia?.estatus === 'generada' ? 'yellow' : 'red')
+      }));
+      setUsers(mappedData);
+      if (!selectedUser && mappedData.length > 0) setSelectedUser(mappedData[0]);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchSignatures = async () => {
+    try {
+      const data = await getCongresoSignaturesApi(accessToken, idCongreso);
+      setSignatures({
+        organizador: data.firma_organizador,
+        secretaria: data.firma_secretaria
+      });
+      setAreSignaturesValid(data.firmas_bloqueadas);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const filteredUsers = users.filter(u => 
     u.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || 
     u.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleBulkAction = (type) => {
+  const handleBulkAction = async (type) => {
     if (!areSignaturesValid) {
       alert("⚠️ Error: Debe confirmar y bloquear las firmas institucionales antes de realizar acciones masivas.");
       return;
@@ -37,40 +68,31 @@ export default function UsuariosConstanciasView() {
     setBulkActionType(type);
     setIsBulkProcessing(true);
     setProcessedCount(0);
-    
-    let count = 0;
-    const interval = setInterval(() => {
-      count += 1;
-      if (count >= users.length) {
-        count = users.length;
-        clearInterval(interval);
-        
-        if (type === 'send') {
-          const updated = users.map(u => ({ ...u, status: "green" }));
-          setUsers(updated);
 
-          const currentRequests = JSON.parse(localStorage.getItem("invoice_requests") || "[]");
-          const newEntries = users.map(u => ({
-            id: `const-${u.id}-${Date.now()}`,
-            nombre: u.nombre,
-            rol: u.rol,
-            institucion: u.institucion,
-            email: u.email,
-            status: "green",
-            fechaEnvio: new Date().toISOString(),
-            tipo: "constancia"
-          }));
-          
-          localStorage.setItem("invoice_requests", JSON.stringify([...currentRequests, ...newEntries]));
-        }
-        
-        setTimeout(() => {
-          setIsBulkProcessing(false);
-          setBulkActionType(null);
-        }, 800);
+    try {
+      if (type === 'send') {
+        await bulkConstanciaActionApi(accessToken, 'send', idCongreso, users.map(u => u.id));
+        await fetchParticipants();
       }
-      setProcessedCount(count);
-    }, 200);
+      // Simulación visual de progreso
+      let count = 0;
+      const interval = setInterval(() => {
+        count += 5;
+        if (count >= users.length) {
+          setProcessedCount(users.length);
+          clearInterval(interval);
+          setTimeout(() => {
+            setIsBulkProcessing(false);
+            setBulkActionType(null);
+          }, 800);
+        } else {
+          setProcessedCount(count);
+        }
+      }, 100);
+    } catch (error) {
+      alert("Error en acción masiva");
+      setIsBulkProcessing(false);
+    }
   };
 
   return (

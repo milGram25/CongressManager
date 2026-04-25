@@ -1,7 +1,67 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
-from .models import Persona, Asistente
+from .models import Persona, Asistente, Factura, Constancia, HistorialAcciones
+
+class FacturaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Factura
+        fields = '__all__'
+
+class ConstanciaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Constancia
+        fields = '__all__'
+
+class HistorialAccionesSerializer(serializers.ModelSerializer):
+    nombre_persona = serializers.CharField(source='id_persona.nombre', read_only=True)
+    fecha = serializers.DateTimeField(source='fecha_accion', format="%Y-%m-%d %H:%M:%S")
+
+    class Meta:
+        model = HistorialAcciones
+        fields = ('id_historial_acciones', 'nombre_persona', 'fecha', 'rol', 'accion')
+
+class ParticipantSerializer(serializers.ModelSerializer):
+    nombre_completo = serializers.SerializerMethodField()
+    rol = serializers.SerializerMethodField()
+    institucion = serializers.SerializerMethodField()
+    factura = serializers.SerializerMethodField()
+    constancia = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Persona
+        fields = ('id_persona', 'nombre_completo', 'correo_electronico', 'rol', 'institucion', 'factura', 'constancia')
+
+    def get_nombre_completo(self, obj):
+        nombres = [obj.nombre, obj.primer_apellido, obj.segundo_apellido]
+        return " ".join([n for n in nombres if n]).strip()
+
+    def get_rol(self, obj):
+        try:
+            if hasattr(obj, 'dictaminador'): return 'Dictaminador'
+            if hasattr(obj, 'evaluador'): return 'Evaluador'
+            if hasattr(obj, 'ponente'): return 'Ponente'
+            if hasattr(obj, 'asistente'): return 'Asistente'
+        except: pass
+        return 'Participante'
+
+    def get_institucion(self, obj):
+        try:
+            return obj.asistente.institucion_procedencia
+        except:
+            return "N/A"
+
+    def get_factura(self, obj):
+        factura = Factura.objects.filter(id_persona=obj).order_by('-fecha_solicitud').first()
+        if factura:
+            return FacturaSerializer(factura).data
+        return None
+
+    def get_constancia(self, obj):
+        constancia = Constancia.objects.filter(id_persona=obj).order_by('-fecha_emision').first()
+        if constancia:
+            return ConstanciaSerializer(constancia).data
+        return None
 
 class RegisterSerializer(serializers.ModelSerializer):
     """Serializer para registro de nuevos usuarios."""

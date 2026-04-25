@@ -188,7 +188,6 @@ const AdminLayoutWrapper = () => {
         { to: '/admin/eventos/congresos/lista', label: 'Lista', icon: MdInfo, className: 'pl-14 opacity-60' },
         { to: '/admin/eventos/congresos/sede', label: 'Sede', icon: MdPlace, className: 'pl-14 opacity-60' },
         { to: '/admin/eventos/congresos/fechas', label: 'Fechas', icon: MdEventAvailable, className: 'pl-14 opacity-60' },
-        { to: '/admin/eventos/congresos/tipos-trabajo', label: 'Tipos Trabajo', icon: MdWork, className: 'pl-14 opacity-60' },
         { to: '/admin/eventos/congresos/libros', label: 'Libros', icon: FaBook, className: 'pl-14 opacity-70' },
       ] : [])
     ] : []),
@@ -389,7 +388,7 @@ function App() {
                 <Route path="detalles/:id" element={<CongresoDetallesView />} />
                 <Route path="sede" element={<CongresoSedeView />} />
                 <Route path="fechas" element={<CongresoFechasView />} />
-                <Route path="tipos-trabajo" element={<CongresoTiposTrabajoView />} />
+                <Route path="tipos-trabajo/:id" element={<CongresoTiposTrabajoView />} />
                 <Route path="libros" element={<LibrosView title="Gestión de Libros" />} />
               </Route>
             </Route>

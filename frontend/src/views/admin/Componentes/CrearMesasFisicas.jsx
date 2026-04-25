@@ -1,198 +1,164 @@
 import React, { useEffect, useState } from 'react';
-import { MdDelete, MdAdd, MdEdit } from 'react-icons/md';
+import { MdDelete, MdAdd, MdEdit, MdSave } from 'react-icons/md';
 import { HiDownload } from 'react-icons/hi';
+import { createMesaApi, deleteMesaApi } from '../../../api/adminApi';
 
-const CrearMesasFisicas = ({ listaMesas }) => {
-
-
+const CrearMesasFisicas = ({ idSede, listaMesas, onUpdate }) => {
   const [mesas, setMesas] = useState([]);
   const [mesaSeleccionada, setMesaSeleccionada] = useState(null);
   const [editandoId, setEditandoId] = useState(null);
+  const accessToken = localStorage.getItem('congress_access');
 
   useEffect(() => {
-    if (listaMesas && listaMesas.length > 0) {//si hay mesas
-      setMesas(listaMesas);
-      setMesaSeleccionada(listaMesas[0].id); //selecciona la primera mesa
+    setMesas(listaMesas);
+    if (listaMesas.length > 0 && !mesaSeleccionada) {
+      setMesaSeleccionada(listaMesas[0].id_mesas_trabajo);
     }
-  }, []);
+  }, [listaMesas]);
 
+  const mesaActual = mesas.find((m) => m.id_mesas_trabajo === mesaSeleccionada);
 
-  const mesaActual = mesas.find((m) => m.id === mesaSeleccionada);
-
-
-  const agregarMesa = () => {
-    const nueva = { id: Date.now(), nombre: '', subarea: '', capacidad: '' }; //un id de la fecha para asegurarse de que nunca se repite
-    setMesas([...mesas, nueva]);
-    setMesaSeleccionada(nueva.id);
-    setEditandoId(nueva.id);
+  const handleAgregarMesa = async () => {
+    try {
+        const nombre = `Nueva Mesa ${mesas.length + 1}`;
+        await createMesaApi(accessToken, { 
+            nombre: nombre,
+            id_sede: idSede
+        });
+        if (onUpdate) onUpdate();
+    } catch (error) {
+        alert("Error al crear mesa.");
+    }
   };
 
-  const eliminarMesa = (id) => {
-    const nuevas = mesas.filter((m) => m.id !== id); //implementar lógica en la base de datos
-    setMesas(nuevas);
-    if (mesaSeleccionada === id) {
-      setMesaSeleccionada(nuevas[0]?.id || null);
+  const handleEliminarMesa = async (id) => {
+    if (!window.confirm("¿Estás seguro de eliminar esta mesa?")) return;
+    try {
+        await deleteMesaApi(accessToken, id);
+        if (onUpdate) onUpdate();
+    } catch (error) {
+        alert("Error al eliminar mesa.");
     }
   };
 
   const editarNombreMesa = (id, nuevoNombre) => {
-    setMesas(mesas.map((m) => (m.id === id ? { ...m, nombre: nuevoNombre } : m)));
-  };
-
-  const editarCaracteristica = (campo, valor) => {
-    setMesas(mesas.map((m) => (m.id === mesaSeleccionada ? { ...m, [campo]: valor } : m)));
+    setMesas(mesas.map((m) => (m.id_mesas_trabajo === id ? { ...m, nombre: nuevoNombre } : m)));
   };
 
   const descargarMesas = () => {
-    const csv = ['Nombre,Subárea,Capacidad', ...mesas.map((m) => `"${m.nombre}","${m.subarea}","${m.capacidad}"`)].join('\n');
+    const csv = ['Nombre,Sede ID', ...mesas.map((m) => `"${m.nombre}","${m.id_sede}"`)].join('\n');
     const a = document.createElement('a');
     a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    a.download = 'mesas.csv';
+    a.download = 'mesas_trabajo.csv';
     a.click();
   };
 
   return (
-    <div className="w-full min-h-[400px]">
+    <div className="w-full min-h-[400px] animate-in slide-in-from-bottom duration-700">
       {/* Header */}
-      <div className="flex items-center justify-between bg-black text-white p-6 rounded-t-lg">
-        <h2 className="text-xl font-bold">Mesas físicas</h2>
+      <div className="flex items-center justify-between bg-black text-white p-6 rounded-t-[32px] shadow-lg">
+        <h2 className="text-xl font-bold uppercase tracking-tight">Mesas físicas</h2>
         <div className="flex gap-2">
-          <button onClick={descargarMesas} className="btn btn-sm btn-circle bg-black border-2 border-white text-white hover:bg-gray-800" title="Descargar">
-            <HiDownload size={16} />
+          <button onClick={descargarMesas} className="w-10 h-10 rounded-2xl bg-white/10 text-white border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all cursor-pointer" title="Descargar CSV">
+            <HiDownload size={20} />
           </button>
-          <button onClick={agregarMesa} className="btn btn-sm btn-circle bg-black border-2 border-white text-white hover:bg-gray-800" title="Agregar mesa">
-            <MdAdd size={16} />
+          <button onClick={handleAgregarMesa} className="w-10 h-10 rounded-2xl bg-white text-black flex items-center justify-center hover:bg-[#005a6a] hover:text-white transition-all cursor-pointer shadow-md" title="Agregar mesa">
+            <MdAdd size={24} />
           </button>
         </div>
       </div>
 
       {/* Sección */}
-      <div className="bg-base-100 border border-black rounded-b-lg p-6 h-full">
-        <h3 className="text-lg font-bold text-black mb-2">Mesas</h3>
-        <p className="text-sm text-base-content/60 mb-6">
-          Crea mesas de trabajo para posteriormente enlazar los eventos (ponencias y talleres) del congreso a un espacio físico (la mesa)
-        </p>
+      <div className="bg-white border border-gray-100 rounded-b-[32px] p-8 shadow-sm h-full">
+        <div className="mb-8">
+            <h3 className="text-lg font-black text-gray-900 uppercase tracking-tighter">Inventario de Espacios</h3>
+            <p className="text-sm text-gray-500 font-medium">
+            Gestiona las mesas de trabajo físicas donde se llevarán a cabo las ponencias y talleres.
+            </p>
+        </div>
 
-        <div className="grid grid-cols-2 gap-6">
-          {/*columna izquierda:lista de mesas*/}
-          <div>
-            <div className="flex items-start justify-between mb-1">
-              <div>
-                <h4 className="font-semibold text-black mb-1">Creación de mesas</h4>
-                <p className="text-xs text-base-content/60 mb-4">
-                  Crea una mesa que deberá tener un análogo físico en la sede
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <button onClick={descargarMesas} className="btn btn-sm btn-circle bg-black text-white hover:bg-gray-700" title="Descargar">
-                  <HiDownload size={14} />
-                </button>
-                <button onClick={agregarMesa} className="btn btn-sm btn-circle bg-black text-white hover:bg-gray-700" title="Agregar">
-                  <MdAdd size={14} />
-                </button>
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* Columna Izquierda: Lista de Mesas */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Listado de Mesas ({mesas.length})</span>
             </div>
 
-            <div className="space-y-3 pr-5 border-r">
-
-
-              {
-                mesas.length > 0 ? mesas.map((mesa) => (
+            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+              {mesas.length > 0 ? mesas.map((mesa) => (
                   <div
-                    key={mesa.id}
-                    className="flex gap-2 items-center"
-                    onClick={() => setMesaSeleccionada(mesa.id)}
+                    key={mesa.id_mesas_trabajo}
+                    className={`flex gap-3 items-center p-3 rounded-2xl border transition-all cursor-pointer group ${mesaSeleccionada === mesa.id_mesas_trabajo ? 'bg-[#005a6a]/5 border-[#005a6a] shadow-sm' : 'bg-gray-50 border-transparent hover:border-gray-200'}`}
+                    onClick={() => setMesaSeleccionada(mesa.id_mesas_trabajo)}
                   >
-                    {/* 
-                  Indicador de selección*/}
-                    <div className={`w-2 h-2 rounded-full flex-shrink-0 border ${mesaSeleccionada === mesa.id ? 'bg-black border-black' : 'bg-transparent border-gray-400'}`} />
+                    <div className={`w-2 h-2 rounded-full ${mesaSeleccionada === mesa.id_mesas_trabajo ? 'bg-[#005a6a] animate-pulse' : 'bg-gray-300'}`} />
 
                     <input
-                      ref={editandoId === mesa.id ? (el) => el?.focus() : null}
                       type="text"
-                      placeholder="Nombre de la mesa"
                       value={mesa.nombre}
-                      onChange={(e) => editarNombreMesa(mesa.id, e.target.value)}
-                      onBlur={() => setEditandoId(null)}
-                      readOnly={editandoId !== mesa.id}
-                      className={`input border border-black input-sm flex-1 rounded-full bg-white cursor-pointer ${mesaSeleccionada === mesa.id ? 'border-black border-2' : ''}`}
+                      onChange={(e) => editarNombreMesa(mesa.id_mesas_trabajo, e.target.value)}
+                      readOnly={editandoId !== mesa.id_mesas_trabajo}
+                      className={`flex-1 bg-transparent text-sm font-bold outline-none ${mesaSeleccionada === mesa.id_mesas_trabajo ? 'text-gray-900' : 'text-gray-500'}`}
                     />
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setEditandoId(editandoId === mesa.id ? null : mesa.id); }}
-                      className="btn btn-sm btn-circle bg-black text-white hover:bg-gray-700"
-                      title="Editar"
-                    >
-                      <MdEdit size={14} />
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); eliminarMesa(mesa.id); }}
-                      className="btn btn-sm btn-circle bg-black text-white hover:bg-gray-700"
-                      title="Eliminar"
-                    >
-                      <MdDelete size={14} />
-                    </button>
+                    
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setEditandoId(editandoId === mesa.id_mesas_trabajo ? null : mesa.id_mesas_trabajo); }}
+                          className="w-8 h-8 rounded-lg bg-black text-white flex items-center justify-center hover:bg-gray-700 transition-colors"
+                        >
+                          {editandoId === mesa.id_mesas_trabajo ? <MdSave size={16}/> : <MdEdit size={16} />}
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleEliminarMesa(mesa.id_mesas_trabajo); }}
+                          className="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center hover:bg-red-200 transition-colors"
+                        >
+                          <MdDelete size={16} />
+                        </button>
+                    </div>
                   </div>
-                )) : <div className='text-gray-500 text-center'>
-                  <br />
-                  <p className=' italic text-sm'>Aún no hay mesas existentes: crea una</p>
-                </div>}
+                )) : (
+                <div className='flex flex-col items-center justify-center py-10 opacity-30'>
+                  <MdAdd size={48} />
+                  <p className='text-xs font-bold uppercase mt-2'>No hay mesas creadas</p>
+                </div>
+                )}
             </div>
           </div>
 
-          {/*columna derecha: atributos (subáreas y capacidad máxima, como aparece en la base de datos)*/}
-          <div>
-            <div className="flex items-start justify-between mb-1">
-              <div>
-                <h4 className="font-semibold text-black mb-1">Características de la mesa</h4>
-                <p className="text-xs text-base-content/60 mb-4">
-                  Asigna atributos a las mesas para restringir su alcance y que sea más fácil reconocerlas
-                </p>
-              </div>
-              <button className="btn btn-sm btn-circle bg-black text-white hover:bg-gray-700" title="Descargar">
-                <HiDownload size={14} />
-              </button>
+          {/* Columna Derecha: Características */}
+          <div className="bg-gray-50 rounded-[32px] p-8 border border-gray-100">
+            <div className="mb-6">
+                <h4 className="text-sm font-black text-gray-900 uppercase tracking-widest mb-1">Configuración Detallada</h4>
+                <p className="text-[10px] text-gray-400 font-bold uppercase">Ajusta los atributos del espacio seleccionado</p>
             </div>
 
             {mesaActual ? (
-              <div className="space-y-4">
-                {/*subárea*/}
-                <div className="flex gap-3 items-center">
-                  <label className="w-24 text-sm font-medium text-black flex-shrink-0">Subárea</label>
-                  <div className="flex flex-1 items-center gap-2">
-                    <input
-                      className="flex-1 h-9 bg-white border border-black pl-3 pr-3 rounded-full text-sm focus:outline-none focus:border-black"
-                      placeholder="p. ej.: Programación estructurada"
-                      type="text"
-                      value={mesaActual.subarea}
-                      onChange={(e) => editarCaracteristica('subarea', e.target.value)}
-                    />
-                    <button className="btn btn-sm btn-circle bg-black text-white hover:bg-gray-700 flex-shrink-0">
-                      <MdEdit size={14} />
-                    </button>
+              <div className="space-y-6">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase ml-2">Nombre Identificador</label>
+                  <input
+                    className="w-full h-12 bg-white border border-gray-200 px-6 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-black outline-none transition-all shadow-sm"
+                    value={mesaActual.nombre}
+                    readOnly
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase ml-2">Asociado a Sede (ID)</label>
+                  <div className="w-full h-12 bg-gray-100 border border-transparent px-6 rounded-2xl text-sm font-mono flex items-center text-gray-400">
+                    {idSede || "N/A"}
                   </div>
                 </div>
 
-                {/*capacidad máxima*/}
-                <div className="flex gap-3 items-center">
-                  <label className="w-24 text-sm font-medium text-black flex-shrink-0">Cap. máx.</label>
-                  <div className="flex flex-1 items-center gap-2">
-                    <input
-                      className="flex-1 h-9 bg-white border border-black pl-3 pr-3 rounded-full text-sm focus:outline-none focus:border-black"
-                      placeholder="p. ej.: 50"
-                      type="number"
-                      value={mesaActual.capacidad}
-                      onChange={(e) => editarCaracteristica('capacidad', e.target.value)}
-                    />
-                    <button className="btn btn-sm btn-circle bg-black text-white hover:bg-gray-700 flex-shrink-0">
-                      <MdEdit size={14} />
-                    </button>
-                  </div>
+                <div className="pt-4 italic text-[10px] text-gray-400 text-center uppercase tracking-widest font-black">
+                   Las mesas se vinculan automáticamente a la sede actual
                 </div>
-
-                {/*posiblemente agregar aquí un cupo máximo de eventos por mesa */}
               </div>
             ) : (
-              <p className="text-sm text-gray-500 italic">Selecciona una mesa para ver sus características</p>
+              <div className="h-full flex flex-col items-center justify-center py-10 opacity-30 text-center">
+                  <MdEdit size={40} />
+                  <p className="text-xs font-black uppercase mt-4 max-w-[200px]">Selecciona una mesa para ver sus detalles</p>
+              </div>
             )}
           </div>
         </div>

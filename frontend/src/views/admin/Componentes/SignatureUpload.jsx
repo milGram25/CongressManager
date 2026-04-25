@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { HiCloudUpload, HiCheckCircle, HiTrash, HiLockClosed, HiLockOpen } from "react-icons/hi";
 import { MdEdit } from "react-icons/md";
+import { getCongresoSignaturesApi, updateCongresoSignaturesApi } from "../../../api/adminApi";
 
 export default function SignatureUpload({ onSignaturesChange }) {
   const [signatures, setSignatures] = useState({
@@ -8,34 +9,62 @@ export default function SignatureUpload({ onSignaturesChange }) {
     secretaria: null
   });
   const [isLocked, setIsLocked] = useState(false);
+  const [idCongreso] = useState(1); // TODO
 
-  const handleUpload = (e, type) => {
-    if (isLocked) return;
-    const file = e.target.files[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      const newSignatures = { ...signatures, [type]: url };
-      setSignatures(newSignatures);
-      // No notificamos al padre hasta que se bloquee/confirme
+  const accessToken = localStorage.getItem('congress_access');
+
+  useEffect(() => {
+    fetchSignatures();
+  }, []);
+
+  const fetchSignatures = async () => {
+    try {
+      const data = await getCongresoSignaturesApi(accessToken, idCongreso);
+      const serverUrl = 'http://localhost:8000';
+      setSignatures({
+        organizador: data.firma_organizador ? (data.firma_organizador.startsWith('http') ? data.firma_organizador : `${serverUrl}${data.firma_organizador}`) : null,
+        secretaria: data.firma_secretaria ? (data.firma_secretaria.startsWith('http') ? data.firma_secretaria : `${serverUrl}${data.firma_secretaria}`) : null
+      });
+      setIsLocked(data.firmas_bloqueadas);
+      if (data.firmas_bloqueadas) {
+        onSignaturesChange({
+          organizador: data.firma_organizador ? (data.firma_organizador.startsWith('http') ? data.firma_organizador : `${serverUrl}${data.firma_organizador}`) : null,
+          secretaria: data.firma_secretaria ? (data.firma_secretaria.startsWith('http') ? data.firma_secretaria : `${serverUrl}${data.firma_secretaria}`) : null
+        });
+      }
+    } catch (error) {
+      console.error(error);
     }
   };
 
-  const removeSignature = (type) => {
+  const handleUpload = async (e, type) => {
     if (isLocked) return;
-    const newSignatures = { ...signatures, [type]: null };
-    setSignatures(newSignatures);
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        const data = await updateCongresoSignaturesApi(accessToken, idCongreso, { [type === 'organizador' ? 'firma_organizador' : 'firma_secretaria']: file });
+        const serverUrl = 'http://localhost:8000';
+        setSignatures({
+          organizador: data.firma_organizador ? (data.firma_organizador.startsWith('http') ? data.firma_organizador : `${serverUrl}${data.firma_organizador}`) : null,
+          secretaria: data.firma_secretaria ? (data.firma_secretaria.startsWith('http') ? data.firma_secretaria : `${serverUrl}${data.firma_secretaria}`) : null
+        });
+      } catch (error) {
+        alert("Error al subir firma");
+      }
+    }
   };
 
-  const toggleLock = () => {
+  const toggleLock = async () => {
     const nextLockedState = !isLocked;
-    setIsLocked(nextLockedState);
-    
-    if (nextLockedState) {
-      // Al bloquear, notificamos al padre para que las use
-      onSignaturesChange(signatures);
-    } else {
-      // Al desbloquear, podemos notificar null para "pausar" el uso de firmas incompletas si se desea
-      // Por ahora mantendremos las que estaban
+    try {
+      const data = await updateCongresoSignaturesApi(accessToken, idCongreso, { lock: nextLockedState });
+      setIsLocked(data.firmas_bloqueadas);
+      
+      if (data.firmas_bloqueadas) {
+        onSignaturesChange(signatures);
+      }
+    } catch (error) {
+      alert("Error al cambiar estado de bloqueo");
     }
   };
 

@@ -1,14 +1,16 @@
 import React from 'react';
-import { FiBookOpen, FiFileText, FiUser, FiCalendar, FiClock } from 'react-icons/fi';
+import { FiBookOpen, FiFileText, FiUser, FiCalendar, FiClock, FiSettings } from 'react-icons/fi';
 import TarjetaGenerica from './TarjetaGenerica';
+import { useNavigate } from 'react-router-dom';
 
 const ItemCongreso = ({ listaDatos }) => {
+    const navigate = useNavigate();
 
-    const fecha_inicio = listaDatos.fecha_hora_inicio.split("T")[0];
-    const hora_inicio = listaDatos.fecha_hora_inicio.split("T")[1];
+    const fecha_inicio = listaDatos.fecha_hora_inicio ? listaDatos.fecha_hora_inicio.split("T")[0] : "N/A";
+    const hora_inicio = listaDatos.fecha_hora_inicio ? listaDatos.fecha_hora_inicio.split("T")[1].substring(0, 5) : "N/A";
 
-    const fecha_fin = listaDatos.fecha_hora_final.split("T")[0];
-    const hora_fin = listaDatos.fecha_hora_final.split("T")[1];
+    const fecha_fin = listaDatos.fecha_hora_final ? listaDatos.fecha_hora_final.split("T")[0] : "N/A";
+    const hora_fin = listaDatos.fecha_hora_final ? listaDatos.fecha_hora_final.split("T")[1].substring(0, 5) : "N/A";
 
     const Row = ({ icon: Icon, label, value }) => (
         <div className="flex items-center justify-between gap-6 mb-3">
@@ -43,8 +45,7 @@ const ItemCongreso = ({ listaDatos }) => {
     return (
         <TarjetaGenerica
             titulo={listaDatos.nombre_congreso}
-
-            indexDatosModal={listaDatos.id}
+            indexDatosModal={listaDatos.id_congreso}
             definirTipoElemento="congreso"
         >
             <Row icon={FiBookOpen} label="Sede" value={listaDatos.sede} />
@@ -54,6 +55,19 @@ const ItemCongreso = ({ listaDatos }) => {
             <div className="mt-4 space-y-3">
                 <DateTimeBox label="Inicio" date={fecha_inicio} time={hora_inicio} />
                 <DateTimeBox label="Fin" date={fecha_fin} time={hora_fin} />
+            </div>
+
+            {/* Acceso a Configuración Académica (Navegación Original) */}
+            <div className="mt-6 pt-4 border-t border-base-300">
+                <button 
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/admin/eventos/congresos/tipos-trabajo/${listaDatos.id_congreso}`);
+                    }}
+                    className="w-full flex items-center justify-center gap-3 py-3 bg-black text-white hover:bg-[#005a6a] rounded-2xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer shadow-lg active:scale-95"
+                >
+                    <FiSettings size={16} /> Configuración Académica
+                </button>
             </div>
         </TarjetaGenerica>
     );
