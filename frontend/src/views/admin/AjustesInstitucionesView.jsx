@@ -16,9 +16,11 @@ export default function AjustesInstitucionesView() {
     try {
       const data = await getInstitucionesApi(accessToken);
       const mappedData = data.map(inst => ({
+        ...inst,
         id: inst.id_institucion,
         nombre_institucion: inst.nombre,
-        ruta_imagen: inst.ruta_imagen
+        congresos_totales: 0, // Fallback if backend doesn't provide it
+        congresos_activos: 0  // Fallback if backend doesn't provide it
       }));
       setInstituciones(mappedData);
     } catch (error) {

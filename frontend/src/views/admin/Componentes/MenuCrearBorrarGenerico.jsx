@@ -11,6 +11,7 @@ import Modal from './Modal';
 import DetallesCrearCongreso from './DetallesCrearCongreso';
 import DetallesEditarTaller from './DetallesEditarTaller';
 import DetallesEditarPonencia from './DetallesEditarPonencia';
+import DetallesEditarInstitucion from './DetallesEditarInstitucion';
 
 const MenuCrearBorrarGenerico = ({
                                      title = "Crear [insertar sustantivo]",
@@ -22,7 +23,7 @@ const MenuCrearBorrarGenerico = ({
                                  }) => {
     const navigate = useNavigate();
     const [listaElementos, setListaElementos] = useState(listaElementos2);
-    const mostrarAgregarEliminar = !["institucion"].includes(definirTipoElemento);
+    const mostrarAgregarEliminar = true; // Habilitado para todos los tipos según requerimiento
 
     const renderizarItem = (objeto, index) => {
         switch(definirTipoElemento){
@@ -44,9 +45,9 @@ const MenuCrearBorrarGenerico = ({
             case "ponencia":
                 return <DetallesEditarPonencia/>;
             case "taller":
-                return null;
-            case "institucion":
                 return <DetallesEditarTaller/>;
+            case "institucion":
+                return <DetallesEditarInstitucion/>;
             case "congreso":
                 return <DetallesCrearCongreso modificandoDatos={true} />;
             default:
@@ -67,6 +68,10 @@ const MenuCrearBorrarGenerico = ({
         }
         if (definirTipoElemento === 'ponencia') {
             navigate('/admin/eventos/ponencias/crear');
+            return;
+        }
+        if (definirTipoElemento === 'institucion') {
+            navigate('/admin/ajustes/instituciones/crear');
             return;
         }
         setOpenModal(true);
@@ -124,7 +129,7 @@ const MenuCrearBorrarGenerico = ({
                     {listaElementos.map((objeto, index) => renderizarItem(objeto, index))}
                 </div>
 
-                {listaElementos.length === 0 && !mostrarAgregarEliminar && (
+                {listaElementos.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
                         <p className="italic text-lg">No hay {definirTipoElemento}s para mostrar.</p>
                     </div>

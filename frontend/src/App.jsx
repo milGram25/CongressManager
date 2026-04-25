@@ -35,6 +35,7 @@ import UsuariosHistorialView from "./views/admin/UsuariosHistorialView";
 import AjustesView from "./views/admin/AjustesView";
 import AjustesAreasView from "./views/admin/AjustesAreasView";
 import AjustesInstitucionesView from "./views/admin/AjustesInstitucionesView";
+import InstitucionDetallesView from "./views/admin/InstitucionDetallesView";
 
 import ProcesosResumenesView from "./views/admin/ProcesosResumenesView";
 import ProcesosExtensosView from "./views/admin/ProcesosExtensosView";
@@ -401,9 +402,12 @@ function App() {
             </Route>
             <Route path="ajustes">
               <Route index element={<AjustesView />} />
-              <Route path="instituciones" element={<AjustesInstitucionesView title="Gestión de Instituciones" />} />
+              <Route path="instituciones">
+                <Route index element={<AjustesInstitucionesView title="Gestión de Instituciones" />} />
+                <Route path="crear" element={<InstitucionDetallesView />} />
+                <Route path="editar/:id" element={<InstitucionDetallesView />} />
+              </Route>
               <Route path="areas" element={<AjustesAreasView title="Gestión de Áreas" />} />
-
             </Route>
           </Route>
 

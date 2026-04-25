@@ -20,7 +20,11 @@ const ItemInstitucion = ({
     listaDatos
 }) => {
     return (
-        <TarjetaGenerica titulo={listaDatos.nombre_institucion}> {/* Sin botón de publicar */}
+        <TarjetaGenerica 
+            titulo={listaDatos.nombre_institucion}
+            definirTipoElemento="institucion"
+            indexDatosModal={listaDatos.id}
+        >
 
 
             {/* Fila 1: Lista congresos totales */}

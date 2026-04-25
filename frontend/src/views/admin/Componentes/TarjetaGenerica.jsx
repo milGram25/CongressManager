@@ -6,6 +6,7 @@ import DetallesCrearCongreso from './DetallesCrearCongreso';
 import DetallesEditarTaller from './DetallesEditarTaller';
 import { useNavigate } from 'react-router-dom';
 import DetallesEditarPonencia from './DetallesEditarPonencia';
+import DetallesEditarInstitucion from './DetallesEditarInstitucion';
 
 const TarjetaGenerica = ({
                              titulo,
@@ -29,7 +30,7 @@ const TarjetaGenerica = ({
             case "taller":
                 return <DetallesEditarTaller/>;
             case "institucion":
-                return null;
+                return <DetallesEditarInstitucion/>;
             case "congreso":
                 return <DetallesCrearCongreso indexDatosModal={indexDatosModal}/>;
             default:
@@ -64,6 +65,8 @@ const TarjetaGenerica = ({
                     onClick={() => {
                         if (definirTipoElemento === 'congreso') {
                             navigate(`/admin/eventos/congresos/detalles/${indexDatosModal}`);
+                        } else if (definirTipoElemento === 'institucion') {
+                            navigate(`/admin/ajustes/instituciones/editar/${indexDatosModal}`);
                         } else {
                             if (onView) onView();
                             else setOpenModal(true);
@@ -96,6 +99,8 @@ const TarjetaGenerica = ({
                         onClick={() => {
                             if (definirTipoElemento === 'congreso') {
                                 navigate(`/admin/eventos/congresos/detalles/${indexDatosModal}?edit=true`);
+                            } else if (definirTipoElemento === 'institucion') {
+                                navigate(`/admin/ajustes/instituciones/editar/${indexDatosModal}`);
                             } else {
                                 if (onEdit) onEdit();
                                 else setOpenModal(true);
