@@ -40,7 +40,7 @@ export default function DetallesSede({
                     {modificando === true ? (
 
                         <button
-                            className="flex justify-center rounded-full h-8 w-8 border-2 bg-black text-white border border-white items-center mr-4 hover:bg-gray-500 cursor-pointer transition-colors"
+                            className="flex justify-center rounded-full h-8 w-8 border-2 bg-black text-white border-white items-center mr-4 hover:bg-gray-500 cursor-pointer transition-colors"
                             onClick={() => setModificando(!modificando)}
                         >
                             <RiPencilFill />
@@ -73,12 +73,12 @@ export default function DetallesSede({
             </div>
 
 
-            <div className="w-full grid border rounded-b-lg">
-                <div className="border-b p-4 mb-4 w-full">
+            <div className="w-full grid border border-base-300 shadow-sm rounded-lg px-4">
+                <div className="border-b border-slate-400 py-4 mb-4 w-full">
                     <p className="text-gray-500">
                         Detalles del edificio
                     </p>
-                    <div className="flex flex-1 items-center gap-4 h-15">
+                    <div className="flex flex-1 items-center gap-4 h-15 ">
                         <p className="flex-1 text-center pl-4">Nombre del edificio</p>
                         <input
                             className="flex-[5] bg-white rounded-full h-10 pl-4 border"
@@ -90,7 +90,7 @@ export default function DetallesSede({
                 </div>
 
                 <div className="flex">
-                    <div className="grid flex-1  pr-4 pl-4 pb-4">
+                    <div className="grid flex-1 pb-4">
                         <p className="pl-4 text-gray-500">Lugar</p>
                         <div className="flex items-center gap-4 h-15 border-b border-gray-200">
                             <p className="flex-1 text-center">País</p>
