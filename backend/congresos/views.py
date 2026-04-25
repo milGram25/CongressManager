@@ -92,6 +92,59 @@ class InstitucionViewSet(viewsets.ModelViewSet):
     serializer_class = InstitucionSerializer
     permission_classes = [IsAuthenticated]
 
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        image_file = request.FILES.get('image')
+        
+        # Guardar imagen si existe
+        ruta_imagen = None
+        if image_file:
+            upload_dir = os.path.join(settings.MEDIA_ROOT, 'instituciones')
+            os.makedirs(upload_dir, exist_ok=True)
+            fs = FileSystemStorage(location=upload_dir, base_url='/media/instituciones/')
+            filename = fs.save(image_file.name, image_file)
+            ruta_imagen = f"/media/instituciones/{filename}"
+
+        # Usar SQL directo ya que managed=False y para asegurar consistencia con el estilo del proyecto
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO institucion (nombre, ubicacion, pais, ruta_imagen) VALUES (%s, %s, %s, %s) RETURNING id_institucion",
+                    [data.get('nombre'), data.get('ubicacion'), data.get('pais', 'México'), ruta_imagen]
+                )
+                new_id = cursor.fetchone()[0]
+            
+            inst = Institucion.objects.get(id_institucion=new_id)
+            return Response(self.get_serializer(inst).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = request.data
+        image_file = request.FILES.get('image')
+
+        ruta_imagen = instance.ruta_imagen
+        if image_file:
+            upload_dir = os.path.join(settings.MEDIA_ROOT, 'instituciones')
+            os.makedirs(upload_dir, exist_ok=True)
+            fs = FileSystemStorage(location=upload_dir, base_url='/media/instituciones/')
+            filename = fs.save(image_file.name, image_file)
+            ruta_imagen = f"/media/instituciones/{filename}"
+
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "UPDATE institucion SET nombre=%s, ubicacion=%s, pais=%s, ruta_imagen=%s WHERE id_institucion=%s",
+                    [data.get('nombre', instance.nombre), data.get('ubicacion', instance.ubicacion), 
+                     data.get('pais', instance.pais), ruta_imagen, instance.id_institucion]
+                )
+            
+            instance.refresh_from_db()
+            return Response(self.get_serializer(instance).data)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 class CongresoViewSet(viewsets.ModelViewSet):
     queryset = Congreso.objects.all()
     serializer_class = CongresoSerializer

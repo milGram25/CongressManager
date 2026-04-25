@@ -22,7 +22,12 @@ const MenuCrearBorrarGenerico = ({
                                      onViewItem
                                  }) => {
     const navigate = useNavigate();
-    const [listaElementos, setListaElementos] = useState(listaElementos2);
+    const [listaElementos, setListaElementos] = React.useState(listaElementos2);
+
+    React.useEffect(() => {
+        setListaElementos(listaElementos2);
+    }, [listaElementos2]);
+
     const mostrarAgregarEliminar = true; // Habilitado para todos los tipos según requerimiento
 
     const renderizarItem = (objeto, index) => {

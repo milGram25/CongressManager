@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiImage, FiMapPin, FiFlag, FiSave, FiTrash2 } from 'react-icons/fi';
-import { getInstitucionesApi } from '../../api/adminApi';
+import { getInstitucionesApi, createInstitucionApi, updateInstitucionApi } from '../../api/adminApi';
 import { API_URL } from '../../api/constants';
 
 export default function InstitucionDetallesView() {
@@ -11,6 +11,7 @@ export default function InstitucionDetallesView() {
     const accessToken = localStorage.getItem('congress_access');
 
     const [loading, setLoading] = useState(!isNew);
+    const [saving, setSaving] = useState(false);
     const [formData, setFormData] = useState({
         nombre: "",
         ubicacion: "",
@@ -65,9 +66,24 @@ export default function InstitucionDetallesView() {
     };
 
     const handleSave = async () => {
-        // Aquí iría la llamada al API para guardar (POST/PUT)
-        alert("Simulación: Datos guardados con éxito");
-        navigate('/admin/ajustes/instituciones');
+        if (!formData.nombre) {
+            alert("El nombre de la institución es obligatorio.");
+            return;
+        }
+
+        setSaving(true);
+        try {
+            if (isNew) {
+                await createInstitucionApi(accessToken, formData);
+            } else {
+                await updateInstitucionApi(accessToken, id, formData);
+            }
+            navigate('/admin/ajustes/instituciones');
+        } catch (error) {
+            alert(error.message || "Error al guardar los cambios.");
+        } finally {
+            setSaving(false);
+        }
     };
 
     if (loading) return <div className="flex justify-center p-20"><span className="loading loading-spinner loading-lg text-primary"></span></div>;
@@ -79,6 +95,7 @@ export default function InstitucionDetallesView() {
                 <button 
                     onClick={() => navigate('/admin/ajustes/instituciones')}
                     className="p-2 bg-base-200 hover:bg-base-300 rounded-full transition-all active:scale-90"
+                    disabled={saving}
                 >
                     <FiArrowLeft size={20} />
                 </button>
@@ -103,6 +120,7 @@ export default function InstitucionDetallesView() {
                                         <button 
                                             onClick={() => {setPreviewImage(null); setFormData(p => ({...p, imageFile: null}))}}
                                             className="p-3 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-xl active:scale-90 transition-all"
+                                            disabled={saving}
                                         >
                                             <FiTrash2 size={20} />
                                         </button>
@@ -117,7 +135,7 @@ export default function InstitucionDetallesView() {
                                         <p className="text-sm font-bold text-base-content/60">Subir imagen</p>
                                         <p className="text-[10px] text-base-content/30 uppercase font-black">PNG, JPG hasta 5MB</p>
                                     </div>
-                                    <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+                                    <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} disabled={saving} />
                                 </label>
                             )}
                         </div>
@@ -144,6 +162,7 @@ export default function InstitucionDetallesView() {
                                         className="w-full bg-base-200/50 border border-base-300 rounded-2xl px-6 py-4 text-sm font-bold focus:bg-base-100 focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all" 
                                         value={formData.nombre} 
                                         onChange={handleChange}
+                                        disabled={saving}
                                     />
                                 </div>
 
@@ -159,6 +178,7 @@ export default function InstitucionDetallesView() {
                                                 className="w-full bg-base-200/50 border border-base-300 rounded-2xl pl-12 pr-6 py-4 text-sm font-bold focus:bg-base-100 focus:border-primary outline-none transition-all" 
                                                 value={formData.ubicacion} 
                                                 onChange={handleChange}
+                                                disabled={saving}
                                             />
                                         </div>
                                     </div>
@@ -173,6 +193,7 @@ export default function InstitucionDetallesView() {
                                                 className="w-full bg-base-200/50 border border-base-300 rounded-2xl pl-12 pr-6 py-4 text-sm font-bold focus:bg-base-100 focus:border-primary outline-none transition-all" 
                                                 value={formData.pais} 
                                                 onChange={handleChange}
+                                                disabled={saving}
                                             />
                                         </div>
                                     </div>
@@ -184,13 +205,16 @@ export default function InstitucionDetallesView() {
                         <div className="flex gap-4 pt-4">
                             <button 
                                 onClick={handleSave}
-                                className="flex-1 bg-primary text-primary-content py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3"
+                                disabled={saving}
+                                className="flex-1 bg-primary text-primary-content py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                             >
-                                <FiSave size={18} /> {isNew ? 'Registrar Institución' : 'Guardar Cambios'}
+                                {saving ? <span className="loading loading-spinner loading-xs"></span> : <FiSave size={18} />} 
+                                {isNew ? 'Registrar Institución' : 'Guardar Cambios'}
                             </button>
                             <button 
                                 onClick={() => navigate('/admin/ajustes/instituciones')}
                                 className="px-8 bg-base-200 text-base-content py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-base-300 active:scale-95 transition-all"
+                                disabled={saving}
                             >
                                 Cancelar
                             </button>

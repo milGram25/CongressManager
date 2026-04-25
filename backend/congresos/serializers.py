@@ -2,9 +2,23 @@ from rest_framework import serializers
 from .models import Congreso, Institucion, Sede, MesasTrabajo, Evento, FechasCongreso, CostosCongreso, Rubrica, RubricaCriterio, TipoTrabajo, Dictamen, DictamenPregunta
 
 class InstitucionSerializer(serializers.ModelSerializer):
+    congresos_totales = serializers.SerializerMethodField()
+    congresos_activos = serializers.SerializerMethodField()
+
     class Meta:
         model = Institucion
-        fields = '__all__'
+        fields = ['id_institucion', 'nombre', 'ubicacion', 'pais', 'ruta_imagen', 'congresos_totales', 'congresos_activos']
+
+    def get_congresos_totales(self, obj):
+        return Congreso.objects.filter(id_institucion=obj).count()
+
+    def get_congresos_activos(self, obj):
+        # Un congreso es activo si la fecha final es mayor a la actual
+        from django.utils import timezone
+        return Congreso.objects.filter(
+            id_institucion=obj,
+            id_fechas_congreso__fecha_final_evento__gt=timezone.now()
+        ).count()
 
 class SedeSerializer(serializers.ModelSerializer):
     class Meta:

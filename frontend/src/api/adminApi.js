@@ -153,6 +153,40 @@ export async function getInstitucionesApi(accessToken) {
   return res.json();
 }
 
+export async function createInstitucionApi(accessToken, data) {
+  const formData = new FormData();
+  formData.append('nombre', data.nombre);
+  formData.append('ubicacion', data.ubicacion);
+  formData.append('pais', data.pais);
+  if (data.imageFile) formData.append('image', data.imageFile);
+
+  const res = await fetch(`${API_URL}/api/congresos/instituciones/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+    body: formData,
+  });
+  const resData = await res.json();
+  if (!res.ok) throw new Error(resData.detail || 'Error al crear institución.');
+  return resData;
+}
+
+export async function updateInstitucionApi(accessToken, idInstitucion, data) {
+  const formData = new FormData();
+  formData.append('nombre', data.nombre);
+  formData.append('ubicacion', data.ubicacion);
+  formData.append('pais', data.pais);
+  if (data.imageFile) formData.append('image', data.imageFile);
+
+  const res = await fetch(`${API_URL}/api/congresos/instituciones/${idInstitucion}/`, {
+    method: 'PUT',
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+    body: formData,
+  });
+  const resData = await res.json();
+  if (!res.ok) throw new Error(resData.detail || 'Error al actualizar institución.');
+  return resData;
+}
+
 // Rúbricas
 export async function getRubricasApi(accessToken, idCongreso = null) {
   let url = `${API_URL}/api/congresos/rubricas/`;

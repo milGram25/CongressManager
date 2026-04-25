@@ -3,6 +3,8 @@ from django.db import models
 class Institucion(models.Model):
     id_institucion = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=255)
+    ubicacion = models.CharField(max_length=255, blank=True, null=True)
+    pais = models.CharField(max_length=100, default='México')
     ruta_imagen = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
