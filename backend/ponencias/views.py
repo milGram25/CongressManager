@@ -28,7 +28,6 @@ class EnviarPonenciaAPIView(APIView):
         if not all([titulo, autor, tipo_participacion, eje_tematico_nombre, tipo_trabajo_nombre, palabras_clave, resumen_texto]):
             return Response({'detail': 'Faltan campos obligatorios.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        coautores_json = json.dumps(coautores)
         try:
             with transaction.atomic():
                 with connection.cursor() as cursor:
@@ -90,10 +89,10 @@ class EnviarPonenciaAPIView(APIView):
 
                     #Crea un registro en la tabla ponencia
                     cursor.execute("""
-                        INSERT INTO ponencia (tipo_participacion, id_subarea, id_resumen, autor_principal, coautores, id_tipo_trabajo)
-                        VALUES (%s, %s, %s, %s, %s, %s)
+                        INSERT INTO ponencia (tipo_participacion, id_subarea, id_resumen, id_tipo_trabajo)
+                        VALUES (%s, %s, %s, %s)
                         RETURNING id_ponencia
-                    """, [tipo_participacion, id_subarea, id_resumen, autor, coautores_json, id_tipo_trabajo])
+                    """, [tipo_participacion, id_subarea, id_resumen, id_tipo_trabajo])
                     id_ponencia = cursor.fetchone()[0]
 
                     #se asegura que el usuario sea ponente y se crea si no existe
@@ -109,8 +108,8 @@ class EnviarPonenciaAPIView(APIView):
                         
                         #Asociar ponente a la ponencia
                         cursor.execute("""
-                            INSERT INTO ponente_has_ponencia (id_ponente, id_ponencia, asistio)
-                            VALUES (%s, %s, FALSE)
+                            INSERT INTO ponente_has_ponencia (id_ponente, id_ponencia, asistio, es_principal)
+                            VALUES (%s, %s, FALSE, TRUE)
                             ON CONFLICT (id_ponente, id_ponencia) DO NOTHING
                         """, [id_ponente, id_ponencia])
 
@@ -118,7 +117,6 @@ class EnviarPonenciaAPIView(APIView):
                     for coautor in coautores:
                         if isinstance(coautor, dict):
                             coautor_email = coautor.get('email', '').strip()
-                            coautor_nombre = coautor.get('nombre', '').strip()
                             if coautor_email:
                                 cursor.execute("SELECT id_persona FROM persona WHERE correo_electronico = %s", [coautor_email])
                                 persona_row = cursor.fetchone()
@@ -133,29 +131,12 @@ class EnviarPonenciaAPIView(APIView):
                                         id_ponente_coautor = ponente_coautor_row[0]
                                     
                                     cursor.execute("""
-                                        INSERT INTO ponente_has_ponencia (id_ponente, id_ponencia, asistio)
-                                        VALUES (%s, %s, FALSE)
+                                        INSERT INTO ponente_has_ponencia (id_ponente, id_ponencia, asistio, es_principal)
+                                        VALUES (%s, %s, FALSE, FALSE)
                                         ON CONFLICT (id_ponente, id_ponencia) DO NOTHING
                                     """, [id_ponente_coautor, id_ponencia])
 
-                                # Enviar correo al coautor
-                                try:
-                                    asunto = f"Has sido añadido como coautor: {titulo}"
-                                    mensaje = (
-                                        f"Hola {coautor_nombre},\n\n"
-                                        f"Has sido registrado como coautor en la ponencia titulada '{titulo}'.\n"
-                                        f"Autor principal: {autor}\n\n"
-                                        f"Gracias por tu participación\n"
-                                    )
-                                    send_mail(
-                                        asunto,
-                                        mensaje,
-                                        getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@congressmanager.com'),
-                                        [coautor_email],
-                                        fail_silently=True,
-                                    )
-                                except Exception as e:
-                                    print(f"Error enviando correo a {coautor_email}: {e}")        
+
             return Response({'detail': 'Ponencia enviada exitosamente', 'id_ponencia': id_ponencia}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

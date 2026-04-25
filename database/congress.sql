@@ -210,7 +210,7 @@ CREATE TABLE resumen (
     fecha_entrega TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     revisado BOOLEAN DEFAULT FALSE,
     estatus estatus_resumen_enum,
-    retroalimentacion TEXT
+    retroalimentacion TEXT,
     titulo VARCHAR(255),
     palabras_clave VARCHAR(255),
     contenido TEXT
@@ -221,7 +221,7 @@ CREATE TABLE extenso (
     titulo VARCHAR(255) NOT NULL,
     fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     revisado BOOLEAN DEFAULT FALSE,
-    version_numero INTEGER DEFAULT, 1 -- Para manejar "Solicitud de cambios"
+    version_numero INTEGER DEFAULT 1, -- Para manejar "Solicitud de cambios"
     ruta_archivo VARCHAR(255)
 );
 
@@ -233,8 +233,6 @@ CREATE TABLE ponencia (
     id_resumen INTEGER NOT NULL REFERENCES resumen(id_resumen),
     id_extenso INTEGER REFERENCES extenso(id_extenso),
     id_multimedia INTEGER REFERENCES multimedia(id_material),
-    autor_principal VARCHAR(255), 
-    coautores TEXT,
     id_tipo_trabajo INTEGER REFERENCES tipo_trabajo(id_tipo_trabajo)
 );
 
@@ -291,6 +289,7 @@ CREATE TABLE ponente_has_ponencia (
     id_ponente INTEGER NOT NULL REFERENCES ponente(id_ponente),
     id_ponencia INTEGER NOT NULL REFERENCES ponencia(id_ponencia),
     asistio BOOLEAN DEFAULT FALSE,
+    es_principal BOOLEAN DEFAULT FALSE,
     UNIQUE(id_ponente, id_ponencia)
 );
 
