@@ -86,7 +86,7 @@ const MOCK_EXTENSOS = [
     grupos_rubrica: [
       {
         id: 1,
-        nombre_grupo: "Concisión",
+        grupo: "Concisión",
         criterios: [
           { id: 1, texto: "Originalidad", calificacion: 0, maximo: 5 },
           { id: 2, texto: "Redaccion", calificacion: 0, maximo: 5 },
@@ -111,7 +111,7 @@ const MOCK_EXTENSOS = [
     grupos_rubrica: [
       {
         id: 1,
-        nombre_grupo: "Concisión",
+        grupo: "Concisión",
         criterios: [
           { id: 1, texto: "Originalidad", calificacion: 2, maximo: 5 },
           { id: 2, texto: "Redaccion", calificacion: 1, maximo: 5 },
@@ -138,7 +138,7 @@ const MOCK_EXTENSOS = [
     grupos_rubrica: [
       {
         id: 1,
-        nombre_grupo: "Concisión",
+        grupo: "Concisión",
         criterios: [
           { id: 1, texto: "Originalidad", calificacion: 4, maximo: 5 },
           { id: 2, texto: "Redaccion", calificacion: 2, maximo: 5 },
@@ -148,7 +148,7 @@ const MOCK_EXTENSOS = [
       },
       {
         id: 2,
-        nombre_grupo: "Relevancia",
+        grupo: "Relevancia",
         criterios: [
           { id: 1, texto: "Importancia", calificacion: 4, maximo: 5 },
           { id: 2, texto: "Precisión", calificacion: 2, maximo: 5 },
@@ -175,7 +175,7 @@ const MOCK_EXTENSOS = [
     grupos_rubrica: [
       {
         id: 1,
-        nombre_grupo: "Concisión",
+        grupo: "Concisión",
         criterios: [
           { id: 1, texto: "Originalidad", calificacion: 2, maximo: 5 },
           { id: 2, texto: "Redaccion", calificacion: 1, maximo: 5 },
@@ -185,7 +185,7 @@ const MOCK_EXTENSOS = [
       },
       {
         id: 2,
-        nombre_grupo: "Credibilidad",
+        grupo: "Credibilidad",
         criterios: [
           { id: 1, texto: "Metodología", calificacion: 2, maximo: 5 },
           { id: 2, texto: "Actualidad", calificacion: 1, maximo: 5 },
@@ -212,7 +212,7 @@ const MOCK_EXTENSOS = [
     grupos_rubrica: [
       {
         id: 1,
-        nombre_grupo: "Concisión",
+        grupo: "Concisión",
         criterios: [
           { id: 1, texto: "Originalidad", calificacion: 2, maximo: 5 },
           { id: 2, texto: "Redaccion", calificacion: 1, maximo: 5 },
@@ -222,7 +222,7 @@ const MOCK_EXTENSOS = [
       },
       {
         id: 2,
-        nombre_grupo: "Credibilidad",
+        grupo: "Credibilidad",
         criterios: [
           { id: 1, texto: "Metodología", calificacion: 2, maximo: 5 },
           { id: 2, texto: "Actualidad", calificacion: 1, maximo: 5 },
@@ -249,7 +249,7 @@ const MOCK_EXTENSOS = [
     grupos_rubrica: [
       {
         id: 1,
-        nombre_grupo: "Concisión",
+        grupo: "Concisión",
         criterios: [
           { id: 1, texto: "Originalidad", calificacion: 2, maximo: 5 },
           { id: 2, texto: "Redaccion", calificacion: 1, maximo: 5 },
@@ -259,7 +259,7 @@ const MOCK_EXTENSOS = [
       },
       {
         id: 2,
-        nombre_grupo: "Credibilidad",
+        grupo: "Credibilidad",
         criterios: [
           { id: 1, texto: "Metodología", calificacion: 2, maximo: 5 },
           { id: 2, texto: "Actualidad", calificacion: 1, maximo: 5 },
@@ -275,9 +275,9 @@ const MOCK_EXTENSOS = [
 ];
 
 //Componente para agrupar criterios de evaluación
-function RubricaGrupoStatusRow({ nombre_grupo }) {
+function RubricaGrupoStatusRow({ grupo }) {
 
-  const nombreGrupo = nombre_grupo.nombre_grupo || "Grupo de Evaluación";
+  const nombreGrupo = grupo.grupo || "";
 
   return (
     <div className="mb-5 ml-2">
@@ -285,7 +285,7 @@ function RubricaGrupoStatusRow({ nombre_grupo }) {
         {nombreGrupo}
       </h4>
       <div className="flex flex-col">
-        {nombre_grupo.criterios?.map((criterio) => (
+        {grupo.criterios?.map((criterio) => (
           <RubricaCriteriosStatusRow key={criterio.id} criterio={criterio} />
         ))}
       </div>
@@ -355,8 +355,8 @@ function ExtensoDetailCard({ extenso, revisores }) {
           </div>
 
           <div className="mt-3 overflow-y-auto max-h-[250px]">
-            {extenso.grupos_rubrica.map((nombre_grupo) => (
-              <RubricaGrupoStatusRow key={nombre_grupo.id} nombre_grupo={nombre_grupo} />
+            {extenso.grupos_rubrica.map((grupo) => (
+              <RubricaGrupoStatusRow key={grupo.id} grupo={grupo} />
             ))}
           </div>
         </section>
