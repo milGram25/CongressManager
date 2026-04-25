@@ -83,10 +83,16 @@ const MOCK_EXTENSOS = [
     subarea: "TECNOLOGIA",
     tipoTrabajo: "tesis",
     puntuacion: { obtenida: 0, total: 15 },
-    rubricas: [
-      { id: 1, texto: "Originalidad", calificacion: 0, maximo: 5 },
-      { id: 2, texto: "Redaccion", calificacion: 0, maximo: 5 },
-      { id: 3, texto: "Claridad", calificacion: 0, maximo: 5 },
+    grupos_rubrica: [
+      {
+        id: 1,
+        nombre_grupo: "Concisión",
+        criterios: [
+          { id: 1, texto: "Originalidad", calificacion: 0, maximo: 5 },
+          { id: 2, texto: "Redaccion", calificacion: 0, maximo: 5 },
+          { id: 3, texto: "Claridad", calificacion: 0, maximo: 5 },
+        ]
+      }
     ],
     comentario: "La información presentada es pertinente, pero todavía requiere fortalecer la sección metodológica y la definición del aporte.",
   },
@@ -102,10 +108,18 @@ const MOCK_EXTENSOS = [
     subarea: "INTELIGENCIA ARTIFICIAL",
     tipoTrabajo: "prototipo",
     puntuacion: { obtenida: 6, total: 15 },
-    rubricas: [
-      { id: 1, texto: "Originalidad", calificacion: 2, maximo: 5 },
-      { id: 2, texto: "Redaccion", calificacion: 1, maximo: 5 },
-      { id: 3, texto: "Claridad", calificacion: 3, maximo: 5 },
+    grupos_rubrica: [
+      {
+        id: 1,
+        nombre_grupo: "Concisión",
+        criterios: [
+          { id: 1, texto: "Originalidad", calificacion: 2, maximo: 5 },
+          { id: 2, texto: "Redaccion", calificacion: 1, maximo: 5 },
+          { id: 3, texto: "Claridad", calificacion: 3, maximo: 5 },
+
+        ]
+      }
+
     ],
     comentario: "Se recomienda clarificar los resultados obtenidos y separar con mayor precision la revision bibliografica del aporte propio.",
   },
@@ -121,10 +135,28 @@ const MOCK_EXTENSOS = [
     subarea: "BIOLOGIA COMPUTACIONAL",
     tipoTrabajo: "investigacion",
     puntuacion: { obtenida: 13, total: 15 },
-    rubricas: [
-      { id: 1, texto: "Originalidad", calificacion: 4, maximo: 5 },
-      { id: 2, texto: "Redaccion", calificacion: 4, maximo: 5 },
-      { id: 3, texto: "Claridad", calificacion: 5, maximo: 5 },
+    grupos_rubrica: [
+      {
+        id: 1,
+        nombre_grupo: "Concisión",
+        criterios: [
+          { id: 1, texto: "Originalidad", calificacion: 4, maximo: 5 },
+          { id: 2, texto: "Redaccion", calificacion: 2, maximo: 5 },
+          { id: 3, texto: "Claridad", calificacion: 5, maximo: 5 },
+
+        ]
+      },
+      {
+        id: 2,
+        nombre_grupo: "Relevancia",
+        criterios: [
+          { id: 1, texto: "Importancia", calificacion: 4, maximo: 5 },
+          { id: 2, texto: "Precisión", calificacion: 2, maximo: 5 },
+          { id: 3, texto: "Actualidad", calificacion: 5, maximo: 5 },
+
+        ]
+      }
+
     ],
     comentario: "El extenso cumple con los criterios formales y presenta resultados solidos con una discusion bien sustentada.",
   },
@@ -140,10 +172,28 @@ const MOCK_EXTENSOS = [
     subarea: "BIOTECNOLOGIA",
     tipoTrabajo: "articulo breve",
     puntuacion: { obtenida: 0, total: 15 },
-    rubricas: [
-      { id: 1, texto: "Originalidad", calificacion: 0, maximo: 5 },
-      { id: 2, texto: "Redaccion", calificacion: 0, maximo: 5 },
-      { id: 3, texto: "Claridad", calificacion: 0, maximo: 5 },
+    grupos_rubrica: [
+      {
+        id: 1,
+        nombre_grupo: "Concisión",
+        criterios: [
+          { id: 1, texto: "Originalidad", calificacion: 2, maximo: 5 },
+          { id: 2, texto: "Redaccion", calificacion: 1, maximo: 5 },
+          { id: 3, texto: "Claridad", calificacion: 3, maximo: 5 },
+
+        ]
+      },
+      {
+        id: 2,
+        nombre_grupo: "Credibilidad",
+        criterios: [
+          { id: 1, texto: "Metodología", calificacion: 2, maximo: 5 },
+          { id: 2, texto: "Actualidad", calificacion: 1, maximo: 5 },
+          { id: 3, texto: "Fuentes", calificacion: 3, maximo: 5 },
+
+        ]
+      }
+
     ],
     comentario: "Sin comentarios disponibles. El extenso aun no inicia proceso de evaluacion.",
   },
@@ -159,10 +209,28 @@ const MOCK_EXTENSOS = [
     subarea: "INGENIERIA DE SOFTWARE",
     tipoTrabajo: "estudio de caso",
     puntuacion: { obtenida: 15, total: 15 },
-    rubricas: [
-      { id: 1, texto: "Originalidad", calificacion: 5, maximo: 5 },
-      { id: 2, texto: "Redaccion", calificacion: 5, maximo: 5 },
-      { id: 3, texto: "Claridad", calificacion: 5, maximo: 5 },
+    grupos_rubrica: [
+      {
+        id: 1,
+        nombre_grupo: "Concisión",
+        criterios: [
+          { id: 1, texto: "Originalidad", calificacion: 2, maximo: 5 },
+          { id: 2, texto: "Redaccion", calificacion: 1, maximo: 5 },
+          { id: 3, texto: "Claridad", calificacion: 3, maximo: 5 },
+
+        ]
+      },
+      {
+        id: 2,
+        nombre_grupo: "Credibilidad",
+        criterios: [
+          { id: 1, texto: "Metodología", calificacion: 2, maximo: 5 },
+          { id: 2, texto: "Actualidad", calificacion: 1, maximo: 5 },
+          { id: 3, texto: "Fuentes", calificacion: 3, maximo: 5 },
+
+        ]
+      }
+
     ],
     comentario: "Trabajo aceptado. El documento esta completo, mantiene coherencia metodologica y cumple con la estructura solicitada.",
   },
@@ -177,30 +245,68 @@ const MOCK_EXTENSOS = [
     autores: ["Renata Moreno", "Diego Morales"],
     subarea: "HISTORIA Y PATRIMONIO",
     tipoTrabajo: "revision documental",
-    puntuacion: { obtenida: 7, total: 15 },
-    rubricas: [
-      { id: 1, texto: "Originalidad", calificacion: 3, maximo: 5 },
-      { id: 2, texto: "Redaccion", calificacion: 2, maximo: 5 },
-      { id: 3, texto: "Claridad", calificacion: 2, maximo: 5 },
+    puntuacion: { obtenida: 7, total: 35 },
+    grupos_rubrica: [
+      {
+        id: 1,
+        nombre_grupo: "Concisión",
+        criterios: [
+          { id: 1, texto: "Originalidad", calificacion: 2, maximo: 5 },
+          { id: 2, texto: "Redaccion", calificacion: 1, maximo: 5 },
+          { id: 3, texto: "Claridad", calificacion: 3, maximo: 5 },
+
+        ]
+      },
+      {
+        id: 2,
+        nombre_grupo: "Credibilidad",
+        criterios: [
+          { id: 1, texto: "Metodología", calificacion: 2, maximo: 5 },
+          { id: 2, texto: "Actualidad", calificacion: 1, maximo: 5 },
+          { id: 3, texto: "Fuentes", calificacion: 3, maximo: 5 },
+          { id: 4, texto: "Uso de IA", calificacion: 3, maximo: 5 },
+
+        ]
+      }
+
     ],
     comentario: "La narrativa es consistente, aunque el texto necesita mayor profundidad en resultados y criterios de analisis historico.",
   },
 ];
 
-// Cuadrado de la rubrica con color segun calificacion
-function RubricaStatusRow({ rubrica }) {
+//Componente para agrupar criterios de evaluación
+function RubricaGrupoStatusRow({ nombre_grupo }) {
+
+  const nombreGrupo = nombre_grupo.nombre_grupo || "Grupo de Evaluación";
+
   return (
-    <div className="flex items-center justify-between border-b border-slate-200 py-3 last:border-b-0">
-      <span className="text-sm font-medium text-slate-700">{rubrica.texto}</span>
+    <div className="mb-5 ml-2">
+      <h4 className="text-[12px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-2 mb-1">
+        {nombreGrupo}
+      </h4>
+      <div className="flex flex-col">
+        {nombre_grupo.criterios?.map((criterio) => (
+          <RubricaCriteriosStatusRow key={criterio.id} criterio={criterio} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Cuadrado de la rubrica con color segun calificacion
+function RubricaCriteriosStatusRow({ criterio }) {
+  return (
+    <div className="flex items-center justify-between border-b border-slate-200 py-3 last:border-b-0 pl-2 ml-2">
+      <span className="text-sm font-medium text-slate-700">{criterio.texto}</span>
       <div className="flex items-center gap-3">
-        {Array.from({ length: rubrica.maximo }, (_, index) => {
+        {Array.from({ length: criterio.maximo }, (_, index) => {
           const value = index + 1;
-          const active = value <= rubrica.calificacion;
+          const active = value <= criterio.calificacion;
 
           return (
             <div
               key={value}
-              className={`flex h-6 w-6 items-center justify-center rounded-full border text-[11px] font-semibold ${active ? "border-[#0b7c91] bg-black text-white" : "border-slate-800 bg-white text-slate-700"
+              className={`flex h-6 w-6 items-center justify-center rounded-full border text-[11px] font-semibold ${active ? "bg-black text-white" : "border-slate-800 bg-white text-slate-700"
                 }`}
             >
               {value}
@@ -248,9 +354,9 @@ function ExtensoDetailCard({ extenso, revisores }) {
             </div>
           </div>
 
-          <div className="mt-3">
-            {extenso.rubricas.map((rubrica) => (
-              <RubricaStatusRow key={rubrica.id} rubrica={rubrica} />
+          <div className="mt-3 overflow-y-auto max-h-[250px]">
+            {extenso.grupos_rubrica.map((nombre_grupo) => (
+              <RubricaGrupoStatusRow key={nombre_grupo.id} nombre_grupo={nombre_grupo} />
             ))}
           </div>
         </section>
