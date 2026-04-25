@@ -67,7 +67,7 @@ const CrearMesasFisicas = ({ listaMesas }) => {
       </div>
 
       {/* Sección */}
-      <div className="bg-base-100 border border-black rounded-b-lg p-6 h-full">
+      <div className="bg-base-100 border border-base-300 shadow-sm rounded-b-lg p-6 h-full">
         <h3 className="text-lg font-bold text-black mb-2">Mesas</h3>
         <p className="text-sm text-base-content/60 mb-6">
           Crea mesas de trabajo para posteriormente enlazar los eventos (ponencias y talleres) del congreso a un espacio físico (la mesa)
