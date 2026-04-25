@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiBookOpen, FiFileText, FiUser, FiCalendar, FiClock, FiSettings } from 'react-icons/fi';
+import { FiBookOpen, FiFileText, FiUser, FiCalendar, FiClock, FiSettings, FiChevronDown } from 'react-icons/fi';
 import TarjetaGenerica from './TarjetaGenerica';
 import { useNavigate } from 'react-router-dom';
 
@@ -57,8 +57,37 @@ const ItemCongreso = ({ listaDatos }) => {
                 <DateTimeBox label="Fin" date={fecha_fin} time={hora_fin} />
             </div>
 
-            {/* Acceso a Configuración Académica (Navegación Original) */}
-            <div className="mt-6 pt-4 border-t border-base-300">
+            <div className="mt-6 pt-4 border-t border-base-300 space-y-3">
+                {/* Botón de Eventos con Dropdown */}
+                <div className="dropdown dropdown-top w-full">
+                    <div 
+                        tabIndex={0} 
+                        role="button" 
+                        className="w-full flex items-center justify-center gap-3 py-3 bg-base-200 text-base-content hover:bg-base-300 rounded-2xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer shadow-sm active:scale-95"
+                    >
+                        <FiFileText size={16} /> Eventos <FiChevronDown />
+                    </div>
+                    <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow-xl bg-base-100 rounded-2xl w-full mb-2 border border-base-300">
+                        <li>
+                            <button 
+                                onClick={() => navigate('/admin/eventos/talleres')}
+                                className="flex items-center gap-2 py-3 font-bold text-xs uppercase"
+                            >
+                                Talleres
+                            </button>
+                        </li>
+                        <li>
+                            <button 
+                                onClick={() => navigate('/admin/eventos/ponencias')}
+                                className="flex items-center gap-2 py-3 font-bold text-xs uppercase"
+                            >
+                                Ponencias
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                {/* Acceso a Configuración Académica */}
                 <button 
                     onClick={(e) => {
                         e.stopPropagation();

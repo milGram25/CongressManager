@@ -77,6 +77,11 @@ class DictamenPreguntaViewSet(viewsets.ModelViewSet):
     serializer_class = DictamenPreguntaSerializer
     permission_classes = [IsAuthenticated]
 
+class MesasTrabajoViewSet(viewsets.ModelViewSet):
+    queryset = MesasTrabajo.objects.all()
+    serializer_class = MesasTrabajoSerializer
+    permission_classes = [IsAuthenticated]
+
 class SedeViewSet(viewsets.ModelViewSet):
     queryset = Sede.objects.all()
     serializer_class = SedeSerializer

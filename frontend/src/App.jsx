@@ -81,6 +81,7 @@ import {
   MdDescription,
   MdArticle,
   MdReceipt,
+  MdLayers,
 } from "react-icons/md";
 import { FaBook } from "react-icons/fa6";
 const AsistenteLayoutWrapper = () => {
@@ -177,19 +178,18 @@ const AdminLayoutWrapper = () => {
       { to: '/admin/procesos/extensos', label: 'Extensos', icon: MdArticle, className: 'pl-9 opacity-70' },
     ] : []),
 
-    // Eventos con sub-menú dinámico
-    { to: '/admin/eventos', label: 'Eventos', icon: MdEvent },
-    ...(pathname.includes('/admin/eventos') ? [
-      { to: '/admin/eventos/talleres', label: 'Talleres', icon: MdGroups, className: 'pl-9 opacity-70' },
-      { to: '/admin/eventos/ponencias', label: 'Ponencias', icon: MdCoPresent, className: 'pl-9 opacity-70' },
-      { to: '/admin/eventos/congresos', label: 'Congresos', icon: MdAccountBalance, className: 'pl-9 opacity-70' },
-      // Sub-sub menú de Congresos
-      ...(pathname.includes('/admin/eventos/congresos') ? [
-        { to: '/admin/eventos/congresos/lista', label: 'Lista', icon: MdInfo, className: 'pl-14 opacity-60' },
-        { to: '/admin/eventos/congresos/sede', label: 'Sede', icon: MdPlace, className: 'pl-14 opacity-60' },
-        { to: '/admin/eventos/congresos/fechas', label: 'Fechas', icon: MdEventAvailable, className: 'pl-14 opacity-60' },
-        { to: '/admin/eventos/congresos/libros', label: 'Libros', icon: FaBook, className: 'pl-14 opacity-70' },
-      ] : [])
+    // Congresos como apartado principal con sub-menú dinámico
+    { 
+      to: '/admin/eventos/congresos/lista', 
+      label: 'Congresos', 
+      icon: MdAccountBalance,
+      activePaths: ['/admin/eventos/talleres', '/admin/eventos/ponencias']
+    },
+    ...(pathname.includes('/admin/eventos/congresos') ? [
+      { to: '/admin/eventos/congresos/lista', label: 'Lista', icon: MdInfo, className: 'pl-9 opacity-70' },
+      { to: '/admin/eventos/congresos/sede', label: 'Sede', icon: MdPlace, className: 'pl-9 opacity-70' },
+      { to: '/admin/eventos/congresos/fechas', label: 'Fechas', icon: MdEventAvailable, className: 'pl-9 opacity-70' },
+      { to: '/admin/eventos/congresos/libros', label: 'Libros', icon: FaBook, className: 'pl-9 opacity-70' },
     ] : []),
 
     { to: '/admin/pagos', label: 'Pagos', icon: MdPayment },

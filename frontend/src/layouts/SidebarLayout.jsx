@@ -270,11 +270,15 @@ export default function SidebarLayout({
               const isSubItem = item.className?.includes('pl-9');
               const isSubSubItem = item.className?.includes('pl-14');
               
+              // Determinar si el item debe estar activo por rutas personalizadas
+              const isCustomActive = item.activePaths?.some(p => pathname.includes(p));
+
               return (
                 <NavLink
                   key={index}
                   to={item.to}
-                  className={({ isActive }) => {
+                  className={({ isActive: navLinkActive }) => {
+                    const isActive = navLinkActive || isCustomActive;
                     const baseClasses = `group block px-4 py-2 rounded-xl text-sm transition-all duration-200 relative ${item.className || ''}`;
                     const isSub = isSubItem || isSubSubItem;
                     

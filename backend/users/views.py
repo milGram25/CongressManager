@@ -179,9 +179,6 @@ class RegisterView(APIView):
             user = serializer.save()
             tokens = get_tokens_for_user(user)
             user_data = UserSerializer(user).data
-            # Asegurarse de retornar el 'user' como lo espera el frontend y con el rol mapeado
-            user_data['rol'] = tokens.get('access_dict', {}).get('rol') or 'asistente' 
-
             return Response({
                 'user': user_data,
                 **tokens,
@@ -214,7 +211,7 @@ class LoginView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-        user = authenticate(request, correo_electronico=user_obj.correo_electronico, password=password)
+        user = authenticate(request, username=user_obj.correo_electronico, password=password)
         if user is None:
             return Response(
                 {'detail': 'Correo o contraseña incorrectos.'},

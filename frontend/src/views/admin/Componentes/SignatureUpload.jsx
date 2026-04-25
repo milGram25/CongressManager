@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { HiCloudUpload, HiCheckCircle, HiTrash, HiLockClosed, HiLockOpen } from "react-icons/hi";
 import { MdEdit } from "react-icons/md";
 import { getCongresoSignaturesApi, updateCongresoSignaturesApi } from "../../../api/adminApi";
+import { API_URL } from "../../../api/constants";
 
 export default function SignatureUpload({ onSignaturesChange }) {
   const [signatures, setSignatures] = useState({
@@ -20,7 +21,7 @@ export default function SignatureUpload({ onSignaturesChange }) {
   const fetchSignatures = async () => {
     try {
       const data = await getCongresoSignaturesApi(accessToken, idCongreso);
-      const serverUrl = 'http://localhost:8000';
+      const serverUrl = API_URL;
       setSignatures({
         organizador: data.firma_organizador ? (data.firma_organizador.startsWith('http') ? data.firma_organizador : `${serverUrl}${data.firma_organizador}`) : null,
         secretaria: data.firma_secretaria ? (data.firma_secretaria.startsWith('http') ? data.firma_secretaria : `${serverUrl}${data.firma_secretaria}`) : null
@@ -43,7 +44,7 @@ export default function SignatureUpload({ onSignaturesChange }) {
     if (file) {
       try {
         const data = await updateCongresoSignaturesApi(accessToken, idCongreso, { [type === 'organizador' ? 'firma_organizador' : 'firma_secretaria']: file });
-        const serverUrl = 'http://localhost:8000';
+        const serverUrl = API_URL;
         setSignatures({
           organizador: data.firma_organizador ? (data.firma_organizador.startsWith('http') ? data.firma_organizador : `${serverUrl}${data.firma_organizador}`) : null,
           secretaria: data.firma_secretaria ? (data.firma_secretaria.startsWith('http') ? data.firma_secretaria : `${serverUrl}${data.firma_secretaria}`) : null

@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8000';
+import { API_URL } from './constants';
 
 // Participantes
 export async function getParticipantsApi(accessToken, idCongreso = null) {

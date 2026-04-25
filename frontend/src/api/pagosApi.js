@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8000';
+import { API_URL } from './constants';
 
 export async function getPagosResumenApi(accessToken) {
   const res = await fetch(`${API_URL}/api/congresos/pagos/resumen/`, {
