@@ -30,11 +30,11 @@ const ItemCongreso = ({ listaDatos }) => {
             <div className="flex gap-2 mt-1">
                 <div className="flex-1 flex bg-base-100 border border-base-300 rounded-xl overflow-hidden shadow-sm group-hover:border-primary/30 transition-colors">
                     <div className="bg-black text-white px-2 flex items-center justify-center"><FiCalendar size={12} /></div>
-                    <div className="flex-1 py-1.5 text-center text-[13px] font-mono font-bold">{date}</div>
+                    <div className="flex-1 py-1.5 text-center text-[15px] font-mono font-bold">{date}</div>
                 </div>
                 <div className="w-20 flex bg-base-100 border border-base-300 rounded-xl overflow-hidden shadow-sm group-hover:border-primary/30 transition-colors h-10">
                     <div className="bg-black text-white px-2 flex items-center justify-center"><FiClock size={12} /></div>
-                    <div className="flex-1 py-1.5 text-center text-[13px] font-mono font-bold ">{time}</div>
+                    <div className="flex-1 py-1.5 text-center text-[15px] font-mono font-bold ">{time}</div>
                 </div>
             </div>
         </div>
