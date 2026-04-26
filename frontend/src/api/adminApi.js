@@ -59,6 +59,12 @@ export async function getCongresosApi(accessToken) {
   return res.json();
 }
 
+export async function getCongresoByIdApi(accessToken, idCongreso) {
+  const res = await fetch(`${API_URL}/api/congresos/lista/${idCongreso}/`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener detalles del congreso.');
+  return res.json();
+}
+
 export async function createCongresoApi(accessToken, data) {
   const res = await fetch(`${API_URL}/api/congresos/lista/`, {
     method: 'POST',
@@ -184,6 +190,62 @@ export async function updateInstitucionApi(accessToken, idInstitucion, data) {
   });
   const resData = await res.json();
   if (!res.ok) throw new Error(resData.detail || 'Error al actualizar institución.');
+  return resData;
+}
+
+export async function getTalleresApi(accessToken, idCongreso = null) {
+  let url = `${API_URL}/api/congresos/talleres/`;
+  if (idCongreso) url += `?id_congreso=${idCongreso}`;
+  const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener talleres.');
+  return res.json();
+}
+
+export async function getPonenciasApi(accessToken, idCongreso = null) {
+  let url = `${API_URL}/api/ponencias/lista/`;
+  if (idCongreso) url += `?id_congreso=${idCongreso}`;
+  const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener ponencias.');
+  return res.json();
+}
+
+export async function getTallerByIdApi(accessToken, idTaller) {
+  const res = await fetch(`${API_URL}/api/congresos/talleres/${idTaller}/`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener el taller.');
+  return res.json();
+}
+
+export async function getPonenciaByIdApi(accessToken, idPonencia) {
+  const res = await fetch(`${API_URL}/api/ponencias/lista/${idPonencia}/`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener la ponencia.');
+  return res.json();
+}
+
+export async function createTallerApi(accessToken, data) {
+  const res = await fetch(`${API_URL}/api/congresos/talleres/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  const resData = await res.json();
+  if (!res.ok) throw new Error(resData.detail || 'Error al crear taller.');
+  return resData;
+}
+
+export async function getSubareasApi(accessToken) {
+  const res = await fetch(`${API_URL}/api/congresos/subareas/`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener subáreas.');
+  return res.json();
+}
+
+export async function createPonenciaApi(accessToken, data) {
+  const res = await fetch(`${API_URL}/api/ponencias/lista/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  const resData = await res.json();
+  if (!res.ok) throw new Error(resData.detail || 'Error al crear ponencia.');
   return resData;
 }
 

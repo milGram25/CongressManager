@@ -14,6 +14,23 @@ class Institucion(models.Model):
     def __str__(self):
         return self.nombre
 
+class Subarea(models.Model):
+    id_subareas = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=255)
+    id_area_general = models.ForeignKey('AreaGeneral', models.DO_NOTHING, db_column='id_area_general')
+
+    class Meta:
+        managed = False
+        db_table = 'subareas'
+
+class AreaGeneral(models.Model):
+    id_areas_generales = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=255)
+
+    class Meta:
+        managed = False
+        db_table = 'areas_generales'
+
 class Sede(models.Model):
     id_sede = models.AutoField(primary_key=True)
     nombre_sede = models.CharField(max_length=255)
@@ -35,6 +52,8 @@ class Sede(models.Model):
 class CostosCongreso(models.Model):
     id_costos_congreso = models.AutoField(primary_key=True)
     cuenta_deposito = models.CharField(max_length=255)
+    descuento_prepago = models.FloatField(default=0)
+    descuento_estudiante = models.FloatField(default=0)
     costo_congreso_asistente = models.FloatField()
     costo_congreso_ponente = models.FloatField()
     costo_congreso_comite = models.FloatField()
@@ -154,11 +173,27 @@ class Evento(models.Model):
     id_evento = models.AutoField(primary_key=True)
     id_congreso = models.ForeignKey(Congreso, models.DO_NOTHING, db_column='id_congreso', related_name='eventos')
     nombre_evento = models.CharField(max_length=255)
-    tipo_evento = models.CharField(max_length=50)
+    tipo_evento = models.CharField(max_length=50) # 'ponencia', 'taller', etc.
+    id_tipo_trabajo = models.ForeignKey('TipoTrabajo', models.DO_NOTHING, db_column='id_tipo_trabajo')
     id_mesas_trabajo = models.ForeignKey(MesasTrabajo, models.DO_NOTHING, db_column='id_mesas_trabajo', blank=True, null=True)
     fecha_hora_inicio = models.DateTimeField()
     fecha_hora_final = models.DateTimeField()
+    sinopsis = models.TextField(blank=True, null=True)
+    cupos = models.SmallIntegerField(default=0)
+    enlace = models.CharField(max_length=255, blank=True, null=True)
     
     class Meta:
         managed = False
         db_table = 'evento'
+
+class Taller(models.Model):
+    id_taller = models.AutoField(primary_key=True)
+    tallerista = models.CharField(max_length=255)
+    id_evento = models.ForeignKey(Evento, models.DO_NOTHING, db_column='id_evento')
+    tipo_participacion = models.CharField(max_length=50)
+    id_subarea = models.ForeignKey(Subarea, models.DO_NOTHING, db_column='id_subarea')
+    id_multimedia = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'taller'

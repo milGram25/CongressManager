@@ -24,6 +24,7 @@ const ItemInstitucion = ({
             titulo={listaDatos.nombre_institucion}
             definirTipoElemento="institucion"
             indexDatosModal={listaDatos.id}
+            itemData={listaDatos}
         >
 
 

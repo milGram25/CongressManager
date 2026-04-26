@@ -1,9 +1,66 @@
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import AsistenteEvento
+from django.db import transaction
+from .models import AsistenteEvento, Ponencia
+from .serializers import PonenciaSerializer, CatalogoEventoSerializer, AsistenteEventoSerializer
 from users.models import Asistente
+from congresos.models import Evento
+
+class PonenciaViewSet(viewsets.ModelViewSet):
+    queryset = Ponencia.objects.all()
+    serializer_class = PonenciaSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Ponencia.objects.all()
+        id_congreso = self.request.query_params.get('id_congreso')
+        # Si hay una acción de detalle (retrieve), no filtramos por congreso para no romper la búsqueda por ID
+        if self.action == 'list' and id_congreso:
+            queryset = queryset.filter(id_evento__id_congreso_id=id_congreso)
+        return queryset
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        try:
+            with transaction.atomic():
+                # Obtener id_tipo_trabajo para ponencia (usamos id 1 como fallback si no hay uno específico)
+                from congresos.models import TipoTrabajo
+                tipo_trabajo = TipoTrabajo.objects.filter(tipo_trabajo__icontains='ponencia').first()
+                id_tipo_id = tipo_trabajo.id_tipo_trabajo if tipo_trabajo else 1
+
+                # 1. Crear Evento
+                evento = Evento.objects.create(
+                    id_congreso_id=data.get('id_congreso'),
+                    nombre_evento=data.get('nombre_evento'),
+                    tipo_evento=data.get('tipo_evento', 'ponencia'), # ponencia o ponencia magistral
+                    id_tipo_trabajo_id=id_tipo_id,
+                    id_mesas_trabajo_id=data.get('id_mesas_trabajo'),
+                    fecha_hora_inicio=data.get('fecha_hora_inicio'),
+                    fecha_hora_final=data.get('fecha_hora_final'),
+                    sinopsis=data.get('sinopsis'),
+                    cupos=data.get('cupos', 0),
+                    enlace=data.get('enlace')
+                )
+                
+                # 2. Crear Ponencia
+                tipo_p = data.get('tipo_participacion', 'presencial').lower()
+                if 'híbrido' in tipo_p or 'hibrido' in tipo_p:
+                    tipo_p = 'hibrida'
+
+                ponencia = Ponencia.objects.create(
+                    id_evento=evento,
+                    tipo_participacion=tipo_p,
+                    id_subarea_id=data.get('id_subarea'),
+                    id_resumen=data.get('id_resumen'),
+                    id_extenso=data.get('id_extenso'),
+                    id_multimedia=data.get('id_multimedia')
+                )
+                
+                return Response(self.get_serializer(ponencia).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

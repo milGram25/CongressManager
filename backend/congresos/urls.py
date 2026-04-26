@@ -7,6 +7,9 @@ from .views import (
     RegistrarPagoView,
     CongresoSignaturesView,
     SedeViewSet,
+    SubareaViewSet,
+    EventoViewSet,
+    TallerViewSet,
     InstitucionViewSet,
     CongresoViewSet,
     RubricaViewSet,
@@ -20,6 +23,9 @@ app_name = 'congresos'
 
 router = DefaultRouter()
 router.register(r'sedes', SedeViewSet, basename='sede')
+router.register(r'subareas', SubareaViewSet, basename='subarea')
+router.register(r'eventos', EventoViewSet, basename='evento')
+router.register(r'talleres', TallerViewSet, basename='taller')
 router.register(r'instituciones', InstitucionViewSet, basename='institucion')
 router.register(r'lista', CongresoViewSet, basename='congreso')
 router.register(r'rubricas', RubricaViewSet, basename='rubrica')

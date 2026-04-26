@@ -4,11 +4,11 @@ import TarjetaGenerica from './TarjetaGenerica';
 
 const ItemTaller = ({ listaDatos, onViewItem }) => {
 
-    const fecha_inicio = listaDatos.fecha_hora_inicio.split("T")[0];
-    const hora_inicio = listaDatos.fecha_hora_inicio.split("T")[1];
+    const fecha_inicio = listaDatos.fecha_hora_inicio ? listaDatos.fecha_hora_inicio.split("T")[0] : "N/A";
+    const hora_inicio = listaDatos.fecha_hora_inicio ? listaDatos.fecha_hora_inicio.split("T")[1].substring(0, 5) : "N/A";
 
-    const fecha_fin = listaDatos.fecha_hora_final.split("T")[0];
-    const hora_fin = listaDatos.fecha_hora_final.split("T")[1];
+    const fecha_fin = listaDatos.fecha_hora_final ? listaDatos.fecha_hora_final.split("T")[0] : "N/A";
+    const hora_fin = listaDatos.fecha_hora_final ? listaDatos.fecha_hora_final.split("T")[1].substring(0, 5) : "N/A";
 
     const Row = ({ icon: Icon, label, value }) => (
         <div className="flex items-center justify-between gap-6 mb-3">
@@ -42,9 +42,11 @@ const ItemTaller = ({ listaDatos, onViewItem }) => {
 
     return (
         <TarjetaGenerica
-            titulo={listaDatos.nombre_evento.trim() !== "" ? listaDatos.nombre_evento : "Undefined"}
+            titulo={listaDatos.nombre_evento ? listaDatos.nombre_evento : "Sin título"}
             botonPublicarTexto="Publicar"
             definirTipoElemento="taller"
+            indexDatosModal={listaDatos.id}
+            itemData={listaDatos}
             onView={() => onViewItem && onViewItem(listaDatos)}
             onEdit={() => onViewItem && onViewItem(listaDatos)}
         >

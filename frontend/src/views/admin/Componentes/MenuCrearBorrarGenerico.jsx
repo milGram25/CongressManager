@@ -5,7 +5,7 @@ import ItemPonencia2 from './ItemPonencia2';
 import ItemTaller from './ItemTaller';
 import ItemCongreso from "./ItemCongreso";
 import ItemInstitucion from "./ItemInstitucion";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { IoMdAdd } from "react-icons/io";
 import Modal from './Modal';
 import DetallesCrearCongreso from './DetallesCrearCongreso';
@@ -22,6 +22,7 @@ const MenuCrearBorrarGenerico = ({
                                      onViewItem
                                  }) => {
     const navigate = useNavigate();
+    const { search } = useLocation();
     const [listaElementos, setListaElementos] = React.useState(listaElementos2);
 
     React.useEffect(() => {
@@ -64,19 +65,19 @@ const MenuCrearBorrarGenerico = ({
 
     function handleAgregarElemento(){
         if (definirTipoElemento === 'taller') {
-            navigate('/admin/eventos/talleres/crear');
+            navigate(`/admin/eventos/talleres/crear${search}`);
             return;
         }
         if (definirTipoElemento === 'congreso') {
-            navigate('/admin/eventos/congresos/crear');
+            navigate(`/admin/eventos/congresos/crear${search}`);
             return;
         }
         if (definirTipoElemento === 'ponencia') {
-            navigate('/admin/eventos/ponencias/crear');
+            navigate(`/admin/eventos/ponencias/crear${search}`);
             return;
         }
         if (definirTipoElemento === 'institucion') {
-            navigate('/admin/ajustes/instituciones/crear');
+            navigate(`/admin/ajustes/instituciones/crear${search}`);
             return;
         }
         setOpenModal(true);

@@ -1,88 +1,97 @@
-import React, { useState } from 'react';
-import { FiEdit2, FiCopy, FiCalendar, FiClock, FiUsers, FiMapPin, FiUser } from 'react-icons/fi';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { FiEdit2, FiCopy, FiCalendar, FiClock, FiUsers, FiMapPin, FiUser, FiSave } from 'react-icons/fi';
 import { IoIosCheckmark } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
+import { getInstitucionesApi, getCongresosApi, getSubareasApi, getMesasApi, createTallerApi, getTallerByIdApi } from '../../../api/adminApi';
+import { useNavigate } from 'react-router-dom';
 
-const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPage = false }) => {
+const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = false, isFullPage = false }, ref) => {
+    const navigate = useNavigate();
+    const accessToken = localStorage.getItem('congress_access');
+    
     // We use the data passed from the parent or a fallback for testing
-    const initialData = tallerData || {
-        id: 1,
-        nombre_evento: "Taller de Ejemplo",
-        nombre_congreso: "CIENU 2026",
-        nombre_institucion: "CUALTOS",
-        sede: "Sede Central",
-        nombre_tallerista: "Dr. Juan Pérez",
-        subarea: "Tecnología Educativa",
-        cupos_maximos_taller: 25,
-        nombre_taller: "Inteligencia Artificial en el Aula",
-        tipo_participacion: "Híbrido",
-        enlace_videollamada: "https://meet.google.com/abc-defg-hij",
-        nombre_mesa: "Mesa A",
-        cupos_mesa: 15,
-        fecha_hora_inicio: "2026-04-12T11:00",
-        fecha_hora_final: "2026-04-12T14:00"
+    const initialData = {
+        nombre_evento: "",
+        id_congreso: "",
+        id_institucion: "",
+        id_sede: "",
+        tallerista: "",
+        id_subarea: "",
+        cupos: 0,
+        tipo_participacion: "Presencial",
+        enlace: "",
+        id_mesas_trabajo: "",
+        fecha_hora_inicio: "",
+        fecha_hora_final: "",
+        sinopsis: ""
     };
 
     const [formatData, setFormatData] = useState(initialData);
     const [modificando, setModificando] = useState(initialModificando);
+    const [saving, setSaving] = useState(false);
+    const [loading, setLoading] = useState(!!tallerData?.id);
 
-    const instituciones = [
-        {
-            id:1,
-            nombre_institucion: "CIENU"
-        },
-         {
-            id:2,
-            nombre_institucion: "RIDMAE"
-        }
-    ];
+    const [instituciones, setInstituciones] = useState([]);
+    const [congresos, setCongresos] = useState([]);
+    const [mesas, setMesas] = useState([]);
+    const [subareas, setSubareas] = useState([]);
 
-    const congresos = [
-        {
-            id:1,
-            nombre_congreso: "CIENU 2026",
-            ruta_imagen: "ruta 1"
-        },
-         {
-            id:2,
-            nombre_congreso: "RIDMAE 2026",
-            ruta_imagen: "ruta 1"
-        }
-    ];
-    const mesas = [
-        {
-            id:1,
-            nombre_mesa: "Mesa A",
-            
-        },
-         {
-            id:2,
-            nombre_mesa: "Mesa B"
-        }
-    ];
+    useImperativeHandle(ref, () => ({
+        handleSave
+    }));
 
-    const sedes = [
-        
-            "CUALTOS"
-        
-    ];
+    useEffect(() => {
+        const fetchAll = async () => {
+            try {
+                const [instData, congData, subData] = await Promise.all([
+                    getInstitucionesApi(accessToken),
+                    getCongresosApi(accessToken),
+                    getSubareasApi(accessToken)
+                ]);
+                setInstituciones(instData);
+                setCongresos(congData);
+                setSubareas(subData);
 
-    const subareas = [
-        {
-            id:1,
-            subarea:"Matemáticas"
-        },
-        {
-            id:2,
-            subarea:"Programación"
-        },
-        {
-            id:3,
-            subarea:"IA"
-        }
-    ];
+                // Si hay un ID, cargar los datos específicos del taller
+                if (tallerData?.id) {
+                    const realTaller = await getTallerByIdApi(accessToken, tallerData.id);
 
-    //Es necesario realizar una búsqueda de los datos una vez que se haya seleccionado la institución y congreso
+                    const formatDate = (dateStr) => {
+                        if (!dateStr) return "";
+                        return dateStr.substring(0, 16);
+                    };
+
+                    setFormatData({
+                        ...realTaller,
+                        id_congreso: realTaller.id_congreso || realTaller.id_evento?.id_congreso || "",
+                        id_mesas_trabajo: realTaller.id_mesas_trabajo || realTaller.id_evento?.id_mesas_trabajo || "",
+                        id_subarea: realTaller.id_subarea || "",
+                        fecha_hora_inicio: formatDate(realTaller.fecha_hora_inicio),
+                        fecha_hora_final: formatDate(realTaller.fecha_hora_final)
+                    });
+                }
+ else if (tallerData?.id_congreso) {
+                    // Si no hay ID pero si id_congreso (caso crear desde congreso)
+                    setFormatData(prev => ({ ...prev, id_congreso: parseInt(tallerData.id_congreso) }));
+                }
+            } catch (error) {
+                console.error("Error cargando datos:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchAll();
+    }, [tallerData?.id, accessToken]);
+
+    // Determinar si el congreso debe estar bloqueado
+    const congressLocked = (!!tallerData?.id || !!tallerData?.id_congreso) && isFullPage;
+
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center p-20 gap-4">
+            <span className="loading loading-spinner loading-lg text-primary"></span>
+            <p className="text-xs font-black uppercase tracking-widest opacity-40">Cargando información...</p>
+        </div>
+    );
 
     function handleChange(e) {
         const { id, value } = e.target;
@@ -92,10 +101,27 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
         }));
     }
 
+    const handleSave = async () => {
+        if (!formatData.nombre_evento || !formatData.id_congreso) {
+            alert("Por favor completa los campos obligatorios.");
+            return;
+        }
+
+        setSaving(true);
+        try {
+            await createTallerApi(accessToken, formatData);
+            alert("Taller creado con éxito");
+            if (isFullPage) navigate('/admin/eventos/congresos/lista');
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const inputClasses = `w-full bg-base-100 border border-base-300 rounded-xl px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all ${!modificando ? 'bg-base-200 cursor-not-allowed opacity-70' : 'hover:border-primary/50'}`;
     const labelClasses = "text-[10px] font-bold text-base-content/40 mb-1 block ml-1 uppercase tracking-widest";
     const sectionTitleClasses = "text-lg font-bold text-primary flex items-center gap-2 mb-6 pb-2 border-b border-base-300 mt-8 first:mt-0";
-    const selectClasses = `w-full bg-base-100 border border-base-300 rounded-xl px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all ${!modificando ? 'bg-base-200 cursor-not-allowed opacity-70' : 'hover:border-primary/50'}`;
 
     return (
         <div className={`w-full bg-base-100 ${isFullPage ? '' : 'rounded-3xl shadow-2xl'} overflow-hidden font-sans`}>
@@ -116,10 +142,11 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
                             <div className='flex bg-base-100 rounded-full p-1 gap-1 shadow-inner'>
                                 <button 
                                     className="w-8 h-8 rounded-full bg-success text-success-content flex items-center justify-center hover:brightness-110 transition-all active:scale-95 cursor-pointer" 
-                                    onClick={() => setModificando(false)}
+                                    onClick={handleSave}
+                                    disabled={saving}
                                     title="Guardar"
                                 >
-                                    <IoIosCheckmark size={24} />
+                                    {saving ? <span className="loading loading-spinner loading-xs"></span> : <IoIosCheckmark size={24} />}
                                 </button>
                                 <button 
                                     className="w-8 h-8 rounded-full bg-error text-error-content flex items-center justify-center hover:brightness-110 transition-all active:scale-95 cursor-pointer" 
@@ -145,51 +172,42 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">
                             <div>
-                                <label className={labelClasses}>Institución</label>
-                                <select 
-                                    id="nombre_institucion" 
-                                    value={formatData.nombre_institucion}  
-                                    className={inputClasses}
-                                    onChange={handleChange} 
-                                    disabled={!modificando}
-                                    >
-                                    {
-                                        instituciones.map((item)=>(
-                                            <option value={item.nombre_institucion}>{item.nombre_institucion}</option>
-                                        ))
-                                    }
-
-                                </select>
-                                
-                            </div>
-                            <div>
                                 <label className={labelClasses}>Congreso</label>
-                               
-                                <select 
-                                    id="nombre_congreso" 
-                                    value={formatData.nombre_congreso}  
-                                    className={inputClasses}
-                                    onChange={handleChange} 
-                                    disabled={!modificando}
-                                    >
-                                    {
-                                        congresos.map((item)=>(
-                                            <option value={item.nombre_congreso}>{item.nombre_congreso}</option>
-                                        ))
-                                    }
-
-                                </select>
+                                {congressLocked ? (
+                                    <input 
+                                        type="text" 
+                                        className={inputClasses} 
+                                        value={congresos.find(c => c.id_congreso === formatData.id_congreso)?.nombre_congreso || "Cargando..."} 
+                                        readOnly 
+                                    />
+                                ) : (
+                                    <select 
+                                        id="id_congreso" 
+                                        value={formatData.id_congreso}  
+                                        className={inputClasses}
+                                        onChange={handleChange} 
+                                        disabled={!modificando}
+                                        >
+                                        <option value="">Selecciona un congreso</option>
+                                        {
+                                            congresos.map((item)=>(
+                                                <option key={item.id_congreso} value={item.id_congreso}>{item.nombre_congreso}</option>
+                                            ))
+                                        }
+                                    </select>
+                                )}
                             </div>
                             
                             <div>
-                                <label className={labelClasses}>Sede</label>
+                                <label className={labelClasses}>Nombre del Taller (Evento)</label>
                                 <input 
-                                    id="sede" 
+                                    id="nombre_evento" 
                                     type="text" 
-                                    placeholder="Lugar del evento..."
+                                    placeholder="Nombre público del taller..."
                                     className={inputClasses} 
-                                    value={formatData.sede} 
-                                    readOnly={true}//Solo debe mostrar los datos del congreso seleccionado
+                                    value={formatData.nombre_evento} 
+                                    onChange={handleChange}
+                                    readOnly={!modificando}
                                 />
                             </div>
                         </div>
@@ -198,13 +216,9 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
                             <div className="w-full aspect-video bg-base-300 rounded-2xl flex items-center justify-center text-base-content/20 text-xs font-bold uppercase tracking-widest shadow-inner overflow-hidden">
                                 <div className="text-center p-4">
                                     <FiMapPin size={32} className="mx-auto mb-2 opacity-20" />
-                                    [ Imagen de la institución ]
-                                    {/*Aquí insertar la imagen de la institución, que está en congresos.ruta_imagen*/}
+                                    Vista Previa
                                 </div>
                             </div>
-                            <button className='w-full bg-primary text-primary-content rounded-xl py-3 text-xs font-bold uppercase tracking-widest hover:brightness-110 transition-all active:scale-95 shadow-lg shadow-primary/20'>
-                                Ver detalles del congreso
-                            </button>
                         </div>
                     </div>
                 </section>
@@ -220,11 +234,11 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FiUser /></span>
                                 <input 
-                                    id="nombre_tallerista" 
+                                    id="tallerista" 
                                     type="text" 
                                     placeholder="Nombre completo del instructor..."
                                     className={`${inputClasses} pl-11`} 
-                                    value={formatData.nombre_tallerista} 
+                                    value={formatData.tallerista} 
                                     onChange={handleChange} 
                                     readOnly={!modificando}
                                 />
@@ -232,38 +246,25 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
                         </div>
                         
                         <div>
-                            <label className={labelClasses}>Nombre del taller</label>
-                            <input 
-                                id="nombre_taller" 
-                                type="text" 
-                                placeholder="Título del taller..."
-                                className={inputClasses} 
-                                value={formatData.nombre_taller} 
-                                onChange={handleChange} 
-                                readOnly={!modificando}
-                            />
-                        </div>
-
-                        <div>
-                            <label className={labelClasses}>Subárea</label>
-                            
+                            <label className={labelClasses}>Subárea Académica</label>
                             <select 
-                                id="subarea" 
-                                value={formatData.subarea}  
+                                id="id_subarea" 
+                                value={formatData.id_subarea}  
                                 className={inputClasses}
                                 onChange={handleChange} 
                                 disabled={!modificando}
                             >
-                            {
-                                subareas.map((item)=>(
-                                    <option value={item.subarea}>{item.subarea}</option>
-                                ))
-                            }
+                                <option value="">Selecciona subárea</option>
+                                {
+                                    subareas.map((item)=>(
+                                        <option key={item.id_subareas} value={item.id_subareas}>{item.nombre}</option>
+                                    ))
+                                }
                             </select>
                         </div>
 
                         <div>
-                            <label className={labelClasses}>Tipo de taller</label>
+                            <label className={labelClasses}>Tipo de participación</label>
                             <select 
                                 id="tipo_participacion" 
                                 value={formatData.tipo_participacion}  
@@ -278,17 +279,16 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
                         </div>
 
                         <div>
-                            <label className={labelClasses}>Cupos máximos</label>
+                            <label className={labelClasses}>Cupos disponibles</label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FiUsers /></span>
-                                {/*El máximo son los cupos que hay en la mesa */}
                                 <input 
-                                    id="cupos_maximos_taller" 
+                                    id="cupos" 
                                     type="number" 
                                     placeholder="25"
                                     min="0" 
                                     className={`${inputClasses} pl-11 font-mono`} 
-                                    value={formatData.cupos_maximos_taller} 
+                                    value={formatData.cupos} 
                                     onChange={handleChange} 
                                     readOnly={!modificando}
                                 />
@@ -296,14 +296,14 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
                         </div>
 
                         <div className="md:col-span-2">
-                            <label className={labelClasses}>Enlace a videollamada</label>
+                            <label className={labelClasses}>Enlace / URL (si es virtual)</label>
                             <div className='flex group'>
                                 <input 
-                                    id="enlace_videollamada" 
+                                    id="enlace" 
                                     className={`${inputClasses} rounded-r-none border-r-0`} 
                                     type="text" 
                                     placeholder="https://..."
-                                    value={formatData.enlace_videollamada} 
+                                    value={formatData.enlace} 
                                     onChange={handleChange} 
                                     readOnly={!modificando}
                                 />
@@ -313,10 +313,16 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
                             </div>
                         </div>
 
-                        <div className='md:col-span-2 flex justify-center pt-4'>
-                            <button className='bg-primary text-primary-content px-10 py-3 rounded-xl hover:brightness-110 transition-all active:scale-95 text-xs font-bold uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-primary/20'>
-                                Ver multimedia
-                            </button>
+                        <div className="md:col-span-2">
+                            <label className={labelClasses}>Sinopsis / Descripción</label>
+                            <textarea 
+                                id="sinopsis" 
+                                className={`${inputClasses} h-24 py-3`} 
+                                placeholder="Breve descripción del contenido del taller..."
+                                value={formatData.sinopsis} 
+                                onChange={handleChange}
+                                readOnly={!modificando}
+                            ></textarea>
                         </div>
                     </div>
                 </section>
@@ -328,35 +334,21 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <label className={labelClasses}>Nombre de la mesa</label>
-                            
+                            <label className={labelClasses}>Asignar Mesa de Trabajo</label>
                             <select 
-                                id="nombre_mesa" 
-                                value={formatData.nombre_mesa}  
+                                id="id_mesas_trabajo" 
+                                value={formatData.id_mesas_trabajo}  
                                 className={inputClasses}
                                 onChange={handleChange} 
                                 disabled={!modificando}
                                 >
+                                <option value="">Sin mesa asignada</option>
                                 {
                                     mesas.map((item)=>(
-                                        <option value={item.nombre_mesa}>{item.nombre_mesa}</option>
+                                        <option key={item.id_mesas_trabajo} value={item.id_mesas_trabajo}>{item.nombre}</option>
                                     ))
                                 }
-
                             </select>
-                        </div>
-                        <div>
-                            <label className={labelClasses}>Cupos de la mesa</label>
-                            <input 
-                                id="cupos_mesa" 
-                                type="number"
-                                placeholder="15"
-                                className={`${inputClasses} font-mono`} 
-                                value={formatData.cupos_mesa} 
-                                onChange={handleChange} 
-                                readOnly={!modificando}
-                                min="0"
-                            />
                         </div>
                     </div>
                 </section>
@@ -397,9 +389,22 @@ const DetallesEditarTaller = ({ tallerData, initialModificando = false, isFullPa
                         </div>
                     </div>
                 </section>
+
+                {isFullPage && modificando && (
+                    <div className='flex justify-center mt-12'>
+                         <button
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="px-12 py-4 rounded-2xl bg-black text-white font-black shadow-xl hover:bg-[#005a6a] transition-all active:scale-95 uppercase tracking-widest text-sm flex items-center gap-3 disabled:opacity-50"
+                        >
+                            {saving ? <span className="loading loading-spinner"></span> : <FiSave size={20} />}
+                            Guardar Taller
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
-};
+});
 
 export default DetallesEditarTaller;

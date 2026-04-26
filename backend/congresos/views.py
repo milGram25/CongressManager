@@ -10,8 +10,8 @@ from datetime import datetime, timedelta
 from calendar import monthrange
 import os
 
-from .models import Sede, Institucion, Congreso, Evento, MesasTrabajo, FechasCongreso, CostosCongreso, Rubrica, TipoTrabajo, Dictamen, DictamenPregunta
-from .serializers import SedeSerializer, InstitucionSerializer, CongresoSerializer, EventoSerializer, MesasTrabajoSerializer, RubricaSerializer, TipoTrabajoSerializer, DictamenSerializer, DictamenPreguntaSerializer
+from .models import Sede, Institucion, Congreso, Evento, MesasTrabajo, FechasCongreso, CostosCongreso, Rubrica, TipoTrabajo, Dictamen, DictamenPregunta, Subarea, Taller
+from .serializers import SedeSerializer, InstitucionSerializer, CongresoSerializer, EventoSerializer, MesasTrabajoSerializer, RubricaSerializer, TipoTrabajoSerializer, DictamenSerializer, DictamenPreguntaSerializer, SubareaSerializer, TallerSerializer
 
 def clean_date(val, default=None):
     if val is None or (isinstance(val, str) and val.strip() == ""):
@@ -87,6 +87,68 @@ class SedeViewSet(viewsets.ModelViewSet):
     serializer_class = SedeSerializer
     permission_classes = [IsAuthenticated]
 
+class SubareaViewSet(viewsets.ModelViewSet):
+    queryset = Subarea.objects.all()
+    serializer_class = SubareaSerializer
+    permission_classes = [IsAuthenticated]
+
+class EventoViewSet(viewsets.ModelViewSet):
+    queryset = Evento.objects.all()
+    serializer_class = EventoSerializer
+    permission_classes = [IsAuthenticated]
+
+class TallerViewSet(viewsets.ModelViewSet):
+    queryset = Taller.objects.all()
+    serializer_class = TallerSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Taller.objects.all()
+        id_congreso = self.request.query_params.get('id_congreso')
+        if self.action == 'list' and id_congreso:
+            queryset = queryset.filter(id_evento__id_congreso_id=id_congreso)
+        return queryset
+
+    def create(self, request, *args, **kwargs):
+        # Lógica para crear Evento y luego Taller
+        data = request.data
+        try:
+            with transaction.atomic():
+                # Obtener id_tipo_trabajo para 'taller'
+                tipo_trabajo = TipoTrabajo.objects.filter(tipo_trabajo__iexact='taller').first()
+                id_tipo_id = tipo_trabajo.id_tipo_trabajo if tipo_trabajo else 1 # Fallback al id 1 si no existe
+
+                # 1. Crear Evento
+                evento = Evento.objects.create(
+                    id_congreso_id=data.get('id_congreso'),
+                    nombre_evento=data.get('nombre_evento'),
+                    tipo_evento='taller',
+                    id_tipo_trabajo_id=id_tipo_id,
+                    id_mesas_trabajo_id=data.get('id_mesas_trabajo'),
+                    fecha_hora_inicio=data.get('fecha_hora_inicio'),
+                    fecha_hora_final=data.get('fecha_hora_final'),
+                    sinopsis=data.get('sinopsis'),
+                    cupos=data.get('cupos', 0),
+                    enlace=data.get('enlace')
+                )
+                
+                # 2. Crear Taller
+                tipo_p = data.get('tipo_participacion', 'presencial').lower()
+                if 'híbrido' in tipo_p or 'hibrido' in tipo_p:
+                    tipo_p = 'hibrida'
+                
+                taller = Taller.objects.create(
+                    tallerista=data.get('tallerista'),
+                    id_evento=evento,
+                    tipo_participacion=tipo_p,
+                    id_subarea_id=data.get('id_subarea'),
+                    id_multimedia=data.get('id_multimedia')
+                )
+                
+                return Response(self.get_serializer(taller).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 class InstitucionViewSet(viewsets.ModelViewSet):
     queryset = Institucion.objects.all()
     serializer_class = InstitucionSerializer
@@ -146,9 +208,14 @@ class InstitucionViewSet(viewsets.ModelViewSet):
             return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class CongresoViewSet(viewsets.ModelViewSet):
-    queryset = Congreso.objects.all()
+    queryset = Congreso.objects.all().select_related('id_sede', 'id_fechas_congreso', 'id_costos_congreso', 'id_institucion')
     serializer_class = CongresoSerializer
     permission_classes = [IsAuthenticated]
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
     def create(self, request, *args, **kwargs):
         data = request.data
         now = timezone.now()
@@ -184,6 +251,8 @@ class CongresoViewSet(viewsets.ModelViewSet):
                 )
                 costos = CostosCongreso.objects.create(
                     cuenta_deposito=clean_date(data.get('cuenta_deposito'), ''),
+                    descuento_prepago=float(clean_date(data.get('descuento_prepago'), 0)),
+                    descuento_estudiante=float(clean_date(data.get('descuento_estudiante'), 0)),
                     costo_congreso_asistente=float(clean_date(data.get('costo_asistente'), 0)),
                     costo_congreso_ponente=float(clean_date(data.get('costo_ponente'), 0)),
                     costo_congreso_comite=float(clean_date(data.get('costo_miembro_comite'), 0))
@@ -235,6 +304,8 @@ class CongresoViewSet(viewsets.ModelViewSet):
                 fe.save()
                 co = instance.id_costos_congreso
                 co.cuenta_deposito = clean_date(data.get('cuenta_deposito'), co.cuenta_deposito)
+                co.descuento_prepago = float(clean_date(data.get('descuento_prepago'), co.descuento_prepago))
+                co.descuento_estudiante = float(clean_date(data.get('descuento_estudiante'), co.descuento_estudiante))
                 co.costo_congreso_asistente = float(clean_date(data.get('costo_asistente'), co.costo_congreso_asistente))
                 co.costo_congreso_ponente = float(clean_date(data.get('costo_ponente'), co.costo_congreso_ponente))
                 co.costo_congreso_comite = float(clean_date(data.get('costo_miembro_comite'), co.costo_congreso_comite))

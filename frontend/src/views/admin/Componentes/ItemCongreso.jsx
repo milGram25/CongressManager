@@ -2,15 +2,27 @@ import React from 'react';
 import { FiBookOpen, FiFileText, FiUser, FiCalendar, FiClock, FiSettings, FiChevronDown } from 'react-icons/fi';
 import TarjetaGenerica from './TarjetaGenerica';
 import { useNavigate } from 'react-router-dom';
+import { format, parseISO } from "date-fns";
+import { es } from "date-fns/locale";
 
 const ItemCongreso = ({ listaDatos }) => {
     const navigate = useNavigate();
 
-    const fecha_inicio = listaDatos.fecha_hora_inicio ? listaDatos.fecha_hora_inicio.split("T")[0] : "N/A";
-    const hora_inicio = listaDatos.fecha_hora_inicio ? listaDatos.fecha_hora_inicio.split("T")[1].substring(0, 5) : "N/A";
+    const formatParts = (dateStr) => {
+        if (!dateStr) return { date: "N/A", time: "N/A" };
+        try {
+            const dateObj = parseISO(dateStr);
+            return {
+                date: format(dateObj, "dd/MM/yyyy"),
+                time: format(dateObj, "HH:mm")
+            };
+        } catch (e) {
+            return { date: "Error", time: "Error" };
+        }
+    };
 
-    const fecha_fin = listaDatos.fecha_hora_final ? listaDatos.fecha_hora_final.split("T")[0] : "N/A";
-    const hora_fin = listaDatos.fecha_hora_final ? listaDatos.fecha_hora_final.split("T")[1].substring(0, 5) : "N/A";
+    const inicio = formatParts(listaDatos.congreso_inicio);
+    const fin = formatParts(listaDatos.congreso_fin);
 
     const Row = ({ icon: Icon, label, value }) => (
         <div className="flex items-center justify-between gap-6 mb-3">
@@ -48,13 +60,13 @@ const ItemCongreso = ({ listaDatos }) => {
             indexDatosModal={listaDatos.id_congreso}
             definirTipoElemento="congreso"
         >
-            <Row icon={FiBookOpen} label="Sede" value={listaDatos.sede} />
+            <Row icon={FiBookOpen} label="Sede" value={listaDatos.nombre_sede} />
             <Row icon={FiFileText} label="Eventos" value={listaDatos.cantidad_eventos} />
             <Row icon={FiUser} label="Institución" value={listaDatos.nombre_institucion} />
 
             <div className="mt-4 space-y-3">
-                <DateTimeBox label="Inicio" date={fecha_inicio} time={hora_inicio} />
-                <DateTimeBox label="Fin" date={fecha_fin} time={hora_fin} />
+                <DateTimeBox label="Inicio" date={inicio.date} time={inicio.time} />
+                <DateTimeBox label="Fin" date={fin.date} time={fin.time} />
             </div>
 
             <div className="mt-6 pt-4 border-t border-base-300 space-y-3">
@@ -70,7 +82,7 @@ const ItemCongreso = ({ listaDatos }) => {
                     <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow-xl bg-base-100 rounded-2xl w-full mb-2 border border-base-300">
                         <li>
                             <button 
-                                onClick={() => navigate('/admin/eventos/talleres')}
+                                onClick={() => navigate(`/admin/eventos/talleres?id_congreso=${listaDatos.id_congreso}`)}
                                 className="flex items-center gap-2 py-3 font-bold text-xs uppercase"
                             >
                                 Talleres
@@ -78,7 +90,7 @@ const ItemCongreso = ({ listaDatos }) => {
                         </li>
                         <li>
                             <button 
-                                onClick={() => navigate('/admin/eventos/ponencias')}
+                                onClick={() => navigate(`/admin/eventos/ponencias?id_congreso=${listaDatos.id_congreso}`)}
                                 className="flex items-center gap-2 py-3 font-bold text-xs uppercase"
                             >
                                 Ponencias

@@ -1,12 +1,16 @@
 from django.db import models
 from users.models import Asistente, Ponente
-from congresos.models import Evento
+from congresos.models import Evento, Subarea
 
 class Ponencia(models.Model):
     id_ponencia = models.AutoField(primary_key=True)
     id_evento = models.ForeignKey(Evento, models.DO_NOTHING, db_column='id_evento')
     tipo_participacion = models.CharField(max_length=50) # 'presencial', 'virtual', etc.
-    
+    id_subarea = models.ForeignKey(Subarea, models.DO_NOTHING, db_column='id_subarea')
+    id_resumen = models.IntegerField(blank=True, null=True) # O FK a Resumen si existe
+    id_extenso = models.IntegerField(blank=True, null=True) # O FK a Extenso si existe
+    id_multimedia = models.IntegerField(blank=True, null=True)
+
     class Meta:
         managed = False
         db_table = 'ponencia'
