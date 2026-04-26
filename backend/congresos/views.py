@@ -439,3 +439,474 @@ class AgendaCalendarioView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+# =============================================================================
+# CRUD de Congresos (Eventos > Congresos > Lista)
+# =============================================================================
+
+FECHA_FIELDS = [
+    'fecha_inicio_evento',
+    'fecha_final_evento',
+    'fecha_inicio_prepago',
+    'fecha_fin_prepago',
+    'fecha_inicio_pago_normal',
+    'fecha_fin_pago_normal',
+    'fecha_inicio_inscribir_dictaminador',
+    'fecha_fin_inscribir_dictaminador',
+    'fecha_inicio_inscribir_evaluador',
+    'fecha_fin_inscribir_evaluador',
+    'fecha_inicio_subida_ponencias',
+    'fecha_fin_subida_ponencias',
+    'fecha_inicio_evaluar_resumenes',
+    'fecha_final_evaluar_resumenes',
+    'fecha_inicio_evaluar_extensos',
+    'fecha_fin_evaluar_extensos',
+    'fecha_inicio_subir_multimedia',
+    'fecha_fin_subir_multimedia',
+    'fecha_inicio_subir_extenso_final',
+    'fecha_fin_subir_extenso_final',
+]
+
+
+def _serialize_congreso_row(row):
+    return {
+        'id_congreso': row[0],
+        'nombre_congreso': row[1],
+        'id_sede': row[2],
+        'nombre_sede': row[3],
+        'id_institucion': row[4],
+        'nombre_institucion': row[5],
+        'ruta_imagen': row[6] or '',
+        'cantidad_eventos': row[7] or 0,
+        'fecha_hora_inicio': row[8].isoformat() if row[8] else '',
+        'fecha_hora_final': row[9].isoformat() if row[9] else '',
+    }
+
+
+class ListarInstitucionesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT id_institucion, nombre, ruta_imagen FROM institucion ORDER BY nombre"
+            )
+            rows = cursor.fetchall()
+
+        data = [
+            {'id': row[0], 'nombre': row[1], 'ruta_imagen': row[2] or ''}
+            for row in rows
+        ]
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class ListarCongresosView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        id_institucion = request.query_params.get('id_institucion')
+
+        base_sql = """
+            SELECT c.id_congreso,
+                   c.nombre_congreso,
+                   s.id_sede,
+                   s.nombre_sede,
+                   i.id_institucion,
+                   i.nombre,
+                   i.ruta_imagen,
+                   (SELECT COUNT(*) FROM evento e WHERE e.id_congreso = c.id_congreso) AS cantidad_eventos,
+                   f.fecha_inicio_evento,
+                   f.fecha_final_evento
+            FROM congreso c
+            JOIN sede s ON s.id_sede = c.id_sede
+            JOIN institucion i ON i.id_institucion = c.id_institucion
+            JOIN fechas_congreso f ON f.id_fechas_congreso = c.id_fechas_congreso
+        """
+
+        params = []
+        if id_institucion:
+            try:
+                params.append(int(id_institucion))
+            except (TypeError, ValueError):
+                return Response(
+                    {'detail': 'id_institucion inválido.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            base_sql += " WHERE c.id_institucion = %s"
+
+        base_sql += " ORDER BY c.id_congreso DESC"
+
+        with connection.cursor() as cursor:
+            cursor.execute(base_sql, params)
+            rows = cursor.fetchall()
+
+        data = [_serialize_congreso_row(r) for r in rows]
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class DetalleCongresoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, id_congreso):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT c.id_congreso, c.nombre_congreso,
+                       i.id_institucion, i.nombre, i.ruta_imagen,
+                       s.id_sede, s.nombre_sede, s.pais, s.estado, s.ciudad,
+                       s.calle, s.num_exterior, s.num_interior, s.modulo_fisico,
+                       f.id_fechas_congreso,
+                       f.fecha_inicio_evento, f.fecha_final_evento,
+                       f.fecha_inicio_prepago, f.fecha_fin_prepago,
+                       f.fecha_inicio_pago_normal, f.fecha_fin_pago_normal,
+                       f.fecha_inicio_inscribir_dictaminador, f.fecha_fin_inscribir_dictaminador,
+                       f.fecha_inicio_inscribir_evaluador, f.fecha_fin_inscribir_evaluador,
+                       f.fecha_inicio_subida_ponencias, f.fecha_fin_subida_ponencias,
+                       f.fecha_inicio_evaluar_resumenes, f.fecha_final_evaluar_resumenes,
+                       f.fecha_inicio_evaluar_extensos, f.fecha_fin_evaluar_extensos,
+                       f.fecha_inicio_subir_multimedia, f.fecha_fin_subir_multimedia,
+                       f.fecha_inicio_subir_extenso_final, f.fecha_fin_subir_extenso_final,
+                       co.id_costos_congreso, co.cuenta_deposito,
+                       co.descuento_prepago, co.descuento_estudiante,
+                       co.costo_congreso_asistente, co.costo_congreso_ponente, co.costo_congreso_comite,
+                       c.id_rubrica_default
+                FROM congreso c
+                JOIN institucion i ON i.id_institucion = c.id_institucion
+                JOIN sede s ON s.id_sede = c.id_sede
+                JOIN fechas_congreso f ON f.id_fechas_congreso = c.id_fechas_congreso
+                JOIN costos_congreso co ON co.id_costos_congreso = c.id_costos_congreso
+                WHERE c.id_congreso = %s
+                """,
+                [id_congreso],
+            )
+            row = cursor.fetchone()
+
+        if not row:
+            return Response(
+                {'detail': 'Congreso no encontrado.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        def iso(dt):
+            return dt.isoformat() if dt else ''
+
+        data = {
+            'id_congreso': row[0],
+            'nombre_congreso': row[1],
+            'id_institucion': row[2],
+            'nombre_institucion': row[3],
+            'ruta_imagen': row[4] or '',
+            'id_sede': row[5],
+            'nombre_sede': row[6],
+            'pais': row[7],
+            'estado': row[8],
+            'ciudad': row[9],
+            'calle': row[10],
+            'num_exterior': row[11],
+            'num_interior': row[12],
+            'modulo_fisico': row[13] or '',
+            'id_fechas_congreso': row[14],
+            'fecha_inicio_evento': iso(row[15]),
+            'fecha_final_evento': iso(row[16]),
+            'fecha_inicio_prepago': iso(row[17]),
+            'fecha_fin_prepago': iso(row[18]),
+            'fecha_inicio_pago_normal': iso(row[19]),
+            'fecha_fin_pago_normal': iso(row[20]),
+            'fecha_inicio_inscribir_dictaminador': iso(row[21]),
+            'fecha_fin_inscribir_dictaminador': iso(row[22]),
+            'fecha_inicio_inscribir_evaluador': iso(row[23]),
+            'fecha_fin_inscribir_evaluador': iso(row[24]),
+            'fecha_inicio_subida_ponencias': iso(row[25]),
+            'fecha_fin_subida_ponencias': iso(row[26]),
+            'fecha_inicio_evaluar_resumenes': iso(row[27]),
+            'fecha_final_evaluar_resumenes': iso(row[28]),
+            'fecha_inicio_evaluar_extensos': iso(row[29]),
+            'fecha_fin_evaluar_extensos': iso(row[30]),
+            'fecha_inicio_subir_multimedia': iso(row[31]),
+            'fecha_fin_subir_multimedia': iso(row[32]),
+            'fecha_inicio_subir_extenso_final': iso(row[33]),
+            'fecha_fin_subir_extenso_final': iso(row[34]),
+            'id_costos_congreso': row[35],
+            'cuenta_deposito': row[36],
+            'descuento_prepago': float(row[37] or 0),
+            'descuento_estudiante': float(row[38] or 0),
+            'costo_congreso_asistente': float(row[39]),
+            'costo_congreso_ponente': float(row[40]),
+            'costo_congreso_comite': float(row[41]),
+            'id_rubrica_default': row[42],
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+
+def _extract_congreso_payload(data):
+    required_text = ['nombre_congreso', 'id_institucion', 'nombre_sede', 'pais',
+                     'estado', 'ciudad', 'calle', 'num_exterior', 'cuenta_deposito']
+    missing = [f for f in required_text if data.get(f) in (None, '')]
+    if missing:
+        return None, f"Faltan campos obligatorios: {', '.join(missing)}"
+
+    fechas = {}
+    for field in FECHA_FIELDS:
+        raw = data.get(field)
+        if raw in (None, ''):
+            if field in ('fecha_inicio_prepago', 'fecha_fin_prepago'):
+                fechas[field] = None
+                continue
+            return None, f"Falta la fecha '{field}'."
+        fechas[field] = raw
+
+    try:
+        num_exterior = int(data.get('num_exterior'))
+    except (TypeError, ValueError):
+        return None, 'num_exterior debe ser un número entero.'
+
+    num_interior_raw = data.get('num_interior')
+    try:
+        num_interior = int(num_interior_raw) if num_interior_raw not in (None, '') else None
+    except (TypeError, ValueError):
+        return None, 'num_interior debe ser un número entero.'
+
+    try:
+        payload = {
+            'nombre_congreso': str(data['nombre_congreso']).strip(),
+            'id_institucion': int(data['id_institucion']),
+            'id_rubrica_default': int(data['id_rubrica_default']) if data.get('id_rubrica_default') not in (None, '') else None,
+            'sede': {
+                'nombre_sede': str(data['nombre_sede']).strip(),
+                'pais': str(data['pais']).strip(),
+                'estado': str(data['estado']).strip(),
+                'ciudad': str(data['ciudad']).strip(),
+                'calle': str(data['calle']).strip(),
+                'num_exterior': num_exterior,
+                'num_interior': num_interior,
+                'modulo_fisico': str(data.get('modulo_fisico') or '').strip() or None,
+            },
+            'costos': {
+                'cuenta_deposito': str(data['cuenta_deposito']).strip(),
+                'descuento_prepago': float(data.get('descuento_prepago') or 0),
+                'descuento_estudiante': float(data.get('descuento_estudiante') or 0),
+                'costo_congreso_asistente': float(data.get('costo_congreso_asistente') or 0),
+                'costo_congreso_ponente': float(data.get('costo_congreso_ponente') or 0),
+                'costo_congreso_comite': float(data.get('costo_congreso_comite') or 0),
+            },
+            'fechas': fechas,
+        }
+    except (TypeError, ValueError) as exc:
+        return None, f'Valor numérico inválido: {exc}'
+
+    return payload, None
+
+
+class CrearCongresoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        payload, error = _extract_congreso_payload(request.data)
+        if error:
+            return Response({'detail': error}, status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                sede = payload['sede']
+                cursor.execute(
+                    """
+                    INSERT INTO sede (nombre_sede, pais, estado, ciudad, calle, num_exterior, num_interior, modulo_fisico)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    RETURNING id_sede
+                    """,
+                    [sede['nombre_sede'], sede['pais'], sede['estado'], sede['ciudad'],
+                     sede['calle'], sede['num_exterior'], sede['num_interior'], sede['modulo_fisico']],
+                )
+                id_sede = cursor.fetchone()[0]
+
+                fechas = payload['fechas']
+                cursor.execute(
+                    f"""
+                    INSERT INTO fechas_congreso ({', '.join(FECHA_FIELDS)})
+                    VALUES ({', '.join(['%s'] * len(FECHA_FIELDS))})
+                    RETURNING id_fechas_congreso
+                    """,
+                    [fechas[f] for f in FECHA_FIELDS],
+                )
+                id_fechas = cursor.fetchone()[0]
+
+                costos = payload['costos']
+                cursor.execute(
+                    """
+                    INSERT INTO costos_congreso (cuenta_deposito, descuento_prepago, descuento_estudiante,
+                                                 costo_congreso_asistente, costo_congreso_ponente, costo_congreso_comite)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    RETURNING id_costos_congreso
+                    """,
+                    [costos['cuenta_deposito'], costos['descuento_prepago'], costos['descuento_estudiante'],
+                     costos['costo_congreso_asistente'], costos['costo_congreso_ponente'], costos['costo_congreso_comite']],
+                )
+                id_costos = cursor.fetchone()[0]
+
+                cursor.execute(
+                    """
+                    INSERT INTO congreso (nombre_congreso, id_sede, id_institucion,
+                                          id_fechas_congreso, id_costos_congreso, id_rubrica_default)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    RETURNING id_congreso
+                    """,
+                    [payload['nombre_congreso'], id_sede, payload['id_institucion'],
+                     id_fechas, id_costos, payload['id_rubrica_default']],
+                )
+                id_congreso = cursor.fetchone()[0]
+
+        return Response(
+            {'detail': 'Congreso creado correctamente.', 'id_congreso': id_congreso},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class ActualizarCongresoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, id_congreso):
+        payload, error = _extract_congreso_payload(request.data)
+        if error:
+            return Response({'detail': error}, status=status.HTTP_400_BAD_REQUEST)
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT id_sede, id_fechas_congreso, id_costos_congreso FROM congreso WHERE id_congreso = %s",
+                [id_congreso],
+            )
+            row = cursor.fetchone()
+
+        if not row:
+            return Response({'detail': 'Congreso no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+        id_sede, id_fechas, id_costos = row
+
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                sede = payload['sede']
+                cursor.execute(
+                    """
+                    UPDATE sede
+                    SET nombre_sede=%s, pais=%s, estado=%s, ciudad=%s, calle=%s,
+                        num_exterior=%s, num_interior=%s, modulo_fisico=%s
+                    WHERE id_sede=%s
+                    """,
+                    [sede['nombre_sede'], sede['pais'], sede['estado'], sede['ciudad'],
+                     sede['calle'], sede['num_exterior'], sede['num_interior'],
+                     sede['modulo_fisico'], id_sede],
+                )
+
+                fechas = payload['fechas']
+                set_clause = ', '.join(f"{f}=%s" for f in FECHA_FIELDS)
+                cursor.execute(
+                    f"UPDATE fechas_congreso SET {set_clause} WHERE id_fechas_congreso=%s",
+                    [fechas[f] for f in FECHA_FIELDS] + [id_fechas],
+                )
+
+                costos = payload['costos']
+                cursor.execute(
+                    """
+                    UPDATE costos_congreso
+                    SET cuenta_deposito=%s, descuento_prepago=%s, descuento_estudiante=%s,
+                        costo_congreso_asistente=%s, costo_congreso_ponente=%s, costo_congreso_comite=%s
+                    WHERE id_costos_congreso=%s
+                    """,
+                    [costos['cuenta_deposito'], costos['descuento_prepago'], costos['descuento_estudiante'],
+                     costos['costo_congreso_asistente'], costos['costo_congreso_ponente'],
+                     costos['costo_congreso_comite'], id_costos],
+                )
+
+                cursor.execute(
+                    """
+                    UPDATE congreso
+                    SET nombre_congreso=%s, id_institucion=%s, id_rubrica_default=%s
+                    WHERE id_congreso=%s
+                    """,
+                    [payload['nombre_congreso'], payload['id_institucion'],
+                     payload['id_rubrica_default'], id_congreso],
+                )
+
+        return Response(
+            {'detail': 'Congreso actualizado correctamente.', 'id_congreso': id_congreso},
+            status=status.HTTP_200_OK,
+        )
+
+
+class EliminarCongresoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, id_congreso):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    (SELECT COUNT(*) FROM evento WHERE id_congreso = %s),
+                    (SELECT COUNT(*) FROM libros WHERE id_congreso = %s)
+                """,
+                [id_congreso, id_congreso],
+            )
+            eventos_asociados, libros_asociados = cursor.fetchone()
+
+        if eventos_asociados or libros_asociados:
+            partes = []
+            if eventos_asociados:
+                partes.append(f'{eventos_asociados} evento(s)')
+            if libros_asociados:
+                partes.append(f'{libros_asociados} libro(s)')
+            return Response(
+                {'detail': f'No se puede eliminar: el congreso tiene {" y ".join(partes)} asociado(s).'},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "DELETE FROM congreso WHERE id_congreso = %s",
+                    [id_congreso],
+                )
+                if cursor.rowcount == 0:
+                    return Response(
+                        {'detail': 'Congreso no encontrado.'},
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
+
+        return Response(
+            {'detail': 'Congreso eliminado correctamente.'},
+            status=status.HTTP_200_OK,
+        )
+
+
+class ListarTiposTrabajoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT id_tipo_trabajo, tipo_trabajo FROM tipo_trabajo ORDER BY tipo_trabajo"
+            )
+            rows = cursor.fetchall()
+        return Response(
+            [{'id': r[0], 'nombre': r[1]} for r in rows],
+            status=status.HTTP_200_OK,
+        )
+
+
+class ListarRubricasView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT id_rubrica, nombre, tipo_trabajo, esta_activo
+                FROM rubrica
+                WHERE esta_activo = true
+                ORDER BY nombre
+                """
+            )
+            rows = cursor.fetchall()
+        return Response(
+            [{'id': r[0], 'nombre': r[1], 'id_tipo_trabajo': r[2]} for r in rows],
+            status=status.HTTP_200_OK,
+        )
