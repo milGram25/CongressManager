@@ -218,12 +218,34 @@ class CongresoViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(id_institucion_id=id_institucion)
         return queryset
 
+    def _validate_dates(self, data, is_update=False):
+        required_dates = [
+            'congreso_inicio', 'congreso_fin',
+            'envio_ponencias_inicio', 'envio_ponencias_fin',
+            'revision_resumenes_inicio', 'revision_resumenes_fin',
+            'inscripcion_dictaminadores_inicio', 'inscripcion_dictaminadores_fin',
+            'inscripcion_evaluadores_inicio', 'inscripcion_evaluadores_fin',
+            'subir_multimedia_inicio', 'subir_multimedia_fin'
+        ]
+        errors = {}
+        if not is_update:
+            for field in required_dates:
+                val = data.get(field)
+                if val is None or (isinstance(val, str) and val.strip() == ""):
+                    errors[field] = "Este campo es obligatorio."
+        return errors
+
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
     def create(self, request, *args, **kwargs):
         data = request.data
+        date_errors = self._validate_dates(data, is_update=False)
+        if date_errors:
+            return Response({'detail': 'Faltan fechas obligatorias', 'errors': date_errors}, status=status.HTTP_400_BAD_REQUEST)
+        
         now = timezone.now()
         try:
             with transaction.atomic():
@@ -238,22 +260,24 @@ class CongresoViewSet(viewsets.ModelViewSet):
                     modulo_fisico=clean_date(data.get('modulo_fisico'))
                 )
                 fechas = FechasCongreso.objects.create(
-                    fecha_inicio_evento=clean_date(data.get('congreso_inicio'), now),
-                    fecha_final_evento=clean_date(data.get('congreso_fin'), now),
-                    fecha_inicio_pago_normal=clean_date(data.get('pagos_normales_inicio'), now),
-                    fecha_fin_pago_normal=clean_date(data.get('pagos_normales_fin'), now),
-                    fecha_inicio_inscribir_dictaminador=clean_date(data.get('inscripcion_dictaminadores_inicio'), now),
-                    fecha_fin_inscribir_dictaminador=clean_date(data.get('inscripcion_dictaminadores_fin'), now),
-                    fecha_inicio_inscribir_evaluador=clean_date(data.get('inscripcion_evaluadores_inicio'), now),
-                    fecha_fin_inscribir_evaluador=clean_date(data.get('inscripcion_evaluadores_fin'), now),
-                    fecha_inicio_subida_ponencias=clean_date(data.get('envio_ponencias_inicio'), now),
-                    fecha_fin_subida_ponencias=clean_date(data.get('envio_ponencias_fin'), now),
-                    fecha_inicio_evaluar_resumenes=clean_date(data.get('revision_resumenes_inicio'), now),
-                    fecha_final_evaluar_resumenes=clean_date(data.get('revision_resumenes_fin'), now),
-                    fecha_inicio_evaluar_extensos=clean_date(data.get('revision_extensos_inicio'), now),
-                    fecha_fin_evaluar_extensos=clean_date(data.get('revision_extensos_fin'), now),
-                    fecha_inicio_subir_multimedia=clean_date(data.get('subir_multimedia_inicio'), now),
-                    fecha_fin_subir_multimedia=clean_date(data.get('subir_multimedia_fin'), now)
+                    fecha_inicio_evento=data.get('congreso_inicio'),
+                    fecha_final_evento=data.get('congreso_fin'),
+                    fecha_inicio_pago_normal=data.get('pagos_normales_inicio', now),
+                    fecha_fin_pago_normal=data.get('pagos_normales_fin', now),
+                    fecha_inicio_inscribir_dictaminador=data.get('inscripcion_dictaminadores_inicio'),
+                    fecha_fin_inscribir_dictaminador=data.get('inscripcion_dictaminadores_fin'),
+                    fecha_inicio_inscribir_evaluador=data.get('inscripcion_evaluadores_inicio'),
+                    fecha_fin_inscribir_evaluador=data.get('inscripcion_evaluadores_fin'),
+                    fecha_inicio_subida_ponencias=data.get('envio_ponencias_inicio'),
+                    fecha_fin_subida_ponencias=data.get('envio_ponencias_fin'),
+                    fecha_inicio_evaluar_resumenes=data.get('revision_resumenes_inicio'),
+                    fecha_final_evaluar_resumenes=data.get('revision_resumenes_fin'),
+                    fecha_inicio_evaluar_extensos=data.get('revision_extensos_inicio', now),
+                    fecha_fin_evaluar_extensos=data.get('revision_extensos_fin', now),
+                    fecha_inicio_subir_multimedia=data.get('subir_multimedia_inicio'),
+                    fecha_fin_subir_multimedia=data.get('subir_multimedia_fin'),
+                    fecha_inicio_subir_extenso_final=data.get('envio_extensos_inicio'),
+                    fecha_fin_subir_extenso_final=data.get('envio_extensos_fin')
                 )
                 costos = CostosCongreso.objects.create(
                     cuenta_deposito=clean_date(data.get('cuenta_deposito'), ''),
@@ -278,6 +302,10 @@ class CongresoViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         data = request.data
+        date_errors = self._validate_dates(data, is_update=True)
+        if date_errors:
+            return Response({'detail': 'Faltan fechas obligatorias', 'errors': date_errors}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             with transaction.atomic():
                 sede = instance.id_sede
@@ -290,6 +318,7 @@ class CongresoViewSet(viewsets.ModelViewSet):
                 sede.num_interior = int(data.get('numero_interior')) if clean_date(data.get('numero_interior')) else None
                 sede.modulo_fisico = clean_date(data.get('modulo_fisico'), sede.modulo_fisico)
                 sede.save()
+                
                 fe = instance.id_fechas_congreso
                 fe.fecha_inicio_evento = clean_date(data.get('congreso_inicio'), fe.fecha_inicio_evento)
                 fe.fecha_final_evento = clean_date(data.get('congreso_fin'), fe.fecha_final_evento)
@@ -306,9 +335,11 @@ class CongresoViewSet(viewsets.ModelViewSet):
                 fe.fecha_inicio_evaluar_extensos = clean_date(data.get('revision_extensos_inicio'), fe.fecha_inicio_evaluar_extensos)
                 fe.fecha_fin_evaluar_extensos = clean_date(data.get('revision_extensos_fin'), fe.fecha_fin_evaluar_extensos)
                 fe.fecha_inicio_subir_multimedia = clean_date(data.get('subir_multimedia_inicio'), fe.fecha_inicio_subir_multimedia)
-
                 fe.fecha_fin_subir_multimedia = clean_date(data.get('subir_multimedia_fin'), fe.fecha_fin_subir_multimedia)
+                fe.fecha_inicio_subir_extenso_final = clean_date(data.get('envio_extensos_inicio'), fe.fecha_inicio_subir_extenso_final)
+                fe.fecha_fin_subir_extenso_final = clean_date(data.get('envio_extensos_fin'), fe.fecha_fin_subir_extenso_final)
                 fe.save()
+                
                 co = instance.id_costos_congreso
                 co.cuenta_deposito = clean_date(data.get('cuenta_deposito'), co.cuenta_deposito)
                 co.descuento_prepago = float(clean_date(data.get('descuento_prepago'), co.descuento_prepago))
@@ -317,6 +348,7 @@ class CongresoViewSet(viewsets.ModelViewSet):
                 co.costo_congreso_ponente = float(clean_date(data.get('costo_ponente'), co.costo_congreso_ponente))
                 co.costo_congreso_comite = float(clean_date(data.get('costo_miembro_comite'), co.costo_congreso_comite))
                 co.save()
+                
                 inst_nombre = clean_date(data.get('nombre_institucion'))
                 if inst_nombre:
                     institucion, _ = Institucion.objects.get_or_create(nombre=inst_nombre)

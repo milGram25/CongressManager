@@ -82,6 +82,8 @@ class FechasCongreso(models.Model):
     fecha_fin_evaluar_extensos = models.DateTimeField()
     fecha_inicio_subir_multimedia = models.DateTimeField()
     fecha_fin_subir_multimedia = models.DateTimeField()
+    fecha_inicio_subir_extenso_final = models.DateTimeField(blank=True, null=True)
+    fecha_fin_subir_extenso_final = models.DateTimeField(blank=True, null=True)
     
     class Meta:
         managed = False

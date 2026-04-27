@@ -77,8 +77,8 @@ class CongresoSerializer(serializers.ModelSerializer):
     inscripcion_dictaminadores_fin = serializers.DateTimeField(source='id_fechas_congreso.fecha_final_inscribir_dictaminador', read_only=True)
     revision_resumenes_inicio = serializers.DateTimeField(source='id_fechas_congreso.fecha_inicio_evaluar_resumenes', read_only=True)
     revision_resumenes_fin = serializers.DateTimeField(source='id_fechas_congreso.fecha_final_evaluar_resumenes', read_only=True)
-    envio_extensos_inicio = serializers.SerializerMethodField()
-    envio_extensos_fin = serializers.SerializerMethodField()
+    envio_extensos_inicio = serializers.DateTimeField(source='id_fechas_congreso.fecha_inicio_subir_extenso_final', read_only=True)
+    envio_extensos_fin = serializers.DateTimeField(source='id_fechas_congreso.fecha_fin_subir_extenso_final', read_only=True)
     inscripcion_evaluadores_inicio = serializers.DateTimeField(source='id_fechas_congreso.fecha_inicio_inscribir_evaluador', read_only=True)
     inscripcion_evaluadores_fin = serializers.DateTimeField(source='id_fechas_congreso.fecha_final_inscribir_evaluador', read_only=True)
     revision_extensos_inicio = serializers.DateTimeField(source='id_fechas_congreso.fecha_inicio_evaluar_extensos', read_only=True)
@@ -102,12 +102,6 @@ class CongresoSerializer(serializers.ModelSerializer):
 
     def get_cantidad_eventos(self, obj):
         return obj.eventos.count() if hasattr(obj, 'eventos') else 0
-
-    def get_envio_extensos_inicio(self, obj):
-        return None
-
-    def get_envio_extensos_fin(self, obj):
-        return None
 
 class MesasTrabajoSerializer(serializers.ModelSerializer):
     class Meta:
