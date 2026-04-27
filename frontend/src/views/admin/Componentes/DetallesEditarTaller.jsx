@@ -2,7 +2,8 @@ import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'rea
 import { FiEdit2, FiCopy, FiCalendar, FiClock, FiUsers, FiMapPin, FiUser, FiSave } from 'react-icons/fi';
 import { IoIosCheckmark } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
-import { getInstitucionesApi, getCongresosApi, getSubareasApi, getMesasApi, createTallerApi, getTallerByIdApi } from '../../../api/adminApi';
+import { getInstitucionesApi, getCongresosApi, getSubareasApi, getMesasApi, createMesaApi, createTallerApi, getTallerByIdApi } from '../../../api/adminApi';
+import { API_URL } from '../../../api/constants';
 import { useNavigate } from 'react-router-dom';
 
 const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = false, isFullPage = false }, ref) => {
@@ -29,7 +30,7 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
     const [formatData, setFormatData] = useState(initialData);
     const [modificando, setModificando] = useState(initialModificando);
     const [saving, setSaving] = useState(false);
-    const [loading, setLoading] = useState(!!tallerData?.id);
+    const [loading, setLoading] = useState(true);
 
     const [instituciones, setInstituciones] = useState([]);
     const [congresos, setCongresos] = useState([]);
@@ -42,19 +43,23 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
 
     useEffect(() => {
         const fetchAll = async () => {
+            setLoading(true);
             try {
                 const [instData, congData, subData] = await Promise.all([
                     getInstitucionesApi(accessToken),
                     getCongresosApi(accessToken),
                     getSubareasApi(accessToken)
                 ]);
-                setInstituciones(instData);
-                setCongresos(congData);
-                setSubareas(subData);
+                setInstituciones(instData || []);
+                setCongresos(congData || []);
+                setSubareas(subData || []);
 
-                // Si hay un ID, cargar los datos específicos del taller
-                if (tallerData?.id) {
-                    const realTaller = await getTallerByIdApi(accessToken, tallerData.id);
+                const realId = tallerData?.id || tallerData?.id_taller;
+
+                if (realId) {
+                    console.log("DEBUG: Fetching workshop with ID:", realId);
+                    const realTaller = await getTallerByIdApi(accessToken, realId);
+                    console.log("DEBUG: Received workshop data:", realTaller);
 
                     const formatDate = (dateStr) => {
                         if (!dateStr) return "";
@@ -63,25 +68,25 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
 
                     setFormatData({
                         ...realTaller,
-                        id_congreso: realTaller.id_congreso || realTaller.id_evento?.id_congreso || "",
-                        id_mesas_trabajo: realTaller.id_mesas_trabajo || realTaller.id_evento?.id_mesas_trabajo || "",
+                        id: realId,
+                        id_congreso: realTaller.id_congreso || "",
+                        id_mesas_trabajo: realTaller.id_mesas_trabajo || "",
                         id_subarea: realTaller.id_subarea || "",
                         fecha_hora_inicio: formatDate(realTaller.fecha_hora_inicio),
                         fecha_hora_final: formatDate(realTaller.fecha_hora_final)
                     });
-                }
- else if (tallerData?.id_congreso) {
-                    // Si no hay ID pero si id_congreso (caso crear desde congreso)
+                } else if (tallerData?.id_congreso) {
                     setFormatData(prev => ({ ...prev, id_congreso: parseInt(tallerData.id_congreso) }));
                 }
             } catch (error) {
-                console.error("Error cargando datos:", error);
+                console.error("Error cargando taller:", error);
+                alert("Error al cargar los datos del taller");
             } finally {
                 setLoading(false);
             }
         };
         fetchAll();
-    }, [tallerData?.id, accessToken]);
+    }, [tallerData?.id, tallerData?.id_taller, accessToken]);
 
     // Determinar si el congreso debe estar bloqueado
     const congressLocked = (!!tallerData?.id || !!tallerData?.id_congreso) && isFullPage;
@@ -109,9 +114,26 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
 
         setSaving(true);
         try {
-            await createTallerApi(accessToken, formatData);
-            alert("Taller creado con éxito");
+            if (tallerData?.id) {
+                // Edición
+                const res = await fetch(`${API_URL}/api/congresos/talleres/${tallerData.id}/`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formatData),
+                });
+                if (!res.ok) throw new Error('Error al actualizar taller');
+                alert("Taller actualizado con éxito");
+            } else {
+                // Creación
+                await createTallerApi(accessToken, formatData);
+                alert("Taller creado con éxito");
+            }
+            
             if (isFullPage) navigate('/admin/eventos/congresos/lista');
+            else window.location.reload(); // Recargar para ver cambios en modal
         } catch (error) {
             alert(error.message);
         } finally {

@@ -30,13 +30,18 @@ export default function TalleresView() {
           getInstitucionesApi(accessToken)
         ]);
 
-        console.log("Talleres recibidos:", talleresData);
+        console.log("DEBUG: raw talleresData:", talleresData);
 
-        const mappedTalleres = (talleresData || []).map(t => ({
+        const dataArray = Array.isArray(talleresData) ? talleresData : (talleresData?.results || []);
+        
+        const mappedTalleres = dataArray.map(t => ({
             ...t,
-            id: t.id_taller
+            id: t.id_taller || t.id,
+            nombre_evento: t.nombre_evento || "Taller sin nombre",
+            tallerista: t.tallerista || "Sin tallerista"
         }));
 
+        console.log("DEBUG: final mappedTalleres:", mappedTalleres);
         setListaEventos(mappedTalleres);
         setCongresos(congresosData.map(c => ({ id: c.id_congreso, nombre: c.nombre_congreso })));
         setInstituciones(instData.map(i => ({ id: i.id_institucion, nombre: i.nombre })));

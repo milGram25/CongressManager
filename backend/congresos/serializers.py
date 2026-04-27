@@ -109,6 +109,7 @@ class MesasTrabajoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class TallerSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source='id_taller', read_only=True)
     id_congreso = serializers.IntegerField(source='id_evento.id_congreso.id_congreso', read_only=True)
     nombre_evento = serializers.CharField(source='id_evento.nombre_evento', read_only=True)
     nombre_congreso = serializers.CharField(source='id_evento.id_congreso.nombre_congreso', read_only=True)
@@ -119,15 +120,21 @@ class TallerSerializer(serializers.ModelSerializer):
     sinopsis = serializers.CharField(source='id_evento.sinopsis', read_only=True)
     id_mesas_trabajo = serializers.IntegerField(source='id_evento.id_mesas_trabajo.id_mesas_trabajo', read_only=True)
     nombre_subarea = serializers.CharField(source='id_subarea.nombre', read_only=True)
+    lugar = serializers.SerializerMethodField()
 
     class Meta:
         model = Taller
         fields = [
-            'id_taller', 'tallerista', 'id_evento', 'id_congreso', 'nombre_evento', 
+            'id', 'id_taller', 'tallerista', 'id_evento', 'id_congreso', 'nombre_evento', 
             'nombre_congreso', 'fecha_hora_inicio', 'fecha_hora_final', 
             'cupos', 'tipo_participacion', 'id_subarea', 'nombre_subarea', 
-            'id_multimedia', 'enlace', 'sinopsis', 'id_mesas_trabajo'
+            'id_multimedia', 'enlace', 'sinopsis', 'id_mesas_trabajo', 'lugar'
         ]
+
+    def get_lugar(self, obj):
+        if obj.id_evento and obj.id_evento.id_mesas_trabajo and obj.id_evento.id_mesas_trabajo.id_sede:
+            return obj.id_evento.id_mesas_trabajo.id_sede.nombre_sede
+        return "Por confirmar"
 
 class EventoSerializer(serializers.ModelSerializer):
     class Meta:

@@ -3,6 +3,7 @@ import { FiEdit2, FiCopy, FiCalendar, FiClock, FiUsers, FiMapPin, FiUser, FiAwar
 import { IoIosCheckmark } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
 import { getInstitucionesApi, getCongresosApi, getSubareasApi, getMesasApi, createPonenciaApi, getPonenciaByIdApi } from '../../../api/adminApi';
+import { API_URL } from '../../../api/constants';
 import { useNavigate } from 'react-router-dom';
 
 const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = false, isFullPage = false }, ref) => {
@@ -50,9 +51,11 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                 setCongresos(congData);
                 setSubareas(subData);
 
-                if (ponenciaData?.id) {
-                    console.log("Cargando ponencia ID:", ponenciaData.id);
-                    const realPonencia = await getPonenciaByIdApi(accessToken, ponenciaData.id);
+                const realId = ponenciaData?.id || ponenciaData?.id_ponencia;
+
+                if (realId) {
+                    console.log("Cargando ponencia ID:", realId);
+                    const realPonencia = await getPonenciaByIdApi(accessToken, realId);
                     console.log("Datos recibidos:", realPonencia);
                     
                     const formatDate = (dateStr) => {
@@ -62,6 +65,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
 
                     setFormatData({
                         ...realPonencia,
+                        id: realId,
                         id_congreso: realPonencia.id_congreso || "",
                         id_mesas_trabajo: realPonencia.id_mesas_trabajo || "",
                         id_subarea: realPonencia.id_subarea || "",
@@ -79,7 +83,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
             }
         };
         fetchAll();
-    }, [ponenciaData?.id, accessToken]);
+    }, [ponenciaData?.id, ponenciaData?.id_ponencia, accessToken]);
 
     useEffect(() => {
         if (formatData.id_congreso) {
@@ -103,9 +107,26 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
 
         setSaving(true);
         try {
-            await createPonenciaApi(accessToken, formatData);
-            alert("Ponencia guardada con éxito");
+            if (ponenciaData?.id) {
+                // Actualizar
+                const res = await fetch(`${API_URL}/api/ponencias/lista/${ponenciaData.id}/`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formatData)
+                });
+                if (!res.ok) throw new Error('Error al actualizar la ponencia');
+                alert("Ponencia actualizada con éxito");
+            } else {
+                // Crear
+                await createPonenciaApi(accessToken, formatData);
+                alert("Ponencia creada con éxito");
+            }
+            
             if (isFullPage) navigate(`/admin/eventos/congresos/lista`);
+            else window.location.reload();
         } catch (err) {
             alert(err.message);
         } finally {

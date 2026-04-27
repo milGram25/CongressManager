@@ -3,6 +3,7 @@ from .models import AsistenteEvento, Ponencia
 from congresos.models import Evento
 
 class PonenciaSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source='id_ponencia', read_only=True)
     id_congreso = serializers.IntegerField(source='id_evento.id_congreso.id_congreso', read_only=True)
     nombre_evento = serializers.CharField(source='id_evento.nombre_evento', read_only=True)
     nombre_congreso = serializers.CharField(source='id_evento.id_congreso.nombre_congreso', read_only=True)
@@ -17,7 +18,7 @@ class PonenciaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ponencia
         fields = [
-            'id_ponencia', 'id_evento', 'id_congreso', 'nombre_evento', 'nombre_congreso',
+            'id', 'id_ponencia', 'id_evento', 'id_congreso', 'nombre_evento', 'nombre_congreso',
             'fecha_hora_inicio', 'fecha_hora_final', 'cupos',
             'tipo_participacion', 'id_subarea', 'nombre_subarea',
             'id_resumen', 'id_extenso', 'id_multimedia', 'enlace', 'sinopsis', 'id_mesas_trabajo'
