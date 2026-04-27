@@ -43,3 +43,7 @@ VALUES ('Revisor', 'UDG', 'revisor@udg.mx', 'pbkdf2_sha256$1200000$3gUODcjT4Jqh8
 
 INSERT INTO evaluador (id_persona)
 SELECT id_persona FROM persona WHERE correo_electronico = 'revisor@udg.mx';
+
+-- 6. Institución por defecto
+INSERT INTO institucion (nombre, ubicacion, pais)
+VALUES ('Universidad de Guadalajara', 'Guadalajara, Jalisco', 'México');

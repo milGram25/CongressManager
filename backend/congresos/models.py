@@ -104,11 +104,17 @@ class Congreso(models.Model):
     class Meta:
         managed = False
         db_table = 'congreso'
+        
+    def __str__(self):
+        return self.nombre_congreso
 
 class Rubrica(models.Model):
     id_rubrica = models.AutoField(primary_key=True)
     id_congreso = models.ForeignKey(Congreso, models.DO_NOTHING, db_column='id_congreso', blank=True, null=True, related_name='rubricas')
+    tipo_trabajo = models.ForeignKey('TipoTrabajo', models.DO_NOTHING, db_column='tipo_trabajo', blank=True, null=True)
     nombre = models.CharField(max_length=255)
+    esta_activo = models.BooleanField(default=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         managed = False

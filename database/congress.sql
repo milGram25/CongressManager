@@ -16,6 +16,8 @@ CREATE TYPE accion_enum AS ENUM (
 CREATE TABLE institucion (
     id_institucion SERIAL PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL,
+    ubicacion VARCHAR(255),
+    pais VARCHAR(100) DEFAULT 'México',
     ruta_imagen VARCHAR(255)
 );
 
@@ -38,6 +40,7 @@ CREATE TABLE areas_generales (
 
 CREATE TABLE tipo_trabajo (
     id_tipo_trabajo SERIAL PRIMARY KEY,
+    id_congreso INTEGER,
     tipo_trabajo VARCHAR(255) NOT NULL
 );
 
@@ -102,7 +105,8 @@ CREATE TABLE fechas_congreso (
 -- 3. SISTEMA DE RÚBRICAS (Plantillas de evaluación)
 CREATE TABLE rubrica (
     id_rubrica SERIAL PRIMARY KEY,
-    tipo_trabajo INTEGER NOT NULL REFERENCES tipo_trabajo(id_tipo_trabajo),
+    id_congreso INTEGER,
+    tipo_trabajo INTEGER REFERENCES tipo_trabajo(id_tipo_trabajo),
     nombre VARCHAR(255) NOT NULL,
     esta_activo BOOLEAN DEFAULT true,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -154,6 +158,9 @@ CREATE TABLE congreso (
     firma_secretaria VARCHAR(255),
     firmas_bloqueadas BOOLEAN DEFAULT FALSE
 );
+
+ALTER TABLE tipo_trabajo ADD CONSTRAINT fk_tipo_trabajo_congreso FOREIGN KEY (id_congreso) REFERENCES congreso(id_congreso) ON DELETE CASCADE;
+ALTER TABLE rubrica ADD CONSTRAINT fk_rubrica_congreso FOREIGN KEY (id_congreso) REFERENCES congreso(id_congreso) ON DELETE CASCADE;
 
 -- 5. ROLES Y LOGÍSTICA
 CREATE TABLE evaluador (
