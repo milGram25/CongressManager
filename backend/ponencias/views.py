@@ -1,9 +1,146 @@
+import os
+import json
+import uuid
+from datetime import datetime
+from django.conf import settings
+from django.core.mail import send_mail
+from django.db import connection, transaction
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from .models import AsistenteEvento
 from users.models import Asistente
+
+class EnviarPonenciaAPIView(APIView):
+    # permission_classes = [IsAuthenticated]
+    def post(self, request):
+        data = request.data
+        titulo = data.get('titulo')
+        autor = data.get('autor')
+        coautores = data.get('coautores', [])
+        tipo_participacion = data.get('tipoParticipacion')
+        eje_tematico_nombre = data.get('ejeTematico')
+        tipo_trabajo_nombre = data.get('tipoTrabajo')
+        palabras_clave = data.get('palabrasClave')
+        resumen_texto = data.get('resumen')
+        if not all([titulo, autor, tipo_participacion, eje_tematico_nombre, tipo_trabajo_nombre, palabras_clave, resumen_texto]):
+            return Response({'detail': 'Faltan campos obligatorios.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            with transaction.atomic():
+                with connection.cursor() as cursor:
+                    #resolver el id_subarea a partir del eje tematico
+                    cursor.execute("SELECT id_subareas FROM subareas WHERE nombre ILIKE %s LIMIT 1", [f"%{eje_tematico_nombre}%"])
+                    subarea_row = cursor.fetchone()
+                    if not subarea_row:
+                        #prueba, si no existe agrega
+                        cursor.execute("SELECT id_areas_generales FROM areas_generales LIMIT 1")
+                        area_row = cursor.fetchone()
+                        if not area_row:
+                            cursor.execute("INSERT INTO areas_generales (nombre) VALUES ('Area General Default') RETURNING id_areas_generales")
+                            id_area_general = cursor.fetchone()[0]
+                        else:
+                            id_area_general = area_row[0]
+                        cursor.execute("INSERT INTO subareas (nombre, id_area_general) VALUES (%s, %s) RETURNING id_subareas", [eje_tematico_nombre, id_area_general])
+                        id_subarea = cursor.fetchone()[0]
+                    else:
+                        id_subarea = subarea_row[0]
+
+                    #id_tipo a partir del tipo_trabajo_nombre
+                    #solo compara las primeras palabras para evitar conflictos
+                    first_words = " ".join(tipo_trabajo_nombre.split()[:2])
+                    cursor.execute("SELECT id_tipo_trabajo FROM tipo_trabajo WHERE tipo_trabajo ILIKE %s LIMIT 1", [f"%{first_words}%"])
+                    tipo_trabajo_row = cursor.fetchone()
+                    if not tipo_trabajo_row:
+                        #pruebas
+                        cursor.execute("INSERT INTO tipo_trabajo (tipo_trabajo) VALUES (%s) RETURNING id_tipo_trabajo", [tipo_trabajo_nombre])
+                        id_tipo_trabajo = cursor.fetchone()[0]
+                    else:
+                        id_tipo_trabajo = tipo_trabajo_row[0]
+
+                    #Crea un archivo de etxto para el resumen, asegura que el directorio de media exista
+                    media_dir = os.path.join(settings.MEDIA_ROOT, 'resumenes')
+                    os.makedirs(media_dir, exist_ok=True)
+                    
+                    #Se genera un nombre de archivo unico
+                    safe_titulo = "".join([c if c.isalnum() else "_" for c in titulo])[:50]
+                    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+                    unique_id = uuid.uuid4().hex[:6]
+                    filename = f"resumen_{safe_titulo}_{timestamp}_{unique_id}.txt"
+                    filepath = os.path.join(media_dir, filename)
+                    
+                    # Se escribe el contenido en el archivo
+                    with open(filepath, 'w', encoding='utf-8') as f:
+                        f.write(f"Título: {titulo}\n")
+                        f.write(f"Autor: {autor}\n")
+                        f.write(f"Palabras Clave: {palabras_clave}\n")
+                        f.write("-" * 50 + "\n")
+                        f.write(resumen_texto)
+                        
+                    #Crea un registro en la tabla de resumen
+                    cursor.execute("""
+                        INSERT INTO resumen (titulo, contenido, palabras_clave, revisado)
+                        VALUES (%s, %s, %s, FALSE)
+                        RETURNING id_resumen
+                    """, [titulo, resumen_texto, palabras_clave])
+                    id_resumen = cursor.fetchone()[0]
+
+                    #Crea un registro en la tabla ponencia
+                    cursor.execute("""
+                        INSERT INTO ponencia (tipo_participacion, id_subarea, id_resumen, id_tipo_trabajo)
+                        VALUES (%s, %s, %s, %s)
+                        RETURNING id_ponencia
+                    """, [tipo_participacion, id_subarea, id_resumen, id_tipo_trabajo])
+                    id_ponencia = cursor.fetchone()[0]
+
+                    #se asegura que el usuario sea ponente y se crea si no existe
+                    if request.user.is_authenticated:
+                        id_persona = request.user.id_persona
+                        cursor.execute("SELECT id_ponente FROM ponente WHERE id_persona = %s", [id_persona])
+                        ponente_row = cursor.fetchone()
+                        if not ponente_row:
+                            cursor.execute("INSERT INTO ponente (id_persona) VALUES (%s) RETURNING id_ponente", [id_persona])
+                            id_ponente = cursor.fetchone()[0]
+                        else:
+                            id_ponente = ponente_row[0]
+                        
+                        #Asociar ponente a la ponencia
+                        cursor.execute("""
+                            INSERT INTO ponente_has_ponencia (id_ponente, id_ponencia, asistio, es_principal)
+                            VALUES (%s, %s, FALSE, TRUE)
+                            ON CONFLICT (id_ponente, id_ponencia) DO NOTHING
+                        """, [id_ponente, id_ponencia])
+
+                    #Coautores, se vinculan si tienen cuenta, correo
+                    for coautor in coautores:
+                        if isinstance(coautor, dict):
+                            coautor_email = coautor.get('email', '').strip()
+                            if coautor_email:
+                                cursor.execute("SELECT id_persona FROM persona WHERE correo_electronico = %s", [coautor_email])
+                                persona_row = cursor.fetchone()
+                                if persona_row:
+                                    id_persona_coautor = persona_row[0]
+                                    cursor.execute("SELECT id_ponente FROM ponente WHERE id_persona = %s", [id_persona_coautor])
+                                    ponente_coautor_row = cursor.fetchone()
+                                    if not ponente_coautor_row:
+                                        cursor.execute("INSERT INTO ponente (id_persona) VALUES (%s) RETURNING id_ponente", [id_persona_coautor])
+                                        id_ponente_coautor = cursor.fetchone()[0]
+                                    else:
+                                        id_ponente_coautor = ponente_coautor_row[0]
+                                    
+                                    cursor.execute("""
+                                        INSERT INTO ponente_has_ponencia (id_ponente, id_ponencia, asistio, es_principal)
+                                        VALUES (%s, %s, FALSE, FALSE)
+                                        ON CONFLICT (id_ponente, id_ponencia) DO NOTHING
+                                    """, [id_ponente_coautor, id_ponencia])
+
+
+            return Response({'detail': 'Ponencia enviada exitosamente', 'id_ponencia': id_ponencia}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
