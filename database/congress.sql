@@ -238,7 +238,7 @@ CREATE TABLE ponencia (
     id_evento INTEGER REFERENCES evento(id_evento),
     tipo_participacion tipo_participacion_enum,
     id_subarea INTEGER NOT NULL REFERENCES subareas(id_subareas),
-    id_resumen INTEGER NOT NULL REFERENCES resumen(id_resumen),
+    id_resumen INTEGER REFERENCES resumen(id_resumen),
     id_extenso INTEGER REFERENCES extenso(id_extenso),
     id_multimedia INTEGER REFERENCES multimedia(id_material)
 );
