@@ -208,9 +208,15 @@ class InstitucionViewSet(viewsets.ModelViewSet):
             return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class CongresoViewSet(viewsets.ModelViewSet):
-    queryset = Congreso.objects.all().select_related('id_sede', 'id_fechas_congreso', 'id_costos_congreso', 'id_institucion')
     serializer_class = CongresoSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Congreso.objects.all().select_related('id_sede', 'id_fechas_congreso', 'id_costos_congreso', 'id_institucion')
+        id_institucion = self.request.query_params.get('id_institucion')
+        if id_institucion:
+            queryset = queryset.filter(id_institucion_id=id_institucion)
+        return queryset
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()

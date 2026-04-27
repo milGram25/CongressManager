@@ -53,8 +53,10 @@ export async function getUserHistoryApi(accessToken, tipo = 'general') {
 }
 
 // Congresos
-export async function getCongresosApi(accessToken) {
-  const res = await fetch(`${API_URL}/api/congresos/lista/`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+export async function getCongresosApi(accessToken, idInstitucion = null) {
+  let url = `${API_URL}/api/congresos/lista/`;
+  if (idInstitucion) url += `?id_institucion=${idInstitucion}`;
+  const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
   if (!res.ok) throw new Error('Error al obtener congresos.');
   return res.json();
 }
