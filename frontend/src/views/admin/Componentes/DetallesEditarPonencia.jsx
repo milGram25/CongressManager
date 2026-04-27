@@ -99,7 +99,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
         }));
     }
 
-    const handleSave = async () => {
+    async function handleSave() {
         if (!formatData.nombre_evento || !formatData.id_congreso) {
             alert("Por favor completa los campos obligatorios.");
             return;

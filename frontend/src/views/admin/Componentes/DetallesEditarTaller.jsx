@@ -88,6 +88,12 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
         fetchAll();
     }, [tallerData?.id, tallerData?.id_taller, accessToken]);
 
+    useEffect(() => {
+        if (formatData.id_congreso) {
+            getMesasApi(accessToken).then(setMesas).catch(console.error);
+        }
+    }, [formatData.id_congreso, accessToken]);
+
     // Determinar si el congreso debe estar bloqueado
     const congressLocked = (!!tallerData?.id || !!tallerData?.id_congreso) && isFullPage;
 
@@ -106,7 +112,7 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
         }));
     }
 
-    const handleSave = async () => {
+    async function handleSave() {
         if (!formatData.nombre_evento || !formatData.id_congreso) {
             alert("Por favor completa los campos obligatorios.");
             return;
