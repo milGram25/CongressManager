@@ -1,10 +1,25 @@
 from rest_framework import serializers
+from django.utils import timezone
 from .models import Congreso, Institucion, Sede, MesasTrabajo, Evento, FechasCongreso, CostosCongreso, Rubrica, RubricaCriterio, TipoTrabajo, Dictamen, DictamenPregunta, AreaGeneral, Subarea, Taller
 
 class InstitucionSerializer(serializers.ModelSerializer):
+    congresos_totales = serializers.SerializerMethodField()
+    congresos_activos = serializers.SerializerMethodField()
+
     class Meta:
         model = Institucion
         fields = '__all__'
+
+    def get_congresos_totales(self, obj):
+        return Congreso.objects.filter(id_institucion=obj).count()
+
+    def get_congresos_activos(self, obj):
+        now = timezone.now()
+        return Congreso.objects.filter(
+            id_institucion=obj,
+            id_fechas_congreso__fecha_inicio_evento__lte=now,
+            id_fechas_congreso__fecha_final_evento__gte=now
+        ).count()
 
 class SedeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -56,18 +71,18 @@ class CongresoSerializer(serializers.ModelSerializer):
     # Mapear campos de FECHAS
     congreso_inicio = serializers.DateTimeField(source='id_fechas_congreso.fecha_inicio_evento', read_only=True)
     congreso_fin = serializers.DateTimeField(source='id_fechas_congreso.fecha_final_evento', read_only=True)
-    envio_ponencias_inicio = serializers.DateTimeField(source='id_fechas_congreso.fecha_inicio_envio_resumen', read_only=True)
-    envio_ponencias_fin = serializers.DateTimeField(source='id_fechas_congreso.fecha_final_envio_resumen', read_only=True)
-    inscripcion_dictaminadores_inicio = serializers.DateTimeField(source='id_fechas_congreso.fecha_inicio_registro_dictaminadores', read_only=True)
-    inscripcion_dictaminadores_fin = serializers.DateTimeField(source='id_fechas_congreso.fecha_final_registro_dictaminadores', read_only=True)
-    revision_resumenes_inicio = serializers.DateTimeField(source='id_fechas_congreso.fecha_inicio_revision_resumen', read_only=True)
-    revision_resumenes_fin = serializers.DateTimeField(source='id_fechas_congreso.fecha_final_revision_resumen', read_only=True)
-    envio_extensos_inicio = serializers.DateTimeField(source='id_fechas_congreso.fecha_inicio_subir_extenso', read_only=True)
-    envio_extensos_fin = serializers.DateTimeField(source='id_fechas_congreso.fecha_final_subir_extenso', read_only=True)
-    inscripcion_evaluadores_inicio = serializers.DateTimeField(source='id_fechas_congreso.fecha_inicio_registro_evaluadores', read_only=True)
-    inscripcion_evaluadores_fin = serializers.DateTimeField(source='id_fechas_congreso.fecha_final_registro_evaluadores', read_only=True)
-    revision_extensos_inicio = serializers.DateTimeField(source='id_fechas_congreso.fecha_inicio_revision_extensos', read_only=True)
-    revision_extensos_fin = serializers.DateTimeField(source='id_fechas_congreso.fecha_final_revision_extensos', read_only=True)
+    envio_ponencias_inicio = serializers.DateTimeField(source='id_fechas_congreso.fecha_inicio_subida_ponencias', read_only=True)
+    envio_ponencias_fin = serializers.DateTimeField(source='id_fechas_congreso.fecha_final_subida_ponencias', read_only=True)
+    inscripcion_dictaminadores_inicio = serializers.DateTimeField(source='id_fechas_congreso.fecha_inicio_inscribir_dictaminador', read_only=True)
+    inscripcion_dictaminadores_fin = serializers.DateTimeField(source='id_fechas_congreso.fecha_final_inscribir_dictaminador', read_only=True)
+    revision_resumenes_inicio = serializers.DateTimeField(source='id_fechas_congreso.fecha_inicio_evaluar_resumenes', read_only=True)
+    revision_resumenes_fin = serializers.DateTimeField(source='id_fechas_congreso.fecha_final_evaluar_resumenes', read_only=True)
+    envio_extensos_inicio = serializers.SerializerMethodField()
+    envio_extensos_fin = serializers.SerializerMethodField()
+    inscripcion_evaluadores_inicio = serializers.DateTimeField(source='id_fechas_congreso.fecha_inicio_inscribir_evaluador', read_only=True)
+    inscripcion_evaluadores_fin = serializers.DateTimeField(source='id_fechas_congreso.fecha_final_inscribir_evaluador', read_only=True)
+    revision_extensos_inicio = serializers.DateTimeField(source='id_fechas_congreso.fecha_inicio_evaluar_extensos', read_only=True)
+    revision_extensos_fin = serializers.DateTimeField(source='id_fechas_congreso.fecha_fin_evaluar_extensos', read_only=True)
     subir_multimedia_inicio = serializers.DateTimeField(source='id_fechas_congreso.fecha_inicio_subir_multimedia', read_only=True)
     subir_multimedia_fin = serializers.DateTimeField(source='id_fechas_congreso.fecha_final_subir_multimedia', read_only=True)
 
@@ -76,8 +91,8 @@ class CongresoSerializer(serializers.ModelSerializer):
     costo_ponente = serializers.DecimalField(source='id_costos_congreso.costo_congreso_ponente', max_digits=10, decimal_places=2, read_only=True)
     costo_miembro_comite = serializers.DecimalField(source='id_costos_congreso.costo_congreso_comite', max_digits=10, decimal_places=2, read_only=True)
     cuenta_deposito = serializers.CharField(source='id_costos_congreso.cuenta_deposito', read_only=True)
-    descuento_prepago = serializers.IntegerField(source='id_costos_congreso.descuento_prepago', read_only=True)
-    descuento_estudiante = serializers.IntegerField(source='id_costos_congreso.descuento_estudiante', read_only=True)
+    descuento_prepago = serializers.FloatField(source='id_costos_congreso.descuento_prepago', read_only=True)
+    descuento_estudiante = serializers.FloatField(source='id_costos_congreso.descuento_estudiante', read_only=True)
 
     cantidad_eventos = serializers.SerializerMethodField()
 
@@ -87,6 +102,12 @@ class CongresoSerializer(serializers.ModelSerializer):
 
     def get_cantidad_eventos(self, obj):
         return obj.eventos.count() if hasattr(obj, 'eventos') else 0
+
+    def get_envio_extensos_inicio(self, obj):
+        return None
+
+    def get_envio_extensos_fin(self, obj):
+        return None
 
 class MesasTrabajoSerializer(serializers.ModelSerializer):
     class Meta:

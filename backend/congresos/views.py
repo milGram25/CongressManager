@@ -300,6 +300,7 @@ class CongresoViewSet(viewsets.ModelViewSet):
                 fe.fecha_inicio_evaluar_extensos = clean_date(data.get('revision_extensos_inicio'), fe.fecha_inicio_evaluar_extensos)
                 fe.fecha_fin_evaluar_extensos = clean_date(data.get('revision_extensos_fin'), fe.fecha_fin_evaluar_extensos)
                 fe.fecha_inicio_subir_multimedia = clean_date(data.get('subir_multimedia_inicio'), fe.fecha_inicio_subir_multimedia)
+
                 fe.fecha_fin_subir_multimedia = clean_date(data.get('subir_multimedia_fin'), fe.fecha_fin_subir_multimedia)
                 fe.save()
                 co = instance.id_costos_congreso

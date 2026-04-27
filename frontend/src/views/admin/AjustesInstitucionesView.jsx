@@ -18,7 +18,9 @@ export default function AjustesInstitucionesView() {
       const mappedData = data.map(inst => ({
         ...inst,
         id: inst.id_institucion,
-        nombre_institucion: inst.nombre
+        nombre_institucion: inst.nombre,
+        congresos_totales: inst.congresos_totales,
+        congresos_activos: inst.congresos_activos
       }));
       setInstituciones(mappedData);
     } catch (error) {
