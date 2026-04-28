@@ -163,3 +163,5 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'id_persona',
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

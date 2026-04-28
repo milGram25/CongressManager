@@ -11,4 +11,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('registrar/', registrar_ponencia, name='registrar_ponencia'),
     path('catalogo/', listar_catalogo_ponencias, name='listar_catalogo'),
+    path('enviar/', EnviarPonenciaAPIView.as_view(), name='enviar-ponencia'),
 ]

@@ -122,6 +122,7 @@ const MOCK_RESUMENES = [
       { id: 1, texto: "Es conciso?", aprobado: true, comentario: "Bien" },
       { id: 2, texto: "Es util?", aprobado: false, comentario: "Meh" },
       { id: 3, texto: "Es claro?", aprobado: true, comentario: "Claro" },
+      { id: 3, texto: "Es relevante?", aprobado: true, comentario: "Le falta" },
     ],
   },
 ];
@@ -183,7 +184,7 @@ function ResumenDetailCard({ resumen, revisores }) {
             </div>
           </div>
 
-          <div className="mt-3">
+          <div className="mt-3 max-h-[200px] overflow-y-auto">
             {resumen.preguntas.map((pregunta) => (
               <QuestionStatusRow key={pregunta.id} pregunta={pregunta} />
             ))}
@@ -238,7 +239,10 @@ export default function ProcesosResumenesView() {
           <ListaRevisores titulo="DICTAMINADORES" revisores={revisoresAsignados} />
 
         </div>
-        <ResumenDetailCard resumen={viewItem} revisores={revisoresAsignados} />
+        <div className="">
+          <ResumenDetailCard resumen={viewItem} revisores={revisoresAsignados} />
+        </div>
+
       </section>
     </div>
   );
