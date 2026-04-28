@@ -1,14 +1,95 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
-from .models import Persona, Asistente
+from .models import Persona, Asistente, Dictaminador, Evaluador, Ponente, Factura, Constancia, HistorialAcciones
+
+
+class FacturaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Factura
+        fields = '__all__'
+
+
+class ConstanciaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Constancia
+        fields = '__all__'
+
+
+class HistorialAccionesSerializer(serializers.ModelSerializer):
+    nombre_persona = serializers.CharField(source='id_persona.nombre', read_only=True)
+    fecha = serializers.DateTimeField(source='fecha_accion', format="%Y-%m-%d %H:%M:%S")
+
+    class Meta:
+        model = HistorialAcciones
+        fields = ('id_historial_acciones', 'nombre_persona', 'fecha', 'rol', 'accion')
+
+
+class ParticipantSerializer(serializers.ModelSerializer):
+    nombre_completo = serializers.SerializerMethodField()
+    rol = serializers.SerializerMethodField()
+    institucion = serializers.SerializerMethodField()
+    factura = serializers.SerializerMethodField()
+    constancia = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Persona
+        fields = ('id_persona', 'nombre_completo', 'correo_electronico', 'rol', 'institucion', 'factura', 'constancia')
+
+    def get_nombre_completo(self, obj):
+        partes = [obj.nombre, obj.primer_apellido, obj.segundo_apellido]
+        return " ".join([n for n in partes if n]).strip()
+
+    def get_rol(self, obj):
+        try:
+            obj.dictaminador
+            return 'Dictaminador'
+        except Exception:
+            pass
+        try:
+            obj.evaluador
+            return 'Evaluador'
+        except Exception:
+            pass
+        try:
+            obj.ponente
+            return 'Ponente'
+        except Exception:
+            pass
+        try:
+            obj.asistente
+            return 'Asistente'
+        except Exception:
+            pass
+        return 'Participante'
+
+    def get_institucion(self, obj):
+        try:
+            inst = obj.asistente.institucion_procedencia
+            return inst if inst else "N/A"
+        except Exception:
+            return "N/A"
+
+    def get_factura(self, obj):
+        id_congreso = self.context.get('id_congreso')
+        query = Factura.objects.filter(id_persona=obj)
+        if id_congreso:
+            query = query.filter(id_congreso_id=id_congreso)
+        factura = query.order_by('-fecha_solicitud').first()
+        return FacturaSerializer(factura).data if factura else None
+
+    def get_constancia(self, obj):
+        id_congreso = self.context.get('id_congreso')
+        query = Constancia.objects.filter(id_persona=obj)
+        if id_congreso:
+            query = query.filter(id_congreso_id=id_congreso)
+        constancia = query.order_by('-fecha_emision').first()
+        return ConstanciaSerializer(constancia).data if constancia else None
+
 
 class RegisterSerializer(serializers.ModelSerializer):
-    """Serializer para registro de nuevos usuarios."""
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     confirmPassword = serializers.CharField(write_only=True, required=True)
-    
-    # Campos extra del frontend
     nombres = serializers.CharField(source='nombre', required=True)
     apellidos = serializers.CharField(source='primer_apellido', required=True)
     email = serializers.EmailField(source='correo_electronico', required=True)
@@ -17,12 +98,11 @@ class RegisterSerializer(serializers.ModelSerializer):
     genero = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     pais = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     discapacidad = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    
-    # Ignoramos estos del modelo Persona porque los manejaremos en 'create' con alias
+
     class Meta:
         model = Persona
         fields = (
-            'nombres', 'apellidos', 'email', 'telefono', 
+            'nombres', 'apellidos', 'email', 'telefono',
             'password', 'confirmPassword', 'institucion',
             'genero', 'pais', 'discapacidad'
         )
@@ -30,43 +110,30 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs.get('password') != attrs.get('confirmPassword'):
             raise serializers.ValidationError({"password": "Las contraseñas no coinciden."})
-        
-        # Validar unicidad explícita porque usamos source=''
         correo = attrs.get('correo_electronico')
         if Persona.objects.filter(correo_electronico=correo).exists():
             raise serializers.ValidationError({"email": "Un usuario con este correo electrónico ya existe."})
-            
         telefono = attrs.get('num_telefono')
         if telefono and Persona.objects.filter(num_telefono=telefono).exists():
             raise serializers.ValidationError({"telefono": "Un usuario con este teléfono ya existe."})
-            
         return attrs
 
     def create(self, validated_data):
         institucion = validated_data.pop('institucion', '')
         password = validated_data.pop('password')
-        # confirmPassword ya se validó en 'validate()', se saca para no enviarlo a create_user
         validated_data.pop('confirmPassword', None)
-        
-        # Separar apellidos si llegan ambos en el mismo campo
         apellidos_str = validated_data.get('primer_apellido', '')
-        partes_apellido = apellidos_str.split(' ', 1)
-        if len(partes_apellido) > 1:
-            validated_data['primer_apellido'] = partes_apellido[0]
-            validated_data['segundo_apellido'] = partes_apellido[1]
-            
+        partes = apellidos_str.split(' ', 1)
+        if len(partes) > 1:
+            validated_data['primer_apellido'] = partes[0]
+            validated_data['segundo_apellido'] = partes[1]
         with transaction.atomic():
             user = Persona.objects.create_user(contrasena=password, **validated_data)
-            # Todo el que se registra por primera vez es asistente por defecto
-            Asistente.objects.create(
-                id_persona=user,
-                institucion_procedencia=institucion
-            )
+            Asistente.objects.create(id_persona=user, institucion_procedencia=institucion)
         return user
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Serializer para devolver los datos del usuario autenticado."""
     rol = serializers.SerializerMethodField()
     nombre_completo = serializers.SerializerMethodField()
 
@@ -75,29 +142,22 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id_persona', 'correo_electronico', 'nombre', 'primer_apellido', 'segundo_apellido', 'rol', 'nombre_completo')
 
     def get_rol(self, obj):
-        # Determinar rol verificando relaciones
         if obj.is_superuser or obj.is_staff:
             return 'administrador'
-        
         try:
-            if obj.dictaminador: return 'dictaminador'
+            obj.dictaminador; return 'dictaminador'
         except Exception:
             pass
         try:
-            if obj.evaluador: return 'revisor'
+            obj.evaluador; return 'revisor'
         except Exception:
             pass
         try:
-            if obj.ponente: return 'ponente'
+            obj.ponente; return 'ponente'
         except Exception:
             pass
-        try:
-            if obj.asistente: return 'asistente'
-        except Exception:
-            pass
-            
-        return 'asistente' # Por defecto
+        return 'asistente'
 
     def get_nombre_completo(self, obj):
-        nombres = [obj.nombre, obj.primer_apellido, obj.segundo_apellido]
-        return " ".join([n for n in nombres if n]).strip()
+        partes = [obj.nombre, obj.primer_apellido, obj.segundo_apellido]
+        return " ".join([n for n in partes if n]).strip()

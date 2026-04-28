@@ -20,7 +20,12 @@ const ItemInstitucion = ({
     listaDatos
 }) => {
     return (
-        <TarjetaGenerica titulo={listaDatos.nombre_institucion}> {/* Sin botón de publicar */}
+        <TarjetaGenerica 
+            titulo={listaDatos.nombre_institucion}
+            definirTipoElemento="institucion"
+            indexDatosModal={listaDatos.id}
+            itemData={listaDatos}
+        >
 
 
             {/* Fila 1: Lista congresos totales */}
@@ -48,7 +53,7 @@ const ItemInstitucion = ({
                     <span>Ubicación</span>
                 </div>
                 <div style={valuePillStyle}>
-                    {ubicacion} {/* No es una píldora tradicional, es texto alineado a la izquierda */}
+                    {listaDatos.ubicacion || "Sin ubicación"}
                 </div>
             </div>
 
@@ -58,7 +63,7 @@ const ItemInstitucion = ({
                     <div style={iconCircleBox}><FiFlag size={12} /></div>
                     <span>País</span>
                 </div>
-                <div style={valuePillStyle}>{pais}</div>
+                <div style={valuePillStyle}>{listaDatos.pais || "México"}</div>
             </div>
 
             <div className='flex w-full items-center justify-between border rounded-full w-30 h-20 overflow-hidden'>

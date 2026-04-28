@@ -35,13 +35,18 @@ import UsuariosHistorialView from "./views/admin/UsuariosHistorialView";
 import AjustesView from "./views/admin/AjustesView";
 import AjustesAreasView from "./views/admin/AjustesAreasView";
 import AjustesInstitucionesView from "./views/admin/AjustesInstitucionesView";
+import InstitucionDetallesView from "./views/admin/InstitucionDetallesView";
 
 import ProcesosResumenesView from "./views/admin/ProcesosResumenesView";
 import ProcesosExtensosView from "./views/admin/ProcesosExtensosView";
 import TalleresView from "./views/admin/TalleresView";
 import TalleresCrearView from "./views/admin/TalleresCrearView";
+import TallerDetallesView from "./views/admin/TallerDetallesView";
+
 import PonenciasView from "./views/admin/PonenciasView";
 import PonenciaCrearView from "./views/admin/PonenciaCrearView";
+import PonenciaDetallesView from "./views/admin/PonenciaDetallesView";
+
 import CongresosView from "./views/admin/CongresosView";
 import CongresoListaView from "./views/admin/CongresoListaView";
 import CongresoDetallesView from "./views/admin/CongresoDetallesView";
@@ -81,6 +86,7 @@ import {
   MdDescription,
   MdArticle,
   MdReceipt,
+  MdLayers,
 } from "react-icons/md";
 import { FaBook } from "react-icons/fa6";
 const AsistenteLayoutWrapper = () => {
@@ -177,20 +183,18 @@ const AdminLayoutWrapper = () => {
       { to: '/admin/procesos/extensos', label: 'Extensos', icon: MdArticle, className: 'pl-9 opacity-70' },
     ] : []),
 
-    // Eventos con sub-menú dinámico
-    { to: '/admin/eventos', label: 'Eventos', icon: MdEvent },
-    ...(pathname.includes('/admin/eventos') ? [
-      { to: '/admin/eventos/talleres', label: 'Talleres', icon: MdGroups, className: 'pl-9 opacity-70' },
-      { to: '/admin/eventos/ponencias', label: 'Ponencias', icon: MdCoPresent, className: 'pl-9 opacity-70' },
-      { to: '/admin/eventos/congresos', label: 'Congresos', icon: MdAccountBalance, className: 'pl-9 opacity-70' },
-      // Sub-sub menú de Congresos
-      ...(pathname.includes('/admin/eventos/congresos') ? [
-        { to: '/admin/eventos/congresos/lista', label: 'Lista', icon: MdInfo, className: 'pl-14 opacity-60' },
-        { to: '/admin/eventos/congresos/sede', label: 'Sede', icon: MdPlace, className: 'pl-14 opacity-60' },
-        { to: '/admin/eventos/congresos/fechas', label: 'Fechas', icon: MdEventAvailable, className: 'pl-14 opacity-60' },
-        { to: '/admin/eventos/congresos/tipos-trabajo', label: 'Tipos Trabajo', icon: MdWork, className: 'pl-14 opacity-60' },
-        { to: '/admin/eventos/congresos/libros', label: 'Libros', icon: FaBook, className: 'pl-14 opacity-70' },
-      ] : [])
+    // Congresos como apartado principal con sub-menú dinámico
+    { 
+      to: '/admin/eventos/congresos/lista', 
+      label: 'Congresos', 
+      icon: MdAccountBalance,
+      activePaths: ['/admin/eventos/talleres', '/admin/eventos/ponencias']
+    },
+    ...(pathname.includes('/admin/eventos/congresos') ? [
+      { to: '/admin/eventos/congresos/lista', label: 'Lista', icon: MdInfo, className: 'pl-9 opacity-70' },
+      { to: '/admin/eventos/congresos/sede', label: 'Sede', icon: MdPlace, className: 'pl-9 opacity-70' },
+      { to: '/admin/eventos/congresos/fechas', label: 'Fechas', icon: MdEventAvailable, className: 'pl-9 opacity-70' },
+      { to: '/admin/eventos/congresos/libros', label: 'Libros', icon: FaBook, className: 'pl-9 opacity-70' },
     ] : []),
 
     { to: '/admin/pagos', label: 'Pagos', icon: MdPayment },
@@ -377,10 +381,12 @@ function App() {
               <Route path="talleres">
                 <Route index element={<TalleresView />} />
                 <Route path="crear" element={<TalleresCrearView />} />
+                <Route path="detalles/:id" element={<TallerDetallesView />} />
               </Route>
               <Route path="ponencias">
                 <Route index element={<PonenciasView />} />
                 <Route path="crear" element={<PonenciaCrearView />} />
+                <Route path="detalles/:id" element={<PonenciaDetallesView />} />
               </Route>
               <Route path="congresos">
                 <Route index element={<CongresosView />} />
@@ -389,7 +395,7 @@ function App() {
                 <Route path="detalles/:id" element={<CongresoDetallesView />} />
                 <Route path="sede" element={<CongresoSedeView />} />
                 <Route path="fechas" element={<CongresoFechasView />} />
-                <Route path="tipos-trabajo" element={<CongresoTiposTrabajoView />} />
+                <Route path="tipos-trabajo/:id" element={<CongresoTiposTrabajoView />} />
                 <Route path="libros" element={<LibrosView title="Gestión de Libros" />} />
               </Route>
             </Route>
@@ -402,9 +408,12 @@ function App() {
             </Route>
             <Route path="ajustes">
               <Route index element={<AjustesView />} />
-              <Route path="instituciones" element={<AjustesInstitucionesView title="Gestión de Instituciones" />} />
+              <Route path="instituciones">
+                <Route index element={<AjustesInstitucionesView title="Gestión de Instituciones" />} />
+                <Route path="crear" element={<InstitucionDetallesView />} />
+                <Route path="editar/:id" element={<InstitucionDetallesView />} />
+              </Route>
               <Route path="areas" element={<AjustesAreasView title="Gestión de Áreas" />} />
-
             </Route>
           </Route>
 

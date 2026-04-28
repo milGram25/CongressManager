@@ -16,6 +16,8 @@ CREATE TYPE accion_enum AS ENUM (
 CREATE TABLE institucion (
     id_institucion SERIAL PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL,
+    ubicacion VARCHAR(255),
+    pais VARCHAR(100) DEFAULT 'México',
     ruta_imagen VARCHAR(255)
 );
 
@@ -38,6 +40,7 @@ CREATE TABLE areas_generales (
 
 CREATE TABLE tipo_trabajo (
     id_tipo_trabajo SERIAL PRIMARY KEY,
+    id_congreso INTEGER,
     tipo_trabajo VARCHAR(255) NOT NULL
 );
 
@@ -102,7 +105,8 @@ CREATE TABLE fechas_congreso (
 -- 3. SISTEMA DE RÚBRICAS (Plantillas de evaluación)
 CREATE TABLE rubrica (
     id_rubrica SERIAL PRIMARY KEY,
-    tipo_trabajo INTEGER NOT NULL REFERENCES tipo_trabajo(id_tipo_trabajo),
+    id_congreso INTEGER,
+    tipo_trabajo INTEGER REFERENCES tipo_trabajo(id_tipo_trabajo),
     nombre VARCHAR(255) NOT NULL,
     esta_activo BOOLEAN DEFAULT true,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -149,8 +153,14 @@ CREATE TABLE congreso (
     id_institucion INTEGER NOT NULL REFERENCES institucion(id_institucion),
     id_fechas_congreso INTEGER NOT NULL REFERENCES fechas_congreso(id_fechas_congreso),
     id_costos_congreso INTEGER NOT NULL REFERENCES costos_congreso(id_costos_congreso),
-    id_rubrica_default INTEGER REFERENCES rubrica(id_rubrica) -- Rubrica global del congreso
+    id_rubrica_default INTEGER REFERENCES rubrica(id_rubrica), -- Rubrica global del congreso
+    firma_organizador VARCHAR(255),
+    firma_secretaria VARCHAR(255),
+    firmas_bloqueadas BOOLEAN DEFAULT FALSE
 );
+
+ALTER TABLE tipo_trabajo ADD CONSTRAINT fk_tipo_trabajo_congreso FOREIGN KEY (id_congreso) REFERENCES congreso(id_congreso) ON DELETE CASCADE;
+ALTER TABLE rubrica ADD CONSTRAINT fk_rubrica_congreso FOREIGN KEY (id_congreso) REFERENCES congreso(id_congreso) ON DELETE CASCADE;
 
 -- 5. ROLES Y LOGÍSTICA
 CREATE TABLE evaluador (
@@ -232,7 +242,7 @@ CREATE TABLE ponencia (
     id_evento INTEGER REFERENCES evento(id_evento),
     tipo_participacion tipo_participacion_enum,
     id_subarea INTEGER NOT NULL REFERENCES subareas(id_subareas),
-    id_resumen INTEGER NOT NULL REFERENCES resumen(id_resumen),
+    id_resumen INTEGER REFERENCES resumen(id_resumen),
     id_extenso INTEGER REFERENCES extenso(id_extenso),
     id_multimedia INTEGER REFERENCES multimedia(id_material),
     id_tipo_trabajo INTEGER REFERENCES tipo_trabajo(id_tipo_trabajo)
@@ -298,11 +308,15 @@ CREATE TABLE ponente_has_ponencia (
 CREATE TABLE factura (
     id_factura SERIAL PRIMARY KEY,
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona),
+    id_congreso INTEGER REFERENCES congreso(id_congreso),
     rfc VARCHAR(13),
     razon_social VARCHAR(255),
     codigo_postal VARCHAR(10),
     regimen_fiscal VARCHAR(255),
-    ruta_pdf_xml VARCHAR(255) NOT NULL
+    ruta_pdf_xml VARCHAR(255),
+    estatus VARCHAR(20) DEFAULT 'pendiente', -- 'pendiente', 'enviada'
+    fecha_solicitud TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_envio TIMESTAMP
 );
 
 CREATE TABLE pagos (
@@ -327,7 +341,11 @@ CREATE TABLE historial_acciones (
 CREATE TABLE constancia (
     id_constancia SERIAL PRIMARY KEY,
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona),
-    ruta_constancia VARCHAR(255) NOT NULL
+    id_congreso INTEGER REFERENCES congreso(id_congreso),
+    ruta_constancia VARCHAR(255),
+    tipo_constancia VARCHAR(50), -- 'Asistente', 'Ponente', etc.
+    estatus VARCHAR(20) DEFAULT 'generada', -- 'generada', 'enviada'
+    fecha_emision TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE libros(
@@ -361,3 +379,169 @@ CREATE TABLE ponencia_magistral_has_ponente_magistral(
     nombre_persona VARCHAR(100) NOT NULL,
     id_ponencia_magistral INTEGER NOT NULL REFERENCES ponencia_magistral(id_ponencia_magistral)
 );
+
+-- =============================================================================
+-- DATOS DE PRUEBA — PARTICIPANTES DEL MÓDULO DE CONSTANCIAS
+-- =============================================================================
+-- Generados con: python manage.py seed_participants
+-- Contraseña de todos los usuarios de prueba: Test1234!
+--
+-- ROLES:
+--   Asistentes  → inscritos al congreso vía asistente_evento
+--   Dictaminadores / Evaluadores → comité (se incluyen en todos los congresos)
+--   Ponentes    → vinculados a ponencias vía ponente_has_ponencia
+--
+-- REQUISITOS:
+--   • Debe existir el congreso con id_congreso = 8  (Encuentro con dios)
+--   • Debe existir el evento      con id_evento    = 16 (Diego – ponencia)
+--   • Debe existir la ponencia    con id_ponencia  = 6
+--   Los registros anteriores son parte del script del backend de congresos.
+-- =============================================================================
+
+-- ── Personas de prueba ────────────────────────────────────────────────────────
+INSERT INTO persona (id_persona, nombre, primer_apellido, correo_electronico, contrasena, num_telefono, is_active, is_staff, is_superuser)
+VALUES
+  (16, 'Laura',     'Hernández', 'laura.hernandez@udg.mx',     'pbkdf2_sha256$1200000$3clD78SJJ3vX5H5aqGfJZh$2iRMQIkDJ2p6DiHKqd6pSuy9OqSKJ4qKKT1RYBERE74=', '3311100001', TRUE, FALSE, FALSE),
+  (17, 'Carlos',    'Mendoza',   'carlos.mendoza@unam.mx',     'pbkdf2_sha256$1200000$5PJZUt6S8aj7Sb9B7OAw8X$GIWwJgrcoWjasrdjsaHJl4u8Sfd9aCHnfifsh+5HdEM=', '5511100001', TRUE, FALSE, FALSE),
+  (18, 'Sofía',     'Ramírez',   'sofia.ramirez@tec.mx',       'pbkdf2_sha256$1200000$6ZDoRi5L1VLkD8EKKrAGPP$xklNSk2AxxXLURUpSAwavcOHMy9ejq10LStqSVzJeJc=', '8111100001', TRUE, FALSE, FALSE),
+  (19, 'Miguel',    'Torres',    'miguel.torres@udg.mx',       'pbkdf2_sha256$1200000$DlwCRI8VNyLzlTBDbrM4T1$nbMmgVL6Z1hBchl57QqsSc+vhP9DIYxkFbHT659rO04=', '3311100002', TRUE, FALSE, FALSE),
+  (20, 'Valentina', 'Cruz',      'valentina.cruz@uam.mx',      'pbkdf2_sha256$1200000$gk6UHaqPM6wleSPhxGUFo4$+7i/ua7BTnS2uS4frIMPPqKTqCXeU1Qt2NHdCeUyICk=', '5511100002', TRUE, FALSE, FALSE),
+  (21, 'Jorge',     'Fuentes',   'jorge.fuentes@udg.mx',       'pbkdf2_sha256$1200000$cF5LkXLIPYtQX16oAjcMxW$mc1JRmkfhVncqveSc9x2VwwfnnnMoVCczfwrmfP0w1E=', '3311100003', TRUE, FALSE, FALSE),
+  (22, 'Gabriela',  'Sánchez',   'gabriela.sanchez@unam.mx',   'pbkdf2_sha256$1200000$l92xOBY2vdeUoPbKyBS2vO$A5M/MrLV5JouSU2rX5E9TdxDC7KOVrvvjJazrghgbrU=', '5511100003', TRUE, FALSE, FALSE),
+  (23, 'Roberto',   'Pérez',     'roberto.perez@tec.mx',       'pbkdf2_sha256$1200000$8ZE4yZgWLWHWeE1yPvegSe$TdXLi9zv0Cnug0GGGjhGeuyjC4jDA1N5IuoDaTx9mDI=', '8111100002', TRUE, FALSE, FALSE),
+  (24, 'Elena',     'Vázquez',   'elena.vazquez@unam.mx',      'pbkdf2_sha256$1200000$tDYSx1BTO1LEKRhcmDi5hW$aksjCcUTzpN5G/4scnpnXJqRdl00XMpTbcI7mt7tq5A=', '5511100004', TRUE, FALSE, FALSE),
+  (25, 'Fernando',  'López',     'fernando.lopez@udg.mx',      'pbkdf2_sha256$1200000$icTGpAVAKrbZzUn4yMeq9d$/BtRdLWmENWFGw96XuVFqdRfx4YM/8e2kuMHwddyTdw=', '3311100004', TRUE, FALSE, FALSE),
+  (26, 'Patricia',  'Morales',   'patricia.morales@uam.mx',    'pbkdf2_sha256$1200000$BXMRWHAGiU6gM6zt0B1TL7$eXN662Pig3f0Q6/DihDz3p7F7inU4MxY/sONBEuif9Q=', '5511100005', TRUE, FALSE, FALSE),
+  (27, 'Alejandro', 'Jiménez',   'alejandro.jimenez@udg.mx',   'pbkdf2_sha256$1200000$s1zQUl64anpZ9gjzYF2NCu$xvxxvfMjCPN/aeXGYpz6LruFmtCE6OGVVVwwbPw1Lj8=', '3311100005', TRUE, FALSE, FALSE),
+  (28, 'Claudia',   'García',    'claudia.garcia@tec.mx',      'pbkdf2_sha256$1200000$JTfP2p7FsHCAclT43qfva1$bTNd0gMEqp7g6ze2EBQlHCi42aNyVdReSaNdW4B/klA=', '8111100003', TRUE, FALSE, FALSE),
+  (29, 'Ricardo',   'Ortega',    'ricardo.ortega@unam.mx',     'pbkdf2_sha256$1200000$5Ss6JZ2pXoagzFRRKMJHxg$vsnqNri9upKJjSqCmNP3rYNd6qewU9uVazQ8Cd2XCYs=', '5511100006', TRUE, FALSE, FALSE)
+ON CONFLICT (id_persona) DO NOTHING;
+
+-- Ajustar secuencia de persona para que no colisione con los registros insertados
+SELECT setval('persona_id_persona_seq', (SELECT MAX(id_persona) FROM persona));
+
+-- ── Asistentes ────────────────────────────────────────────────────────────────
+INSERT INTO asistente (id_asistente, id_persona, institucion_procedencia)
+VALUES
+  (3,  16, 'Universidad de Guadalajara'),
+  (4,  17, 'UNAM'),
+  (5,  18, 'Tec de Monterrey'),
+  (6,  19, 'Universidad de Guadalajara'),
+  (7,  20, 'UAM Iztapalapa'),
+  -- Dictaminadores también son asistentes (institución de procedencia)
+  (8,  21, 'Universidad de Guadalajara'),
+  (9,  22, 'UNAM'),
+  (10, 23, 'Tec de Monterrey'),
+  -- Evaluadores también son asistentes
+  (11, 24, 'UNAM'),
+  (12, 25, 'Universidad de Guadalajara'),
+  (13, 26, 'UAM Iztapalapa'),
+  -- Ponentes también son asistentes
+  (14, 27, 'Universidad de Guadalajara'),
+  (15, 28, 'Tec de Monterrey'),
+  (16, 29, 'UNAM')
+ON CONFLICT (id_asistente) DO NOTHING;
+
+SELECT setval('asistente_id_asistente_seq', (SELECT MAX(id_asistente) FROM asistente));
+
+-- ── Dictaminadores ────────────────────────────────────────────────────────────
+INSERT INTO dictaminador (id_dictaminador, id_persona)
+VALUES
+  (5, 21),  -- Jorge Fuentes
+  (6, 22),  -- Gabriela Sánchez
+  (7, 23)   -- Roberto Pérez
+ON CONFLICT (id_dictaminador) DO NOTHING;
+
+SELECT setval('dictaminador_id_dictaminador_seq', (SELECT MAX(id_dictaminador) FROM dictaminador));
+
+-- ── Evaluadores / Revisores ───────────────────────────────────────────────────
+INSERT INTO evaluador (id_evaluador, id_persona)
+VALUES
+  (5, 24),  -- Elena Vázquez
+  (6, 25),  -- Fernando López
+  (7, 26)   -- Patricia Morales
+ON CONFLICT (id_evaluador) DO NOTHING;
+
+SELECT setval('evaluador_id_evaluador_seq', (SELECT MAX(id_evaluador) FROM evaluador));
+
+-- ── Ponentes ──────────────────────────────────────────────────────────────────
+INSERT INTO ponente (id_ponente, id_persona)
+VALUES
+  (3, 27),  -- Alejandro Jiménez
+  (4, 28),  -- Claudia García
+  (5, 29)   -- Ricardo Ortega
+ON CONFLICT (id_ponente) DO NOTHING;
+
+SELECT setval('ponente_id_ponente_seq', (SELECT MAX(id_ponente) FROM ponente));
+
+-- ── Inscripciones al congreso 8 (asistentes → evento 16) ─────────────────────
+-- Asistentes inscritos al evento "Diego" (id_evento=16) del congreso "Encuentro con dios" (id=8)
+INSERT INTO asistente_evento (id_asistente, id_evento, fecha_inscripcion)
+VALUES
+  (3, 16, NOW()),  -- Laura Hernández
+  (4, 16, NOW()),  -- Carlos Mendoza
+  (5, 16, NOW()),  -- Sofía Ramírez
+  (6, 16, NOW()),  -- Miguel Torres
+  (7, 16, NOW())   -- Valentina Cruz
+ON CONFLICT DO NOTHING;
+
+-- ── Ponentes vinculados a la ponencia 6 (congreso 8, evento 16) ───────────────
+INSERT INTO ponente_has_ponencia (id_ponente, id_ponencia, asistio)
+VALUES
+  (3, 6, FALSE),  -- Alejandro Jiménez
+  (4, 6, FALSE),  -- Claudia García
+  (5, 6, FALSE)   -- Ricardo Ortega
+ON CONFLICT DO NOTHING;
+
+-- ── Facturas pendientes de prueba (congreso 8) ───────────────────────────────
+-- 6 facturas con datos fiscales para probar la vista /admin/usuarios/facturas.
+-- Equivalente a correr: python manage.py seed_facturas
+INSERT INTO factura (id_persona, id_congreso, rfc, razon_social, codigo_postal, regimen_fiscal, estatus)
+SELECT p.id_persona, 8, v.rfc, v.razon, v.cp, v.regimen, 'pendiente'
+FROM (VALUES
+  ('laura.hernandez@udg.mx',   'HERL900101AAA', 'Universidad de Guadalajara', '44100', '601 - General Personas Morales'),
+  ('carlos.mendoza@unam.mx',   'MECA850615BBB', 'UNAM',                       '04510', '601 - General Personas Morales'),
+  ('sofia.ramirez@tec.mx',     'RASF920320CCC', 'Tec de Monterrey',           '64849', '601 - General Personas Morales'),
+  ('jorge.fuentes@udg.mx',     'FUJG780910DDD', 'Universidad de Guadalajara', '44100', '612 - Personas Físicas con Actividades Empresariales'),
+  ('alejandro.jimenez@udg.mx', 'JIEA880225EEE', 'Universidad de Guadalajara', '44100', '612 - Personas Físicas con Actividades Empresariales'),
+  ('elena.vazquez@unam.mx',    'VAEE910714FFF', 'UNAM',                       '04510', '601 - General Personas Morales')
+) AS v(email, rfc, razon, cp, regimen)
+JOIN persona p ON p.correo_electronico = v.email
+WHERE NOT EXISTS (
+  SELECT 1 FROM factura f WHERE f.id_persona = p.id_persona AND f.id_congreso = 8
+);
+
+-- =============================================================================
+-- INSTRUCCIONES PARA NUEVOS DESARROLLADORES
+-- =============================================================================
+-- 1. Aplicar este script completo en una BD PostgreSQL vacía:
+--       psql -U <usuario> -d <base_de_datos> -f database/congress.sql
+--
+-- 2. Configurar el .env del backend (backend/.env) con las credenciales de BD.
+--
+-- 3. Instalar dependencias del backend:
+--       cd backend && python -m venv venv && source venv/bin/activate
+--       pip install -r requirements.txt
+--
+-- 4. Correr el servidor Django:
+--       python manage.py runserver
+--
+-- 5. Instalar dependencias del frontend:
+--       cd frontend && npm install
+--
+-- 6. Correr el frontend:
+--       npm run dev
+--
+-- Usuarios de prueba disponibles (contraseña: Test1234!):
+--   laura.hernandez@udg.mx   → Asistente    (UDG)  – tiene factura pendiente
+--   carlos.mendoza@unam.mx   → Asistente    (UNAM) – tiene factura pendiente
+--   sofia.ramirez@tec.mx     → Asistente    (Tec)  – tiene factura pendiente
+--   jorge.fuentes@udg.mx     → Dictaminador (UDG)  – tiene factura pendiente
+--   gabriela.sanchez@unam.mx → Dictaminador (UNAM)
+--   elena.vazquez@unam.mx    → Evaluador    (UNAM) – tiene factura pendiente
+--   alejandro.jimenez@udg.mx → Ponente      (UDG)  – tiene factura pendiente
+--
+-- Comandos de seed disponibles:
+--   python manage.py seed_participants  → Crea personas con roles de prueba
+--   python manage.py seed_facturas      → Crea facturas pendientes (requiere seed_participants)
+-- =============================================================================

@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8000';
+import { API_URL } from './constants';
 
 export async function getAgendaHoyApi(accessToken) {
   const res = await fetch(`${API_URL}/api/congresos/agenda/hoy/`, {
