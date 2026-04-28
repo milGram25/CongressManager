@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import registrar_ponencia, listar_catalogo_ponencias, PonenciaViewSet
+from .views import registrar_ponencia, listar_catalogo_ponencias, PonenciaViewSet, EnviarPonenciaAPIView
 
 app_name = 'ponencias'
 
