@@ -16,10 +16,16 @@ export default function UserInvoiceList({ users, selectedUserId, onSelectUser })
 
   const getStatusColor = (status) => {
     switch(status) {
-      case 'green': return 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]';
-      case 'red': return 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]';
+      case 'green':  return 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]';
+      case 'orange': return 'bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.5)]';
       default: return 'bg-gray-300';
     }
+  };
+
+  const getStatusLabel = (status) => {
+    if (status === 'green')  return { label: 'Enviada',  cls: 'bg-green-50 text-green-600 border-green-200' };
+    if (status === 'orange') return { label: 'Pendiente', cls: 'bg-orange-50 text-orange-600 border-orange-200' };
+    return null;
   };
 
   return (
@@ -39,22 +45,25 @@ export default function UserInvoiceList({ users, selectedUserId, onSelectUser })
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <h4 className="font-bold text-gray-800 truncate">{user.nombre}</h4>
               <span className="bg-[#005a6a]/10 px-2 py-0.5 rounded-md text-[#005a6a] text-[10px] font-bold uppercase tracking-wider">{user.rol}</span>
+              {(() => { const s = getStatusLabel(user.status); return s ? (
+                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${s.cls}`}>{s.label}</span>
+              ) : null; })()}
             </div>
-            
+
             <div className="flex flex-col gap-0.5">
               <p className="text-xs font-semibold text-gray-600">
-                <span className="text-gray-400 font-normal mr-1 italic">RFC:</span> {user.rfc}
+                <span className="text-gray-400 font-normal mr-1 italic">RFC:</span> {user.rfc || '—'}
               </p>
-              
+
               {user.razonSocial && (
                 <p className="text-[11px] text-[#005a6a] font-medium truncate">
                   <span className="text-gray-400 font-normal mr-1 italic">Facturar a:</span> {user.razonSocial}
                 </p>
               )}
-              
+
               <p className="text-[10px] text-gray-400 truncate mt-0.5">
                 {user.email}
               </p>

@@ -119,18 +119,19 @@ class ParticipantsListView(APIView):
                 return Response([])
             users = users.filter(pk__in=enrolled_ids)
 
+        dict_ids = set(Dictaminador.objects.values_list('id_persona_id', flat=True))
+        eval_ids = set(Evaluador.objects.values_list('id_persona_id', flat=True))
+        pon_ids  = set(Ponente.objects.values_list('id_persona_id', flat=True))
+        asi_ids  = set(Asistente.objects.values_list('id_persona_id', flat=True))
+
         if rol == 'dictaminador':
-            ids = Dictaminador.objects.values_list('id_persona_id', flat=True)
-            users = users.filter(pk__in=ids)
+            users = users.filter(pk__in=dict_ids)
         elif rol in ('evaluador', 'revisor'):
-            ids = Evaluador.objects.values_list('id_persona_id', flat=True)
-            users = users.filter(pk__in=ids)
+            users = users.filter(pk__in=eval_ids).exclude(pk__in=dict_ids)
         elif rol == 'ponente':
-            ids = Ponente.objects.values_list('id_persona_id', flat=True)
-            users = users.filter(pk__in=ids)
+            users = users.filter(pk__in=pon_ids).exclude(pk__in=dict_ids).exclude(pk__in=eval_ids)
         elif rol == 'asistente':
-            ids = Asistente.objects.values_list('id_persona_id', flat=True)
-            users = users.filter(pk__in=ids)
+            users = users.filter(pk__in=asi_ids).exclude(pk__in=dict_ids).exclude(pk__in=eval_ids).exclude(pk__in=pon_ids)
 
         if institucion:
             ids = Asistente.objects.filter(
@@ -196,7 +197,10 @@ class FacturaUploadView(APIView):
         filename = fs.save(f"factura_{id_persona}_{id_congreso}_{file.name}", file)
         file_url = f"/media/facturas/{filename}"
 
-        factura = Factura.objects.filter(id_persona_id=id_persona, id_congreso_id=id_congreso).first()
+        factura = Factura.objects.filter(
+            id_persona_id=id_persona,
+            id_congreso_id=id_congreso if id_congreso else None
+        ).first()
         if not factura:
             factura = Factura.objects.create(
                 id_persona_id=id_persona,
@@ -211,7 +215,45 @@ class FacturaUploadView(APIView):
             factura.fecha_envio = timezone.now()
             factura.save()
 
+        try:
+            persona = Persona.objects.get(pk=id_persona)
+            rol = _get_rol_persona(persona)
+            HistorialAcciones.objects.create(
+                id_persona=persona,
+                rol=rol,
+                accion='emisión de factura'
+            )
+        except Exception:
+            pass
+
         return Response(FacturaSerializer(factura).data, status=status.HTTP_200_OK)
+
+
+class BulkFacturaActionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        id_congreso = request.data.get('id_congreso')
+        user_ids = request.data.get('user_ids', [])
+
+        if not user_ids:
+            return Response({'detail': 'No se especificaron usuarios.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        Factura.objects.filter(
+            id_persona_id__in=user_ids,
+            id_congreso_id=id_congreso if id_congreso else None,
+            estatus='pendiente'
+        ).update(estatus='enviada', fecha_envio=timezone.now())
+
+        personas = Persona.objects.filter(pk__in=user_ids)
+        for persona in personas:
+            HistorialAcciones.objects.create(
+                id_persona=persona,
+                rol=_get_rol_persona(persona),
+                accion='emisión de factura'
+            )
+
+        return Response({'detail': f'{len(user_ids)} facturas procesadas.'})
 
 
 class BulkConstanciaActionView(APIView):

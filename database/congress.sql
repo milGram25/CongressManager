@@ -487,6 +487,24 @@ VALUES
   (5, 6, FALSE)   -- Ricardo Ortega
 ON CONFLICT DO NOTHING;
 
+-- ── Facturas pendientes de prueba (congreso 8) ───────────────────────────────
+-- 6 facturas con datos fiscales para probar la vista /admin/usuarios/facturas.
+-- Equivalente a correr: python manage.py seed_facturas
+INSERT INTO factura (id_persona, id_congreso, rfc, razon_social, codigo_postal, regimen_fiscal, estatus)
+SELECT p.id_persona, 8, v.rfc, v.razon, v.cp, v.regimen, 'pendiente'
+FROM (VALUES
+  ('laura.hernandez@udg.mx',   'HERL900101AAA', 'Universidad de Guadalajara', '44100', '601 - General Personas Morales'),
+  ('carlos.mendoza@unam.mx',   'MECA850615BBB', 'UNAM',                       '04510', '601 - General Personas Morales'),
+  ('sofia.ramirez@tec.mx',     'RASF920320CCC', 'Tec de Monterrey',           '64849', '601 - General Personas Morales'),
+  ('jorge.fuentes@udg.mx',     'FUJG780910DDD', 'Universidad de Guadalajara', '44100', '612 - Personas Físicas con Actividades Empresariales'),
+  ('alejandro.jimenez@udg.mx', 'JIEA880225EEE', 'Universidad de Guadalajara', '44100', '612 - Personas Físicas con Actividades Empresariales'),
+  ('elena.vazquez@unam.mx',    'VAEE910714FFF', 'UNAM',                       '04510', '601 - General Personas Morales')
+) AS v(email, rfc, razon, cp, regimen)
+JOIN persona p ON p.correo_electronico = v.email
+WHERE NOT EXISTS (
+  SELECT 1 FROM factura f WHERE f.id_persona = p.id_persona AND f.id_congreso = 8
+);
+
 -- =============================================================================
 -- INSTRUCCIONES PARA NUEVOS DESARROLLADORES
 -- =============================================================================
@@ -509,11 +527,15 @@ ON CONFLICT DO NOTHING;
 --       npm run dev
 --
 -- Usuarios de prueba disponibles (contraseña: Test1234!):
---   laura.hernandez@udg.mx   → Asistente    (UDG)
---   carlos.mendoza@unam.mx   → Asistente    (UNAM)
---   sofia.ramirez@tec.mx     → Asistente    (Tec)
---   jorge.fuentes@udg.mx     → Dictaminador (UDG)
+--   laura.hernandez@udg.mx   → Asistente    (UDG)  – tiene factura pendiente
+--   carlos.mendoza@unam.mx   → Asistente    (UNAM) – tiene factura pendiente
+--   sofia.ramirez@tec.mx     → Asistente    (Tec)  – tiene factura pendiente
+--   jorge.fuentes@udg.mx     → Dictaminador (UDG)  – tiene factura pendiente
 --   gabriela.sanchez@unam.mx → Dictaminador (UNAM)
---   elena.vazquez@unam.mx    → Evaluador    (UNAM)
---   alejandro.jimenez@udg.mx → Ponente      (UDG)
+--   elena.vazquez@unam.mx    → Evaluador    (UNAM) – tiene factura pendiente
+--   alejandro.jimenez@udg.mx → Ponente      (UDG)  – tiene factura pendiente
+--
+-- Comandos de seed disponibles:
+--   python manage.py seed_participants  → Crea personas con roles de prueba
+--   python manage.py seed_facturas      → Crea facturas pendientes (requiere seed_participants)
 -- =============================================================================

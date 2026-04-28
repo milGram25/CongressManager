@@ -50,6 +50,16 @@ export async function bulkConstanciaActionApi(accessToken, action, idCongreso, u
   return res.json();
 }
 
+export async function bulkFacturaActionApi(accessToken, idCongreso, userIds) {
+  const res = await fetch(`${API_URL}/api/users/factura/bulk-action/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id_congreso: idCongreso, user_ids: userIds }),
+  });
+  if (!res.ok) throw new Error('Error en envío masivo de facturas.');
+  return res.json();
+}
+
 export async function getUserHistoryApi(accessToken, tipo = 'general') {
   const res = await fetch(`${API_URL}/api/users/history/?tipo=${tipo}`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
   if (!res.ok) throw new Error('Error al obtener historial.');
