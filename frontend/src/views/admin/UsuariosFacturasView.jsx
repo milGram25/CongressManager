@@ -15,7 +15,7 @@ export default function UsuariosFacturasView() {
 
   const loadRequests = async () => {
     try {
-      const data = await getParticipantsApi(accessToken, idCongreso);
+      const data = await getParticipantsApi(accessToken, { idCongreso });
       // Filtrar usuarios que tienen factura pendiente o solicitada
       const pendingRequests = data
         .filter(u => u.factura?.estatus === 'pendiente')

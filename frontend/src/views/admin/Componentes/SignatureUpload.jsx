@@ -4,19 +4,23 @@ import { MdEdit } from "react-icons/md";
 import { getCongresoSignaturesApi, updateCongresoSignaturesApi } from "../../../api/adminApi";
 import { API_URL } from "../../../api/constants";
 
-export default function SignatureUpload({ onSignaturesChange }) {
+export default function SignatureUpload({ onSignaturesChange, idCongreso }) {
   const [signatures, setSignatures] = useState({
     organizador: null,
     secretaria: null
   });
   const [isLocked, setIsLocked] = useState(false);
-  const [idCongreso] = useState(1); // TODO
 
   const accessToken = localStorage.getItem('congress_access');
 
   useEffect(() => {
-    fetchSignatures();
-  }, []);
+    if (idCongreso) {
+      fetchSignatures();
+    } else {
+      setSignatures({ organizador: null, secretaria: null });
+      setIsLocked(false);
+    }
+  }, [idCongreso]);
 
   const fetchSignatures = async () => {
     try {

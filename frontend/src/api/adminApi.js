@@ -1,9 +1,13 @@
 import { API_URL } from './constants';
 
 // Participantes
-export async function getParticipantsApi(accessToken, idCongreso = null) {
-  let url = `${API_URL}/api/users/participants/`;
-  if (idCongreso) url += `?id_congreso=${idCongreso}`;
+export async function getParticipantsApi(accessToken, { idCongreso = null, rol = null, institucion = null } = {}) {
+  const params = new URLSearchParams();
+  if (idCongreso) params.append('id_congreso', idCongreso);
+  if (rol) params.append('rol', rol);
+  if (institucion) params.append('institucion', institucion);
+  const query = params.toString();
+  const url = `${API_URL}/api/users/participants/${query ? '?' + query : ''}`;
   const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
   if (!res.ok) throw new Error('Error al obtener participantes.');
   return res.json();
