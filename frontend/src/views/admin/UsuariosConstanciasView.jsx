@@ -141,6 +141,8 @@ export default function UsuariosConstanciasView() {
   const pendingCount = filteredUsers.filter(u => u.status === 'red').length;
   const sentCount = filteredUsers.filter(u => u.status === 'green').length;
 
+  const selectedCongreso = congresos.find(c => c.id_congreso === filters.idCongreso || c.id_congreso === Number(filters.idCongreso));
+
   return (
     <div className="flex flex-col h-full gap-6 p-2 md:p-4 animate-in fade-in duration-500">
       {/* Header */}
@@ -257,6 +259,8 @@ export default function UsuariosConstanciasView() {
             signatures={signatures}
             isSignatureLocked={areSignaturesValid}
             idCongreso={filters.idCongreso}
+            congressName={selectedCongreso?.nombre_congreso}
+            sede={selectedCongreso?.nombre_sede}
             onUploadSuccess={() => fetchParticipants(filters)}
           />
         </div>
