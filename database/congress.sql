@@ -398,6 +398,23 @@ CREATE TABLE ponencia_magistral_has_ponente_magistral(
 --   Los registros anteriores son parte del script del backend de congresos.
 -- =============================================================================
 
+-- ── Entidades necesarias previas (Sede, Institución, Fechas, Costos, Congreso, Evento, Ponencia) ───────────
+INSERT INTO institucion (id_institucion, nombre) VALUES (1, 'Institución Base') ON CONFLICT (id_institucion) DO NOTHING;
+INSERT INTO sede (id_sede, nombre_sede, pais, estado, ciudad, calle, num_exterior) VALUES (1, 'Sede Base', 'México', 'Jalisco', 'Guadalajara', 'Juarez', 123) ON CONFLICT (id_sede) DO NOTHING;
+INSERT INTO costos_congreso (id_costos_congreso, cuenta_deposito, costo_congreso_asistente, costo_congreso_ponente, costo_congreso_comite) VALUES (1, '0000000000', 1000, 1000, 0) ON CONFLICT (id_costos_congreso) DO NOTHING;
+INSERT INTO fechas_congreso (id_fechas_congreso, fecha_inicio_evento, fecha_final_evento, fecha_inicio_pago_normal, fecha_fin_pago_normal, fecha_inicio_inscribir_dictaminador, fecha_fin_inscribir_dictaminador, fecha_inicio_inscribir_evaluador, fecha_fin_inscribir_evaluador, fecha_inicio_subida_ponencias, fecha_fin_subida_ponencias, fecha_inicio_evaluar_resumenes, fecha_final_evaluar_resumenes, fecha_inicio_evaluar_extensos, fecha_fin_evaluar_extensos, fecha_inicio_subir_multimedia, fecha_fin_subir_multimedia, fecha_inicio_subir_extenso_final, fecha_fin_subir_extenso_final) VALUES (1, '2026-01-01', '2026-12-31', '2026-01-01', '2026-12-31', '2026-01-01', '2026-12-31', '2026-01-01', '2026-12-31', '2026-01-01', '2026-12-31', '2026-01-01', '2026-12-31', '2026-01-01', '2026-12-31', '2026-01-01', '2026-12-31', '2026-01-01', '2026-12-31') ON CONFLICT (id_fechas_congreso) DO NOTHING;
+
+INSERT INTO congreso (id_congreso, nombre_congreso, id_sede, id_institucion, id_fechas_congreso, id_costos_congreso) VALUES (8, 'Encuentro con dios', 1, 1, 1, 1) ON CONFLICT (id_congreso) DO NOTHING;
+
+INSERT INTO tipo_trabajo (id_tipo_trabajo, id_congreso, tipo_trabajo) VALUES (1, 8, 'Ponencia') ON CONFLICT (id_tipo_trabajo) DO NOTHING;
+
+INSERT INTO evento (id_evento, id_congreso, nombre_evento, tipo_evento, id_tipo_trabajo, fecha_hora_inicio, fecha_hora_final) VALUES (16, 8, 'Diego – ponencia', 'ponencia', 1, '2026-05-01 10:00:00', '2026-05-01 12:00:00') ON CONFLICT (id_evento) DO NOTHING;
+
+INSERT INTO areas_generales (id_areas_generales, nombre) VALUES (1, 'Área General Base') ON CONFLICT (id_areas_generales) DO NOTHING;
+INSERT INTO subareas (id_subareas, nombre, id_area_general) VALUES (1, 'Subárea Base', 1) ON CONFLICT (id_subareas) DO NOTHING;
+
+INSERT INTO ponencia (id_ponencia, id_evento, id_subarea, id_tipo_trabajo) VALUES (6, 16, 1, 1) ON CONFLICT (id_ponencia) DO NOTHING;
+
 -- ── Personas de prueba ────────────────────────────────────────────────────────
 INSERT INTO persona (id_persona, nombre, primer_apellido, correo_electronico, contrasena, num_telefono, is_active, is_staff, is_superuser)
 VALUES
