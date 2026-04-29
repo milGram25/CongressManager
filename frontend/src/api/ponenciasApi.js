@@ -151,14 +151,14 @@ export async function getAdminEvaluadores(accessToken) {
     return res.json();
 }
 
-export async function asignarEvaluador(idExtenso, idEvaluador, accessToken) {
+export async function asignarEvaluador(idExtenso, idsEvaluadores, accessToken) {
     const res = await fetch(`${API_URL}/api/ponencias/admin/asignar-evaluador/${idExtenso}/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${accessToken}`
         },
-        body: JSON.stringify({ id_evaluador: idEvaluador })
+        body: JSON.stringify({ evaluadores_ids: idsEvaluadores })
     });
     if (!res.ok) throw new Error('Error al asignar el evaluador');
     return res.json();

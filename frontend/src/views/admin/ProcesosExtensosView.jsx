@@ -30,9 +30,21 @@ function RubricaStatusRow({ rubrica }) {
 
 // Tarjeta de extenso seleccionado con detalles, asignación y rubricas
 function ExtensoDetailCard({ extenso, revisores, evaluadores, onAsignar, asignando }) {
-  const [selectedEvaluador, setSelectedEvaluador] = useState("");
+  const [evaluador1, setEvaluador1] = useState("");
+  const [evaluador2, setEvaluador2] = useState("");
+  const [evaluador3, setEvaluador3] = useState("");
 
-  useEffect(() => { setSelectedEvaluador(""); }, [extenso?.id]);
+  useEffect(() => { 
+    if (extenso && extenso.revisores) {
+      setEvaluador1(extenso.revisores[0] || "");
+      setEvaluador2(extenso.revisores[1] || "");
+      setEvaluador3(extenso.revisores[2] || "");
+    } else {
+      setEvaluador1("");
+      setEvaluador2("");
+      setEvaluador3("");
+    }
+  }, [extenso]);
 
   if (!extenso) {
     return (
@@ -41,6 +53,21 @@ function ExtensoDetailCard({ extenso, revisores, evaluadores, onAsignar, asignan
       </article>
     );
   }
+
+  // Validar si el ID ya está seleccionado en otros campos
+  const isAvailable = (id, currentSelectIndex) => {
+    if (!id) return true;
+    if (currentSelectIndex !== 1 && id == evaluador1) return false;
+    if (currentSelectIndex !== 2 && id == evaluador2) return false;
+    if (currentSelectIndex !== 3 && id == evaluador3) return false;
+    return true;
+  };
+
+  const handleAsignarClick = () => {
+    // Filtrar los que no estén vacíos
+    const ids = [evaluador1, evaluador2, evaluador3].filter(Boolean);
+    onAsignar(extenso.id, ids);
+  };
 
   return (
     <article className="flex min-h-[760px] flex-col rounded-[28px] border border-black/55 bg-white px-5 py-5 shadow-sm md:px-6">
@@ -58,30 +85,49 @@ function ExtensoDetailCard({ extenso, revisores, evaluadores, onAsignar, asignan
           </div>
         </section>
 
-        {/* Asignar Evaluador */}
+        {/* Asignar Evaluadores */}
         <section>
-          <h3 className="text-[14px] font-semibold uppercase tracking-wide text-slate-700">Asignar Evaluador</h3>
-          <div className="mt-3 flex gap-2">
-            <select
-              value={selectedEvaluador}
-              onChange={(e) => setSelectedEvaluador(e.target.value)}
-              className="flex-1 rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 outline-none focus:border-black"
-            >
-              <option value="">Seleccionar evaluador...</option>
-              {evaluadores.map((e) => (
-                <option key={e.id} value={e.id}>{e.nombre}</option>
-              ))}
-            </select>
-            <button
-              onClick={() => onAsignar(extenso.id, selectedEvaluador)}
-              disabled={!selectedEvaluador || asignando}
-              className="rounded-2xl bg-black px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {asignando ? "Asignando..." : "Asignar"}
-            </button>
+          <h3 className="text-[14px] font-semibold uppercase tracking-wide text-slate-700">Asignar Evaluadores (Hasta 3)</h3>
+          <div className="mt-3 flex flex-col gap-3">
+            {[1, 2, 3].map((index) => {
+               const value = index === 1 ? evaluador1 : index === 2 ? evaluador2 : evaluador3;
+               const setter = index === 1 ? setEvaluador1 : index === 2 ? setEvaluador2 : setEvaluador3;
+               
+               return (
+                 <div key={index} className="flex gap-2">
+                    <span className="flex items-center justify-center text-xs font-bold text-slate-400 w-4">{index}.</span>
+                    <select
+                      value={value}
+                      onChange={(e) => setter(e.target.value)}
+                      className="flex-1 rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 outline-none focus:border-black"
+                    >
+                      <option value="">Seleccionar evaluador...</option>
+                      {evaluadores.map((e) => (
+                        <option 
+                          key={e.id} 
+                          value={e.id}
+                          disabled={!isAvailable(e.id, index)}
+                        >
+                          {e.nombre} {!isAvailable(e.id, index) ? "(Ya seleccionado)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                 </div>
+               );
+            })}
+            
+            <div className="mt-2 flex justify-end">
+              <button
+                onClick={handleAsignarClick}
+                disabled={asignando || (!evaluador1 && !evaluador2 && !evaluador3 && !extenso.asignado)}
+                className="rounded-2xl bg-black px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {asignando ? "Guardando..." : "Guardar Asignaciones"}
+              </button>
+            </div>
           </div>
           {extenso.asignado && (
-            <p className="mt-2 text-xs font-medium text-green-600">✓ Ya tiene evaluador asignado</p>
+            <p className="mt-2 text-xs font-medium text-green-600">✓ Tiene evaluadores asignados</p>
           )}
         </section>
 
@@ -149,16 +195,15 @@ export default function ProcesosExtensosView() {
     return evaluadores.filter((e) => viewItem.revisores.includes(e.id));
   }, [viewItem, evaluadores]);
 
-  const handleAsignar = async (idExtenso, idEvaluador) => {
-    if (!idEvaluador) return;
+  const handleAsignar = async (idExtenso, idsEvaluadores) => {
     setAsignando(true);
     try {
       const token = localStorage.getItem("congress_access");
-      await asignarEvaluador(idExtenso, parseInt(idEvaluador), token);
+      await asignarEvaluador(idExtenso, idsEvaluadores, token);
       await cargarDatos();
     } catch (err) {
       console.error("Error al asignar evaluador:", err);
-      alert("No se pudo asignar el evaluador. Intenta de nuevo.");
+      alert("No se pudieron asignar los evaluadores. Intenta de nuevo.");
     } finally {
       setAsignando(false);
     }

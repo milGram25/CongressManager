@@ -320,23 +320,42 @@ def admin_listar_extensos(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def admin_asignar_evaluador(request, id_extenso):
-    """Asigna un evaluador a un extenso específico."""
+    """Asigna evaluadores a un extenso específico (hasta 3)."""
     if not request.user.is_staff:
         return Response({"error": "Acceso denegado."}, status=status.HTTP_403_FORBIDDEN)
 
-    id_evaluador = request.data.get('id_evaluador')
+    evaluadores_ids = request.data.get('evaluadores_ids', [])
+    if 'id_evaluador' in request.data and not evaluadores_ids:
+        evaluadores_ids = [request.data.get('id_evaluador')]
+
     try:
         extenso = Extenso.objects.get(id_extenso=id_extenso)
-        evaluador = Evaluador.objects.get(id_evaluador=id_evaluador)
-    except (Extenso.DoesNotExist, Evaluador.DoesNotExist):
-        return Response({"error": "Extenso o evaluador no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+    except Extenso.DoesNotExist:
+        return Response({"error": "Extenso no encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
-    Evaluacion.objects.get_or_create(
-        id_extenso=extenso,
-        id_evaluador=evaluador,
-        defaults={'estatus': 'pendiente'}
-    )
-    return Response({"mensaje": "Evaluador asignado exitosamente."})
+    # Limpiar ids válidos (que no estén vacíos y sin duplicados)
+    valid_ids = [int(eid) for eid in evaluadores_ids if eid]
+    valid_ids = list(set(valid_ids))
+
+    # Crear nuevas asignaciones pendientes
+    for eid in valid_ids:
+        try:
+            evaluador = Evaluador.objects.get(id_evaluador=eid)
+            Evaluacion.objects.get_or_create(
+                id_extenso=extenso,
+                id_evaluador=evaluador,
+                defaults={'estatus': 'pendiente'}
+            )
+        except Evaluador.DoesNotExist:
+            continue
+
+    # Limpiar asignaciones desmarcadas (solo las que siguen pendientes, para no borrar calificaciones ya hechas)
+    if valid_ids:
+        Evaluacion.objects.filter(id_extenso=extenso, estatus='pendiente').exclude(id_evaluador__id_evaluador__in=valid_ids).delete()
+    else:
+        Evaluacion.objects.filter(id_extenso=extenso, estatus='pendiente').delete()
+
+    return Response({"mensaje": "Evaluadores asignados exitosamente."})
 
 
 # ==========================================
