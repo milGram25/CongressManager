@@ -1,9 +1,7 @@
 import React from 'react';
-import { FiTarget, FiMapPin, FiFlag } from 'react-icons/fi';
+import { FiMapPin, FiFlag } from 'react-icons/fi';
 import TarjetaGenerica from './TarjetaGenerica';
-import cienu from "../../../assets/CIENU.jpg";
-import ridmae from "../../../assets/ridmae.jpg";
-
+import { API_URL} from "../../../api/constants.js";
 import { MdAccountBalance, MdAccountTree } from 'react-icons/md';
 
 // Reutilizamos estilos base
@@ -13,12 +11,13 @@ const iconCircleBox = { backgroundColor: 'black', color: '#FFFFFF', padding: '6p
 const valuePillStyle = { flex: 2, backgroundColor: '#FFFFFF', border: '1px solid #1A1A1A', borderRadius: '16px', padding: '4px 8px', color: '#1A1A1A', fontSize: '14px', fontWeight: '600', textAlign: 'center', minWidth: '60px' };
 
 const ItemInstitucion = ({
-    nombreInstitucion = "Universidad de Ejemplo",
-    sede = "Rectoría",
-    ubicacion = "Guadalajara, Jalisco",
-    pais = "México",
-    listaDatos
+                             listaDatos
 }) => {
+    const imageSrc = listaDatos?.ruta_imagen
+        ? (listaDatos.ruta_imagen.startsWith('http')
+            ? listaDatos.ruta_imagen
+            : `${API_URL}${listaDatos.ruta_imagen}`)
+        : null;
     return (
         <TarjetaGenerica 
             titulo={listaDatos.nombre_institucion}
@@ -71,7 +70,13 @@ const ItemInstitucion = ({
                 {/*Aquí insertar la imagen indicada en la base de datos*/}
                 {/*<img src={listaDatos.ruta_imagen} alt="Imagen del congreso"/>*/}
 
-                <img className="w-full h-full object-cover" src={ridmae} alt="Imagen del congreso" />
+                {imageSrc ? (
+                    <img className="w-full h-full object-cover" src={imageSrc} alt="Imagen de la institución" />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">
+                        Sin imagen
+                    </div>
+                )}
             </div>
 
         </TarjetaGenerica>
