@@ -289,11 +289,51 @@ def registrar_ponencia(request):
         if not id_evento:
             return Response({"error": "id_evento es requerido."}, status=status.HTTP_400_BAD_REQUEST)
         if AsistenteEvento.objects.filter(id_asistente=asistente, id_evento_id=id_evento).exists():
-            return Response({"error": "Ya estás registrado en esta ponencia."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Ya estás registrado en este evento."}, status=status.HTTP_400_BAD_REQUEST)
+        evento = Evento.objects.get(id_evento=id_evento)
+        if evento.cupos and evento.cupos > 0:
+            ocupados = AsistenteEvento.objects.filter(id_evento_id=id_evento).count()
+            if ocupados >= evento.cupos:
+                return Response({"error": "No hay cupos disponibles para este evento."}, status=status.HTTP_400_BAD_REQUEST)
         asistente_evento = AsistenteEvento.objects.create(id_asistente=asistente, id_evento_id=id_evento)
         return Response({"message": "Registro exitoso", "id": asistente_evento.id_asistente_evento}, status=status.HTTP_201_CREATED)
+    except Evento.DoesNotExist:
+        return Response({"error": "Evento no encontrado."}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": f"Error interno del servidor: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class MiAgendaView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        asistente = Asistente.objects.filter(id_persona=request.user).first()
+        if not asistente:
+            return Response([])
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT e.id_evento, e.nombre_evento, e.tipo_evento,
+                       e.fecha_hora_inicio, e.fecha_hora_final, e.sinopsis,
+                       c.nombre_congreso, c.id_congreso
+                FROM asistente_evento ae
+                JOIN evento e ON e.id_evento = ae.id_evento
+                JOIN congreso c ON c.id_congreso = e.id_congreso
+                WHERE ae.id_asistente = %s
+                ORDER BY e.fecha_hora_inicio
+            """, [asistente.id_asistente])
+            rows = cursor.fetchall()
+        result = []
+        for r in rows:
+            result.append({
+                'id': r[0],
+                'titulo': r[1] or '',
+                'tipo': r[2] or '',
+                'fecha_inicio': r[3].isoformat() if r[3] else None,
+                'fecha_fin': r[4].isoformat() if r[4] else None,
+                'sinopsis': r[5] or '',
+                'congreso': r[6] or '',
+                'id_congreso': r[7],
+            })
+        return Response(result)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

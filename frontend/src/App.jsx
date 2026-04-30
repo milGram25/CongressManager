@@ -111,8 +111,8 @@ const AsistenteLayoutWrapper = () => {
       },
     ] : []),
 
-    { to: '/asistente/agenda', label: 'Agenda', icon: MdCalendarMonth },
-    { to: '/asistente/catalogo', label: 'Catálogo', icon: MdLibraryBooks },
+    { to: '/asistente/agenda', label: 'Congresos', icon: MdCalendarMonth },
+    { to: '/asistente/catalogo', label: 'Agenda', icon: MdLibraryBooks },
     { to: '/asistente/pagos', label: 'Pagos', icon: MdPayment },
     { to: '/asistente/facturas', label: 'Mis Facturas', icon: MdReceipt },
     { to: '/asistente/constancias', label: 'Mis Constancias', icon: MdBadge },

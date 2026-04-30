@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import registrar_ponencia, listar_catalogo_ponencias, PonenciaViewSet
+from .views import registrar_ponencia, listar_catalogo_ponencias, PonenciaViewSet, EnviarPonenciaAPIView, MiAgendaView
 
 app_name = 'ponencias'
 
@@ -12,4 +12,5 @@ urlpatterns = [
     path('registrar/', registrar_ponencia, name='registrar_ponencia'),
     path('catalogo/', listar_catalogo_ponencias, name='listar_catalogo'),
     path('enviar/', EnviarPonenciaAPIView.as_view(), name='enviar-ponencia'),
+    path('mi-agenda/', MiAgendaView.as_view(), name='mi_agenda'),
 ]

@@ -1,132 +1,9 @@
-import { useState, useMemo } from "react";
-import { MdFilterAlt, MdKeyboardArrowDown, MdSearch, MdClose } from "react-icons/md";
+import { useState, useMemo, useEffect } from "react";
+import { MdKeyboardArrowDown, MdSearch, MdClose } from "react-icons/md";
 import { FiDownload, FiCopy } from 'react-icons/fi';
 import ListaDesplegableElementosGenerica from "./Componentes/ListaDesplegableElementosGenerica";
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const MOCK_CONGRESOS = [
-  {
-    id: 1,
-    nombre: "CIENU 2024",
-
-  },
-  {
-    id: 2,
-    nombre: "CIENU 2025",
-
-  },
-  {
-    id: 3,
-    nombre: "CIENU 2026",
-
-  },
-  {
-    id: 4,
-    nombre: "CIENU 2027",
-
-  }
-]
-
-const MOCK_INSTITUCIONES = [
-  {
-    id: 1,
-    nombre: "CIENU",
-
-  },
-  {
-    id: 2,
-    nombre: "RIDMAE",
-
-  }
-];
-export const listaPagos = [
-  {
-    orden: 1001,
-    nombre: "Ernesto",
-    primerApellido: "Villanueva",
-    segundoApellido: "Ruiz",
-    telefono: "333 111 2222",
-    curp: "VIRE900101HJCLNR01",
-    correo: "ernesto.v@gmail.com",
-    rol: "Ponente",
-    fecha: "2026-03-28T12:54:00",
-    estatus: "Pagado",
-    congreso: "CIENU 2026",
-    sede: "CUALTOS",
-    cuentaDeposito: "123456789",
-    descuento: 0,
-    monto: 100.00,
-  },
-  {
-    orden: 1002,
-    nombre: "Jimenita",
-    primerApellido: "López",
-    segundoApellido: "Soto",
-    telefono: "333 222 3333",
-    curp: "LOSJ950215MJCLPN02",
-    correo: "jimenita.l@gmail.com",
-    rol: "Comité académico",
-    fecha: "2026-03-28T12:54:00",
-    estatus: "Pagado",
-    congreso: "CIENU 2026",
-    sede: "CUALTOS",
-    cuentaDeposito: "987654321",
-    descuento: 10,
-    monto: 90.00,
-  },
-  {
-    orden: 1003,
-    nombre: "Kaleb",
-    primerApellido: "Martínez",
-    segundoApellido: "García",
-    telefono: "333 444 5555",
-    curp: "MAGK010310HJCLRT03",
-    correo: "kaleb.mg@outlook.com",
-    rol: "Asistente",
-    fecha: "2026-03-28T12:54:00",
-    estatus: "Pendiente",
-    congreso: "CIENU 2026",
-    sede: "CUALTOS",
-    cuentaDeposito: "111222333",
-    descuento: 0,
-    monto: 80.00,
-  },
-  {
-    orden: 1004,
-    nombre: "Gabriel",
-    primerApellido: "Sánchez",
-    segundoApellido: "Torres",
-    telefono: "333 555 6666",
-    curp: "SATG980720HJCLNB04",
-    correo: "gabriel.st@hotmail.com",
-    rol: "Comité académico",
-    fecha: "2026-03-28T12:54:00",
-    estatus: "Pendiente",
-    congreso: "CIENU 2026",
-    sede: "CUALTOS",
-    cuentaDeposito: "444555666",
-    descuento: 5,
-    monto: 95.00,
-  },
-  {
-    orden: 1005,
-    nombre: "Lalo",
-    primerApellido: "Díaz",
-    segundoApellido: "Mendoza",
-    telefono: "333 777 8888",
-    curp: "DIML020505HJCLZL05",
-    correo: "lalo.dm@gmail.com",
-    rol: "Comité académico",
-    fecha: "2026-03-28T12:54:00",
-    estatus: "Pagado",
-    congreso: "CIENU 2026",
-    sede: "CUALTOS",
-    cuentaDeposito: "777888999",
-    descuento: 15,
-    monto: 85.00,
-  },
-];
+import { getPagosAdminApi } from "../../api/pagosApi";
+import { getCongresosApi, getInstitucionesApi } from "../../api/adminApi";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatFecha(iso) {
@@ -138,7 +15,6 @@ function formatFecha(iso) {
   return `${dia}/${mes}/${año}, ${hora}`;
 }
 
-const ROLES = ["Todos", "Ponente", "Asistente", "Comité académico"];
 const FECHAS = ["Recientes", "Más antiguos"];
 const ESTATUS = ["Todos", "Pagado", "Pendiente"];
 
@@ -203,7 +79,7 @@ function DetallePanel({ pago }) {
             <p className="text-[11px] text-base-content/40 uppercase font-semibold tracking-wide mb-1">Otros detalles</p>
             <div className="ml-4 space-y-2">
               <Campo label="Sede destinatario" value={pago.sede} />
-              <Campo label="Cuenta depósito" value={`${pago.cuentaDeposito.slice(0, 9)}...`} />
+              <Campo label="Cuenta depósito" value={pago.cuentaDeposito ? `${pago.cuentaDeposito.slice(0, 9)}...` : '—'} />
               <Campo label="Fecha y hora pago" value={formatFecha(pago.fecha)} />
               <Campo label="Descuento" value={`${pago.descuento} %`} />
               <Campo label="Monto" value={`$${pago.monto.toFixed(2)}`} />
@@ -218,8 +94,13 @@ function DetallePanel({ pago }) {
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
-export default function PagosComponente({ listaPagos: propsPagos }) {
-  const pagos = propsPagos ?? listaPagos;
+export default function PagosComponente() {
+  const [pagos, setPagos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [congresos, setCongresos] = useState([]);
+  const [instituciones, setInstituciones] = useState([]);
+  const [filtroCongreso, setFiltroCongreso] = useState(null);
 
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState("");
@@ -230,6 +111,45 @@ export default function PagosComponente({ listaPagos: propsPagos }) {
   const [openRol, setOpenRol] = useState(false);
   const [openFech, setOpenFech] = useState(false);
   const [openEst, setOpenEst] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("congress_access");
+    const loadAll = async () => {
+      try {
+        const [pagosData, congresosData, institucionesData] = await Promise.all([
+          getPagosAdminApi(token),
+          getCongresosApi(token),
+          getInstitucionesApi(token),
+        ]);
+        setPagos(Array.isArray(pagosData) ? pagosData : []);
+        setCongresos(Array.isArray(congresosData) ? congresosData : congresosData.results ?? []);
+        setInstituciones(Array.isArray(institucionesData) ? institucionesData : institucionesData.results ?? []);
+      } catch (err) {
+        setError(err.message || "No se pudo cargar el historial de pagos.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAll();
+  }, []);
+
+  const handleSelectCongreso = async (idStr) => {
+    const token = localStorage.getItem("congress_access");
+    const idCongreso = idStr || null;
+    setFiltroCongreso(idCongreso);
+    setSelected(null);
+    try {
+      const data = await getPagosAdminApi(token, idCongreso);
+      setPagos(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const ROLES_DISPONIBLES = useMemo(() => {
+    const roles = new Set(pagos.map(p => p.rol));
+    return ["Todos", ...Array.from(roles)];
+  }, [pagos]);
 
   const filtrados = useMemo(() => {
     let list = [...pagos];
@@ -260,12 +180,35 @@ export default function PagosComponente({ listaPagos: propsPagos }) {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="bg-base-100 rounded-3xl p-5 flex justify-center py-16">
+        <span className="loading loading-spinner loading-md text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-base-100 rounded-3xl p-5">
+        <div className="alert alert-error"><span>{error}</span></div>
+      </div>
+    );
+  }
+
+  const listaCongresosDropdown = congresos.map(c => ({ id: c.id_congreso, nombre: c.nombre_congreso }));
+  const listaInstitucionesDropdown = instituciones.map(i => ({ id: i.id_institucion, nombre: i.nombre }));
+
   return (
     <div className="bg-base-100 rounded-3xl p-5">
 
       <div className="flex gap-4 mb-10">
-        <ListaDesplegableElementosGenerica titulo="Instituciones" lista={MOCK_INSTITUCIONES} />
-        <ListaDesplegableElementosGenerica titulo="Congresos" lista={MOCK_CONGRESOS} />
+        <ListaDesplegableElementosGenerica titulo="Instituciones" lista={listaInstitucionesDropdown} />
+        <ListaDesplegableElementosGenerica
+          titulo="Congresos"
+          lista={listaCongresosDropdown}
+          onSelect={handleSelectCongreso}
+        />
       </div>
       <div className="flex justify-between bg-black rounded-t-2xl p-4 h-20 items-center pl-8">
         <p className=" font-bold text-base-content text-white text-2xl">Órdenes de pago</p>
@@ -291,7 +234,7 @@ export default function PagosComponente({ listaPagos: propsPagos }) {
 
           <div>
             <p className="text-sm font-bold text-base-content mb-1">Rol</p>
-            <Dropdown label="Rol" value={filtroRol} options={ROLES} open={openRol}
+            <Dropdown label="Rol" value={filtroRol} options={ROLES_DISPONIBLES} open={openRol}
               onToggle={() => { setOpenRol(o => !o); setOpenFech(false); setOpenEst(false); }}
               onSelect={setFiltroRol} />
           </div>

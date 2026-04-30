@@ -318,3 +318,13 @@ export async function getDictamenesApi(accessToken) {
   if (!res.ok) throw new Error('Error al obtener dictámenes.');
   return res.json();
 }
+
+
+export async function getInscritosTallerApi(accessToken, idEvento) {
+  const res = await fetch(`${API_URL}/api/congresos/eventos/${idEvento}/inscritos/`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'No se pudieron cargar los inscritos.');
+  return data;
+}

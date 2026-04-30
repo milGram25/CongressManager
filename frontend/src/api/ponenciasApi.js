@@ -19,6 +19,15 @@ export async function registrarPonenciaApi(idEvento, accessToken) {
   return data;
 }
 
+export async function getMiAgendaApi(accessToken) {
+  const res = await fetch(`${API_URL}/api/ponencias/mi-agenda/`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || data.detail || 'Error al cargar tu agenda.');
+  return data;
+}
+
 /**
  * Obtiene el listado de ponencias disponibles para el catálogo.
  */
