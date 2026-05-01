@@ -111,8 +111,8 @@ const AsistenteLayoutWrapper = () => {
       },
     ] : []),
 
-    { to: '/asistente/agenda', label: 'Congresos', icon: MdCalendarMonth },
-    { to: '/asistente/catalogo', label: 'Agenda', icon: MdLibraryBooks },
+    { to: '/asistente/agenda', label: 'Agenda', icon: MdCalendarMonth },
+    { to: '/asistente/congresos', label: 'Congresos', icon: MdLibraryBooks },
     { to: '/asistente/pagos', label: 'Pagos', icon: MdPayment },
     { to: '/asistente/facturas', label: 'Mis Facturas', icon: MdReceipt },
     { to: '/asistente/constancias', label: 'Mis Constancias', icon: MdBadge },
@@ -167,7 +167,7 @@ const AdminLayoutWrapper = () => {
     {
       type: 'role-icons',
       roles: [
-        { to: '/asistente/agenda', label: 'Asistente', icon: MdPerson },
+        { to: '/asistente/congresos', label: 'Asistente', icon: MdPerson },
         { to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview },
         { to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel },
       ]
@@ -224,10 +224,10 @@ const RevisorLayoutWrapper = () => {
       roles: [
         ...(user?.rol === 'administrador' ? [
           { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
-          { to: '/asistente/agenda', label: 'Asistente', icon: MdPerson },
+          { to: '/asistente/congresos', label: 'Asistente', icon: MdPerson },
           { to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel },
         ] : [
-          { to: '/asistente/agenda', label: 'Asistente', icon: MdPerson },
+          { to: '/asistente/congresos', label: 'Asistente', icon: MdPerson },
         ]),
       ]
     },
@@ -248,10 +248,10 @@ const DictaminadorLayoutWrapper = () => {
       roles: [
         ...(user?.rol === 'administrador' ? [
           { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
-          { to: '/asistente/agenda', label: 'Asistente', icon: MdPerson },
+          { to: '/asistente/congresos', label: 'Asistente', icon: MdPerson },
           { to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview },
         ] : [
-          { to: '/asistente/agenda', label: 'Asistente', icon: MdPerson },
+          { to: '/asistente/congresos', label: 'Asistente', icon: MdPerson },
         ]),
       ]
     },
@@ -284,8 +284,8 @@ function App() {
             }
           >
             <Route index element={<Navigate to="agenda" replace />} />
-            <Route path="agenda" element={<AgendaView />} />
-            <Route path="catalogo" element={<CatalogoView />} />
+            <Route path="agenda" element={<CatalogoView />} />
+            <Route path="congresos" element={<AgendaView />} />
             <Route path="pagos" element={<PagosView />} />
             <Route path="facturas" element={<FacturasView />} />
             <Route path="enviar-ponencia" element={<EnviarPonenciaView />} />

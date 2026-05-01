@@ -15,10 +15,84 @@ function formatHour(iso) {
   return new Date(iso).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
 }
 
+// ─── Modal de detalles del evento ────────────────────────────────────────────
+function EventoDetalleModal({ evento, onClose }) {
+  if (!evento) return null;
+  const tipoLabel = { ponencia: "Ponencia", taller: "Taller" }[evento.tipo] ?? evento.tipo;
+  return (
+    <dialog className="modal modal-bottom sm:modal-middle" open>
+      <div className="modal-box max-w-2xl bg-base-100">
+        <div className="flex items-start gap-3 border-b border-base-200 pb-4 mb-4">
+          <div className="flex-1">
+            <h3 className="font-bold text-xl text-primary leading-snug">{evento.titulo}</h3>
+            <span className="badge badge-ghost mt-2 text-xs capitalize">{tipoLabel}</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 bg-base-200 p-4 rounded-lg text-sm mb-4">
+          <div>
+            <span className="font-bold block opacity-50 uppercase text-[10px] mb-1">Fecha y hora inicio</span>
+            <p>{formatDate(evento.fecha_inicio)} · {formatHour(evento.fecha_inicio)}</p>
+          </div>
+          {evento.fecha_fin && (
+            <div>
+              <span className="font-bold block opacity-50 uppercase text-[10px] mb-1">Hora fin</span>
+              <p>{formatHour(evento.fecha_fin)}</p>
+            </div>
+          )}
+          {evento.cupos > 0 && (
+            <div>
+              <span className="font-bold block opacity-50 uppercase text-[10px] mb-1">Cupos</span>
+              <p className={evento.lleno ? "text-error font-semibold" : ""}>
+                {evento.lleno
+                  ? "Sin cupos disponibles"
+                  : `${evento.cupos_disponibles ?? 0} / ${evento.cupos} disponibles`}
+              </p>
+            </div>
+          )}
+          {evento.enlace && (
+            <div className="col-span-2">
+              <span className="font-bold block opacity-50 uppercase text-[10px] mb-1">Enlace</span>
+              <a
+                href={evento.enlace}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="link link-primary text-sm break-all"
+              >
+                {evento.enlace}
+              </a>
+            </div>
+          )}
+        </div>
+
+        {evento.sinopsis && (
+          <div className="mb-2">
+            <span className="font-bold block text-primary mb-2">Sinopsis</span>
+            <p className="text-sm leading-relaxed text-base-content/80">{evento.sinopsis}</p>
+          </div>
+        )}
+
+        <div className="modal-action">
+          <button className="btn btn-primary text-white px-8" onClick={onClose}>
+            Cerrar
+          </button>
+        </div>
+      </div>
+      <div className="modal-backdrop" onClick={onClose}>
+        <button>close</button>
+      </div>
+    </dialog>
+  );
+}
+
 // ─── Tarjeta de congreso ──────────────────────────────────────────────────────
 function CongresoCard({ congreso, inscrito, onVerEventos, onInscribirse }) {
   return (
-    <div className={`card bg-base-100 shadow-md border transition-shadow duration-200 hover:shadow-lg ${inscrito ? "border-primary/40" : "border-base-200"}`}>
+    <div
+      className={`card bg-base-100 shadow-md border transition-shadow duration-200 hover:shadow-lg ${
+        inscrito ? "border-primary/40" : "border-base-200"
+      }`}
+    >
       <div className="card-body gap-3">
         <div className="flex items-start justify-between gap-2">
           <h2 className="card-title text-base font-semibold leading-snug flex-1">
@@ -78,7 +152,7 @@ function CongresoList({ inscritos, onVerEventos, onInscribirse }) {
         const token = localStorage.getItem("congress_access");
         if (!token) throw new Error("No hay sesión activa.");
         const data = await getCongresosApi(token);
-        setCongresos(Array.isArray(data) ? data : data.results ?? []);
+        setCongresos(Array.isArray(data) ? data : (data.results ?? []));
       } catch (err) {
         setError(err.message || "No se pudieron cargar los congresos.");
       } finally {
@@ -88,9 +162,24 @@ function CongresoList({ inscritos, onVerEventos, onInscribirse }) {
     load();
   }, []);
 
-  if (loading) return <div className="flex justify-center py-16"><span className="loading loading-spinner loading-md text-primary" /></div>;
-  if (error) return <div className="alert alert-error max-w-lg mx-auto mt-8"><span>{error}</span></div>;
-  if (congresos.length === 0) return <div className="text-center text-base-content/50 py-16">No hay congresos disponibles.</div>;
+  if (loading)
+    return (
+      <div className="flex justify-center py-16">
+        <span className="loading loading-spinner loading-md text-primary" />
+      </div>
+    );
+  if (error)
+    return (
+      <div className="alert alert-error max-w-lg mx-auto mt-8">
+        <span>{error}</span>
+      </div>
+    );
+  if (congresos.length === 0)
+    return (
+      <div className="text-center text-base-content/50 py-16">
+        No hay congresos disponibles.
+      </div>
+    );
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
@@ -108,7 +197,7 @@ function CongresoList({ inscritos, onVerEventos, onInscribirse }) {
 }
 
 // ─── Tarjeta de evento ────────────────────────────────────────────────────────
-function EventoCard({ evento, onRegistrar, registrando }) {
+function EventoCard({ evento, onRegistrar, registrando, onVerDetalles }) {
   const tipoLabel = { ponencia: "Ponencia", taller: "Taller" }[evento.tipo] ?? evento.tipo;
   return (
     <div className="card bg-base-100 border border-base-200 shadow-sm hover:shadow-md transition-shadow">
@@ -120,7 +209,9 @@ function EventoCard({ evento, onRegistrar, registrando }) {
 
         <div className="flex flex-wrap gap-x-4 text-xs text-base-content/60">
           {evento.fecha_inicio && (
-            <span>{formatDate(evento.fecha_inicio)} · {formatHour(evento.fecha_inicio)}</span>
+            <span>
+              {formatDate(evento.fecha_inicio)} · {formatHour(evento.fecha_inicio)}
+            </span>
           )}
           {evento.cupos > 0 && (
             <span className={evento.lleno ? "text-error font-semibold" : ""}>
@@ -135,22 +226,30 @@ function EventoCard({ evento, onRegistrar, registrando }) {
           <p className="text-xs text-base-content/70 line-clamp-2">{evento.sinopsis}</p>
         )}
 
-        <div className="card-actions justify-end mt-1">
-          {evento.registrado ? (
-            <span className="flex items-center gap-1 text-xs font-semibold text-primary">
-              <MdCheckCircle /> Registrado
-            </span>
-          ) : evento.lleno ? (
-            <span className="text-xs font-semibold text-error">Cupo lleno</span>
-          ) : (
-            <button
-              className="btn btn-primary btn-xs"
-              disabled={registrando === evento.id}
-              onClick={() => onRegistrar(evento)}
-            >
-              {registrando === evento.id ? "Registrando..." : "Registrarme"}
-            </button>
-          )}
+        <div className="card-actions justify-between mt-1 items-center">
+          <button
+            className="btn btn-ghost btn-xs text-base-content/60"
+            onClick={() => onVerDetalles(evento)}
+          >
+            Ver detalles
+          </button>
+          <div>
+            {evento.registrado ? (
+              <span className="flex items-center gap-1 text-xs font-semibold text-primary">
+                <MdCheckCircle /> Registrado
+              </span>
+            ) : evento.lleno ? (
+              <span className="text-xs font-semibold text-error">Cupo lleno</span>
+            ) : (
+              <button
+                className="btn btn-primary btn-xs"
+                disabled={registrando === evento.id}
+                onClick={() => onRegistrar(evento)}
+              >
+                {registrando === evento.id ? "Registrando..." : "Registrarme"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -165,6 +264,7 @@ function EventosCongreso({ congreso, onBack }) {
   const [registrando, setRegistrando] = useState(null);
   const [errorRegistro, setErrorRegistro] = useState("");
   const [filtro, setFiltro] = useState("todos");
+  const [eventoDetalle, setEventoDetalle] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -187,9 +287,18 @@ function EventosCongreso({ congreso, onBack }) {
     setErrorRegistro("");
     try {
       await registrarPonenciaApi(evento.id, token);
-      setEventos(prev => prev.map(e =>
-        e.id === evento.id ? { ...e, registrado: true, cupos_disponibles: Math.max(0, (e.cupos_disponibles ?? 1) - 1), cupos_ocupados: (e.cupos_ocupados ?? 0) + 1 } : e
-      ));
+      setEventos((prev) =>
+        prev.map((e) =>
+          e.id === evento.id
+            ? {
+                ...e,
+                registrado: true,
+                cupos_disponibles: Math.max(0, (e.cupos_disponibles ?? 1) - 1),
+                cupos_ocupados: (e.cupos_ocupados ?? 0) + 1,
+              }
+            : e
+        )
+      );
     } catch (err) {
       setErrorRegistro(err.message || "No se pudo completar el registro.");
     } finally {
@@ -197,8 +306,9 @@ function EventosCongreso({ congreso, onBack }) {
     }
   };
 
-  const eventosFiltrados = filtro === "todos" ? eventos : eventos.filter(e => e.tipo === filtro);
-  const tipos = [...new Set(eventos.map(e => e.tipo))];
+  const tipos = [...new Set(eventos.map((e) => e.tipo))].filter(Boolean);
+  const eventosFiltrados =
+    filtro === "todos" ? eventos : eventos.filter((e) => e.tipo === filtro);
 
   return (
     <div className="w-full flex flex-col">
@@ -206,7 +316,9 @@ function EventosCongreso({ congreso, onBack }) {
         <button onClick={onBack} className="btn btn-ghost btn-sm gap-1">
           <MdArrowBack className="text-lg" /> Congresos
         </button>
-        <h2 className="text-base font-semibold text-base-content truncate">{congreso.nombre_congreso}</h2>
+        <h2 className="text-base font-semibold text-base-content truncate">
+          {congreso.nombre_congreso}
+        </h2>
       </div>
 
       {tipos.length > 1 && (
@@ -217,7 +329,7 @@ function EventosCongreso({ congreso, onBack }) {
           >
             Todos
           </button>
-          {tipos.map(t => (
+          {tipos.map((t) => (
             <button
               key={t}
               onClick={() => setFiltro(t)}
@@ -230,20 +342,43 @@ function EventosCongreso({ congreso, onBack }) {
       )}
 
       {errorRegistro && (
-        <div className="alert alert-error mb-4"><span>{errorRegistro}</span></div>
+        <div className="alert alert-error mb-4">
+          <span>{errorRegistro}</span>
+        </div>
       )}
-      {loading && <div className="flex justify-center py-16"><span className="loading loading-spinner loading-md text-primary" /></div>}
-      {error && <div className="alert alert-error"><span>{error}</span></div>}
+      {loading && (
+        <div className="flex justify-center py-16">
+          <span className="loading loading-spinner loading-md text-primary" />
+        </div>
+      )}
+      {error && (
+        <div className="alert alert-error">
+          <span>{error}</span>
+        </div>
+      )}
       {!loading && !error && eventosFiltrados.length === 0 && (
-        <p className="text-center text-base-content/50 py-16">No hay eventos disponibles.</p>
+        <p className="text-center text-base-content/50 py-16">
+          No hay eventos disponibles.
+        </p>
       )}
       {!loading && !error && eventosFiltrados.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {eventosFiltrados.map(e => (
-            <EventoCard key={e.id} evento={e} onRegistrar={handleRegistrar} registrando={registrando} />
+          {eventosFiltrados.map((e) => (
+            <EventoCard
+              key={e.id}
+              evento={e}
+              onRegistrar={handleRegistrar}
+              registrando={registrando}
+              onVerDetalles={setEventoDetalle}
+            />
           ))}
         </div>
       )}
+
+      <EventoDetalleModal
+        evento={eventoDetalle}
+        onClose={() => setEventoDetalle(null)}
+      />
     </div>
   );
 }
@@ -257,12 +392,15 @@ export default function AgendaView() {
   useEffect(() => {
     const token = localStorage.getItem("congress_access");
     getMisInscripcionesApi(token)
-      .then(data => setInscritos(new Set(data.inscripciones ?? [])))
+      .then((data) => setInscritos(new Set(data.inscripciones ?? [])))
       .catch(() => setInscritos(new Set()));
   }, []);
 
   const handleInscribirse = (congreso) => {
-    const params = new URLSearchParams({ id_congreso: congreso.id_congreso, nombre: congreso.nombre_congreso });
+    const params = new URLSearchParams({
+      id_congreso: congreso.id_congreso,
+      nombre: congreso.nombre_congreso,
+    });
     navigate(`/asistente/pagos?${params.toString()}`);
   };
 
