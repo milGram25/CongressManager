@@ -2,18 +2,38 @@
 
 ## Resumen
 
-Nueva sub-vista dentro de la sección de Procesos del panel de administrador. Permite listar todos los usuarios del sistema, buscarlos por nombre y gestionar sus roles (dictaminador, evaluador, administrador) mediante un modal con información completa del usuario. Los roles son acumulativos (un usuario puede tener varios simultáneamente). Todas las operaciones sobre roles requieren confirmación doble: asignar o quitar dictaminador/evaluador muestra un "¿Estás seguro?"; asignar o quitar administrador requiere la contraseña del admin operador.
+Nueva sub-vista dentro de la sección de Procesos del panel de administrador. Permite listar todos los usuarios del sistema, filtrarlos por nombre, y gestionar sus roles (dictaminador, evaluador, administrador) en el contexto de un congreso específico. Los roles dictaminador y evaluador son **por congreso** — viven en nuevas tablas de unión independientes del sistema global de revisiones. El rol administrador sigue siendo global. Todas las operaciones requieren confirmación doble: "¿Estás seguro?" para dictaminador/evaluador, y contraseña del admin para asignar o quitar administrador.
 
 ---
 
 ## Arquitectura
 
+### Nuevos modelos Django (`managed=True`)
+
+```python
+class DictaminadorCongreso(models.Model):
+    id_persona  = models.ForeignKey(Persona,   on_delete=models.CASCADE)
+    id_congreso = models.ForeignKey(Congreso,  on_delete=models.CASCADE)
+    class Meta:
+        unique_together = ('id_persona', 'id_congreso')
+        db_table = 'dictaminador_congreso'
+
+class EvaluadorCongreso(models.Model):
+    id_persona  = models.ForeignKey(Persona,   on_delete=models.CASCADE)
+    id_congreso = models.ForeignKey(Congreso,  on_delete=models.CASCADE)
+    class Meta:
+        unique_together = ('id_persona', 'id_congreso')
+        db_table = 'evaluador_congreso'
+```
+
+Estos modelos son independientes de las tablas globales `dictaminador` y `evaluador` que usa el sistema de revisiones existente. Se crean con `makemigrations` / `migrate`.
+
 ### Backend — 3 nuevos endpoints en `users/`
 
-**`GET /api/users/all/`**
+**`GET /api/users/all/?id_congreso=<id>`**
 - Requiere token de admin (`is_staff=True`)
-- Devuelve todos los usuarios de la tabla `persona` sin filtrar por `is_staff`
-- Respuesta por usuario:
+- Parámetro obligatorio: `id_congreso`
+- Devuelve todos los usuarios de `persona` con sus roles para ese congreso:
   ```json
   {
     "id_persona": 1,
@@ -24,28 +44,32 @@ Nueva sub-vista dentro de la sección de Procesos del panel de administrador. Pe
     "pais": "México",
     "roles": {
       "dictaminador": false,
-      "evaluador": false,
-      "administrador": true
+      "evaluador": true,
+      "administrador": false
     }
   }
   ```
+- `roles.dictaminador` = existe entrada en `DictaminadorCongreso` para ese congreso
+- `roles.evaluador` = existe entrada en `EvaluadorCongreso` para ese congreso
+- `roles.administrador` = `is_staff=True` o `is_superuser=True` (siempre global)
 
 **`POST /api/users/{id}/role/assign/`**
 - Requiere token de admin
-- Body: `{ "rol": "dictaminador" | "evaluador" | "administrador", "password": "<contraseña del admin>" }`
-- El campo `password` es requerido **únicamente** cuando `rol == "administrador"`; para los demás roles se ignora
-- Cuando `rol == "administrador"`: valida la contraseña del usuario autenticado con `authenticate()` antes de proceder
-- Para `dictaminador`: `Dictaminador.objects.get_or_create(id_persona=persona)`
-- Para `evaluador`: `Evaluador.objects.get_or_create(id_persona=persona)`
+- Body: `{ "rol": "dictaminador" | "evaluador" | "administrador", "id_congreso": <id>, "password": "<solo para admin>" }`
+- `id_congreso` requerido para dictaminador y evaluador; ignorado para administrador
+- `password` requerido únicamente cuando `rol == "administrador"`; valida con `authenticate()`
+- Para `dictaminador`: `DictaminadorCongreso.objects.get_or_create(id_persona=persona, id_congreso_id=id_congreso)`
+- Para `evaluador`: `EvaluadorCongreso.objects.get_or_create(id_persona=persona, id_congreso_id=id_congreso)`
 - Para `administrador`: `persona.is_staff = True; persona.is_superuser = True; persona.save()`
-- Devuelve 200 con los roles actualizados o 400/401 si hay error
+- Devuelve 200 con los roles actualizados para ese congreso
 
 **`POST /api/users/{id}/role/remove/`**
 - Requiere token de admin
-- Body: `{ "rol": "dictaminador" | "evaluador" | "administrador", "password": "<contraseña del admin>" }`
-- El campo `password` es requerido **únicamente** cuando `rol == "administrador"`; valida con `authenticate()` antes de proceder
-- Para `dictaminador`: `Dictaminador.objects.filter(id_persona=persona).delete()`
-- Para `evaluador`: `Evaluador.objects.filter(id_persona=persona).delete()`
+- Body: `{ "rol": "dictaminador" | "evaluador" | "administrador", "id_congreso": <id>, "password": "<solo para admin>" }`
+- `id_congreso` requerido para dictaminador y evaluador
+- `password` requerido únicamente cuando `rol == "administrador"`; valida con `authenticate()`
+- Para `dictaminador`: `DictaminadorCongreso.objects.filter(id_persona=persona, id_congreso_id=id_congreso).delete()`
+- Para `evaluador`: `EvaluadorCongreso.objects.filter(id_persona=persona, id_congreso_id=id_congreso).delete()`
 - Para `administrador`: `persona.is_staff = False; persona.is_superuser = False; persona.save()`
 - Devuelve 200 con los roles actualizados
 
@@ -53,18 +77,18 @@ Nueva sub-vista dentro de la sección de Procesos del panel de administrador. Pe
 
 | Archivo | Descripción |
 |---|---|
-| `src/views/admin/ProcesosRolesView.jsx` | Vista principal con buscador y lista de usuarios |
+| `src/views/admin/ProcesosRolesView.jsx` | Vista principal con selector de congreso, buscador y lista de usuarios |
 | `src/api/adminApi.js` | 3 nuevas funciones: `getAllUsersApi`, `assignRoleApi`, `removeRoleApi` |
 
 ### Archivos modificados
 
 | Archivo | Cambio |
 |---|---|
+| `backend/users/models.py` | Agregar `DictaminadorCongreso`, `EvaluadorCongreso` |
 | `backend/users/views.py` | Agregar `AllUsersView`, `RoleAssignView`, `RoleRemoveView` |
 | `backend/users/urls.py` | Registrar las 3 nuevas rutas |
 | `src/views/admin/ProcesosView.jsx` | Agregar tarjeta "Roles" |
-| `src/App.jsx` | Agregar ruta `procesos/roles` |
-| `src/layouts/SidebarLayout.jsx` (vía `App.jsx`) | Sub-ítem "Roles" en sidebar de Procesos |
+| `src/App.jsx` | Agregar ruta `procesos/roles` y sub-ítem sidebar |
 
 ---
 
@@ -72,34 +96,36 @@ Nueva sub-vista dentro de la sección de Procesos del panel de administrador. Pe
 
 ### `ProcesosRolesView`
 
-1. Al montar: llama `getAllUsersApi` → guarda lista completa en estado
-2. Buscador: filtra la lista en frontend por `nombre_completo` (case-insensitive, sin llamadas extra al API)
-3. Lista de usuarios: tarjetas con nombre, correo y badges de roles activos
-4. Click en "Gestionar" → abre modal con el usuario seleccionado
+1. Al montar: carga lista de congresos disponibles (`getCongresosApi`)
+2. Admin selecciona un congreso → llama `getAllUsersApi(token, idCongreso)` → guarda lista en estado
+3. Buscador: filtra la lista en frontend por `nombre_completo` (case-insensitive)
+4. Lista de usuarios: tarjetas con nombre, correo y badges de roles activos **para ese congreso**
+5. Click en "Gestionar" → abre modal con el usuario seleccionado
 
 ### Modal de usuario
 
 - Muestra: nombre completo, correo, teléfono, género, país
+- Muestra el congreso seleccionado como contexto ("Roles en: Congreso X")
 - Sección "Roles": un toggle por cada rol (Dictaminador, Evaluador, Administrador)
-- Los toggles reflejan el estado actual del usuario (`roles.dictaminador`, etc.)
+- Los toggles reflejan el estado del usuario para el congreso seleccionado
 - Al activar un toggle:
-  - Si es "dictaminador" o "evaluador": muestra confirmación simple "¿Estás seguro de asignar este rol?" con botones Cancelar / Confirmar
-  - Si es "administrador": muestra campo de contraseña inline + botones Cancelar / Confirmar; al confirmar valida contraseña en backend
+  - Si es "dictaminador" o "evaluador": confirmación simple "¿Estás seguro de asignar este rol?" → Cancelar / Confirmar
+  - Si es "administrador": campo de contraseña inline → Cancelar / Confirmar (llama assign con password)
 - Al desactivar un toggle:
-  - Si es "dictaminador" o "evaluador": muestra confirmación simple "¿Estás seguro de quitar este rol?" con botones Cancelar / Confirmar
-  - Si es "administrador": muestra campo de contraseña inline + botones Cancelar / Confirmar; al confirmar valida contraseña en backend
-- Tras cada operación exitosa: actualiza el estado local del usuario en la lista + toast de éxito
-- Tras error: toast con el mensaje del backend, el toggle regresa a su estado anterior
+  - Si es "dictaminador" o "evaluador": confirmación simple "¿Estás seguro de quitar este rol?" → Cancelar / Confirmar
+  - Si es "administrador": campo de contraseña inline → Cancelar / Confirmar (llama remove con password)
+- Tras operación exitosa: actualiza estado local del usuario en la lista + toast de éxito
+- Tras error: toast con mensaje del backend, toggle regresa a estado anterior
 
 ---
 
 ## Sidebar
 
-En `AdminLayoutWrapper` de `App.jsx`, el sub-menú de Procesos (que ya muestra Resúmenes y Extensos cuando la ruta incluye `/admin/procesos`) se extiende con:
-
 ```jsx
 { to: '/admin/procesos/roles', label: 'Roles', icon: MdManageAccounts, className: 'pl-9 opacity-70' }
 ```
+
+Se añade al sub-menú de Procesos en `AdminLayoutWrapper`, igual que Resúmenes y Extensos.
 
 ---
 
@@ -107,24 +133,25 @@ En `AdminLayoutWrapper` de `App.jsx`, el sub-menú de Procesos (que ya muestra R
 
 | Caso | Comportamiento |
 |---|---|
-| Contraseña incorrecta al asignar o quitar admin | Backend devuelve 401, toast "Contraseña incorrecta", toggle regresa a estado anterior |
-| Usuario ya tiene el rol | Backend devuelve 200 (idempotente con `get_or_create`) |
-| Usuario no tiene el rol al intentar quitar | Backend devuelve 200 (idempotente con `filter().delete()`) |
+| Admin no selecciona congreso | Lista vacía + mensaje "Selecciona un congreso para ver usuarios" |
+| Contraseña incorrecta (admin) | Backend 401, toast "Contraseña incorrecta", toggle sin cambio |
+| Rol ya asignado (idempotente) | Backend 200, `get_or_create` no falla |
+| Rol no existe al quitar (idempotente) | Backend 200, `filter().delete()` no falla |
 | Error de red | Toast "Error de conexión", toggle regresa a estado anterior |
 
 ---
 
 ## Seguridad
 
-- Los 3 endpoints verifican `IsAuthenticated` + `is_staff=True` del usuario en sesión
-- La validación de contraseña para admin usa `authenticate()` de Django, no comparación directa
-- El frontend nunca almacena la contraseña ingresada más allá del ciclo de vida del modal
+- Los 3 endpoints verifican `IsAuthenticated` + `is_staff=True`
+- La validación de contraseña usa `authenticate()` de Django
+- El frontend no almacena la contraseña fuera del ciclo de vida del modal
 
 ---
 
 ## Lo que NO incluye este diseño
 
-- Paginación en el backend (la lista se carga completa y se filtra en frontend; aceptable para el volumen esperado de usuarios de un gestor de congresos)
-- Búsqueda por correo o institución (solo por nombre, según lo acordado)
-- Notificación por correo al usuario cuando se le asigna/quita un rol
-- Notificación por correo al usuario cuando se le asigna/quita un rol
+- Impacto en el sistema de revisiones existente — los roles por congreso son independientes de las tablas globales `dictaminador` y `evaluador` que usa la asignación de ponencias
+- Paginación en backend (filtrado en frontend)
+- Búsqueda por correo o institución
+- Notificaciones por correo al usuario
