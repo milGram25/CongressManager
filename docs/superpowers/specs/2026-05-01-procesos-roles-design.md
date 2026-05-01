@@ -2,7 +2,7 @@
 
 ## Resumen
 
-Nueva sub-vista dentro de la sección de Procesos del panel de administrador. Permite listar todos los usuarios del sistema, buscarlos por nombre y gestionar sus roles (dictaminador, evaluador, administrador) mediante un modal con información completa del usuario. Los roles son acumulativos (un usuario puede tener varios simultáneamente). Todas las operaciones sobre roles requieren confirmación doble: asignar o quitar dictaminador/evaluador muestra un "¿Estás seguro?"; asignar administrador requiere además la contraseña del admin operador.
+Nueva sub-vista dentro de la sección de Procesos del panel de administrador. Permite listar todos los usuarios del sistema, buscarlos por nombre y gestionar sus roles (dictaminador, evaluador, administrador) mediante un modal con información completa del usuario. Los roles son acumulativos (un usuario puede tener varios simultáneamente). Todas las operaciones sobre roles requieren confirmación doble: asignar o quitar dictaminador/evaluador muestra un "¿Estás seguro?"; asignar o quitar administrador requiere la contraseña del admin operador.
 
 ---
 
@@ -42,8 +42,8 @@ Nueva sub-vista dentro de la sección de Procesos del panel de administrador. Pe
 
 **`POST /api/users/{id}/role/remove/`**
 - Requiere token de admin
-- Body: `{ "rol": "dictaminador" | "evaluador" | "administrador" }`
-- No requiere contraseña para ningún rol
+- Body: `{ "rol": "dictaminador" | "evaluador" | "administrador", "password": "<contraseña del admin>" }`
+- El campo `password` es requerido **únicamente** cuando `rol == "administrador"`; valida con `authenticate()` antes de proceder
 - Para `dictaminador`: `Dictaminador.objects.filter(id_persona=persona).delete()`
 - Para `evaluador`: `Evaluador.objects.filter(id_persona=persona).delete()`
 - Para `administrador`: `persona.is_staff = False; persona.is_superuser = False; persona.save()`
@@ -85,7 +85,9 @@ Nueva sub-vista dentro de la sección de Procesos del panel de administrador. Pe
 - Al activar un toggle:
   - Si es "dictaminador" o "evaluador": muestra confirmación simple "¿Estás seguro de asignar este rol?" con botones Cancelar / Confirmar
   - Si es "administrador": muestra campo de contraseña inline + botones Cancelar / Confirmar; al confirmar valida contraseña en backend
-- Al desactivar un toggle → muestra confirmación simple "¿Estás seguro de quitar este rol?" con botones Cancelar / Confirmar; al confirmar llama `removeRoleApi`
+- Al desactivar un toggle:
+  - Si es "dictaminador" o "evaluador": muestra confirmación simple "¿Estás seguro de quitar este rol?" con botones Cancelar / Confirmar
+  - Si es "administrador": muestra campo de contraseña inline + botones Cancelar / Confirmar; al confirmar valida contraseña en backend
 - Tras cada operación exitosa: actualiza el estado local del usuario en la lista + toast de éxito
 - Tras error: toast con el mensaje del backend, el toggle regresa a su estado anterior
 
@@ -105,7 +107,7 @@ En `AdminLayoutWrapper` de `App.jsx`, el sub-menú de Procesos (que ya muestra R
 
 | Caso | Comportamiento |
 |---|---|
-| Contraseña incorrecta al asignar admin | Backend devuelve 401, toast "Contraseña incorrecta", toggle regresa a estado anterior |
+| Contraseña incorrecta al asignar o quitar admin | Backend devuelve 401, toast "Contraseña incorrecta", toggle regresa a estado anterior |
 | Usuario ya tiene el rol | Backend devuelve 200 (idempotente con `get_or_create`) |
 | Usuario no tiene el rol al intentar quitar | Backend devuelve 200 (idempotente con `filter().delete()`) |
 | Error de red | Toast "Error de conexión", toggle regresa a estado anterior |
@@ -124,5 +126,5 @@ En `AdminLayoutWrapper` de `App.jsx`, el sub-menú de Procesos (que ya muestra R
 
 - Paginación en el backend (la lista se carga completa y se filtra en frontend; aceptable para el volumen esperado de usuarios de un gestor de congresos)
 - Búsqueda por correo o institución (solo por nombre, según lo acordado)
-- Confirmación de contraseña para quitar roles (solo se pide contraseña al asignar administrador)
+- Notificación por correo al usuario cuando se le asigna/quita un rol
 - Notificación por correo al usuario cuando se le asigna/quita un rol
