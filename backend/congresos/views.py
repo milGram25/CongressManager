@@ -796,8 +796,15 @@ def _fetch_events_between(start, end, user=None):
                 e.sinopsis, e.tipo_evento, e.enlace,
                 COALESCE(
                     t.tallerista,
-                    NULLIF(TRIM(CONCAT(per.nombre, ' ', per.primer_apellido,
-                        COALESCE(' ' || per.segundo_apellido, ''))), ''),
+                    (
+                        SELECT NULLIF(TRIM(CONCAT(per2.nombre, ' ', per2.primer_apellido,
+                                   COALESCE(' ' || per2.segundo_apellido, ''))), '')
+                        FROM ponente_has_ponencia php2
+                        JOIN ponente po2 ON po2.id_ponente = php2.id_ponente
+                        JOIN persona per2 ON per2.id_persona = po2.id_persona
+                        WHERE php2.id_ponencia = p.id_ponencia
+                        LIMIT 1
+                    ),
                     'Por confirmar'
                 ) AS autor,
                 COALESCE(s.nombre_sede, 'Por confirmar') AS ubicacion,
@@ -806,9 +813,6 @@ def _fetch_events_between(start, end, user=None):
             JOIN evento e ON e.id_evento = ae.id_evento
             LEFT JOIN taller t ON t.id_evento = e.id_evento
             LEFT JOIN ponencia p ON p.id_evento = e.id_evento
-            LEFT JOIN ponente_has_ponencia php ON php.id_ponencia = p.id_ponencia
-            LEFT JOIN ponente po ON po.id_ponente = php.id_ponente
-            LEFT JOIN persona per ON per.id_persona = po.id_persona
             LEFT JOIN mesas_trabajo mt ON mt.id_mesas_trabajo = e.id_mesas_trabajo
             LEFT JOIN sede s ON s.id_sede = mt.id_sede
             LEFT JOIN subareas sub ON sub.id_subareas = COALESCE(t.id_subarea, p.id_subarea)
