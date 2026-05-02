@@ -317,6 +317,14 @@ def get_tokens_for_user(user):
                 except Exception:
                     pass
     refresh['rol'] = rol
+    refresh['es_dictaminador'] = (
+        Dictaminador.objects.filter(id_persona=user).exists() or
+        DictaminadorCongreso.objects.filter(id_persona=user).exists()
+    )
+    refresh['es_evaluador'] = (
+        Evaluador.objects.filter(id_persona=user).exists() or
+        EvaluadorCongreso.objects.filter(id_persona=user).exists()
+    )
     return {
         'refresh': str(refresh),
         'access': str(refresh.access_token),
