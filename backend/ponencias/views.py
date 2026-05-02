@@ -3,8 +3,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db import transaction, connection
-from .models import AsistenteEvento, Ponencia
+from .models import AsistenteEvento, Ponencia, Resumen, Extenso
 from .serializers import PonenciaSerializer, CatalogoEventoSerializer, AsistenteEventoSerializer
+from users.models import Dictaminador, Evaluador, DictaminadorCongreso, EvaluadorCongreso
 import os
 import json
 import uuid
@@ -354,3 +355,79 @@ def listar_catalogo_ponencias(request):
         return Response(data, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({"error": f"Error interno del servidor: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class DictaminadoresDisponiblesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not request.user.is_staff:
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        id_congreso = request.query_params.get('id_congreso')
+        if not id_congreso:
+            return Response({'detail': 'id_congreso requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        persona_ids = DictaminadorCongreso.objects.filter(
+            id_congreso_id=id_congreso
+        ).values_list('id_persona_id', flat=True)
+        dictaminadores = Dictaminador.objects.filter(id_persona_id__in=persona_ids).select_related('id_persona')
+        data = [{
+            'id_dictaminador': d.id_dictaminador,
+            'nombre_completo': ' '.join(x for x in [
+                d.id_persona.nombre, d.id_persona.primer_apellido, d.id_persona.segundo_apellido
+            ] if x).strip(),
+        } for d in dictaminadores]
+        return Response(data)
+
+
+class EvaluadoresDisponiblesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not request.user.is_staff:
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        id_congreso = request.query_params.get('id_congreso')
+        if not id_congreso:
+            return Response({'detail': 'id_congreso requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        persona_ids = EvaluadorCongreso.objects.filter(
+            id_congreso_id=id_congreso
+        ).values_list('id_persona_id', flat=True)
+        evaluadores = Evaluador.objects.filter(id_persona_id__in=persona_ids).select_related('id_persona')
+        data = [{
+            'id_evaluador': e.id_evaluador,
+            'nombre_completo': ' '.join(x for x in [
+                e.id_persona.nombre, e.id_persona.primer_apellido, e.id_persona.segundo_apellido
+            ] if x).strip(),
+        } for e in evaluadores]
+        return Response(data)
+
+
+class AsignarDictaminadorView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        if not request.user.is_staff:
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            resumen = Resumen.objects.get(pk=pk)
+        except Resumen.DoesNotExist:
+            return Response({'detail': 'Resumen no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+        id_dictaminador = request.data.get('id_dictaminador')
+        resumen.id_dictaminador_id = id_dictaminador
+        resumen.save(update_fields=['id_dictaminador'])
+        return Response({'id_resumen': resumen.pk, 'id_dictaminador': id_dictaminador})
+
+
+class AsignarEvaluadorView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        if not request.user.is_staff:
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            extenso = Extenso.objects.get(pk=pk)
+        except Extenso.DoesNotExist:
+            return Response({'detail': 'Extenso no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+        id_evaluador = request.data.get('id_evaluador')
+        extenso.id_evaluador_id = id_evaluador
+        extenso.save(update_fields=['id_evaluador'])
+        return Response({'id_extenso': extenso.pk, 'id_evaluador': id_evaluador})
