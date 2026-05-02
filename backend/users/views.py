@@ -7,7 +7,7 @@ from django.contrib.auth import authenticate
 from django.core.files.storage import FileSystemStorage
 from django.db import connection
 from django.utils import timezone
-from .models import Persona, Asistente, Dictaminador, Evaluador, Ponente, Factura, Constancia, HistorialAcciones
+from .models import Persona, Asistente, Dictaminador, Evaluador, Ponente, Factura, Constancia, HistorialAcciones, DictaminadorCongreso, EvaluadorCongreso
 from .serializers import RegisterSerializer, UserSerializer, ParticipantSerializer, FacturaSerializer, ConstanciaSerializer, HistorialAccionesSerializer
 import os
 
@@ -365,3 +365,129 @@ class UserMeView(APIView):
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
+
+
+class AllUsersView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not request.user.is_staff:
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+
+        id_congreso = request.query_params.get('id_congreso')
+        if not id_congreso:
+            return Response({'detail': 'id_congreso es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        personas = Persona.objects.all().order_by('nombre', 'primer_apellido')
+        dict_ids = set(DictaminadorCongreso.objects.filter(id_congreso_id=id_congreso).values_list('id_persona_id', flat=True))
+        eval_ids = set(EvaluadorCongreso.objects.filter(id_congreso_id=id_congreso).values_list('id_persona_id', flat=True))
+
+        data = []
+        for p in personas:
+            nombre_completo = ' '.join(x for x in [p.nombre, p.primer_apellido, p.segundo_apellido] if x).strip()
+            data.append({
+                'id_persona': p.id_persona,
+                'nombre_completo': nombre_completo,
+                'correo_electronico': p.correo_electronico,
+                'num_telefono': p.num_telefono or '',
+                'genero': p.genero or '',
+                'pais': p.pais or '',
+                'roles': {
+                    'dictaminador': p.id_persona in dict_ids,
+                    'evaluador': p.id_persona in eval_ids,
+                    'administrador': p.is_staff or p.is_superuser,
+                },
+            })
+        return Response(data)
+
+
+class RoleAssignView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, id_persona):
+        if not request.user.is_staff:
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+
+        rol = request.data.get('rol')
+        id_congreso = request.data.get('id_congreso')
+        password = request.data.get('password', '')
+
+        if rol not in ('dictaminador', 'evaluador', 'administrador'):
+            return Response({'detail': 'Rol no válido.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            persona = Persona.objects.get(pk=id_persona)
+        except Persona.DoesNotExist:
+            return Response({'detail': 'Usuario no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if rol == 'administrador':
+            if not password:
+                return Response({'detail': 'Se requiere contraseña.'}, status=status.HTTP_400_BAD_REQUEST)
+            user = authenticate(request, username=request.user.correo_electronico, password=password)
+            if user is None:
+                return Response({'detail': 'Contraseña incorrecta.'}, status=status.HTTP_401_UNAUTHORIZED)
+            persona.is_staff = True
+            persona.is_superuser = True
+            persona.save()
+        else:
+            if not id_congreso:
+                return Response({'detail': 'id_congreso es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+            if rol == 'dictaminador':
+                DictaminadorCongreso.objects.get_or_create(id_persona=persona, id_congreso_id=id_congreso)
+            else:
+                EvaluadorCongreso.objects.get_or_create(id_persona=persona, id_congreso_id=id_congreso)
+
+        dict_ids = set(DictaminadorCongreso.objects.filter(id_congreso_id=id_congreso).values_list('id_persona_id', flat=True)) if id_congreso else set()
+        eval_ids = set(EvaluadorCongreso.objects.filter(id_congreso_id=id_congreso).values_list('id_persona_id', flat=True)) if id_congreso else set()
+
+        return Response({
+            'dictaminador': persona.id_persona in dict_ids,
+            'evaluador': persona.id_persona in eval_ids,
+            'administrador': persona.is_staff or persona.is_superuser,
+        })
+
+
+class RoleRemoveView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, id_persona):
+        if not request.user.is_staff:
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+
+        rol = request.data.get('rol')
+        id_congreso = request.data.get('id_congreso')
+        password = request.data.get('password', '')
+
+        if rol not in ('dictaminador', 'evaluador', 'administrador'):
+            return Response({'detail': 'Rol no válido.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            persona = Persona.objects.get(pk=id_persona)
+        except Persona.DoesNotExist:
+            return Response({'detail': 'Usuario no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if rol == 'administrador':
+            if not password:
+                return Response({'detail': 'Se requiere contraseña.'}, status=status.HTTP_400_BAD_REQUEST)
+            user = authenticate(request, username=request.user.correo_electronico, password=password)
+            if user is None:
+                return Response({'detail': 'Contraseña incorrecta.'}, status=status.HTTP_401_UNAUTHORIZED)
+            persona.is_staff = False
+            persona.is_superuser = False
+            persona.save()
+        else:
+            if not id_congreso:
+                return Response({'detail': 'id_congreso es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+            if rol == 'dictaminador':
+                DictaminadorCongreso.objects.filter(id_persona=persona, id_congreso_id=id_congreso).delete()
+            else:
+                EvaluadorCongreso.objects.filter(id_persona=persona, id_congreso_id=id_congreso).delete()
+
+        dict_ids = set(DictaminadorCongreso.objects.filter(id_congreso_id=id_congreso).values_list('id_persona_id', flat=True)) if id_congreso else set()
+        eval_ids = set(EvaluadorCongreso.objects.filter(id_congreso_id=id_congreso).values_list('id_persona_id', flat=True)) if id_congreso else set()
+
+        return Response({
+            'dictaminador': persona.id_persona in dict_ids,
+            'evaluador': persona.id_persona in eval_ids,
+            'administrador': persona.is_staff or persona.is_superuser,
+        })

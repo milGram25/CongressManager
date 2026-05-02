@@ -6,6 +6,7 @@ from .views import (
     ConstanciaUploadView, BulkConstanciaActionView,
     FacturaUploadView, BulkFacturaActionView,
     UserActionHistoryView,
+    AllUsersView, RoleAssignView, RoleRemoveView,
 )
 
 app_name = 'users'
@@ -21,4 +22,7 @@ urlpatterns = [
     path('factura/<int:id_persona>/upload/', FacturaUploadView.as_view(), name='factura-upload'),
     path('factura/bulk-action/', BulkFacturaActionView.as_view(), name='factura-bulk'),
     path('history/', UserActionHistoryView.as_view(), name='user-history'),
+    path('all/', AllUsersView.as_view(), name='all-users'),
+    path('<int:id_persona>/role/assign/', RoleAssignView.as_view(), name='role-assign'),
+    path('<int:id_persona>/role/remove/', RoleRemoveView.as_view(), name='role-remove'),
 ]
