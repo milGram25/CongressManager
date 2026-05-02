@@ -469,3 +469,19 @@ export async function getDictamenesConFiltroApi(accessToken, tipoTrabajo = null)
   if (!res.ok) throw new Error('Error cargando dictamenes');
   return res.json();
 }
+
+export async function getDictaminadoresDisponiblesApi(accessToken, idCongreso) {
+  const res = await fetch(`${API_URL}/api/ponencias/dictaminadores-disponibles/?id_congreso=${idCongreso}`, {
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error cargando dictaminadores');
+  return res.json();
+}
+
+export async function getEvaluadoresDisponiblesApi(accessToken, idCongreso) {
+  const res = await fetch(`${API_URL}/api/ponencias/evaluadores-disponibles/?id_congreso=${idCongreso}`, {
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error cargando evaluadores');
+  return res.json();
+}

@@ -1,283 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ListaExtensos from "./Componentes/ListaExtensos";
 import ListaRevisores from "./Componentes/ListaRevisores";
-
-// Datos de ejemplo para dictaminadores y extensos
-const MOCK_DICTAMINADORES = [
-  {
-    id: 1,
-    nombre: "Ana García",
-    grado: "Dr. en Ciencias Computacionales",
-    institucion: "UNAM",
-    especialidad: "Inteligencia Artificial",
-    perfil: "Investigadora con 15 años de experiencia en ML y redes neuronales.",
-    email: "ana.garcia@unam.mx",
-  },
-  {
-    id: 2,
-    nombre: "Luis Martínez",
-    grado: "M.C. en Ingeniería de Software",
-    institucion: "IPN",
-    especialidad: "Desarrollo de Software",
-    perfil: "Docente e investigador enfocado en arquitecturas de software escalables.",
-    email: "luis.martinez@ipn.mx",
-  },
-  {
-    id: 3,
-    nombre: "María Sánchez",
-    grado: "Dra. en Bioinformática",
-    institucion: "CINVESTAV",
-    especialidad: "Biología Computacional",
-    perfil: "Especialista en análisis genómico y modelado computacional de proteínas.",
-    email: "m.sanchez@cinvestav.mx",
-  },
-  {
-    id: 4,
-    nombre: "Carlos López",
-    grado: "ING en computacion",
-    institucion: "Cualtos",
-    especialidad: "RedesComputacionales",
-    perfil: "Especialista en dispositivos Cisco",
-    email: "carli_loi9@gmail.com",
-  },
-  {
-    id: 5,
-    nombre: "Pedro Ruiz",
-    grado: "M.C. en Sistemas Computacionales",
-    institucion: "ITESM",
-    especialidad: "Ciberseguridad y Redes",
-    perfil: "Consultor en seguridad informática con experiencia en protección de infraestructuras críticas.",
-    email: "pedro.ruiz@itesm.mx",
-  },
-  {
-    id: 6,
-    nombre: "Elena Torres",
-    grado: "Dra. en Matemáticas Aplicadas",
-    institucion: "BUAP",
-    especialidad: "Modelado Estadístico",
-    perfil: "Investigadora en análisis de datos masivos y modelos predictivos aplicados a salud pública.",
-    email: "e.torres@buap.mx",
-  },
-  {
-    id: 7,
-    nombre: "Roberto Díaz",
-    grado: "Dr. en Ingeniería Eléctrica",
-    institucion: "UAM Iztapalapa",
-    especialidad: "Robótica e Automatización",
-    perfil: "Especialista en diseño de sistemas embebidos y robótica industrial con enfoque en manufactura.",
-    email: "r.diaz@uam.mx",
-  },
-];
-
-// Datos de ejemplo para extensos
-const MOCK_EXTENSOS = [
-  {
-    id: 1,
-    title: "Internet de las cosas",
-    asignado: true,
-    revisado: false,
-    aceptado: false,
-    revisores: [1, 2],
-    fechaLimite: "2026-04-15",
-    autores: ["Jose Camacho Hernandez", "Arturo Gonzalez"],
-    subarea: "TECNOLOGIA",
-    tipoTrabajo: "tesis",
-    puntuacion: { obtenida: 0, total: 15 },
-    grupos_rubrica: [
-      {
-        id: 1,
-        grupo: "Concisión",
-        criterios: [
-          { id: 1, texto: "Originalidad", calificacion: 0, maximo: 5 },
-          { id: 2, texto: "Redaccion", calificacion: 0, maximo: 5 },
-          { id: 3, texto: "Claridad", calificacion: 0, maximo: 5 },
-        ]
-      }
-    ],
-    comentario: "La información presentada es pertinente, pero todavía requiere fortalecer la sección metodológica y la definición del aporte.",
-  },
-  {
-    id: 2,
-    title: "Programacion e inteligencia artificial",
-    asignado: true,
-    revisado: false,
-    aceptado: false,
-    revisores: [4],
-    fechaLimite: "2026-04-20",
-    autores: ["Marina Orozco", "Pablo Nunez"],
-    subarea: "INTELIGENCIA ARTIFICIAL",
-    tipoTrabajo: "prototipo",
-    puntuacion: { obtenida: 6, total: 15 },
-    grupos_rubrica: [
-      {
-        id: 1,
-        grupo: "Concisión",
-        criterios: [
-          { id: 1, texto: "Originalidad", calificacion: 2, maximo: 5 },
-          { id: 2, texto: "Redaccion", calificacion: 1, maximo: 5 },
-          { id: 3, texto: "Claridad", calificacion: 3, maximo: 5 },
-
-        ]
-      }
-
-    ],
-    comentario: "Se recomienda clarificar los resultados obtenidos y separar con mayor precision la revision bibliografica del aporte propio.",
-  },
-  {
-    id: 3,
-    title: "Biologia y computadoras",
-    asignado: true,
-    revisado: true,
-    aceptado: false,
-    revisores: [3, 5],
-    fechaLimite: "2026-04-10",
-    autores: ["Laura Mendez", "Rosa Ibarra"],
-    subarea: "BIOLOGIA COMPUTACIONAL",
-    tipoTrabajo: "investigacion",
-    puntuacion: { obtenida: 13, total: 15 },
-    grupos_rubrica: [
-      {
-        id: 1,
-        grupo: "Concisión",
-        criterios: [
-          { id: 1, texto: "Originalidad", calificacion: 4, maximo: 5 },
-          { id: 2, texto: "Redaccion", calificacion: 2, maximo: 5 },
-          { id: 3, texto: "Claridad", calificacion: 5, maximo: 5 },
-
-        ]
-      },
-      {
-        id: 2,
-        grupo: "Relevancia",
-        criterios: [
-          { id: 1, texto: "Importancia", calificacion: 4, maximo: 5 },
-          { id: 2, texto: "Precisión", calificacion: 2, maximo: 5 },
-          { id: 3, texto: "Actualidad", calificacion: 5, maximo: 5 },
-
-        ]
-      }
-
-    ],
-    comentario: "El extenso cumple con los criterios formales y presenta resultados solidos con una discusion bien sustentada.",
-  },
-  {
-    id: 4,
-    title: "Analisis geneticos",
-    asignado: false,
-    revisado: false,
-    aceptado: false,
-    revisores: [],
-    fechaLimite: "2026-05-01",
-    autores: ["Marta Salinas"],
-    subarea: "BIOTECNOLOGIA",
-    tipoTrabajo: "articulo breve",
-    puntuacion: { obtenida: 0, total: 15 },
-    grupos_rubrica: [
-      {
-        id: 1,
-        grupo: "Concisión",
-        criterios: [
-          { id: 1, texto: "Originalidad", calificacion: 2, maximo: 5 },
-          { id: 2, texto: "Redaccion", calificacion: 1, maximo: 5 },
-          { id: 3, texto: "Claridad", calificacion: 3, maximo: 5 },
-
-        ]
-      },
-      {
-        id: 2,
-        grupo: "Credibilidad",
-        criterios: [
-          { id: 1, texto: "Metodología", calificacion: 2, maximo: 5 },
-          { id: 2, texto: "Actualidad", calificacion: 1, maximo: 5 },
-          { id: 3, texto: "Fuentes", calificacion: 3, maximo: 5 },
-
-        ]
-      }
-
-    ],
-    comentario: "Sin comentarios disponibles. El extenso aun no inicia proceso de evaluacion.",
-  },
-  {
-    id: 5,
-    title: "Enfoque estructural de POO",
-    asignado: true,
-    revisado: true,
-    aceptado: true,
-    revisores: [6],
-    fechaLimite: null,
-    autores: ["Daniel Ramirez", "Eva Suarez"],
-    subarea: "INGENIERIA DE SOFTWARE",
-    tipoTrabajo: "estudio de caso",
-    puntuacion: { obtenida: 15, total: 15 },
-    grupos_rubrica: [
-      {
-        id: 1,
-        grupo: "Concisión",
-        criterios: [
-          { id: 1, texto: "Originalidad", calificacion: 2, maximo: 5 },
-          { id: 2, texto: "Redaccion", calificacion: 1, maximo: 5 },
-          { id: 3, texto: "Claridad", calificacion: 3, maximo: 5 },
-
-        ]
-      },
-      {
-        id: 2,
-        grupo: "Credibilidad",
-        criterios: [
-          { id: 1, texto: "Metodología", calificacion: 2, maximo: 5 },
-          { id: 2, texto: "Actualidad", calificacion: 1, maximo: 5 },
-          { id: 3, texto: "Fuentes", calificacion: 3, maximo: 5 },
-
-        ]
-      }
-
-    ],
-    comentario: "Trabajo aceptado. El documento esta completo, mantiene coherencia metodologica y cumple con la estructura solicitada.",
-  },
-  {
-    id: 6,
-    title: "Las villas de California",
-    asignado: true,
-    revisado: false,
-    aceptado: false,
-    revisores: [7],
-    fechaLimite: "2026-04-28",
-    autores: ["Renata Moreno", "Diego Morales"],
-    subarea: "HISTORIA Y PATRIMONIO",
-    tipoTrabajo: "revision documental",
-    puntuacion: { obtenida: 7, total: 35 },
-    grupos_rubrica: [
-      {
-        id: 1,
-        grupo: "Concisión",
-        criterios: [
-          { id: 1, texto: "Originalidad", calificacion: 2, maximo: 5 },
-          { id: 2, texto: "Redaccion", calificacion: 1, maximo: 5 },
-          { id: 3, texto: "Claridad", calificacion: 3, maximo: 5 },
-
-        ]
-      },
-      {
-        id: 2,
-        grupo: "Credibilidad",
-        criterios: [
-          { id: 1, texto: "Metodología", calificacion: 2, maximo: 5 },
-          { id: 2, texto: "Actualidad", calificacion: 1, maximo: 5 },
-          { id: 3, texto: "Fuentes", calificacion: 3, maximo: 5 },
-          { id: 4, texto: "Uso de IA", calificacion: 3, maximo: 5 },
-
-        ]
-      }
-
-    ],
-    comentario: "La narrativa es consistente, aunque el texto necesita mayor profundidad en resultados y criterios de analisis historico.",
-  },
-];
+import { getCongresosApi, getEvaluadoresDisponiblesApi } from "../../api/adminApi";
+import { getExtensosCongreso, asignarEvaluadorApi } from "../../api/ponenciasApi";
 
 //Componente para agrupar criterios de evaluación
 function RubricaGrupoStatusRow({ grupo }) {
-
-  const nombreGrupo = grupo.grupo || "";
+  const nombreGrupo = grupo.nombre_grupo || "";
 
   return (
     <div className="mb-5 ml-2">
@@ -285,8 +14,8 @@ function RubricaGrupoStatusRow({ grupo }) {
         {nombreGrupo}
       </h4>
       <div className="flex flex-col">
-        {grupo.criterios?.map((criterio) => (
-          <RubricaCriteriosStatusRow key={criterio.id} criterio={criterio} />
+        {grupo.criterios?.map((criterio, i) => (
+          <RubricaCriteriosStatusRow key={i} criterio={criterio} />
         ))}
       </div>
     </div>
@@ -295,13 +24,21 @@ function RubricaGrupoStatusRow({ grupo }) {
 
 // Cuadrado de la rubrica con color segun calificacion
 function RubricaCriteriosStatusRow({ criterio }) {
+  const puntaje = criterio.puntaje ?? 0;
+  const peso = criterio.peso ?? 0;
+
   return (
     <div className="flex items-center justify-between border-b border-slate-200 py-3 last:border-b-0 pl-2 ml-2">
-      <span className="text-sm font-medium text-slate-700">{criterio.texto}</span>
+      <div className="flex-1">
+        <span className="text-sm font-medium text-slate-700">{criterio.nombre_criterio}</span>
+        {criterio.comentario_especifico && (
+          <p className="text-xs text-slate-400 mt-0.5">{criterio.comentario_especifico}</p>
+        )}
+      </div>
       <div className="flex items-center gap-3">
-        {Array.from({ length: criterio.maximo }, (_, index) => {
+        {Array.from({ length: peso }, (_, index) => {
           const value = index + 1;
-          const active = value <= criterio.calificacion;
+          const active = value <= puntaje;
 
           return (
             <div
@@ -319,7 +56,7 @@ function RubricaCriteriosStatusRow({ criterio }) {
 }
 
 // Tarjeta de extenso seleccionado con detalles y rubricas
-function ExtensoDetailCard({ extenso, revisores }) {
+function ExtensoDetailCard({ extenso, revisores, evaluadoresDisponibles, onAsignar }) {
   if (!extenso) {
     return (
       <article className="rounded-[28px] border border-black/55 bg-white p-6 shadow-sm">
@@ -328,6 +65,8 @@ function ExtensoDetailCard({ extenso, revisores }) {
     );
   }
 
+  const grupos = extenso.evaluacion?.grupos ?? null;
+
   return (
     <article className="flex min-h-[760px] flex-col rounded-[28px] border border-black/55 bg-white px-5 py-5 shadow-sm md:px-6">
       <div className="space-y-6">
@@ -335,38 +74,54 @@ function ExtensoDetailCard({ extenso, revisores }) {
           <h3 className="text-[14px] font-semibold uppercase tracking-wide text-slate-700">Información de extenso</h3>
           <div className="mt-4 space-y-3 text-[14px] leading-6 text-slate-700">
             <p><span className="font-semibold text-slate-900">Título:</span> {extenso.title}</p>
-            <p><span className="font-semibold text-slate-900">Autores:</span> {extenso.autores.join(" / ")}</p>
-            <p><span className="font-semibold text-slate-900">Evaluadores:</span> {revisores.length > 0 ? revisores.map((revisor) => revisor.nombre).join(" / ") : "Sin asignar"}</p>
-            <p><span className="font-semibold text-slate-900">Subárea:</span> {extenso.subarea}</p>
-            <p><span className="font-semibold text-slate-900">Tipo de trabajo:</span> {extenso.tipoTrabajo}</p>
+            <p><span className="font-semibold text-slate-900">Autores:</span> {extenso.autores?.join(" / ") || 'Sin autores'}</p>
+            <p><span className="font-semibold text-slate-900">Evaluadores:</span> {revisores.length > 0 ? revisores.map((r) => r.nombre_completo).join(" / ") : "Sin asignar"}</p>
+          </div>
+        </section>
+
+        {/* Asignación de evaluador */}
+        <section>
+          <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700 mb-2">Evaluador asignado</h4>
+          <div className="flex gap-2 items-center">
+            <select
+              className="select select-bordered select-sm flex-1 rounded-xl"
+              value={extenso.id_evaluador ?? ''}
+              onChange={e => onAsignar(extenso.id_extenso, e.target.value ? Number(e.target.value) : null)}
+            >
+              <option value="">Sin asignar</option>
+              {evaluadoresDisponibles?.map(e => (
+                <option key={e.id_evaluador} value={e.id_evaluador}>{e.nombre_completo}</option>
+              ))}
+            </select>
           </div>
         </section>
 
         <section>
           <div className="flex items-end justify-between gap-4">
             <h3 className="text-[14px] font-semibold uppercase tracking-wide text-slate-700">Rúbricas de evaluación</h3>
-            <div className="text-right">
-              <p className="text-[12px] font-semibold uppercase tracking-wide text-slate-500">Puntuación</p>
-              <p className="text-[34px] font-black leading-none text-slate-800">
-                {extenso.puntuacion.obtenida}
-                <span className="text-[22px] text-slate-500">/{extenso.puntuacion.total}</span>
-              </p>
-            </div>
           </div>
 
           <div className="mt-3 overflow-y-auto max-h-[250px]">
-            {extenso.grupos_rubrica.map((grupo) => (
-              <RubricaGrupoStatusRow key={grupo.id} grupo={grupo} />
-            ))}
+            {grupos == null ? (
+              <p className="text-sm text-slate-400 italic">Sin evaluación enviada aún.</p>
+            ) : grupos.length === 0 ? (
+              <p className="text-sm text-slate-400 italic">Sin evaluación enviada aún.</p>
+            ) : (
+              grupos.map((grupo, i) => (
+                <RubricaGrupoStatusRow key={i} grupo={grupo} />
+              ))
+            )}
           </div>
         </section>
 
-        <section>
-          <h3 className="text-[14px] font-semibold uppercase tracking-wide text-slate-700">Comentarios del evaluador</h3>
-          <div className="mt-4 min-h-[180px] rounded-[18px] border border-black/60 bg-[#f4f4f4] p-4 text-sm leading-6 text-slate-700">
-            {extenso.comentario}
-          </div>
-        </section>
+        {extenso.evaluacion?.estatus && (
+          <section>
+            <h3 className="text-[14px] font-semibold uppercase tracking-wide text-slate-700">Estatus de evaluación</h3>
+            <div className="mt-4 rounded-[18px] border border-black/60 bg-[#f4f4f4] p-4 text-sm leading-6 text-slate-700">
+              {extenso.evaluacion.estatus}
+            </div>
+          </section>
+        )}
       </div>
     </article>
   );
@@ -374,13 +129,54 @@ function ExtensoDetailCard({ extenso, revisores }) {
 
 //Vista de extensos con lista lateral y detalle central
 export default function ProcesosExtensosView() {
-  const [items] = useState(MOCK_EXTENSOS);
-  const [viewItem, setViewItem] = useState(MOCK_EXTENSOS[0] ?? null);
+  const accessToken = localStorage.getItem('congress_access');
+  const [congresos, setCongresos] = useState([]);
+  const [selectedCongreso, setSelectedCongreso] = useState(null);
+  const [items, setItems] = useState([]);
+  const [evaluadores, setEvaluadores] = useState([]);
+  const [viewItem, setViewItem] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    getCongresosApi(accessToken).then(setCongresos).catch(console.error);
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!selectedCongreso) return;
+    setLoading(true);
+    Promise.all([
+      getExtensosCongreso(accessToken, selectedCongreso.id_congreso),
+      getEvaluadoresDisponiblesApi(accessToken, selectedCongreso.id_congreso),
+    ])
+      .then(([extData, evalData]) => {
+        setItems(extData);
+        setEvaluadores(evalData);
+        setViewItem(extData[0] ?? null);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [selectedCongreso, accessToken]);
 
   const revisoresAsignados = useMemo(() => {
-    if (!viewItem) return [];
-    return MOCK_DICTAMINADORES.filter((dictaminador) => viewItem.revisores.includes(dictaminador.id));
-  }, [viewItem]);
+    if (!viewItem?.id_evaluador) return [];
+    return evaluadores.filter(e => e.id_evaluador === viewItem.id_evaluador);
+  }, [viewItem, evaluadores]);
+
+  const handleAsignar = async (idExtenso, idEvaluador) => {
+    try {
+      await asignarEvaluadorApi(accessToken, idExtenso, idEvaluador);
+      setItems(prev => prev.map(item =>
+        item.id_extenso === idExtenso
+          ? { ...item, asignado: idEvaluador != null, id_evaluador: idEvaluador }
+          : item
+      ));
+      if (viewItem?.id_extenso === idExtenso) {
+        setViewItem(prev => ({ ...prev, asignado: idEvaluador != null, id_evaluador: idEvaluador }));
+      }
+    } catch (err) {
+      console.error('Error asignando evaluador:', err);
+    }
+  };
 
   return (
     <div className="w-full space-y-7">
@@ -390,26 +186,48 @@ export default function ProcesosExtensosView() {
             <div className="border bg-black rounded-full h-10 w-2"></div>
             <h2 className="flex-1 text-2xl font-bold text-start">Revisión de extensos</h2>
           </div>
-          <p className="pl-12 text-start text-gray-500 mb-3">
-            Aquí se gestiona la revisión de extensos
-          </p>
+          <p className="pl-12 text-start text-gray-500 mb-3">Aquí se gestiona la revisión de extensos.</p>
         </div>
+        <select
+          className="select select-bordered ml-auto rounded-xl"
+          value={selectedCongreso?.id_congreso ?? ''}
+          onChange={e => {
+            const found = congresos.find(c => String(c.id_congreso) === e.target.value);
+            setSelectedCongreso(found ?? null);
+          }}
+        >
+          <option value="">Selecciona un congreso</option>
+          {congresos.map(c => (
+            <option key={c.id_congreso} value={c.id_congreso}>{c.nombre_congreso}</option>
+          ))}
+        </select>
       </section>
 
-      <section className="grid items-start gap-6 xl:grid-cols-2">
-
-
-        <div className="space-y-4">
-          <ListaExtensos
-            listaElementos={items}
-            dictaminadores={MOCK_DICTAMINADORES}
-            selectedId={viewItem?.id ?? null}
-            onView={setViewItem}
+      {!selectedCongreso ? (
+        <p className="text-center py-10 text-base-content/40 italic">Selecciona un congreso para ver los extensos.</p>
+      ) : loading ? (
+        <div className="flex justify-center py-10"><span className="loading loading-spinner loading-lg text-primary"></span></div>
+      ) : items.length === 0 ? (
+        <p className="text-center py-10 text-base-content/40 italic">No hay ponencias con extenso en este congreso.</p>
+      ) : (
+        <section className="grid items-start gap-6 xl:grid-cols-2">
+          <div className="space-y-4">
+            <ListaExtensos
+              listaElementos={items}
+              dictaminadores={evaluadores}
+              selectedId={viewItem?.id ?? null}
+              onView={setViewItem}
+            />
+            <ListaRevisores titulo="EVALUADORES" revisores={revisoresAsignados} />
+          </div>
+          <ExtensoDetailCard
+            extenso={viewItem}
+            revisores={revisoresAsignados}
+            evaluadoresDisponibles={evaluadores}
+            onAsignar={handleAsignar}
           />
-          <ListaRevisores titulo="EVALUADORES" revisores={revisoresAsignados} />
-        </div>
-        <ExtensoDetailCard extenso={viewItem} revisores={revisoresAsignados} />
-      </section>
+        </section>
+      )}
     </div>
   );
 }
