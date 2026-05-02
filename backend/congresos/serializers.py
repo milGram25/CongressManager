@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Congreso, Institucion, Sede, MesasTrabajo, Evento, FechasCongreso, CostosCongreso, Rubrica, RubricaCriterio, TipoTrabajo, Dictamen, DictamenPregunta, AreaGeneral, Subarea, Taller
+from .models import Congreso, Institucion, Sede, MesasTrabajo, Evento, FechasCongreso, CostosCongreso, Rubrica, RubricaGrupo, RubricaCriterio, TipoTrabajo, Dictamen, DictamenPregunta, AreaGeneral, Subarea, Taller
 
 class InstitucionSerializer(serializers.ModelSerializer):
     congresos_totales = serializers.SerializerMethodField()
@@ -31,10 +31,24 @@ class SubareaSerializer(serializers.ModelSerializer):
         model = Subarea
         fields = '__all__'
 
+class RubricaCriterioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RubricaCriterio
+        fields = ['id_criterio', 'id_grupo', 'descripcion', 'peso']
+
+class RubricaGrupoSerializer(serializers.ModelSerializer):
+    criterios = RubricaCriterioSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = RubricaGrupo
+        fields = ['id_grupo', 'id_rubrica', 'nombre_grupo', 'criterios']
+
 class RubricaSerializer(serializers.ModelSerializer):
+    grupos = RubricaGrupoSerializer(many=True, read_only=True)
+
     class Meta:
         model = Rubrica
-        fields = '__all__'
+        fields = ['id_rubrica', 'id_congreso', 'tipo_trabajo', 'nombre', 'esta_activo', 'fecha_creacion', 'grupos']
 
 class TipoTrabajoSerializer(serializers.ModelSerializer):
     class Meta:

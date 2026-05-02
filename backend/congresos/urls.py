@@ -17,6 +17,8 @@ from .views import (
     InstitucionViewSet,
     CongresoViewSet,
     RubricaViewSet,
+    RubricaGrupoViewSet,
+    RubricaCriterioViewSet,
     TipoTrabajoViewSet,
     DictamenViewSet,
     DictamenPreguntaViewSet,
@@ -33,6 +35,8 @@ router.register(r'talleres', TallerViewSet, basename='taller')
 router.register(r'instituciones', InstitucionViewSet, basename='institucion')
 router.register(r'lista', CongresoViewSet, basename='congreso')
 router.register(r'rubricas', RubricaViewSet, basename='rubrica')
+router.register(r'rubrica-grupos', RubricaGrupoViewSet, basename='rubrica-grupo')
+router.register(r'rubrica-criterios', RubricaCriterioViewSet, basename='rubrica-criterio')
 router.register(r'tipos-trabajo', TipoTrabajoViewSet, basename='tipo-trabajo')
 router.register(r'dictamenes', DictamenViewSet, basename='dictamen')
 router.register(r'preguntas', DictamenPreguntaViewSet, basename='pregunta')

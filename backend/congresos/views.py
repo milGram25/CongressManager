@@ -10,8 +10,8 @@ from datetime import datetime, timedelta
 from calendar import monthrange
 import os
 
-from .models import Sede, Institucion, Congreso, Evento, MesasTrabajo, FechasCongreso, CostosCongreso, Rubrica, TipoTrabajo, Dictamen, DictamenPregunta, Subarea, Taller
-from .serializers import SedeSerializer, InstitucionSerializer, CongresoSerializer, EventoSerializer, MesasTrabajoSerializer, RubricaSerializer, TipoTrabajoSerializer, DictamenSerializer, DictamenPreguntaSerializer, SubareaSerializer, TallerSerializer
+from .models import Sede, Institucion, Congreso, Evento, MesasTrabajo, FechasCongreso, CostosCongreso, Rubrica, RubricaGrupo, RubricaCriterio, TipoTrabajo, Dictamen, DictamenPregunta, Subarea, Taller
+from .serializers import SedeSerializer, InstitucionSerializer, CongresoSerializer, EventoSerializer, MesasTrabajoSerializer, RubricaSerializer, RubricaGrupoSerializer, RubricaCriterioSerializer, TipoTrabajoSerializer, DictamenSerializer, DictamenPreguntaSerializer, SubareaSerializer, TallerSerializer
 
 def clean_date(val, default=None):
     if val is None or (isinstance(val, str) and val.strip() == ""):
@@ -33,6 +33,30 @@ class RubricaViewSet(viewsets.ModelViewSet):
             serializer.save(id_congreso_id=id_congreso)
         else:
             serializer.save()
+
+class RubricaGrupoViewSet(viewsets.ModelViewSet):
+    serializer_class = RubricaGrupoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = RubricaGrupo.objects.all()
+        id_rubrica = self.request.query_params.get('id_rubrica')
+        if id_rubrica:
+            qs = qs.filter(id_rubrica_id=id_rubrica)
+        return qs
+
+
+class RubricaCriterioViewSet(viewsets.ModelViewSet):
+    serializer_class = RubricaCriterioSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = RubricaCriterio.objects.all()
+        id_grupo = self.request.query_params.get('id_grupo')
+        if id_grupo:
+            qs = qs.filter(id_grupo_id=id_grupo)
+        return qs
+
 
 class TipoTrabajoViewSet(viewsets.ModelViewSet):
     serializer_class = TipoTrabajoSerializer
@@ -68,9 +92,15 @@ class TipoTrabajoViewSet(viewsets.ModelViewSet):
             return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class DictamenViewSet(viewsets.ModelViewSet):
-    queryset = Dictamen.objects.all()
     serializer_class = DictamenSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = Dictamen.objects.all()
+        tipo_trabajo = self.request.query_params.get('tipo_trabajo')
+        if tipo_trabajo:
+            qs = qs.filter(tipo_trabajo_id=tipo_trabajo)
+        return qs
 
 class DictamenPreguntaViewSet(viewsets.ModelViewSet):
     queryset = DictamenPregunta.objects.all()
