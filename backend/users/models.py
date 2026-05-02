@@ -111,8 +111,9 @@ class HistorialAcciones(models.Model):
 
 
 class DictaminadorCongreso(models.Model):
-    id_persona = models.ForeignKey(Persona, on_delete=models.CASCADE, db_column='id_persona')
-    id_congreso = models.ForeignKey(Congreso, on_delete=models.CASCADE, db_column='id_congreso')
+    id_dictaminador_congreso = models.AutoField(primary_key=True)
+    id_persona = models.ForeignKey(Persona, on_delete=models.CASCADE, db_column='id_persona', related_name='dictaminador_congresos')
+    id_congreso = models.ForeignKey(Congreso, on_delete=models.CASCADE, db_column='id_congreso', related_name='dictaminadores')
 
     class Meta:
         unique_together = ('id_persona', 'id_congreso')
@@ -120,8 +121,9 @@ class DictaminadorCongreso(models.Model):
 
 
 class EvaluadorCongreso(models.Model):
-    id_persona = models.ForeignKey(Persona, on_delete=models.CASCADE, db_column='id_persona')
-    id_congreso = models.ForeignKey(Congreso, on_delete=models.CASCADE, db_column='id_congreso')
+    id_evaluador_congreso = models.AutoField(primary_key=True)
+    id_persona = models.ForeignKey(Persona, on_delete=models.CASCADE, db_column='id_persona', related_name='evaluador_congresos')
+    id_congreso = models.ForeignKey(Congreso, on_delete=models.CASCADE, db_column='id_congreso', related_name='evaluadores')
 
     class Meta:
         unique_together = ('id_persona', 'id_congreso')
