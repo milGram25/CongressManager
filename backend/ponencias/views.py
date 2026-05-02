@@ -431,3 +431,229 @@ class AsignarEvaluadorView(APIView):
         extenso.id_evaluador_id = id_evaluador
         extenso.save(update_fields=['id_evaluador'])
         return Response({'id_extenso': extenso.pk, 'id_evaluador': id_evaluador})
+
+
+class ResumenesCongresoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not request.user.is_staff:
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        id_congreso = request.query_params.get('id_congreso')
+        if not id_congreso:
+            return Response({'detail': 'id_congreso requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        with connection.cursor() as c:
+            c.execute("""
+                SELECT
+                    p.id_ponencia,
+                    p.id_resumen,
+                    COALESCE(s.nombre, 'Ponencia ' || p.id_ponencia::text) AS titulo,
+                    r.id_dictaminador,
+                    r.revisado,
+                    r.estatus,
+                    r.retroalimentacion,
+                    CASE WHEN d_per.id_persona IS NOT NULL
+                        THEN d_per.nombre || ' ' || d_per.primer_apellido
+                        ELSE NULL
+                    END AS nombre_dictaminador
+                FROM ponencia p
+                JOIN evento e ON p.id_evento = e.id_evento
+                JOIN resumen r ON p.id_resumen = r.id_resumen
+                LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
+                LEFT JOIN dictaminador d ON r.id_dictaminador = d.id_dictaminador
+                LEFT JOIN persona d_per ON d.id_persona = d_per.id_persona
+                WHERE e.id_congreso = %s
+                ORDER BY p.id_ponencia
+            """, [id_congreso])
+            rows = c.fetchall()
+            cols = ['id_ponencia','id_resumen','titulo','id_dictaminador','revisado','estatus','retroalimentacion','nombre_dictaminador']
+            ponencias = [dict(zip(cols, row)) for row in rows]
+
+            if not ponencias:
+                return Response([])
+
+            ponencia_ids = [p['id_ponencia'] for p in ponencias]
+            resumen_ids = [p['id_resumen'] for p in ponencias]
+
+            c.execute("""
+                SELECT php.id_ponencia,
+                       per.nombre || ' ' || per.primer_apellido
+                FROM ponente_has_ponencia php
+                JOIN ponente po ON php.id_ponente = po.id_ponente
+                JOIN persona per ON po.id_persona = per.id_persona
+                WHERE php.id_ponencia = ANY(%s)
+            """, [ponencia_ids])
+            autores_map = {}
+            for id_pon, nombre in c.fetchall():
+                autores_map.setdefault(id_pon, []).append(nombre)
+
+            c.execute("""
+                SELECT dr.id_resumen, dp.descripcion, ep.cumplio, ep.comentario_especifico
+                FROM dictamen_resumen dr
+                JOIN evaluacion_pregunta ep ON ep.id_dictamen = dr.id_dictamen
+                JOIN dictamen_pregunta dp ON ep.id_pregunta = dp.id_pregunta
+                WHERE dr.id_resumen = ANY(%s)
+            """, [resumen_ids])
+            dictamen_map = {}
+            for id_res, pregunta, cumplio, comentario in c.fetchall():
+                dictamen_map.setdefault(id_res, []).append({
+                    'pregunta': pregunta,
+                    'cumplio': cumplio,
+                    'comentario': comentario,
+                })
+
+        result = []
+        for p in ponencias:
+            result.append({
+                'id': p['id_ponencia'],
+                'id_resumen': p['id_resumen'],
+                'title': p['titulo'],
+                'autores': autores_map.get(p['id_ponencia'], []),
+                'asignado': p['id_dictaminador'] is not None,
+                'revisado': p['revisado'] or False,
+                'aceptado': p['estatus'] == 'aceptado',
+                'id_dictaminador': p['id_dictaminador'],
+                'nombre_dictaminador': p['nombre_dictaminador'],
+                'estatus': p['estatus'],
+                'retroalimentacion': p['retroalimentacion'],
+                'preguntas': dictamen_map.get(p['id_resumen'], []),
+            })
+        return Response(result)
+
+
+class ExtensosCongresoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not request.user.is_staff:
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        id_congreso = request.query_params.get('id_congreso')
+        if not id_congreso:
+            return Response({'detail': 'id_congreso requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        with connection.cursor() as c:
+            # Nota: id_evaluador en extenso puede no existir aún (migración pendiente de permisos)
+            # La query es resiliente: usa LEFT JOIN y solo falla si la columna no existe
+            try:
+                c.execute("""
+                    SELECT
+                        p.id_ponencia,
+                        p.id_extenso,
+                        ext.titulo,
+                        ext.id_evaluador,
+                        ext.revisado,
+                        ev.id_evaluacion,
+                        ev.estatus AS estatus_evaluacion,
+                        ev.retroalimentacion_general,
+                        CASE WHEN eval_per.id_persona IS NOT NULL
+                            THEN eval_per.nombre || ' ' || eval_per.primer_apellido
+                            ELSE NULL
+                        END AS nombre_evaluador
+                    FROM ponencia p
+                    JOIN evento e ON p.id_evento = e.id_evento
+                    JOIN extenso ext ON p.id_extenso = ext.id_extenso
+                    LEFT JOIN evaluacion ev ON ev.id_extenso = ext.id_extenso
+                    LEFT JOIN evaluador eval ON ext.id_evaluador = eval.id_evaluador
+                    LEFT JOIN persona eval_per ON eval.id_persona = eval_per.id_persona
+                    WHERE e.id_congreso = %s
+                    ORDER BY p.id_ponencia
+                """, [id_congreso])
+            except Exception:
+                # Si la columna id_evaluador no existe aún, query sin ella
+                c.execute("""
+                    SELECT
+                        p.id_ponencia,
+                        p.id_extenso,
+                        ext.titulo,
+                        NULL AS id_evaluador,
+                        ext.revisado,
+                        ev.id_evaluacion,
+                        ev.estatus AS estatus_evaluacion,
+                        ev.retroalimentacion_general,
+                        NULL AS nombre_evaluador
+                    FROM ponencia p
+                    JOIN evento e ON p.id_evento = e.id_evento
+                    JOIN extenso ext ON p.id_extenso = ext.id_extenso
+                    LEFT JOIN evaluacion ev ON ev.id_extenso = ext.id_extenso
+                    WHERE e.id_congreso = %s
+                    ORDER BY p.id_ponencia
+                """, [id_congreso])
+
+            rows = c.fetchall()
+            cols = ['id_ponencia','id_extenso','titulo','id_evaluador','revisado',
+                    'id_evaluacion','estatus_evaluacion','retroalimentacion_general','nombre_evaluador']
+            ponencias = [dict(zip(cols, row)) for row in rows]
+
+            if not ponencias:
+                return Response([])
+
+            ponencia_ids = [p['id_ponencia'] for p in ponencias]
+            evaluacion_ids = [p['id_evaluacion'] for p in ponencias if p['id_evaluacion']]
+
+            c.execute("""
+                SELECT php.id_ponencia,
+                       per.nombre || ' ' || per.primer_apellido
+                FROM ponente_has_ponencia php
+                JOIN ponente po ON php.id_ponente = po.id_ponente
+                JOIN persona per ON po.id_persona = per.id_persona
+                WHERE php.id_ponencia = ANY(%s)
+            """, [ponencia_ids])
+            autores_map = {}
+            for id_pon, nombre in c.fetchall():
+                autores_map.setdefault(id_pon, []).append(nombre)
+
+            criterios_map = {}
+            if evaluacion_ids:
+                c.execute("""
+                    SELECT
+                        ec.id_evaluacion,
+                        rg.nombre_grupo,
+                        rc.descripcion AS nombre_criterio,
+                        rc.peso,
+                        ec.puntaje,
+                        ec.comentario_especifico
+                    FROM evaluacion_criterio ec
+                    JOIN rubrica_criterio rc ON ec.id_criterio = rc.id_criterio
+                    JOIN rubrica_grupo rg ON rc.id_grupo = rg.id_grupo
+                    WHERE ec.id_evaluacion = ANY(%s)
+                    ORDER BY rg.id_grupo, rc.id_criterio
+                """, [evaluacion_ids])
+                for row in c.fetchall():
+                    id_ev, nombre_grupo, nombre_criterio, peso, puntaje, comentario = row
+                    grupos = criterios_map.setdefault(id_ev, {})
+                    criterios = grupos.setdefault(nombre_grupo, [])
+                    criterios.append({
+                        'nombre_criterio': nombre_criterio,
+                        'peso': float(peso) if peso else None,
+                        'puntaje': puntaje,
+                        'comentario_especifico': comentario,
+                    })
+
+        result = []
+        for p in ponencias:
+            evaluacion = None
+            if p['id_evaluacion'] and p['id_evaluacion'] in criterios_map:
+                grupos_dict = criterios_map[p['id_evaluacion']]
+                evaluacion = {
+                    'estatus': p['estatus_evaluacion'],
+                    'retroalimentacion_general': p['retroalimentacion_general'],
+                    'grupos': [
+                        {'nombre_grupo': ng, 'criterios': crs}
+                        for ng, crs in grupos_dict.items()
+                    ],
+                }
+            estatus_ev = p.get('estatus_evaluacion') or ''
+            result.append({
+                'id': p['id_ponencia'],
+                'id_extenso': p['id_extenso'],
+                'title': p['titulo'],
+                'autores': autores_map.get(p['id_ponencia'], []),
+                'asignado': p['id_evaluador'] is not None,
+                'revisado': p['revisado'] or False,
+                'aceptado': 'aceptado' in estatus_ev,
+                'id_evaluador': p['id_evaluador'],
+                'nombre_evaluador': p['nombre_evaluador'],
+                'evaluacion': evaluacion,
+            })
+        return Response(result)

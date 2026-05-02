@@ -5,6 +5,7 @@ from .views import (
     EnviarPonenciaAPIView, MiAgendaView,
     DictaminadoresDisponiblesView, EvaluadoresDisponiblesView,
     AsignarDictaminadorView, AsignarEvaluadorView,
+    ResumenesCongresoView, ExtensosCongresoView,
 )
 
 app_name = 'ponencias'
@@ -22,4 +23,6 @@ urlpatterns = [
     path('evaluadores-disponibles/', EvaluadoresDisponiblesView.as_view(), name='evaluadores-disponibles'),
     path('resumenes/<int:pk>/asignar/', AsignarDictaminadorView.as_view(), name='asignar-dictaminador'),
     path('extensos/<int:pk>/asignar/', AsignarEvaluadorView.as_view(), name='asignar-evaluador'),
+    path('resumenes/', ResumenesCongresoView.as_view(), name='resumenes-congreso'),
+    path('extensos/', ExtensosCongresoView.as_view(), name='extensos-congreso'),
 ]
