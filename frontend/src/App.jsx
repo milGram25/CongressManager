@@ -39,6 +39,7 @@ import InstitucionDetallesView from "./views/admin/InstitucionDetallesView";
 
 import ProcesosResumenesView from "./views/admin/ProcesosResumenesView";
 import ProcesosExtensosView from "./views/admin/ProcesosExtensosView";
+import ProcesosRolesView from "./views/admin/ProcesosRolesView";
 import TalleresView from "./views/admin/TalleresView";
 import TalleresCrearView from "./views/admin/TalleresCrearView";
 import TallerDetallesView from "./views/admin/TallerDetallesView";
@@ -86,6 +87,7 @@ import {
   MdDescription,
   MdArticle,
   MdReceipt,
+  MdManageAccounts,
   MdLayers,
 } from "react-icons/md";
 import { FaBook } from "react-icons/fa6";
@@ -181,6 +183,7 @@ const AdminLayoutWrapper = () => {
     ...(pathname.includes('/admin/procesos') ? [
       { to: '/admin/procesos/resumenes', label: 'Resúmenes', icon: MdDescription, className: 'pl-9 opacity-70' },
       { to: '/admin/procesos/extensos', label: 'Extensos', icon: MdArticle, className: 'pl-9 opacity-70' },
+      { to: '/admin/procesos/roles', label: 'Roles', icon: MdManageAccounts, className: 'pl-9 opacity-70' },
     ] : []),
 
     // Congresos como apartado principal con sub-menú dinámico
@@ -375,6 +378,7 @@ function App() {
               <Route index element={<ProcesosView />} />
               <Route path="resumenes" element={<ProcesosResumenesView />} />
               <Route path="extensos" element={<ProcesosExtensosView />} />
+              <Route path="roles" element={<ProcesosRolesView />} />
             </Route>
             <Route path="eventos">
               <Route index element={<EventosView />} />

@@ -328,3 +328,39 @@ export async function getInscritosTallerApi(accessToken, idEvento) {
   if (!res.ok) throw new Error(data.detail || 'No se pudieron cargar los inscritos.');
   return data;
 }
+
+export async function getAllUsersApi(accessToken, idCongreso) {
+  const res = await fetch(`${API_URL}/api/users/all/?id_congreso=${idCongreso}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error al obtener usuarios.');
+  return res.json();
+}
+
+export async function assignRoleApi(accessToken, idPersona, { rol, idCongreso, password }) {
+  const body = { rol };
+  if (idCongreso) body.id_congreso = idCongreso;
+  if (password) body.password = password;
+  const res = await fetch(`${API_URL}/api/users/${idPersona}/role/assign/`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Error al asignar rol.');
+  return data;
+}
+
+export async function removeRoleApi(accessToken, idPersona, { rol, idCongreso, password }) {
+  const body = { rol };
+  if (idCongreso) body.id_congreso = idCongreso;
+  if (password) body.password = password;
+  const res = await fetch(`${API_URL}/api/users/${idPersona}/role/remove/`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Error al quitar rol.');
+  return data;
+}
