@@ -22,11 +22,14 @@ export default function ProcesosRolesView() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
+  const [fetchError, setFetchError] = useState(null);
 
   const token = localStorage.getItem('congress_access');
 
   useEffect(() => {
-    getCongresosApi(token).then(setCongresos).catch(console.error);
+    getCongresosApi(token)
+      .then(setCongresos)
+      .catch(() => setFetchError('Error al cargar los congresos.'));
   }, []);
 
   useEffect(() => {
@@ -34,8 +37,8 @@ export default function ProcesosRolesView() {
     setLoadingUsers(true);
     setSearchTerm('');
     getAllUsersApi(token, selectedCongreso.id_congreso)
-      .then(setUsers)
-      .catch(console.error)
+      .then(data => { setUsers(data); setFetchError(null); })
+      .catch(() => setFetchError('Error al cargar los usuarios.'))
       .finally(() => setLoadingUsers(false));
   }, [selectedCongreso]);
 
@@ -51,7 +54,7 @@ export default function ProcesosRolesView() {
   };
 
   const activeRoles = user =>
-    Object.entries(user.roles).filter(([, v]) => v).map(([k]) => k);
+    Object.entries(user.roles ?? {}).filter(([, v]) => v).map(([k]) => k);
 
   return (
     <div className="bg-base-100 p-8 rounded-3xl border border-base-300 shadow-sm">
@@ -84,6 +87,10 @@ export default function ProcesosRolesView() {
           ))}
         </select>
       </div>
+
+      {fetchError && (
+        <div className="alert alert-error mb-4 text-sm">{fetchError}</div>
+      )}
 
       {/* Buscador */}
       {selectedCongreso && !loadingUsers && (

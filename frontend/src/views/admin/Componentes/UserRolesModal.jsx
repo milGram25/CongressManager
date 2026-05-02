@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { MdClose, MdLock, MdPerson, MdEmail, MdPhone, MdPublic, MdWc } from "react-icons/md";
 import { assignRoleApi, removeRoleApi } from "../../../api/adminApi";
 
@@ -16,9 +16,12 @@ export default function UserRolesModal({ user, congreso, onClose, onRolesUpdated
 
   const token = localStorage.getItem('congress_access');
 
+  const feedbackTimer = useRef(null);
+
   const showFeedback = (type, msg) => {
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
     setFeedback({ type, msg });
-    setTimeout(() => setFeedback(null), 3000);
+    feedbackTimer.current = setTimeout(() => setFeedback(null), 3000);
   };
 
   const handleToggle = (rol, currentValue) => {
@@ -160,7 +163,7 @@ export default function UserRolesModal({ user, congreso, onClose, onRolesUpdated
                   type="password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleConfirm()}
+                  onKeyDown={e => e.key === 'Enter' && !loading && handleConfirm()}
                   placeholder="Tu contraseña"
                   className="input input-bordered input-sm w-full mb-3"
                   autoFocus
