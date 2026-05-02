@@ -255,3 +255,49 @@ class RoleRemoveViewTests(TestCase):
             format='json',
         )
         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class TokenFlagsTests(TestCase):
+    databases = ['default']
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = _create_persona('flagtest@test.com', nombre='Flag', apellido='Test')
+        self.congreso_id = _create_congreso('Congreso Flag Test')
+
+    def test_no_flags_by_default(self):
+        res = self.client.post('/api/users/login/', {
+            'email': 'flagtest@test.com',
+            'password': 'TestPass1234!'
+        }, format='json')
+        self.assertEqual(res.status_code, 200)
+        self.assertFalse(res.data['user']['es_dictaminador'])
+        self.assertFalse(res.data['user']['es_evaluador'])
+
+    def test_es_dictaminador_after_assign(self):
+        DictaminadorCongreso.objects.create(id_persona=self.user, id_congreso_id=self.congreso_id)
+        res = self.client.post('/api/users/login/', {
+            'email': 'flagtest@test.com',
+            'password': 'TestPass1234!'
+        }, format='json')
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(res.data['user']['es_dictaminador'])
+        self.assertFalse(res.data['user']['es_evaluador'])
+
+    def test_es_evaluador_after_assign(self):
+        EvaluadorCongreso.objects.create(id_persona=self.user, id_congreso_id=self.congreso_id)
+        res = self.client.post('/api/users/login/', {
+            'email': 'flagtest@test.com',
+            'password': 'TestPass1234!'
+        }, format='json')
+        self.assertEqual(res.status_code, 200)
+        self.assertFalse(res.data['user']['es_dictaminador'])
+        self.assertTrue(res.data['user']['es_evaluador'])
+
+    def test_me_includes_flags(self):
+        DictaminadorCongreso.objects.create(id_persona=self.user, id_congreso_id=self.congreso_id)
+        self.client.force_authenticate(user=self.user)
+        res = self.client.get('/api/users/me/')
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(res.data['es_dictaminador'])
+        self.assertFalse(res.data['es_evaluador'])
