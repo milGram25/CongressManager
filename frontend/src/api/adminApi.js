@@ -364,3 +364,108 @@ export async function removeRoleApi(accessToken, idPersona, { rol, idCongreso, p
   if (!res.ok) throw new Error(data.detail || 'Error al quitar rol.');
   return data;
 }
+
+// ── Rubrica Grupos ──────────────────────────────────────────────
+export async function createRubricaGrupoApi(accessToken, data) {
+  const res = await fetch(`${API_URL}/api/congresos/rubrica-grupos/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error creando grupo');
+  return res.json();
+}
+
+export async function updateRubricaGrupoApi(accessToken, id, data) {
+  const res = await fetch(`${API_URL}/api/congresos/rubrica-grupos/${id}/`, {
+    method: 'PATCH',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error actualizando grupo');
+  return res.json();
+}
+
+export async function deleteRubricaGrupoApi(accessToken, id) {
+  const res = await fetch(`${API_URL}/api/congresos/rubrica-grupos/${id}/`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error eliminando grupo');
+}
+
+// ── Rubrica Criterios ─────────────────────────────────────────────
+export async function createRubricaCriterioApi(accessToken, data) {
+  const res = await fetch(`${API_URL}/api/congresos/rubrica-criterios/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error creando criterio');
+  return res.json();
+}
+
+export async function updateRubricaCriterioApi(accessToken, id, data) {
+  const res = await fetch(`${API_URL}/api/congresos/rubrica-criterios/${id}/`, {
+    method: 'PATCH',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error actualizando criterio');
+  return res.json();
+}
+
+export async function deleteRubricaCriterioApi(accessToken, id) {
+  const res = await fetch(`${API_URL}/api/congresos/rubrica-criterios/${id}/`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error eliminando criterio');
+}
+
+// ── Dictamen y Preguntas ──────────────────────────────────────────
+export async function createDictamenApi(accessToken, data) {
+  const res = await fetch(`${API_URL}/api/congresos/dictamenes/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error creando dictamen');
+  return res.json();
+}
+
+export async function createDictamenPreguntaApi(accessToken, data) {
+  const res = await fetch(`${API_URL}/api/congresos/preguntas/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error creando pregunta');
+  return res.json();
+}
+
+export async function updateDictamenPreguntaApi(accessToken, id, data) {
+  const res = await fetch(`${API_URL}/api/congresos/preguntas/${id}/`, {
+    method: 'PATCH',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error actualizando pregunta');
+  return res.json();
+}
+
+export async function deleteDictamenPreguntaApi(accessToken, id) {
+  const res = await fetch(`${API_URL}/api/congresos/preguntas/${id}/`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error eliminando pregunta');
+}
+
+export async function getDictamenesConFiltroApi(accessToken, tipoTrabajo = null) {
+  let url = `${API_URL}/api/congresos/dictamenes/`;
+  if (tipoTrabajo) url += `?tipo_trabajo=${tipoTrabajo}`;
+  const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error cargando dictamenes');
+  return res.json();
+}
