@@ -47,12 +47,20 @@ export default function ProtectedRoute({ children, allowedRole, allowedRoles }) 
       return children;
     }
 
+    // Flags por congreso: acceso a vistas de revisor/dictaminador aunque el rol principal sea otro
+    if (allowedRole === 'revisor' && user.es_evaluador) {
+      return children;
+    }
+    if (allowedRole === 'dictaminador' && user.es_dictaminador) {
+      return children;
+    }
+
     // Casos especiales para rol único
     const isSpecialRole = user.rol === 'revisor' || user.rol === 'dictaminador' || user.rol === 'ponente';
     if (isSpecialRole && allowedRole === 'asistente') {
       return children;
     }
-    
+
     return <Navigate to="/asistente" replace />;
   }
 

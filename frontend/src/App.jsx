@@ -96,7 +96,7 @@ const AsistenteLayoutWrapper = () => {
 
   const menuItems = [
     // Accesos rápidos para roles con permisos extra
-    ...((user?.rol === 'administrador' || user?.rol === 'revisor' || user?.rol === 'dictaminador') ? [
+    ...((user?.rol === 'administrador' || user?.rol === 'revisor' || user?.rol === 'dictaminador' || user?.es_evaluador || user?.es_dictaminador) ? [
       { type: 'subheader', label: 'Vistas de Rol' },
       {
         type: 'role-icons',
@@ -106,8 +106,8 @@ const AsistenteLayoutWrapper = () => {
             { to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview },
             { to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel },
           ] : [
-            ...(user?.rol === 'revisor' ? [{ to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview }] : []),
-            ...(user?.rol === 'dictaminador' ? [{ to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel }] : []),
+            ...((user?.rol === 'revisor' || user?.es_evaluador) ? [{ to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview }] : []),
+            ...((user?.rol === 'dictaminador' || user?.es_dictaminador) ? [{ to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel }] : []),
           ]),
         ]
       },
@@ -130,7 +130,7 @@ const PonenteLayoutWrapper = () => {
 
   const menuItems = [
     // Accesos rápidos para roles con permisos extra
-    ...((user?.rol === 'administrador' || user?.rol === 'revisor' || user?.rol === 'dictaminador') ? [
+    ...((user?.rol === 'administrador' || user?.rol === 'revisor' || user?.rol === 'dictaminador' || user?.es_evaluador || user?.es_dictaminador) ? [
       { type: 'subheader', label: 'Vistas de Rol' },
       {
         type: 'role-icons',
@@ -140,8 +140,8 @@ const PonenteLayoutWrapper = () => {
             { to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview },
             { to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel },
           ] : [
-            ...(user?.rol === 'revisor' ? [{ to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview }] : []),
-            ...(user?.rol === 'dictaminador' ? [{ to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel }] : []),
+            ...((user?.rol === 'revisor' || user?.es_evaluador) ? [{ to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview }] : []),
+            ...((user?.rol === 'dictaminador' || user?.es_dictaminador) ? [{ to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel }] : []),
           ]),
         ]
       },
