@@ -33,6 +33,7 @@
 **Files:**
 - Modify: `backend/users/models.py`
 - Generate: `backend/users/migrations/0003_*.py`
+- Modify: `database/congress.sql`
 
 - [ ] **Step 1: Agregar los dos modelos al final de `backend/users/models.py`**
 
@@ -57,7 +58,27 @@ class EvaluadorCongreso(models.Model):
         db_table = 'evaluador_congreso'
 ```
 
-- [ ] **Step 2: Generar y aplicar la migración**
+- [ ] **Step 2: Actualizar `database/congress.sql`**
+
+En la sección `-- 5. ROLES Y LOGÍSTICA`, después de la tabla `dictaminador`, agregar las dos tablas nuevas (ya incluido en el archivo — verificar que estén presentes):
+
+```sql
+CREATE TABLE dictaminador_congreso (
+    id SERIAL PRIMARY KEY,
+    id_persona INTEGER NOT NULL REFERENCES persona(id_persona) ON DELETE CASCADE,
+    id_congreso INTEGER NOT NULL REFERENCES congreso(id_congreso) ON DELETE CASCADE,
+    UNIQUE(id_persona, id_congreso)
+);
+
+CREATE TABLE evaluador_congreso (
+    id SERIAL PRIMARY KEY,
+    id_persona INTEGER NOT NULL REFERENCES persona(id_persona) ON DELETE CASCADE,
+    id_congreso INTEGER NOT NULL REFERENCES congreso(id_congreso) ON DELETE CASCADE,
+    UNIQUE(id_persona, id_congreso)
+);
+```
+
+- [ ] **Step 3: Generar y aplicar la migración**
 
 ```bash
 cd backend && source venv/bin/activate
@@ -67,7 +88,7 @@ python manage.py migrate
 
 Salida esperada: migración `0003_dictaminadorcongreso_evaluadorcongreso` creada y aplicada sin errores.
 
-- [ ] **Step 3: Verificar que las tablas existen**
+- [ ] **Step 4: Verificar que las tablas existen**
 
 ```bash
 python manage.py dbshell
@@ -80,10 +101,10 @@ SELECT table_name FROM information_schema.tables WHERE table_name IN ('dictamina
 
 Ambas tablas deben aparecer en el resultado.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add backend/users/models.py backend/users/migrations/
+git add backend/users/models.py backend/users/migrations/ database/congress.sql
 git commit -m "feat: modelos DictaminadorCongreso y EvaluadorCongreso por congreso"
 ```
 
