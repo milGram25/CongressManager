@@ -108,3 +108,21 @@ class HistorialAcciones(models.Model):
     class Meta:
         db_table = 'historial_acciones'
         managed = False
+
+
+class DictaminadorCongreso(models.Model):
+    id_persona = models.ForeignKey(Persona, on_delete=models.CASCADE, db_column='id_persona')
+    id_congreso = models.ForeignKey(Congreso, on_delete=models.CASCADE, db_column='id_congreso')
+
+    class Meta:
+        unique_together = ('id_persona', 'id_congreso')
+        db_table = 'dictaminador_congreso'
+
+
+class EvaluadorCongreso(models.Model):
+    id_persona = models.ForeignKey(Persona, on_delete=models.CASCADE, db_column='id_persona')
+    id_congreso = models.ForeignKey(Congreso, on_delete=models.CASCADE, db_column='id_congreso')
+
+    class Meta:
+        unique_together = ('id_persona', 'id_congreso')
+        db_table = 'evaluador_congreso'
