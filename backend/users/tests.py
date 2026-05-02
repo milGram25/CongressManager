@@ -170,6 +170,14 @@ class RoleAssignViewTests(TestCase):
         )
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_user_not_found(self):
+        res = self.client.post(
+            '/api/users/99999/role/assign/',
+            {'rol': 'dictaminador', 'id_congreso': self.congreso_id},
+            format='json',
+        )
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+
 
 class RoleRemoveViewTests(TestCase):
     databases = ['default']
@@ -206,6 +214,7 @@ class RoleRemoveViewTests(TestCase):
 
     def test_remove_admin_requires_password(self):
         self.target.is_staff = True
+        self.target.is_superuser = True
         self.target.save()
         res = self.client.post(
             f'/api/users/{self.target.pk}/role/remove/',
@@ -238,3 +247,11 @@ class RoleRemoveViewTests(TestCase):
         self.assertFalse(res.data['administrador'])
         self.target.refresh_from_db()
         self.assertFalse(self.target.is_staff)
+
+    def test_user_not_found(self):
+        res = self.client.post(
+            '/api/users/99999/role/remove/',
+            {'rol': 'dictaminador', 'id_congreso': self.congreso_id},
+            format='json',
+        )
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)

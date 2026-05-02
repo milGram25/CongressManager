@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.core.files.storage import FileSystemStorage
-from django.db import connection
+from django.db import connection, IntegrityError
 from django.utils import timezone
 from .models import Persona, Asistente, Dictaminador, Evaluador, Ponente, Factura, Constancia, HistorialAcciones, DictaminadorCongreso, EvaluadorCongreso
 from .serializers import RegisterSerializer, UserSerializer, ParticipantSerializer, FacturaSerializer, ConstanciaSerializer, HistorialAccionesSerializer
@@ -433,9 +433,15 @@ class RoleAssignView(APIView):
             if not id_congreso:
                 return Response({'detail': 'id_congreso es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
             if rol == 'dictaminador':
-                DictaminadorCongreso.objects.get_or_create(id_persona=persona, id_congreso_id=id_congreso)
+                try:
+                    DictaminadorCongreso.objects.get_or_create(id_persona=persona, id_congreso_id=id_congreso)
+                except IntegrityError:
+                    return Response({'detail': 'Congreso no válido.'}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                EvaluadorCongreso.objects.get_or_create(id_persona=persona, id_congreso_id=id_congreso)
+                try:
+                    EvaluadorCongreso.objects.get_or_create(id_persona=persona, id_congreso_id=id_congreso)
+                except IntegrityError:
+                    return Response({'detail': 'Congreso no válido.'}, status=status.HTTP_400_BAD_REQUEST)
 
         dict_ids = set(DictaminadorCongreso.objects.filter(id_congreso_id=id_congreso).values_list('id_persona_id', flat=True)) if id_congreso else set()
         eval_ids = set(EvaluadorCongreso.objects.filter(id_congreso_id=id_congreso).values_list('id_persona_id', flat=True)) if id_congreso else set()
