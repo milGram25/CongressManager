@@ -174,14 +174,14 @@ CREATE TABLE dictaminador (
 );
 
 CREATE TABLE dictaminador_congreso (
-    id SERIAL PRIMARY KEY,
+    id_dictaminador_congreso SERIAL PRIMARY KEY,
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona) ON DELETE CASCADE,
     id_congreso INTEGER NOT NULL REFERENCES congreso(id_congreso) ON DELETE CASCADE,
     UNIQUE(id_persona, id_congreso)
 );
 
 CREATE TABLE evaluador_congreso (
-    id SERIAL PRIMARY KEY,
+    id_evaluador_congreso SERIAL PRIMARY KEY,
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona) ON DELETE CASCADE,
     id_congreso INTEGER NOT NULL REFERENCES congreso(id_congreso) ON DELETE CASCADE,
     UNIQUE(id_persona, id_congreso)

@@ -478,6 +478,11 @@ class RoleRemoveView(APIView):
             user = authenticate(request, username=request.user.correo_electronico, password=password)
             if user is None:
                 return Response({'detail': 'Contraseña incorrecta.'}, status=status.HTTP_401_UNAUTHORIZED)
+            if persona.pk == request.user.pk:
+                return Response(
+                    {'detail': 'No puedes quitarte el rol de administrador a ti mismo.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             persona.is_staff = False
             persona.is_superuser = False
             persona.save()

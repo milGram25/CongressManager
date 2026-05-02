@@ -49,7 +49,7 @@ export default function UserRolesModal({ user, congreso, onClose, onRolesUpdated
     try {
       const payload = {
         rol,
-        idCongreso: rol !== 'administrador' ? congreso?.id_congreso : undefined,
+        idCongreso: congreso?.id_congreso,
         password: needsPassword ? password : undefined,
       };
       const updatedRoles = action === 'assign'
