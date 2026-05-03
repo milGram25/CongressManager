@@ -305,7 +305,12 @@ class EnviarPonenciaAPIView(APIView):
                         else:
                             id_tipo_trabajo = tipo_trabajo_row[0]
 
-                    # Crear archivo de resumen
+                    # Obtener nombre legible del tipo de trabajo para el archivo
+                    cursor.execute("SELECT tipo_trabajo FROM tipo_trabajo WHERE id_tipo_trabajo = %s", [id_tipo_trabajo])
+                    tt_row = cursor.fetchone()
+                    tipo_trabajo_str = tt_row[0] if tt_row else str(id_tipo_trabajo_raw)
+
+                    # Crear archivo de resumen con todo el contenido
                     media_dir = os.path.join(settings.MEDIA_ROOT, 'resumenes')
                     os.makedirs(media_dir, exist_ok=True)
                     safe_titulo = "".join([c if c.isalnum() else "_" for c in titulo])[:50]
@@ -316,31 +321,37 @@ class EnviarPonenciaAPIView(APIView):
                     with open(filepath, 'w', encoding='utf-8') as f:
                         f.write(f"Título: {titulo}\n")
                         f.write(f"Autor: {autor}\n")
+                        f.write(f"Tipo de trabajo: {tipo_trabajo_str}\n")
                         f.write(f"Palabras Clave: {palabras_clave}\n")
                         f.write("-" * 50 + "\n")
                         f.write(resumen_texto)
 
-                    # Crear resumen
+                    # Registrar archivo en multimedia
+                    ruta_relativa = os.path.join('resumenes', filename)
                     cursor.execute("""
-                        INSERT INTO resumen (titulo, contenido, palabras_clave, revisado)
-                        VALUES (%s, %s, %s, FALSE)
-                        RETURNING id_resumen
-                    """, [titulo, resumen_texto, palabras_clave])
+                        INSERT INTO multimedia (nombre, ruta_relativa) VALUES (%s, %s) RETURNING id_material
+                    """, [titulo, ruta_relativa])
+                    id_material = cursor.fetchone()[0]
+
+                    # Crear registro de resumen (solo tracking de estado, contenido va en multimedia)
+                    cursor.execute("""
+                        INSERT INTO resumen (revisado) VALUES (FALSE) RETURNING id_resumen
+                    """)
                     id_resumen = cursor.fetchone()[0]
 
-                    # Crear ponencia (con o sin id_evento)
+                    # Crear ponencia
                     if id_evento:
                         cursor.execute("""
-                            INSERT INTO ponencia (tipo_participacion, id_subarea, id_resumen, id_tipo_trabajo, id_evento)
+                            INSERT INTO ponencia (tipo_participacion, id_subarea, id_resumen, id_multimedia, id_evento)
                             VALUES (%s, %s, %s, %s, %s)
                             RETURNING id_ponencia
-                        """, [tipo_participacion, id_subarea, id_resumen, id_tipo_trabajo, id_evento])
+                        """, [tipo_participacion, id_subarea, id_resumen, id_material, id_evento])
                     else:
                         cursor.execute("""
-                            INSERT INTO ponencia (tipo_participacion, id_subarea, id_resumen, id_tipo_trabajo)
+                            INSERT INTO ponencia (tipo_participacion, id_subarea, id_resumen, id_multimedia)
                             VALUES (%s, %s, %s, %s)
                             RETURNING id_ponencia
-                        """, [tipo_participacion, id_subarea, id_resumen, id_tipo_trabajo])
+                        """, [tipo_participacion, id_subarea, id_resumen, id_material])
                     id_ponencia = cursor.fetchone()[0]
 
                     # Asegurar que el usuario sea ponente
@@ -354,8 +365,8 @@ class EnviarPonenciaAPIView(APIView):
                         id_ponente = ponente_row[0]
 
                     cursor.execute("""
-                        INSERT INTO ponente_has_ponencia (id_ponente, id_ponencia, asistio, es_principal)
-                        VALUES (%s, %s, FALSE, TRUE)
+                        INSERT INTO ponente_has_ponencia (id_ponente, id_ponencia, asistio)
+                        VALUES (%s, %s, FALSE)
                         ON CONFLICT (id_ponente, id_ponencia) DO NOTHING
                     """, [id_ponente, id_ponencia])
 
@@ -376,8 +387,8 @@ class EnviarPonenciaAPIView(APIView):
                                     else:
                                         id_ponente_coautor = ponente_coautor_row[0]
                                     cursor.execute("""
-                                        INSERT INTO ponente_has_ponencia (id_ponente, id_ponencia, asistio, es_principal)
-                                        VALUES (%s, %s, FALSE, FALSE)
+                                        INSERT INTO ponente_has_ponencia (id_ponente, id_ponencia, asistio)
+                                        VALUES (%s, %s, FALSE)
                                         ON CONFLICT (id_ponente, id_ponencia) DO NOTHING
                                     """, [id_ponente_coautor, id_ponencia])
 
