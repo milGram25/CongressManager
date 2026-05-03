@@ -664,9 +664,8 @@ class MisResumenesView(APIView):
 
     def get(self, request):
         from users.models import Dictaminador
-        try:
-            dictaminador = Dictaminador.objects.get(id_persona=request.user)
-        except Dictaminador.DoesNotExist:
+        dictaminador = Dictaminador.objects.filter(id_persona=request.user).first()
+        if not dictaminador:
             return Response([])
         with connection.cursor() as c:
             c.execute("""
@@ -704,9 +703,8 @@ class MisExtensosView(APIView):
 
     def get(self, request):
         from users.models import Evaluador
-        try:
-            evaluador = Evaluador.objects.get(id_persona=request.user)
-        except Evaluador.DoesNotExist:
+        evaluador = Evaluador.objects.filter(id_persona=request.user).first()
+        if not evaluador:
             return Response([])
         with connection.cursor() as c:
             c.execute("""
@@ -792,9 +790,8 @@ class EnviarEvaluacionView(APIView):
 
     def post(self, request, pk):
         from users.models import Evaluador
-        try:
-            evaluador = Evaluador.objects.get(id_persona=request.user)
-        except Evaluador.DoesNotExist:
+        evaluador = Evaluador.objects.filter(id_persona=request.user).first()
+        if not evaluador:
             return Response({'detail': 'No eres evaluador.'}, status=status.HTTP_403_FORBIDDEN)
         try:
             Extenso.objects.get(pk=pk)
@@ -823,9 +820,8 @@ class EnviarDictamenView(APIView):
 
     def post(self, request, pk):
         from users.models import Dictaminador
-        try:
-            dictaminador = Dictaminador.objects.get(id_persona=request.user)
-        except Dictaminador.DoesNotExist:
+        dictaminador = Dictaminador.objects.filter(id_persona=request.user).first()
+        if not dictaminador:
             return Response({'detail': 'No eres dictaminador.'}, status=status.HTTP_403_FORBIDDEN)
         try:
             Resumen.objects.get(pk=pk)
