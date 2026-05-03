@@ -76,6 +76,12 @@ const RubricasYPreguntas = ({ idCongreso }) => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  useEffect(() => {
+    const refresh = () => fetchData();
+    window.addEventListener('storage_tipos_trabajo', refresh);
+    return () => window.removeEventListener('storage_tipos_trabajo', refresh);
+  }, [fetchData]);
+
   const handleTipoChange = async (idTipo) => {
     setSelectedTipoTrabajo(Number(idTipo));
     try {
