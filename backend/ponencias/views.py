@@ -239,12 +239,12 @@ class EnviarPonenciaAPIView(APIView):
         coautores = data.get('coautores', [])
         tipo_participacion = data.get('tipoParticipacion')
         eje_tematico_nombre = data.get('ejeTematico')
-        tipo_trabajo_nombre = data.get('tipoTrabajo')
+        id_tipo_trabajo_raw = data.get('tipoTrabajo')  # puede ser ID int o nombre legacy
         palabras_clave = data.get('palabrasClave')
         resumen_texto = data.get('resumen')
         id_congreso = data.get('id_congreso')
 
-        if not all([titulo, autor, tipo_participacion, eje_tematico_nombre, tipo_trabajo_nombre, palabras_clave, resumen_texto]):
+        if not all([titulo, autor, tipo_participacion, eje_tematico_nombre, id_tipo_trabajo_raw, palabras_clave, resumen_texto]):
             return Response({'detail': 'Faltan campos obligatorios.'}, status=status.HTTP_400_BAD_REQUEST)
 
         if not id_congreso:
@@ -257,7 +257,8 @@ class EnviarPonenciaAPIView(APIView):
                     cursor.execute("""
                         SELECT 1 FROM pagos p
                         JOIN costos_congreso cc ON cc.id_costos_congreso = p.id_costos
-                        WHERE p.id_persona = %s AND cc.id_congreso = %s
+                        JOIN congreso c ON c.id_costos_congreso = cc.id_costos_congreso
+                        WHERE p.id_persona = %s AND c.id_congreso = %s
                         LIMIT 1
                     """, [request.user.id_persona, id_congreso])
                     if not cursor.fetchone():
@@ -288,15 +289,21 @@ class EnviarPonenciaAPIView(APIView):
                     else:
                         id_subarea = subarea_row[0]
 
-                    # Resolver id_tipo_trabajo
-                    first_words = " ".join(tipo_trabajo_nombre.split()[:2])
-                    cursor.execute("SELECT id_tipo_trabajo FROM tipo_trabajo WHERE tipo_trabajo ILIKE %s LIMIT 1", [f"%{first_words}%"])
-                    tipo_trabajo_row = cursor.fetchone()
-                    if not tipo_trabajo_row:
-                        cursor.execute("INSERT INTO tipo_trabajo (tipo_trabajo) VALUES (%s) RETURNING id_tipo_trabajo", [tipo_trabajo_nombre])
-                        id_tipo_trabajo = cursor.fetchone()[0]
-                    else:
-                        id_tipo_trabajo = tipo_trabajo_row[0]
+                    # Resolver id_tipo_trabajo — acepta ID directo o nombre legacy
+                    try:
+                        id_tipo_trabajo = int(id_tipo_trabajo_raw)
+                        cursor.execute("SELECT id_tipo_trabajo FROM tipo_trabajo WHERE id_tipo_trabajo = %s", [id_tipo_trabajo])
+                        if not cursor.fetchone():
+                            return Response({'detail': 'Tipo de trabajo no válido.'}, status=status.HTTP_400_BAD_REQUEST)
+                    except (ValueError, TypeError):
+                        first_words = " ".join(str(id_tipo_trabajo_raw).split()[:2])
+                        cursor.execute("SELECT id_tipo_trabajo FROM tipo_trabajo WHERE tipo_trabajo ILIKE %s AND id_congreso = %s LIMIT 1", [f"%{first_words}%", id_congreso])
+                        tipo_trabajo_row = cursor.fetchone()
+                        if not tipo_trabajo_row:
+                            cursor.execute("INSERT INTO tipo_trabajo (tipo_trabajo, id_congreso) VALUES (%s, %s) RETURNING id_tipo_trabajo", [str(id_tipo_trabajo_raw), id_congreso])
+                            id_tipo_trabajo = cursor.fetchone()[0]
+                        else:
+                            id_tipo_trabajo = tipo_trabajo_row[0]
 
                     # Crear archivo de resumen
                     media_dir = os.path.join(settings.MEDIA_ROOT, 'resumenes')

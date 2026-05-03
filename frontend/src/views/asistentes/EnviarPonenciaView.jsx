@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaTrashCan } from "react-icons/fa6";
 import { MdLock, MdLibraryBooks } from "react-icons/md";
 import { getMisInscripcionesApi } from '../../api/agendaApi';
+import { API_URL } from '../../api/constants';
 
 export default function EnviarPonenciaView() {
   const accessToken = localStorage.getItem('congress_access');
@@ -9,6 +10,8 @@ export default function EnviarPonenciaView() {
   const [congresosInscritos, setCongresosInscritos] = useState([]);
   const [loadingCongresos, setLoadingCongresos] = useState(true);
   const [selectedCongreso, setSelectedCongreso] = useState(null);
+  const [tiposTrabajo, setTiposTrabajo] = useState([]);
+  const [loadingTipos, setLoadingTipos] = useState(false);
 
   const [tipoParticipacion, setTipoParticipacion] = useState('');
   const [ejeTematico, setEjeTematico] = useState('');
@@ -28,6 +31,19 @@ export default function EnviarPonenciaView() {
       .catch(() => setCongresosInscritos([]))
       .finally(() => setLoadingCongresos(false));
   }, [accessToken]);
+
+  useEffect(() => {
+    if (!selectedCongreso) { setTiposTrabajo([]); return; }
+    setLoadingTipos(true);
+    setTipoTrabajo('');
+    fetch(`${API_URL}/api/congresos/tipos-trabajo/?id_congreso=${selectedCongreso}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+      .then(r => r.json())
+      .then(data => setTiposTrabajo(Array.isArray(data) ? data : (data.results ?? [])))
+      .catch(() => setTiposTrabajo([]))
+      .finally(() => setLoadingTipos(false));
+  }, [selectedCongreso, accessToken]);
 
   useEffect(() => {
     if (mensaje.texto) {
@@ -283,11 +299,13 @@ export default function EnviarPonenciaView() {
 
           <label className="font-bold">Tipo de trabajo *</label>
           <select value={tipoTrabajo} onChange={(e) => setTipoTrabajo(e.target.value)}
-            className="input input-bordered w-full" required>
-            <option value="">Selecciona una opción</option>
-            <option value="reflexiones o experiencias">Reflexiones o experiencias</option>
-            <option value="Investigacion en educacion">Investigación en educación</option>
-            <option value="avances de tesis">Avances de tesis de posgrado</option>
+            className="input input-bordered w-full" required disabled={loadingTipos}>
+            <option value="">
+              {loadingTipos ? 'Cargando...' : tiposTrabajo.length === 0 ? 'Sin tipos configurados para este congreso' : 'Selecciona una opción'}
+            </option>
+            {tiposTrabajo.map(t => (
+              <option key={t.id_tipo_trabajo} value={t.id_tipo_trabajo}>{t.tipo_trabajo}</option>
+            ))}
           </select>
 
           <label className="font-bold">Palabras clave *</label>
