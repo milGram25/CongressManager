@@ -8,14 +8,16 @@ const PonenciaCrearView = () => {
     const { search } = useLocation();
     const queryParams = new URLSearchParams(search);
     const idCongreso = queryParams.get('id_congreso');
+    const nombreEventoParam = queryParams.get('nombre_evento') || "";
+    const idSubareaParam = queryParams.get('id_subarea') || "";
     const ponenciaRef = useRef();
 
-    // Datos iniciales vacíos para la creación de una nueva ponencia
+    // Datos iniciales — pre-llenados desde query params si vienen del flujo "Publicar ponencia"
     const emptyPonenciaData = {
         id_congreso: idCongreso || "",
-        nombre_evento: "", // Título de la ponencia
+        nombre_evento: nombreEventoParam,
         tipo_evento: "ponencia",
-        id_subarea: "",
+        id_subarea: idSubareaParam,
         cupos: 0,
         tipo_participacion: "Presencial",
         enlace: "",
