@@ -1,8 +1,10 @@
 import React from 'react';
 import { FiAward, FiUser, FiCalendar, FiClock, FiUsers } from 'react-icons/fi';
+import { LuCrown } from "react-icons/lu";
 import TarjetaGenerica from './TarjetaGenerica';
 
 const ItemPonencia = ({ listaDatos, onViewItem }) => {
+    const isMagistral = listaDatos.tipo_ponencia === 'ponencia magistral';
 
     const fecha_inicio = listaDatos.fecha_hora_inicio ? listaDatos.fecha_hora_inicio.split("T")[0] : "N/A";
     const hora_inicio = listaDatos.fecha_hora_inicio ? listaDatos.fecha_hora_inicio.split("T")[1].substring(0, 5) : "N/A";
@@ -41,8 +43,8 @@ const ItemPonencia = ({ listaDatos, onViewItem }) => {
     );
 
     return (
-        <TarjetaGenerica 
-            titulo={listaDatos.nombre_evento || "Sin título"} 
+        <TarjetaGenerica
+            titulo={listaDatos.nombre_evento || "Sin título"}
             botonPublicarTexto="Publicar"
             definirTipoElemento="ponencia"
             indexDatosModal={listaDatos.id}
@@ -51,8 +53,17 @@ const ItemPonencia = ({ listaDatos, onViewItem }) => {
             onEdit={() => onViewItem && onViewItem(listaDatos)}
         >
             <Row icon={FiAward} label="Congreso" value={listaDatos.nombre_congreso} />
-            <Row icon={FiUser} label="Ponente" value={listaDatos.nombre_ponente || "No asignado"} />
-            <Row icon={FiUsers} label="Cupos" value={listaDatos.cupos} />
+            <Row icon={FiUser} label="Ponente" value={listaDatos.ponente_principal || listaDatos.nombre_ponente || "No asignado"} />
+            <Row icon={FiUsers} label="Cupos" value={isMagistral ? "N/A" : listaDatos.cupos} />
+            <Row
+                icon={LuCrown}
+                label="Tipo"
+                value={
+                    <span className={isMagistral ? "text-amber-600 " : ""}>
+                        {isMagistral ? "Ponencia magistral" : "Ponencia normal"}
+                    </span>
+                }
+            />
 
             <div className="mt-4 space-y-3">
                 <DateTimeBox label="Inicio" date={fecha_inicio} time={hora_inicio} />

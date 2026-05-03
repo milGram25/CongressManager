@@ -92,7 +92,7 @@ const RubricasYPreguntas = ({ idCongreso }) => {
           <div className="space-y-3">
             {loading ? (
                 <div className="flex justify-center"><span className="loading loading-spinner text-primary"></span></div>
-            ) : currentDictamen?.preguntas.map((p, i) => (
+            ) : currentDictamen?.preguntas?.map((p, i) => (
               <div key={p.id_pregunta} className="flex gap-2 items-center group">
                 <span className="text-xs font-bold text-base-content/30 w-5">{i + 1}</span>
                 <input
@@ -130,7 +130,7 @@ const RubricasYPreguntas = ({ idCongreso }) => {
           <div className="space-y-6">
             {loading ? (
                  <div className="flex justify-center"><span className="loading loading-spinner text-primary"></span></div>
-            ) : currentRubrica?.criterios.map((c, i) => (
+            ) : currentRubrica?.criterios?.map((c, i) => (
               <div key={c.id_criterio} className="bg-white p-4 rounded-xl border border-base-300 transition-all hover:shadow-sm">
                 <div className="flex justify-between mb-2">
                     <span className="text-[10px] font-bold text-base-content/40 uppercase tracking-widest">Criterio {i+1}</span>

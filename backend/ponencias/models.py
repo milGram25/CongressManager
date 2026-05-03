@@ -10,6 +10,8 @@ class Ponencia(models.Model):
     id_resumen = models.IntegerField(blank=True, null=True) # O FK a Resumen si existe
     id_extenso = models.IntegerField(blank=True, null=True) # O FK a Extenso si existe
     id_multimedia = models.IntegerField(blank=True, null=True)
+    ponente_principal = models.CharField(max_length=255, blank=True, null=True)
+    coautores = models.TextField(blank=True, null=True)
 
     class Meta:
         managed = False
@@ -34,3 +36,19 @@ class AsistenteEvento(models.Model):
         managed = False
         db_table = 'asistente_evento'
         unique_together = (('id_asistente', 'id_evento'),)
+
+class PonenciaMagistral(models.Model):
+    id_ponencia_magistral = models.AutoField(primary_key=True)
+    titulo = models.CharField(max_length=255)
+    tipo_participacion = models.CharField(max_length=50)
+    id_subarea = models.ForeignKey(Subarea, models.DO_NOTHING, db_column='id_subarea')
+    fecha_inicio = models.DateTimeField()
+    fecha_fin = models.DateTimeField()
+    id_congreso = models.ForeignKey('congresos.Congreso', models.DO_NOTHING, db_column='id_congreso')
+    id_multimedia = models.IntegerField(blank=True, null=True)
+    ponente_principal = models.CharField(max_length=255, blank=True, null=True)
+    coautores = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ponencia_magistral'

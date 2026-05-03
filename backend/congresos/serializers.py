@@ -31,10 +31,17 @@ class SubareaSerializer(serializers.ModelSerializer):
         model = Subarea
         fields = '__all__'
 
+class RubricaCriterioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RubricaCriterio
+        fields = '__all__'
+
 class RubricaSerializer(serializers.ModelSerializer):
+    criterios = RubricaCriterioSerializer(many=True, read_only=True)
+
     class Meta:
         model = Rubrica
-        fields = '__all__'
+        fields = ['id_rubrica', 'id_congreso', 'tipo_trabajo', 'nombre', 'esta_activo', 'criterios']
 
 class TipoTrabajoSerializer(serializers.ModelSerializer):
     class Meta:

@@ -1,11 +1,12 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import registrar_ponencia, listar_catalogo_ponencias, PonenciaViewSet, EnviarPonenciaAPIView
+from .views import registrar_ponencia, listar_catalogo_ponencias, PonenciaViewSet, PonenciaMagistralViewSet, EnviarPonenciaAPIView
 
 app_name = 'ponencias'
 
 router = DefaultRouter()
 router.register(r'lista', PonenciaViewSet, basename='ponencia')
+router.register(r'magistrales', PonenciaMagistralViewSet, basename='ponencia-magistral')
 
 urlpatterns = [
     path('', include(router.urls)),

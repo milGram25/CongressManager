@@ -71,7 +71,8 @@ const TarjetaGenerica = ({
                         } else if (definirTipoElemento === 'taller') {
                             navigate(`/admin/eventos/talleres/detalles/${indexDatosModal}`);
                         } else if (definirTipoElemento === 'ponencia') {
-                            navigate(`/admin/eventos/ponencias/detalles/${indexDatosModal}`);
+                            const isMag = itemData?.tipo_ponencia === 'ponencia magistral';
+                            navigate(`/admin/eventos/ponencias/detalles/${indexDatosModal}?magistral=${isMag}`);
                         } else {
                             if (onView) onView();
                             else setOpenModal(true);
@@ -109,7 +110,8 @@ const TarjetaGenerica = ({
                             } else if (definirTipoElemento === 'taller') {
                                 navigate(`/admin/eventos/talleres/detalles/${indexDatosModal}?edit=true`);
                             } else if (definirTipoElemento === 'ponencia') {
-                                navigate(`/admin/eventos/ponencias/detalles/${indexDatosModal}?edit=true`);
+                                const isMag = itemData?.tipo_ponencia === 'ponencia magistral';
+                                navigate(`/admin/eventos/ponencias/detalles/${indexDatosModal}?edit=true&magistral=${isMag}`);
                             } else {
                                 if (onEdit) onEdit();
                                 else setOpenModal(true);

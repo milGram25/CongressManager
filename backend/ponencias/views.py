@@ -3,38 +3,114 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db import transaction, connection
-from .models import AsistenteEvento, Ponencia
-from .serializers import PonenciaSerializer, CatalogoEventoSerializer, AsistenteEventoSerializer
+from .models import AsistenteEvento, Ponencia, PonenciaMagistral
+from .serializers import PonenciaSerializer, CatalogoEventoSerializer, AsistenteEventoSerializer, PonenciaMagistralSerializer
 import os
 import json
 import uuid
 from datetime import datetime
 from django.conf import settings
 from django.core.mail import send_mail
-from django.db import connection, transaction
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import AsistenteEvento
 from users.models import Asistente
 from congresos.models import Evento
 from congresos.views import clean_date
+
+class PonenciaMagistralViewSet(viewsets.ModelViewSet):
+    queryset = PonenciaMagistral.objects.all().select_related('id_congreso', 'id_subarea', 'id_congreso__id_institucion')
+    serializer_class = PonenciaMagistralSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id_ponencia_magistral'
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        data = serializer.data
+        data['id'] = instance.id_ponencia_magistral
+        data['id_ponencia_magistral'] = instance.id_ponencia_magistral
+        return Response(data)
+        data['tipo_ponencia'] = 'ponencia magistral'
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = request.data
+        try:
+            with transaction.atomic():
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        UPDATE ponencia_magistral SET 
+                            titulo = %s, tipo_participacion = %s, id_subarea = %s,
+                            fecha_inicio = %s, fecha_fin = %s, 
+                            ponente_principal = %s, coautores = %s
+                        WHERE id_ponencia_magistral = %s
+                    """, [
+                        data.get('nombre_evento', instance.titulo),
+                        data.get('tipo_participacion', instance.tipo_participacion),
+                        clean_date(data.get('id_subarea'), instance.id_subarea_id),
+                        clean_date(data.get('fecha_hora_inicio'), instance.fecha_inicio),
+                        clean_date(data.get('fecha_hora_final'), instance.fecha_fin),
+                        data.get('ponente_principal', instance.ponente_principal),
+                        data.get('coautores', instance.coautores),
+                        instance.id_ponencia_magistral
+                    ])
+                instance.refresh_from_db()
+                serializer = self.get_serializer(instance)
+                res_data = serializer.data
+                res_data['id'] = instance.id_ponencia_magistral
+                return Response(res_data)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 class PonenciaViewSet(viewsets.ModelViewSet):
     serializer_class = PonenciaSerializer
     permission_classes = [IsAuthenticated]
+    lookup_field = 'id_ponencia'
+    
 
     def get_queryset(self):
         return Ponencia.objects.all().select_related('id_evento', 'id_subarea', 'id_evento__id_congreso')
+
+    def list(self, request, *args, **kwargs):
+        id_congreso = request.query_params.get('id_congreso')
+        
+        # 1. Ponencias Normales
+        queryset = self.get_queryset()
+        if id_congreso:
+            queryset = queryset.filter(id_evento__id_congreso=id_congreso)
+        
+        normal_data = self.get_serializer(queryset, many=True).data
+        for p in normal_data:
+            p['tipo_ponencia'] = 'ponencia normal'
+            # Mapear id_ponencia a id para consistencia
+            p['id'] = p.get('id_ponencia')
+            
+
+        # 2. Ponencias Magistrales
+        mag_queryset = PonenciaMagistral.objects.all().select_related('id_congreso', 'id_subarea', 'id_congreso__id_institucion')
+        if id_congreso:
+            mag_queryset = mag_queryset.filter(id_congreso=id_congreso)
+        
+        mag_data = PonenciaMagistralSerializer(mag_queryset, many=True).data
+        for m in mag_data:
+            m['tipo_ponencia'] = 'ponencia magistral'
+            # Mapear id_ponencia_magistral a id
+            m['id'] = m.get('id_ponencia_magistral')
+
+        return Response(normal_data + mag_data)
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         data = serializer.data
         data['id'] = instance.id_ponencia
+        data['id_ponencia'] = instance.id_ponencia
         data['id_congreso'] = instance.id_evento.id_congreso_id
         data['id_subarea'] = instance.id_subarea_id
+        data['tipo_ponencia'] = 'ponencia normal'
         return Response(data)
 
 
@@ -43,51 +119,76 @@ class PonenciaViewSet(viewsets.ModelViewSet):
         try:
             with transaction.atomic():
                 id_congreso = data.get('id_congreso')
-                from congresos.models import TipoTrabajo
-                tipo_str = data.get('tipo_evento', 'ponencia')
+                tipo_str = data.get('tipo_evento', 'ponencia magistral').lower()
                 
-                with connection.cursor() as cursor:
-                    # 1. Asegurar tipo_trabajo
-                    cursor.execute("SELECT id_tipo_trabajo FROM tipo_trabajo WHERE id_congreso = %s AND tipo_trabajo ILIKE %s LIMIT 1", [id_congreso, tipo_str])
-                    row = cursor.fetchone()
-                    if row:
-                        id_tipo_id = row[0]
-                    else:
-                        cursor.execute("INSERT INTO tipo_trabajo (tipo_trabajo, id_congreso) VALUES (%s, %s) RETURNING id_tipo_trabajo", [tipo_str.capitalize(), id_congreso])
-                        id_tipo_id = cursor.fetchone()[0]
+                if tipo_str == 'ponencia magistral':
+                    with connection.cursor() as cursor:
+                        cursor.execute("""
+                            INSERT INTO ponencia_magistral (titulo, tipo_participacion, id_subarea, fecha_inicio, fecha_fin, id_congreso, id_multimedia, ponente_principal, coautores)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            RETURNING id_ponencia_magistral
+                        """, [
+                            data.get('nombre_evento'), 
+                            data.get('tipo_participacion', 'presencial'),
+                            clean_date(data.get('id_subarea')),
+                            clean_date(data.get('fecha_hora_inicio')),
+                            clean_date(data.get('fecha_hora_final')),
+                            id_congreso,
+                            clean_date(data.get('id_multimedia')),
+                            data.get('ponente_principal', ''),
+                            data.get('coautores', '')
+                        ])
+                        id_mag = cursor.fetchone()[0]
+                        
+                        p_mag = PonenciaMagistral.objects.get(id_ponencia_magistral=id_mag)
+                        res_data = PonenciaMagistralSerializer(p_mag).data
+                        res_data['id'] = id_mag
+                        return Response(res_data, status=status.HTTP_201_CREATED)
+                else:
+                    # Flujo normal para ponencias
+                    with connection.cursor() as cursor:
+                        # 1. Asegurar tipo_trabajo
+                        cursor.execute("SELECT id_tipo_trabajo FROM tipo_trabajo WHERE id_congreso = %s AND tipo_trabajo ILIKE %s LIMIT 1", [id_congreso, tipo_str])
+                        row = cursor.fetchone()
+                        if row:
+                            id_tipo_id = row[0]
+                        else:
+                            cursor.execute("INSERT INTO tipo_trabajo (tipo_trabajo, id_congreso) VALUES (%s, %s) RETURNING id_tipo_trabajo", [tipo_str.capitalize(), id_congreso])
+                            id_tipo_id = cursor.fetchone()[0]
 
-                    # 2. Insertar Evento
-                    cursor.execute("""
-                        INSERT INTO evento (id_congreso, nombre_evento, tipo_evento, id_tipo_trabajo, id_mesas_trabajo, fecha_hora_inicio, fecha_hora_final, sinopsis, cupos, enlace)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                        RETURNING id_evento
-                    """, [
-                        id_congreso, data.get('nombre_evento'), tipo_str, id_tipo_id,
-                        clean_date(data.get('id_mesas_trabajo')),
-                        clean_date(data.get('fecha_hora_inicio')), clean_date(data.get('fecha_hora_final')),
-                        data.get('sinopsis', ''), int(data.get('cupos', 0)), data.get('enlace', '')
-                    ])
-                    id_evento = cursor.fetchone()[0]
+                        # 2. Insertar Evento
+                        cursor.execute("""
+                            INSERT INTO evento (id_congreso, nombre_evento, tipo_evento, id_tipo_trabajo, id_mesas_trabajo, fecha_hora_inicio, fecha_hora_final, sinopsis, cupos, enlace)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            RETURNING id_evento
+                        """, [
+                            id_congreso, data.get('nombre_evento'), tipo_str, id_tipo_id,
+                            clean_date(data.get('id_mesas_trabajo')),
+                            clean_date(data.get('fecha_hora_inicio')), clean_date(data.get('fecha_hora_final')),
+                            data.get('sinopsis', ''), 0 if data.get('cupos') in ["", None] else int(data.get('cupos')), data.get('enlace', '')
+                        ])
+                        id_evento = cursor.fetchone()[0]
 
-                    # 3. Normalizar participación
-                    tipo_p = str(data.get('tipo_participacion', 'presencial')).lower()
-                    if 'híbrido' in tipo_p or 'hibrido' in tipo_p: tipo_p = 'hibrida'
-                    
-                    # 4. Insertar Ponencia
-                    cursor.execute("""
-                        INSERT INTO ponencia (id_evento, tipo_participacion, id_subarea, id_resumen, id_extenso, id_multimedia)
-                        VALUES (%s, %s, %s, %s, %s, %s)
-                        RETURNING id_ponencia
-                    """, [
-                        id_evento, tipo_p, clean_date(data.get('id_subarea')),
-                        clean_date(data.get('id_resumen')), clean_date(data.get('id_extenso')), clean_date(data.get('id_multimedia'))
-                    ])
-                    id_ponencia = cursor.fetchone()[0]
-                    
-                    p = Ponencia.objects.get(id_ponencia=id_ponencia)
-                    res_data = self.get_serializer(p).data
-                    res_data['id'] = id_ponencia
-                    return Response(res_data, status=status.HTTP_201_CREATED)
+                        # 3. Normalizar participación
+                        tipo_p = str(data.get('tipo_participacion', 'presencial')).lower()
+                        if 'híbrido' in tipo_p or 'hibrido' in tipo_p: tipo_p = 'hibrida'
+                        
+                        # 4. Insertar Ponencia
+                        cursor.execute("""
+                            INSERT INTO ponencia (id_evento, tipo_participacion, id_subarea, id_resumen, id_extenso, id_multimedia, ponente_principal, coautores)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                            RETURNING id_ponencia
+                        """, [
+                            id_evento, tipo_p, clean_date(data.get('id_subarea')),
+                            clean_date(data.get('id_resumen')), clean_date(data.get('id_extenso')), clean_date(data.get('id_multimedia')),
+                            data.get('ponente_principal', ''), data.get('coautores', '')
+                        ])
+                        id_ponencia = cursor.fetchone()[0]
+                        
+                        p = Ponencia.objects.get(id_ponencia=id_ponencia)
+                        res_data = self.get_serializer(p).data
+                        res_data['id'] = id_ponencia
+                        return Response(res_data, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -96,8 +197,23 @@ class PonenciaViewSet(viewsets.ModelViewSet):
         data = request.data
         try:
             with transaction.atomic():
+                tipo_p = data.get('tipo_participacion')
+
+                if not tipo_p:
+                    tipo_p = instance.tipo_participacion
+
+                if not tipo_p:
+                    tipo_p = 'presencial'  # valor por defecto válido
+
+                tipo_p = str(tipo_p).lower()
+
+                if 'híbrido' in tipo_p or 'hibrido' in tipo_p:
+                    tipo_p = 'hibrida'
+
+                if tipo_p not in ['presencial', 'virtual', 'hibrida']:
+                    tipo_p = 'presencial'
+
                 with connection.cursor() as cursor:
-                    # 1. Actualizar Evento
                     cursor.execute("""
                         UPDATE evento SET 
                             nombre_evento = %s, id_mesas_trabajo = %s, 
@@ -110,29 +226,29 @@ class PonenciaViewSet(viewsets.ModelViewSet):
                         clean_date(data.get('fecha_hora_inicio'), instance.id_evento.fecha_hora_inicio),
                         clean_date(data.get('fecha_hora_final'), instance.id_evento.fecha_hora_final),
                         data.get('sinopsis', instance.id_evento.sinopsis),
-                        int(data.get('cupos', instance.id_evento.cupos)),
+                        instance.id_evento.cupos if data.get('cupos') is None else (0 if data.get('cupos') == "" else int(data.get('cupos'))),
                         data.get('enlace', instance.id_evento.enlace),
                         instance.id_evento_id
                     ])
 
-                    # 2. Normalizar participación
-                    tipo_p = str(data.get('tipo_participacion', instance.tipo_participacion)).lower()
-                    if 'híbrido' in tipo_p or 'hibrido' in tipo_p: tipo_p = 'hibrida'
-
-                    # 3. Actualizar Ponencia
                     cursor.execute("""
                         UPDATE ponencia SET 
-                            tipo_participacion = %s, id_subarea = %s
+                            tipo_participacion = %s, id_subarea = %s,
+                            ponente_principal = %s, coautores = %s
                         WHERE id_ponencia = %s
                     """, [
-                        tipo_p, clean_date(data.get('id_subarea'), instance.id_subarea_id),
+                        tipo_p,
+                        data.get('id_subarea', instance.id_subarea_id),
+                        data.get('ponente_principal', instance.ponente_principal),
+                        data.get('coautores', instance.coautores),
                         instance.id_ponencia
                     ])
-                
+
                 instance.refresh_from_db()
                 res_data = self.get_serializer(instance).data
                 res_data['id'] = instance.id_ponencia
                 return Response(res_data)
+
         except Exception as e:
             return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 

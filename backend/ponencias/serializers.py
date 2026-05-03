@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import AsistenteEvento, Ponencia
+from .models import AsistenteEvento, Ponencia, PonenciaMagistral
 from congresos.models import Evento
 
 class PonenciaSerializer(serializers.ModelSerializer):
@@ -14,6 +14,11 @@ class PonenciaSerializer(serializers.ModelSerializer):
     sinopsis = serializers.CharField(source='id_evento.sinopsis', read_only=True)
     id_mesas_trabajo = serializers.IntegerField(source='id_evento.id_mesas_trabajo.id_mesas_trabajo', read_only=True)
     nombre_subarea = serializers.CharField(source='id_subarea.nombre', read_only=True)
+    
+    # Campos dinámicos robustos
+    institucion = serializers.SerializerMethodField()
+    tipo_trabajo = serializers.SerializerMethodField()
+    tipo_ponencia = serializers.SerializerMethodField()
 
     class Meta:
         model = Ponencia
@@ -21,7 +26,61 @@ class PonenciaSerializer(serializers.ModelSerializer):
             'id', 'id_ponencia', 'id_evento', 'id_congreso', 'nombre_evento', 'nombre_congreso',
             'fecha_hora_inicio', 'fecha_hora_final', 'cupos',
             'tipo_participacion', 'id_subarea', 'nombre_subarea',
-            'id_resumen', 'id_extenso', 'id_multimedia', 'enlace', 'sinopsis', 'id_mesas_trabajo'
+            'id_resumen', 'id_extenso', 'id_multimedia', 'enlace', 'sinopsis', 'id_mesas_trabajo', 
+            'institucion', 'tipo_trabajo', 'tipo_ponencia', 'ponente_principal', 'coautores'
+        ]
+
+    def get_institucion(self, obj):
+        try:
+            return obj.id_evento.id_congreso.id_institucion.nombre
+        except Exception:
+            return "Sin asignar"
+
+    def get_tipo_trabajo(self, obj):
+        try:
+            return obj.id_evento.id_tipo_trabajo.tipo_trabajo
+        except Exception:
+            return "Sin asignar"
+
+    def get_tipo_ponencia(self, obj):
+        return "ponencia"
+
+class PonenciaMagistralSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source='id_ponencia_magistral', read_only=True)
+    nombre_evento = serializers.CharField(source='titulo', read_only=True)
+    nombre_congreso = serializers.CharField(source='id_congreso.nombre_congreso', read_only=True)
+    nombre_subarea = serializers.CharField(source='id_subarea.nombre', read_only=True)
+    fecha_hora_inicio = serializers.DateTimeField(source='fecha_inicio', read_only=True)
+    fecha_hora_final = serializers.DateTimeField(source='fecha_fin', read_only=True)
+    
+    institucion = serializers.SerializerMethodField()
+    tipo_trabajo = serializers.SerializerMethodField()
+    tipo_ponencia = serializers.SerializerMethodField()
+    nombre_ponente = serializers.SerializerMethodField()
+    id_congreso = serializers.IntegerField(source='id_congreso.id_congreso', read_only=True)
+
+    def get_tipo_ponencia(self, obj):
+        return "ponencia magistral"
+
+    def get_nombre_ponente(self, obj):
+        return obj.ponente_principal or "Sin asignar"
+
+    def get_institucion(self, obj):
+        try:
+            return obj.id_congreso.id_institucion.nombre
+        except Exception:
+            return "Sin asignar"
+
+    def get_tipo_trabajo(self, obj):
+        return "Ponencia Magistral"
+
+    class Meta:
+        model = PonenciaMagistral
+        fields = [
+            'id', 'id_ponencia_magistral', 'titulo', 'nombre_evento', 'tipo_participacion', 
+            'id_subarea', 'nombre_subarea', 'fecha_hora_inicio', 'fecha_hora_final', 
+            'id_congreso', 'nombre_congreso', 'institucion', 'tipo_trabajo', 'tipo_ponencia',
+            'ponente_principal', 'coautores', 'nombre_ponente'
         ]
 
 class AsistenteEventoSerializer(serializers.ModelSerializer):

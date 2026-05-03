@@ -26,7 +26,7 @@ export default function PonenciasView() {
           getInstitucionesApi(accessToken)
         ]);
 
-        setListaEventos(ponenciasData.map(p => ({ ...p, id: p.id_ponencia })));
+        setListaEventos(ponenciasData.map(p => ({ ...p, id: p.id })));
         setCongresos(congresosData.map(c => ({ id: c.id_congreso, nombre: c.nombre_congreso })));
         setInstituciones(instData.map(i => ({ id: i.id_institucion, nombre: i.nombre })));
       } catch (error) {

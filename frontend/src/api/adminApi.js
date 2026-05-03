@@ -237,6 +237,12 @@ export async function getPonenciaByIdApi(accessToken, idPonencia) {
   return res.json();
 }
 
+export async function getPonenciaMagistralByIdApi(accessToken, idPonencia) {
+  const res = await fetch(`${API_URL}/api/ponencias/magistrales/${idPonencia}/`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener la ponencia magistral.');
+  return res.json();
+}
+
 export async function createTallerApi(accessToken, data) {
   const res = await fetch(`${API_URL}/api/congresos/talleres/`, {
     method: 'POST',

@@ -2,7 +2,7 @@ import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'rea
 import { FiEdit2, FiCopy, FiCalendar, FiClock, FiUsers, FiMapPin, FiUser, FiAward, FiFileText, FiLink, FiSave, FiAlertCircle } from 'react-icons/fi';
 import { IoIosCheckmark } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
-import { getInstitucionesApi, getCongresosApi, getSubareasApi, getMesasApi, createPonenciaApi, getPonenciaByIdApi, getParticipantsApi } from '../../../api/adminApi';
+import { getInstitucionesApi, getCongresosApi, getSubareasApi, getMesasApi, createPonenciaApi, getPonenciaByIdApi, getPonenciaMagistralByIdApi, getParticipantsApi } from '../../../api/adminApi';
 import { API_URL } from '../../../api/constants';
 import { useNavigate } from 'react-router-dom';
 import CreatableSelect from 'react-select/creatable';
@@ -19,7 +19,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
         tipo_evento: "ponencia",
         id_subarea: "",
         cupos: 0,
-        tipo_participacion: "Presencial",
+        tipo_participacion: "presencial",
         enlace: "",
         sinopsis: "",
         id_mesas_trabajo: "",
@@ -31,7 +31,8 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
         ponente_principal: "",
         coautores: "",
         rubrica: "",
-        preguntas: ""
+        preguntas: "",
+        es_magistral: ""
     });
 
     const [modificando, setModificando] = useState(initialModificando);
@@ -44,6 +45,8 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
     const [mesas, setMesas] = useState([]);
     const [subareas, setSubareas] = useState([]);
     const [personasOptions, setPersonasOptions] = useState([]);
+
+    const [esMagistral, setEsMagistral] = useState(!ponenciaData?.id);
 
     useImperativeHandle(ref, () => ({
         handleSave
@@ -66,13 +69,34 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
 
                 if (realId) {
                     console.log("Cargando ponencia ID:", realId);
-                    const realPonencia = await getPonenciaByIdApi(accessToken, realId);
+                    let realPonencia;
+                    try {
+                        if (ponenciaData.is_magistral === true) {
+                            realPonencia = await getPonenciaMagistralByIdApi(accessToken, realId);
+                        } else if (ponenciaData.is_magistral === false) {
+                            realPonencia = await getPonenciaByIdApi(accessToken, realId);
+                        } else {
+                            // Fallback si no se especificó
+                            try {
+                                realPonencia = await getPonenciaByIdApi(accessToken, realId);
+                            } catch (err) {
+                                realPonencia = await getPonenciaMagistralByIdApi(accessToken, realId);
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Error cargando ponencia:", err);
+                        return;
+                    }
+
                     console.log("Datos recibidos:", realPonencia);
 
                     const formatDate = (dateStr) => {
                         if (!dateStr) return "";
                         return dateStr.substring(0, 16);
                     };
+
+                    const isMag = realPonencia.tipo_ponencia === 'ponencia magistral';
+                    setEsMagistral(isMag);
 
                     setFormatData({
                         ...realPonencia,
@@ -82,16 +106,23 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                         id_subarea: realPonencia.id_subarea || "",
                         fecha_hora_inicio: formatDate(realPonencia.fecha_hora_inicio),
                         fecha_hora_final: formatDate(realPonencia.fecha_hora_final),
-                        institucion: realPonencia.institucion || "",
-                        tipo_trabajo: realPonencia.tipo_trabajo || "",
-                        tipo_ponencia: realPonencia.tipo_ponencia || "",
+                        institucion: realPonencia.institucion || "Sin asignar",
+                        tipo_trabajo: realPonencia.tipo_trabajo || "Sin asignar",
+                        tipo_ponencia: isMag ? "Ponencia magistral" : "Ponencia normal",
                         ponente_principal: realPonencia.ponente_principal || "",
                         coautores: realPonencia.coautores || "",
                         rubrica: realPonencia.rubrica || "",
                         preguntas: realPonencia.preguntas || ""
                     });
                 } else if (ponenciaData?.id_congreso) {
-                    setFormatData(prev => ({ ...prev, id_congreso: parseInt(ponenciaData.id_congreso) }));
+                    const congId = parseInt(ponenciaData.id_congreso);
+                    const selectedCong = congData.find(c => c.id_congreso === congId);
+                    setFormatData(prev => ({
+                        ...prev,
+                        id_congreso: congId,
+                        institucion: selectedCong?.nombre_institucion || "Sin asignar",
+                        tipo_trabajo: esMagistral ? "Ponencia Magistral" : "Sin asignar"
+                    }));
                 }
             } catch (err) {
                 console.error("Error en DetallesEditarPonencia:", err);
@@ -121,13 +152,29 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
             .catch(console.error);
     }, [accessToken]);
 
-    function handleChange(e) {
-        const { id, value } = e.target;
+    useEffect(() => {
         setFormatData(prev => ({
             ...prev,
-            [id]: value
+            tipo_evento: esMagistral ? "ponencia magistral" : "ponencia",
+            tipo_trabajo: esMagistral ? "Ponencia Magistral" : (prev.tipo_trabajo === "Ponencia Magistral" ? "Sin asignar" : prev.tipo_trabajo)
         }));
-    }
+    }, [esMagistral]);
+
+    const handleChange = (e) => {
+        const { id, value } = e.target;
+
+        if (id === 'id_congreso') {
+            const cong = congresos.find(c => c.id_congreso === parseInt(value));
+            setFormatData(prev => ({
+                ...prev,
+                id_congreso: value,
+                institucion: cong ? (cong.nombre_institucion || "Sin asignar") : "Sin asignar",
+                tipo_trabajo: esMagistral ? "Ponencia Magistral" : (prev.tipo_trabajo || "Sin asignar")
+            }));
+        } else {
+            setFormatData(prev => ({ ...prev, [id]: value }));
+        }
+    };
 
     async function handleSave() {
         if (!formatData.nombre_evento || !formatData.id_congreso) {
@@ -139,7 +186,8 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
         try {
             if (ponenciaData?.id) {
                 // Actualizar
-                const res = await fetch(`${API_URL}/api/ponencias/lista/${ponenciaData.id}/`, {
+                const endpoint = esMagistral ? 'magistrales' : 'lista';
+                const res = await fetch(`${API_URL}/api/ponencias/${endpoint}/${ponenciaData.id}/`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
@@ -147,15 +195,20 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                     },
                     body: JSON.stringify(formatData)
                 });
+                const responseData = await res.json();
+                console.log("STATUS:", res.status);
+
+                console.log("RESPONSE:", responseData);
                 if (!res.ok) throw new Error('Error al actualizar la ponencia');
                 alert("Ponencia actualizada con éxito");
             } else {
                 // Crear
                 await createPonenciaApi(accessToken, formatData);
-                alert("Ponencia creada con éxito");
+                //alert("Ponencia creada con éxito");
             }
 
-            if (isFullPage) navigate(`/admin/eventos/congresos/lista`);
+            //if (isFullPage) navigate(`/admin/eventos/congresos/lista`);
+            if (isFullPage) navigate(-1);
             else window.location.reload();
         } catch (err) {
             alert(err.message);
@@ -266,9 +319,20 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                 </section>
 
                 <section className='mb-8'>
-                    <h3 className={sectionTitleClasses}>
-                        <div className="w-1.5 h-6 bg-primary rounded-full"></div> Detalles de la Ponencia
-                    </h3>
+                    <div className='flex items-center gap-3'>
+                        <h3 className={sectionTitleClasses}>
+                            <div className="w-1.5 h-6 bg-primary rounded-full"></div> Detalles de la Ponencia
+                        </h3>
+                        {isFullPage && (
+                            <button
+                                onClick={() => setModificando(!modificando)}
+                                className={`p-2 rounded-xl transition-all mb-4 ${modificando ? 'bg-amber-100 text-amber-600' : 'bg-base-200 text-base-content/50 hover:bg-base-300'}`}
+                                title={modificando ? "Bloquear edición" : "Habilitar edición"}
+                            >
+                                <FiEdit2 size={18} />
+                            </button>
+                        )}
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                         <div className="">
                             <label className={labelClasses}>Título de la ponencia</label>
@@ -278,7 +342,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                             <label className={labelClasses}>Tipo de ponencia</label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><LuCrown /></span>
-                                <select id="tipo_ponencia" className={`${inputClasses} pl-11 font-mono`} value={formatData.tipo_ponencia} onChange={handleChange} disabled={!modificando}>
+                                <select id="tipo_ponencia" className={`${inputClasses} pl-11 font-mono`} value={`${!esMagistral ? "Ponencia normal" : "Ponencia magistral"}`} onChange={handleChange} disabled={true}>
                                     <option value="Ponencia magistral">
                                         Ponencia magistral
 
@@ -421,16 +485,19 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                         <div>
                             <label className={labelClasses}>Tipo de Participación</label>
                             <select id="tipo_participacion" value={formatData.tipo_participacion} className={`${inputClasses} font-mono`} onChange={handleChange} disabled={!modificando}>
-                                <option value="Presencial">Presencial</option>
-                                <option value="Virtual">Virtual</option>
-                                <option value="Híbrido">Híbrido</option>
+                                <option value="presencial">Presencial</option>
+                                <option value="virtual">Virtual</option>
+                                <option value="hibrida">Híbrido</option>
                             </select>
                         </div>
                         <div>
                             <label className={labelClasses}>Cupos</label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FiUsers /></span>
-                                <input id="cupos" type="number" min="0" className={`${inputClasses} pl-11 font-mono`} value={formatData.cupos} onChange={handleChange} readOnly={!modificando} />
+                                {!esMagistral ?
+                                    <input id="cupos" type="number" min="0" className={`${inputClasses} pl-11 font-mono`} value={formatData.cupos} onChange={handleChange} readOnly={!modificando} />
+                                    :
+                                    <input id="cupos" type="text" className={`${inputClasses} pl-11 font-mono ${esMagistral && "text-slate-500"}`} value={"No hay límite de cupos en ponencias magistrales"} readOnly={true} />}
                             </div>
                         </div>
                         <div>
@@ -474,7 +541,12 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
 
                         <div className="md:col-span-2">
                             <label className={labelClasses}>Sinopsis / Resumen</label>
-                            <textarea id="sinopsis" className={`${inputClasses} min-h-[120px] py-3 resize-none`} value={formatData.sinopsis} onChange={handleChange} readOnly={!modificando} placeholder="Escribe aquí el resumen..."></textarea>
+                            {!esMagistral ?
+                                <textarea id="sinopsis" className={`${inputClasses} min-h-[120px] py-3 resize-none`} value={formatData.sinopsis} onChange={handleChange} readOnly={!modificando} placeholder="Escribe aquí el resumen..."></textarea>
+                                :
+                                <textarea id="sinopsis" className={`${inputClasses} min-h-[120px] py-3 resize-none ${esMagistral && "text-slate-500"}`} value={"No hay sinopsis en las ponencias magistrales"} readOnly={true} ></textarea>
+                            }
+
                         </div>
 
                     </div>
@@ -487,12 +559,21 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="md:col-span-2">
                             <label className={labelClasses}>Mesa Asignada</label>
-                            <select id="id_mesas_trabajo" value={formatData.id_mesas_trabajo} className={`${inputClasses} font-mono`} onChange={handleChange} disabled={!modificando}>
-                                <option value="">Sin mesa asignada</option>
-                                {mesas.map((item) => (
-                                    <option key={item.id_mesas_trabajo} value={item.id_mesas_trabajo}>{item.nombre}</option>
-                                ))}
-                            </select>
+                            {!esMagistral ?
+                                (
+                                    <select id="id_mesas_trabajo" value={formatData.id_mesas_trabajo} className={`${inputClasses} font-mono`} onChange={handleChange} disabled={!modificando}>
+                                        <option value="">Sin mesa asignada</option>
+                                        {mesas.map((item) => (
+                                            <option key={item.id_mesas_trabajo} value={item.id_mesas_trabajo}>{item.nombre}</option>
+                                        ))}
+                                    </select>
+                                ) :
+                                <div className={`${inputClasses} font-mono ${esMagistral && "text-slate-500"}`}>
+                                    No hay mesas en las ponencias magistrales
+
+                                </div>
+                            }
+
                         </div>
                         <div>
                             <div className='flex items-center gap-2 mb-2 ml-1'>

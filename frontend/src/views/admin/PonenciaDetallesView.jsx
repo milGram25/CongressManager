@@ -7,6 +7,7 @@ export default function PonenciaDetallesView() {
   const { id } = useParams();
   const location = useLocation();
   const isEditing = new URLSearchParams(location.search).get('edit') === 'true';
+  const isMagistral = new URLSearchParams(location.search).get('magistral') === 'true';
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-8 animate-in fade-in duration-500">
@@ -27,7 +28,7 @@ export default function PonenciaDetallesView() {
       <div className="bg-base-100 rounded-3xl border border-base-300 shadow-sm overflow-hidden min-h-[400px]">
         <DetallesEditarPonencia 
             key={id} 
-            ponenciaData={{ id: parseInt(id) }} 
+            ponenciaData={{ id: parseInt(id), is_magistral: isMagistral }} 
             initialModificando={isEditing} 
             isFullPage={true} 
         />
