@@ -651,7 +651,7 @@ class ExtensosCongresoView(APIView):
                 'autores': autores_map.get(p['id_ponencia'], []),
                 'asignado': p['id_evaluador'] is not None,
                 'revisado': p['revisado'] or False,
-                'aceptado': 'aceptado' in estatus_ev,
+                'aceptado': estatus_ev == 'aceptado',
                 'id_evaluador': p['id_evaluador'],
                 'nombre_evaluador': p['nombre_evaluador'],
                 'evaluacion': evaluacion,
