@@ -2,10 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { MdCheckCircle, MdCancel } from "react-icons/md";
 import ListaResumenes from "./Componentes/ListaResumenes";
 import ListaRevisores from "./Componentes/ListaRevisores";
-import { getCongresosApi, getDictaminadoresDisponiblesApi } from "../../api/adminApi";
-import { getResumenesCongreso, asignarDictaminadorApi } from "../../api/ponenciasApi";
+import { getCongresosApi } from "../../api/adminApi";
+import { getResumenesCongreso } from "../../api/ponenciasApi";
 
-// Componente del LED de estado
 function LedStatus({ label, active, neutral = false }) {
   const color = neutral ? 'bg-gray-400' : active ? 'bg-green-500' : 'bg-red-500';
   return (
@@ -16,7 +15,7 @@ function LedStatus({ label, active, neutral = false }) {
   );
 }
 
-function ResumenDetailCard({ resumen, revisores, dictaminadoresDisponibles, onAsignar }) {
+function ResumenDetailCard({ resumen }) {
   if (!resumen) return (
     <div className="flex items-center justify-center h-64 rounded-[26px] border border-black/20 bg-white text-gray-400 italic text-sm">
       Selecciona un resumen para ver el detalle
@@ -31,40 +30,19 @@ function ResumenDetailCard({ resumen, revisores, dictaminadoresDisponibles, onAs
       </header>
 
       <div className="p-6 space-y-6">
-        {/* LEDs de estado */}
         <div className="flex flex-wrap gap-4 p-4 bg-gray-50 rounded-2xl">
           <LedStatus label="Revisor asignado" active={resumen.asignado} />
           <LedStatus label="Revisado" active={resumen.revisado} />
           <LedStatus label="Aceptado" active={resumen.aceptado} neutral={resumen.estatus == null} />
         </div>
 
-        {/* Asignación de dictaminador */}
         <section>
-          <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700 mb-2">Dictaminador asignado</h4>
-          <div className="flex gap-2 items-center">
-            <select
-              className="select select-bordered select-sm flex-1 rounded-xl"
-              value={resumen.id_dictaminador ?? ''}
-              onChange={e => onAsignar(resumen.id_resumen, e.target.value ? Number(e.target.value) : null)}
-            >
-              {dictaminadoresDisponibles?.length === 0 ? (
-                <option value="" disabled>No hay dictaminadores en este congreso</option>
-              ) : (
-                <>
-                  <option value="">Sin asignar</option>
-                  {dictaminadoresDisponibles.map(d => (
-                    <option key={d.id_dictaminador} value={d.id_dictaminador}>{d.nombre_completo}</option>
-                  ))}
-                </>
-              )}
-            </select>
-            {dictaminadoresDisponibles?.length === 0 && (
-              <p className="text-xs text-amber-600 italic mt-1">No hay dictaminadores asignados a este congreso.</p>
-            )}
-          </div>
+          <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700 mb-1">Dictaminador asignado</h4>
+          <p className="text-sm text-slate-600">
+            {resumen.nombre_dictaminador ?? 'Sin dictaminador asignado'}
+          </p>
         </section>
 
-        {/* Respuestas del dictamen */}
         {resumen.preguntas && resumen.preguntas.length > 0 && (
           <section>
             <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700 mb-3">Respuestas del dictamen</h4>
@@ -100,7 +78,6 @@ export default function ProcesosResumenesView() {
   const [congresos, setCongresos] = useState([]);
   const [selectedCongreso, setSelectedCongreso] = useState(null);
   const [items, setItems] = useState([]);
-  const [dictaminadores, setDictaminadores] = useState([]);
   const [viewItem, setViewItem] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -111,39 +88,19 @@ export default function ProcesosResumenesView() {
   useEffect(() => {
     if (!selectedCongreso) return;
     setLoading(true);
-    Promise.all([
-      getResumenesCongreso(accessToken, selectedCongreso.id_congreso),
-      getDictaminadoresDisponiblesApi(accessToken, selectedCongreso.id_congreso),
-    ])
-      .then(([resData, dictData]) => {
-        setItems(resData);
-        setDictaminadores(dictData);
-        setViewItem(resData[0] ?? null);
+    getResumenesCongreso(accessToken, selectedCongreso.id_congreso)
+      .then(data => {
+        setItems(data);
+        setViewItem(data[0] ?? null);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [selectedCongreso, accessToken]);
 
   const revisoresAsignados = useMemo(() => {
-    if (!viewItem?.id_dictaminador) return [];
-    return dictaminadores.filter(d => d.id_dictaminador === viewItem.id_dictaminador);
-  }, [viewItem, dictaminadores]);
-
-  const handleAsignar = async (idResumen, idDictaminador) => {
-    try {
-      await asignarDictaminadorApi(accessToken, idResumen, idDictaminador);
-      setItems(prev => prev.map(item =>
-        item.id_resumen === idResumen
-          ? { ...item, asignado: idDictaminador != null, id_dictaminador: idDictaminador }
-          : item
-      ));
-      if (viewItem?.id_resumen === idResumen) {
-        setViewItem(prev => ({ ...prev, asignado: idDictaminador != null, id_dictaminador: idDictaminador }));
-      }
-    } catch (err) {
-      console.error('Error asignando dictaminador:', err);
-    }
-  };
+    if (!viewItem?.nombre_dictaminador) return [];
+    return [{ nombre_completo: viewItem.nombre_dictaminador }];
+  }, [viewItem]);
 
   return (
     <div className="w-full space-y-7">
@@ -181,19 +138,14 @@ export default function ProcesosResumenesView() {
           <div className="space-y-4">
             <ListaResumenes
               listaElementos={items}
-              dictaminadores={dictaminadores}
+              dictaminadores={[]}
               selectedId={viewItem?.id ?? null}
               onView={setViewItem}
             />
             <ListaRevisores titulo="DICTAMINADORES" revisores={revisoresAsignados} />
           </div>
           <div>
-            <ResumenDetailCard
-              resumen={viewItem}
-              revisores={revisoresAsignados}
-              dictaminadoresDisponibles={dictaminadores}
-              onAsignar={handleAsignar}
-            />
+            <ResumenDetailCard resumen={viewItem} />
           </div>
         </section>
       )}

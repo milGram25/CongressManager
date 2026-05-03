@@ -58,7 +58,16 @@ class Extenso(models.Model):
     revisado = models.BooleanField(default=False)
     version_numero = models.IntegerField(default=1)
     id_evaluador = models.ForeignKey(
-        Evaluador, models.SET_NULL, db_column='id_evaluador', null=True, blank=True
+        Evaluador, models.SET_NULL, db_column='id_evaluador',
+        null=True, blank=True, related_name='extensos_r1'
+    )
+    id_evaluador_2 = models.ForeignKey(
+        Evaluador, models.SET_NULL, db_column='id_evaluador_2',
+        null=True, blank=True, related_name='extensos_r2'
+    )
+    id_evaluador_3 = models.ForeignKey(
+        Evaluador, models.SET_NULL, db_column='id_evaluador_3',
+        null=True, blank=True, related_name='extensos_r3'
     )
 
     class Meta:

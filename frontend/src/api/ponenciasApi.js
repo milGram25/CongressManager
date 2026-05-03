@@ -133,3 +133,37 @@ export async function enviarDictamenApi(accessToken, idResumen, data) {
   if (!res.ok) throw new Error('Error enviando dictamen');
   return res.json();
 }
+
+export async function asignarEvaluadoresApi(accessToken, idExtenso, idEvaluador, idEvaluador2) {
+  const res = await fetch(`${API_URL}/api/ponencias/extensos/${idExtenso}/asignar-evaluadores/`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id_evaluador: idEvaluador, id_evaluador_2: idEvaluador2 }),
+  });
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.detail || 'Error asignando revisores');
+  }
+  return res.json();
+}
+
+export async function asignarEvaluador3Api(accessToken, idExtenso, idEvaluador3) {
+  const res = await fetch(`${API_URL}/api/ponencias/extensos/${idExtenso}/asignar-evaluador-3/`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id_evaluador_3: idEvaluador3 }),
+  });
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.detail || 'Error asignando 3er revisor');
+  }
+  return res.json();
+}
+
+export async function getMisPonenciasPonenteApi(accessToken) {
+  const res = await fetch(`${API_URL}/api/ponencias/ponente/mis-ponencias/`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error cargando estatus de ponencias');
+  return res.json();
+}

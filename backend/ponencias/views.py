@@ -22,6 +22,86 @@ from .models import AsistenteEvento
 from users.models import Asistente
 from congresos.models import Evento
 from congresos.views import clean_date
+
+
+def calcular_estado_extenso(ext, evaluaciones_por_eval):
+    """
+    ext: dict with id_evaluador, id_evaluador_2, id_evaluador_3, revisado
+    evaluaciones_por_eval: dict {id_evaluador_int: estatus_str} — latest per evaluador
+    """
+    r1 = ext.get('id_evaluador')
+    r2 = ext.get('id_evaluador_2')
+    r3 = ext.get('id_evaluador_3')
+    revisado = ext.get('revisado', False)
+
+    if revisado:
+        if r3 and r3 in evaluaciones_por_eval:
+            estatus = evaluaciones_por_eval[r3]
+        elif r1 and r1 in evaluaciones_por_eval:
+            estatus = evaluaciones_por_eval[r1]
+        elif r2 and r2 in evaluaciones_por_eval:
+            estatus = evaluaciones_por_eval[r2]
+        else:
+            estatus = 'aceptado'
+        return 'extenso_rechazado' if estatus == 'rechazado' else 'extenso_aceptado'
+
+    if not r1 and not r2:
+        return 'en_revision'
+
+    ev1 = evaluaciones_por_eval.get(r1) if r1 else None
+    ev2 = evaluaciones_por_eval.get(r2) if r2 else None
+
+    if not r2:
+        if ev1 in ('aceptado con ligeras modificaciones', 'aceptado con modificaciones mayores'):
+            return 'con_modificaciones'
+        return 'en_revision'
+
+    if ev1 and ev2:
+        r1_rechazado = ev1 == 'rechazado'
+        r2_rechazado = ev2 == 'rechazado'
+        if r1_rechazado != r2_rechazado:
+            return 'desacuerdo'
+        if r1_rechazado and r2_rechazado:
+            return 'en_revision'
+        any_mods = any(e in ('aceptado con ligeras modificaciones', 'aceptado con modificaciones mayores')
+                       for e in [ev1, ev2])
+        return 'con_modificaciones' if any_mods else 'en_revision'
+
+    ev = ev1 or ev2
+    if ev in ('aceptado con ligeras modificaciones', 'aceptado con modificaciones mayores'):
+        return 'con_modificaciones'
+    return 'en_revision'
+
+
+def _finalizar_extenso_si_procede(cursor, pk, evaluador_id, r1, r2, r3):
+    """After inserting evaluation, mark extenso.revisado=TRUE if a final decision is reached."""
+    if not r2:
+        cursor.execute("UPDATE extenso SET revisado = TRUE WHERE id_extenso = %s", [pk])
+        return
+
+    if r3 and evaluador_id == r3:
+        cursor.execute("UPDATE extenso SET revisado = TRUE WHERE id_extenso = %s", [pk])
+        return
+
+    if evaluador_id not in (r1, r2):
+        return
+
+    cursor.execute("""
+        SELECT DISTINCT ON (id_evaluador) id_evaluador, estatus
+        FROM evaluacion
+        WHERE id_extenso = %s AND id_evaluador = ANY(%s)
+        ORDER BY id_evaluador, fecha_de_revision DESC
+    """, [pk, [r1, r2]])
+    evals = {row[0]: row[1] for row in cursor.fetchall()}
+
+    if r1 not in evals or r2 not in evals:
+        return
+
+    s1, s2 = evals[r1], evals[r2]
+    if (s1 == 'rechazado' and s2 == 'rechazado') or (s1 == 'aceptado' and s2 == 'aceptado'):
+        cursor.execute("UPDATE extenso SET revisado = TRUE WHERE id_extenso = %s", [pk])
+
+
 class PonenciaViewSet(viewsets.ModelViewSet):
     serializer_class = PonenciaSerializer
     permission_classes = [IsAuthenticated]
@@ -150,7 +230,8 @@ class PonenciaViewSet(viewsets.ModelViewSet):
             return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class EnviarPonenciaAPIView(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         data = request.data
         titulo = data.get('titulo')
@@ -161,17 +242,40 @@ class EnviarPonenciaAPIView(APIView):
         tipo_trabajo_nombre = data.get('tipoTrabajo')
         palabras_clave = data.get('palabrasClave')
         resumen_texto = data.get('resumen')
+        id_congreso = data.get('id_congreso')
+
         if not all([titulo, autor, tipo_participacion, eje_tematico_nombre, tipo_trabajo_nombre, palabras_clave, resumen_texto]):
             return Response({'detail': 'Faltan campos obligatorios.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not id_congreso:
+            return Response({'detail': 'Debes seleccionar un congreso.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             with transaction.atomic():
                 with connection.cursor() as cursor:
-                    #resolver el id_subarea a partir del eje tematico
+                    # Verificar que el usuario pagó ese congreso
+                    cursor.execute("""
+                        SELECT 1 FROM pagos p
+                        JOIN costos_congreso cc ON cc.id_costos_congreso = p.id_costos
+                        WHERE p.id_persona = %s AND cc.id_congreso = %s
+                        LIMIT 1
+                    """, [request.user.id_persona, id_congreso])
+                    if not cursor.fetchone():
+                        return Response({'detail': 'No tienes inscripción pagada en ese congreso.'}, status=status.HTTP_403_FORBIDDEN)
+
+                    # Buscar un evento de tipo ponencia en el congreso
+                    cursor.execute("""
+                        SELECT id_evento FROM evento
+                        WHERE id_congreso = %s AND tipo_evento = 'ponencia'
+                        ORDER BY id_evento LIMIT 1
+                    """, [id_congreso])
+                    evento_row = cursor.fetchone()
+                    id_evento = evento_row[0] if evento_row else None
+
+                    # Resolver id_subarea
                     cursor.execute("SELECT id_subareas FROM subareas WHERE nombre ILIKE %s LIMIT 1", [f"%{eje_tematico_nombre}%"])
                     subarea_row = cursor.fetchone()
                     if not subarea_row:
-                        #prueba, si no existe agrega
                         cursor.execute("SELECT id_areas_generales FROM areas_generales LIMIT 1")
                         area_row = cursor.fetchone()
                         if not area_row:
@@ -184,38 +288,32 @@ class EnviarPonenciaAPIView(APIView):
                     else:
                         id_subarea = subarea_row[0]
 
-                    #id_tipo a partir del tipo_trabajo_nombre
-                    #solo compara las primeras palabras para evitar conflictos
+                    # Resolver id_tipo_trabajo
                     first_words = " ".join(tipo_trabajo_nombre.split()[:2])
                     cursor.execute("SELECT id_tipo_trabajo FROM tipo_trabajo WHERE tipo_trabajo ILIKE %s LIMIT 1", [f"%{first_words}%"])
                     tipo_trabajo_row = cursor.fetchone()
                     if not tipo_trabajo_row:
-                        #pruebas
                         cursor.execute("INSERT INTO tipo_trabajo (tipo_trabajo) VALUES (%s) RETURNING id_tipo_trabajo", [tipo_trabajo_nombre])
                         id_tipo_trabajo = cursor.fetchone()[0]
                     else:
                         id_tipo_trabajo = tipo_trabajo_row[0]
 
-                    #Crea un archivo de etxto para el resumen, asegura que el directorio de media exista
+                    # Crear archivo de resumen
                     media_dir = os.path.join(settings.MEDIA_ROOT, 'resumenes')
                     os.makedirs(media_dir, exist_ok=True)
-                    
-                    #Se genera un nombre de archivo unico
                     safe_titulo = "".join([c if c.isalnum() else "_" for c in titulo])[:50]
                     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
                     unique_id = uuid.uuid4().hex[:6]
                     filename = f"resumen_{safe_titulo}_{timestamp}_{unique_id}.txt"
                     filepath = os.path.join(media_dir, filename)
-                    
-                    # Se escribe el contenido en el archivo
                     with open(filepath, 'w', encoding='utf-8') as f:
                         f.write(f"Título: {titulo}\n")
                         f.write(f"Autor: {autor}\n")
                         f.write(f"Palabras Clave: {palabras_clave}\n")
                         f.write("-" * 50 + "\n")
                         f.write(resumen_texto)
-                        
-                    #Crea un registro en la tabla de resumen
+
+                    # Crear resumen
                     cursor.execute("""
                         INSERT INTO resumen (titulo, contenido, palabras_clave, revisado)
                         VALUES (%s, %s, %s, FALSE)
@@ -223,33 +321,38 @@ class EnviarPonenciaAPIView(APIView):
                     """, [titulo, resumen_texto, palabras_clave])
                     id_resumen = cursor.fetchone()[0]
 
-                    #Crea un registro en la tabla ponencia
-                    cursor.execute("""
-                        INSERT INTO ponencia (tipo_participacion, id_subarea, id_resumen, id_tipo_trabajo)
-                        VALUES (%s, %s, %s, %s)
-                        RETURNING id_ponencia
-                    """, [tipo_participacion, id_subarea, id_resumen, id_tipo_trabajo])
+                    # Crear ponencia (con o sin id_evento)
+                    if id_evento:
+                        cursor.execute("""
+                            INSERT INTO ponencia (tipo_participacion, id_subarea, id_resumen, id_tipo_trabajo, id_evento)
+                            VALUES (%s, %s, %s, %s, %s)
+                            RETURNING id_ponencia
+                        """, [tipo_participacion, id_subarea, id_resumen, id_tipo_trabajo, id_evento])
+                    else:
+                        cursor.execute("""
+                            INSERT INTO ponencia (tipo_participacion, id_subarea, id_resumen, id_tipo_trabajo)
+                            VALUES (%s, %s, %s, %s)
+                            RETURNING id_ponencia
+                        """, [tipo_participacion, id_subarea, id_resumen, id_tipo_trabajo])
                     id_ponencia = cursor.fetchone()[0]
 
-                    #se asegura que el usuario sea ponente y se crea si no existe
-                    if request.user.is_authenticated:
-                        id_persona = request.user.id_persona
-                        cursor.execute("SELECT id_ponente FROM ponente WHERE id_persona = %s", [id_persona])
-                        ponente_row = cursor.fetchone()
-                        if not ponente_row:
-                            cursor.execute("INSERT INTO ponente (id_persona) VALUES (%s) RETURNING id_ponente", [id_persona])
-                            id_ponente = cursor.fetchone()[0]
-                        else:
-                            id_ponente = ponente_row[0]
-                        
-                        #Asociar ponente a la ponencia
-                        cursor.execute("""
-                            INSERT INTO ponente_has_ponencia (id_ponente, id_ponencia, asistio, es_principal)
-                            VALUES (%s, %s, FALSE, TRUE)
-                            ON CONFLICT (id_ponente, id_ponencia) DO NOTHING
-                        """, [id_ponente, id_ponencia])
+                    # Asegurar que el usuario sea ponente
+                    id_persona = request.user.id_persona
+                    cursor.execute("SELECT id_ponente FROM ponente WHERE id_persona = %s", [id_persona])
+                    ponente_row = cursor.fetchone()
+                    if not ponente_row:
+                        cursor.execute("INSERT INTO ponente (id_persona) VALUES (%s) RETURNING id_ponente", [id_persona])
+                        id_ponente = cursor.fetchone()[0]
+                    else:
+                        id_ponente = ponente_row[0]
 
-                    #Coautores, se vinculan si tienen cuenta, correo
+                    cursor.execute("""
+                        INSERT INTO ponente_has_ponencia (id_ponente, id_ponencia, asistio, es_principal)
+                        VALUES (%s, %s, FALSE, TRUE)
+                        ON CONFLICT (id_ponente, id_ponencia) DO NOTHING
+                    """, [id_ponente, id_ponencia])
+
+                    # Vincular coautores
                     for coautor in coautores:
                         if isinstance(coautor, dict):
                             coautor_email = coautor.get('email', '').strip()
@@ -265,13 +368,11 @@ class EnviarPonenciaAPIView(APIView):
                                         id_ponente_coautor = cursor.fetchone()[0]
                                     else:
                                         id_ponente_coautor = ponente_coautor_row[0]
-                                    
                                     cursor.execute("""
                                         INSERT INTO ponente_has_ponencia (id_ponente, id_ponencia, asistio, es_principal)
                                         VALUES (%s, %s, FALSE, FALSE)
                                         ON CONFLICT (id_ponente, id_ponencia) DO NOTHING
                                     """, [id_ponente_coautor, id_ponencia])
-
 
             return Response({'detail': 'Ponencia enviada exitosamente', 'id_ponencia': id_ponencia}, status=status.HTTP_201_CREATED)
         except Exception as e:
@@ -533,63 +634,49 @@ class ExtensosCongresoView(APIView):
             return Response({'detail': 'id_congreso requerido.'}, status=status.HTTP_400_BAD_REQUEST)
 
         with connection.cursor() as c:
-            # Nota: id_evaluador en extenso puede no existir aún (migración pendiente de permisos)
-            # La query es resiliente: usa LEFT JOIN y solo falla si la columna no existe
-            try:
-                c.execute("""
-                    SELECT
-                        p.id_ponencia,
-                        p.id_extenso,
-                        ext.titulo,
-                        ext.id_evaluador,
-                        ext.revisado,
-                        ev.id_evaluacion,
-                        ev.estatus AS estatus_evaluacion,
-                        ev.retroalimentacion_general,
-                        CASE WHEN eval_per.id_persona IS NOT NULL
-                            THEN eval_per.nombre || ' ' || eval_per.primer_apellido
-                            ELSE NULL
-                        END AS nombre_evaluador
-                    FROM ponencia p
-                    JOIN evento e ON p.id_evento = e.id_evento
-                    JOIN extenso ext ON p.id_extenso = ext.id_extenso
-                    LEFT JOIN evaluacion ev ON ev.id_extenso = ext.id_extenso
-                    LEFT JOIN evaluador eval ON ext.id_evaluador = eval.id_evaluador
-                    LEFT JOIN persona eval_per ON eval.id_persona = eval_per.id_persona
-                    WHERE e.id_congreso = %s
-                    ORDER BY p.id_ponencia
-                """, [id_congreso])
-            except Exception:
-                # Si la columna id_evaluador no existe aún, query sin ella
-                c.execute("""
-                    SELECT
-                        p.id_ponencia,
-                        p.id_extenso,
-                        ext.titulo,
-                        NULL AS id_evaluador,
-                        ext.revisado,
-                        ev.id_evaluacion,
-                        ev.estatus AS estatus_evaluacion,
-                        ev.retroalimentacion_general,
-                        NULL AS nombre_evaluador
-                    FROM ponencia p
-                    JOIN evento e ON p.id_evento = e.id_evento
-                    JOIN extenso ext ON p.id_extenso = ext.id_extenso
-                    LEFT JOIN evaluacion ev ON ev.id_extenso = ext.id_extenso
-                    WHERE e.id_congreso = %s
-                    ORDER BY p.id_ponencia
-                """, [id_congreso])
-
-            rows = c.fetchall()
-            cols = ['id_ponencia','id_extenso','titulo','id_evaluador','revisado',
-                    'id_evaluacion','estatus_evaluacion','retroalimentacion_general','nombre_evaluador']
-            ponencias = [dict(zip(cols, row)) for row in rows]
+            c.execute("""
+                SELECT
+                    p.id_ponencia,
+                    p.id_extenso,
+                    p.id_subarea,
+                    ext.titulo,
+                    ext.id_evaluador,
+                    ext.id_evaluador_2,
+                    ext.id_evaluador_3,
+                    ext.revisado,
+                    e.tipo_evento AS tipo_ponencia,
+                    e.id_congreso,
+                    CASE WHEN e1_per.id_persona IS NOT NULL
+                        THEN e1_per.nombre || ' ' || e1_per.primer_apellido ELSE NULL
+                    END AS nombre_evaluador,
+                    CASE WHEN e2_per.id_persona IS NOT NULL
+                        THEN e2_per.nombre || ' ' || e2_per.primer_apellido ELSE NULL
+                    END AS nombre_evaluador_2,
+                    CASE WHEN e3_per.id_persona IS NOT NULL
+                        THEN e3_per.nombre || ' ' || e3_per.primer_apellido ELSE NULL
+                    END AS nombre_evaluador_3
+                FROM ponencia p
+                JOIN evento e ON p.id_evento = e.id_evento
+                JOIN extenso ext ON p.id_extenso = ext.id_extenso
+                LEFT JOIN evaluador ev1 ON ext.id_evaluador = ev1.id_evaluador
+                LEFT JOIN persona e1_per ON ev1.id_persona = e1_per.id_persona
+                LEFT JOIN evaluador ev2 ON ext.id_evaluador_2 = ev2.id_evaluador
+                LEFT JOIN persona e2_per ON ev2.id_persona = e2_per.id_persona
+                LEFT JOIN evaluador ev3 ON ext.id_evaluador_3 = ev3.id_evaluador
+                LEFT JOIN persona e3_per ON ev3.id_persona = e3_per.id_persona
+                WHERE e.id_congreso = %s
+                ORDER BY p.id_ponencia
+            """, [id_congreso])
+            cols = ['id_ponencia','id_extenso','id_subarea','titulo','id_evaluador','id_evaluador_2',
+                    'id_evaluador_3','revisado','tipo_ponencia','id_congreso',
+                    'nombre_evaluador','nombre_evaluador_2','nombre_evaluador_3']
+            ponencias = [dict(zip(cols, row)) for row in c.fetchall()]
 
             if not ponencias:
                 return Response([])
 
             ponencia_ids = [p['id_ponencia'] for p in ponencias]
-            evaluacion_ids = [p['id_evaluacion'] for p in ponencias if p['id_evaluacion']]
+            extenso_ids = [p['id_extenso'] for p in ponencias]
 
             c.execute("""
                 SELECT php.id_ponencia,
@@ -603,27 +690,35 @@ class ExtensosCongresoView(APIView):
             for id_pon, nombre in c.fetchall():
                 autores_map.setdefault(id_pon, []).append(nombre)
 
+            c.execute("""
+                SELECT DISTINCT ON (id_extenso, id_evaluador)
+                    id_extenso, id_evaluador, estatus, retroalimentacion_general, id_evaluacion
+                FROM evaluacion
+                WHERE id_extenso = ANY(%s)
+                ORDER BY id_extenso, id_evaluador, fecha_de_revision DESC
+            """, [extenso_ids])
+            evals_map = {}
+            for id_ext, id_eval, estatus, retro, id_ev in c.fetchall():
+                if id_ext not in evals_map:
+                    evals_map[id_ext] = {'por_eval': {}, 'latest_id_evaluacion': id_ev,
+                                         'latest_estatus': estatus, 'latest_retro': retro}
+                evals_map[id_ext]['por_eval'][id_eval] = estatus
+
+            latest_ev_ids = [v['latest_id_evaluacion'] for v in evals_map.values()]
             criterios_map = {}
-            if evaluacion_ids:
+            if latest_ev_ids:
                 c.execute("""
-                    SELECT
-                        ec.id_evaluacion,
-                        rg.nombre_grupo,
-                        rc.descripcion AS nombre_criterio,
-                        rc.peso,
-                        ec.puntaje,
-                        ec.comentario_especifico
+                    SELECT ec.id_evaluacion, rg.nombre_grupo, rc.descripcion, rc.peso, ec.puntaje, ec.comentario_especifico
                     FROM evaluacion_criterio ec
                     JOIN rubrica_criterio rc ON ec.id_criterio = rc.id_criterio
                     JOIN rubrica_grupo rg ON rc.id_grupo = rg.id_grupo
                     WHERE ec.id_evaluacion = ANY(%s)
                     ORDER BY rg.id_grupo, rc.id_criterio
-                """, [evaluacion_ids])
+                """, [latest_ev_ids])
                 for row in c.fetchall():
                     id_ev, nombre_grupo, nombre_criterio, peso, puntaje, comentario = row
                     grupos = criterios_map.setdefault(id_ev, {})
-                    criterios = grupos.setdefault(nombre_grupo, [])
-                    criterios.append({
+                    grupos.setdefault(nombre_grupo, []).append({
                         'nombre_criterio': nombre_criterio,
                         'peso': float(peso) if peso else None,
                         'puntaje': puntaje,
@@ -632,28 +727,38 @@ class ExtensosCongresoView(APIView):
 
         result = []
         for p in ponencias:
+            ext_info = evals_map.get(p['id_extenso'], {})
+            ev_por_eval = ext_info.get('por_eval', {})
+            estado_derivado = calcular_estado_extenso(p, ev_por_eval)
+
             evaluacion = None
-            if p['id_evaluacion'] and p['id_evaluacion'] in criterios_map:
-                grupos_dict = criterios_map[p['id_evaluacion']]
+            id_ev_latest = ext_info.get('latest_id_evaluacion')
+            if id_ev_latest and id_ev_latest in criterios_map:
+                grupos_dict = criterios_map[id_ev_latest]
                 evaluacion = {
-                    'estatus': p['estatus_evaluacion'],
-                    'retroalimentacion_general': p['retroalimentacion_general'],
-                    'grupos': [
-                        {'nombre_grupo': ng, 'criterios': crs}
-                        for ng, crs in grupos_dict.items()
-                    ],
+                    'estatus': ext_info.get('latest_estatus'),
+                    'retroalimentacion_general': ext_info.get('latest_retro'),
+                    'grupos': [{'nombre_grupo': ng, 'criterios': crs} for ng, crs in grupos_dict.items()],
                 }
-            estatus_ev = p.get('estatus_evaluacion') or ''
+
             result.append({
                 'id': p['id_ponencia'],
                 'id_extenso': p['id_extenso'],
+                'id_subarea': p['id_subarea'],
+                'id_congreso': p['id_congreso'],
+                'tipo_ponencia': p['tipo_ponencia'],
                 'title': p['titulo'],
                 'autores': autores_map.get(p['id_ponencia'], []),
-                'asignado': p['id_evaluador'] is not None,
+                'asignado': p['id_evaluador'] is not None and p['id_evaluador_2'] is not None,
                 'revisado': p['revisado'] or False,
-                'aceptado': estatus_ev == 'aceptado',
+                'aceptado': estado_derivado == 'extenso_aceptado',
+                'estado_derivado': estado_derivado,
                 'id_evaluador': p['id_evaluador'],
+                'id_evaluador_2': p['id_evaluador_2'],
+                'id_evaluador_3': p['id_evaluador_3'],
                 'nombre_evaluador': p['nombre_evaluador'],
+                'nombre_evaluador_2': p['nombre_evaluador_2'],
+                'nombre_evaluador_3': p['nombre_evaluador_3'],
                 'evaluacion': evaluacion,
             })
         return Response(result)
@@ -706,27 +811,32 @@ class MisExtensosView(APIView):
         evaluador = Evaluador.objects.filter(id_persona=request.user).first()
         if not evaluador:
             return Response([])
+        eid = evaluador.id_evaluador
         with connection.cursor() as c:
             c.execute("""
                 SELECT p.id_ponencia, p.id_extenso, ext.titulo,
-                       ext.revisado, ev.id_evaluacion, ev.estatus AS estatus_evaluacion,
-                       cong.nombre_congreso, e.id_congreso
+                       ext.revisado, cong.nombre_congreso, e.id_congreso,
+                       ev.id_evaluacion, ev.estatus AS estatus_evaluacion
                 FROM ponencia p
                 JOIN evento e ON p.id_evento = e.id_evento
                 JOIN congreso cong ON e.id_congreso = cong.id_congreso
                 JOIN extenso ext ON p.id_extenso = ext.id_extenso
-                LEFT JOIN evaluacion ev ON ev.id_extenso = ext.id_extenso
-                WHERE ext.id_evaluador = %s
-                ORDER BY ext.revisado, p.id_ponencia
-            """, [evaluador.id_evaluador])
+                LEFT JOIN evaluacion ev ON ev.id_extenso = ext.id_extenso AND ev.id_evaluador = %s
+                WHERE ext.id_evaluador = %s OR ext.id_evaluador_2 = %s
+                ORDER BY ev.id_evaluacion NULLS FIRST, p.id_ponencia
+            """, [eid, eid, eid])
             rows = c.fetchall()
             result = []
-            for id_ponencia, id_extenso, titulo, revisado, id_evaluacion, estatus_evaluacion, nombre_congreso, id_congreso in rows:
+            seen = set()
+            for id_ponencia, id_extenso, titulo, revisado, nombre_congreso, id_congreso, id_evaluacion, estatus_evaluacion in rows:
+                if id_extenso in seen:
+                    continue
+                seen.add(id_extenso)
                 result.append({
                     'id': id_ponencia,
                     'id_extenso': id_extenso,
                     'titulo': titulo,
-                    'revisado': revisado or False,
+                    'revisado': id_evaluacion is not None,
                     'tiene_evaluacion': id_evaluacion is not None,
                     'estatus_evaluacion': estatus_evaluacion,
                     'congreso': nombre_congreso,
@@ -794,9 +904,20 @@ class EnviarEvaluacionView(APIView):
         if not evaluador:
             return Response({'detail': 'No eres evaluador.'}, status=status.HTTP_403_FORBIDDEN)
         try:
-            Extenso.objects.get(pk=pk)
+            extenso = Extenso.objects.get(pk=pk)
         except Extenso.DoesNotExist:
             return Response({'detail': 'Extenso no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+        if extenso.revisado:
+            return Response({'detail': 'El extenso ya fue revisado definitivamente.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        eid = evaluador.id_evaluador
+        r1 = extenso.id_evaluador_id
+        r2 = extenso.id_evaluador_2_id
+        r3 = extenso.id_evaluador_3_id
+
+        if eid not in [r for r in [r1, r2, r3] if r]:
+            return Response({'detail': 'No estás asignado a este extenso.'}, status=status.HTTP_403_FORBIDDEN)
+
         criterios = request.data.get('criterios', [])
         retroalimentacion = request.data.get('retroalimentacion_general', '')
         estatus_ev = request.data.get('estatus', 'aceptado')
@@ -804,14 +925,14 @@ class EnviarEvaluacionView(APIView):
             c.execute("""
                 INSERT INTO evaluacion (id_extenso, id_evaluador, retroalimentacion_general, estatus)
                 VALUES (%s, %s, %s, %s) RETURNING id_evaluacion
-            """, [pk, evaluador.id_evaluador, retroalimentacion, estatus_ev])
+            """, [pk, eid, retroalimentacion, estatus_ev])
             id_evaluacion = c.fetchone()[0]
             for criterio in criterios:
                 c.execute("""
                     INSERT INTO evaluacion_criterio (id_evaluacion, id_criterio, puntaje, comentario_especifico)
                     VALUES (%s, %s, %s, %s)
                 """, [id_evaluacion, criterio['id_criterio'], criterio['puntaje'], criterio.get('comentario', '')])
-            c.execute("UPDATE extenso SET revisado = TRUE WHERE id_extenso = %s", [pk])
+            _finalizar_extenso_si_procede(c, pk, eid, r1, r2, r3)
         return Response({'id_evaluacion': id_evaluacion}, status=status.HTTP_201_CREATED)
 
 
@@ -843,3 +964,158 @@ class EnviarDictamenView(APIView):
                 """, [id_dictamen, resp['id_pregunta'], resp['cumplio'], resp.get('comentario', '')])
             c.execute("UPDATE resumen SET revisado = TRUE, estatus = %s WHERE id_resumen = %s", [estatus_dict, pk])
         return Response({'id_dictamen': id_dictamen}, status=status.HTTP_201_CREATED)
+
+
+class AsignarEvaluadoresView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        if not request.user.is_staff:
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        id_evaluador = request.data.get('id_evaluador')
+        id_evaluador_2 = request.data.get('id_evaluador_2')
+        if not id_evaluador or not id_evaluador_2:
+            return Response({'detail': 'id_evaluador e id_evaluador_2 son requeridos.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            extenso = Extenso.objects.get(pk=pk)
+        except Extenso.DoesNotExist:
+            return Response({'detail': 'Extenso no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+        if extenso.revisado:
+            return Response({'detail': 'El extenso ya fue revisado.'}, status=status.HTTP_400_BAD_REQUEST)
+        extenso.id_evaluador_id = id_evaluador
+        extenso.id_evaluador_2_id = id_evaluador_2
+        extenso.save(update_fields=['id_evaluador', 'id_evaluador_2'])
+        return Response({'id_extenso': pk, 'id_evaluador': id_evaluador, 'id_evaluador_2': id_evaluador_2})
+
+
+class AsignarEvaluador3View(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        if not request.user.is_staff:
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        id_evaluador_3 = request.data.get('id_evaluador_3')
+        if not id_evaluador_3:
+            return Response({'detail': 'id_evaluador_3 es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            extenso = Extenso.objects.get(pk=pk)
+        except Extenso.DoesNotExist:
+            return Response({'detail': 'Extenso no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+        with connection.cursor() as c:
+            c.execute("""
+                SELECT DISTINCT ON (id_evaluador) id_evaluador, estatus
+                FROM evaluacion
+                WHERE id_extenso = %s AND id_evaluador = ANY(%s)
+                ORDER BY id_evaluador, fecha_de_revision DESC
+            """, [pk, [extenso.id_evaluador_id, extenso.id_evaluador_2_id]])
+            evals = {row[0]: row[1] for row in c.fetchall()}
+
+        r1, r2 = extenso.id_evaluador_id, extenso.id_evaluador_2_id
+        if not r1 or not r2 or r1 not in evals or r2 not in evals:
+            return Response({'detail': 'Ambos revisores deben haber evaluado antes de asignar un tercero.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        s1, s2 = evals[r1], evals[r2]
+        if (s1 == 'rechazado') == (s2 == 'rechazado'):
+            return Response({'detail': 'No hay desacuerdo entre los revisores.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        extenso.id_evaluador_3_id = id_evaluador_3
+        extenso.save(update_fields=['id_evaluador_3'])
+        return Response({'id_extenso': pk, 'id_evaluador_3': id_evaluador_3})
+
+
+class EstatusPonenteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        with connection.cursor() as c:
+            c.execute("SELECT id_ponente FROM ponente WHERE id_persona = %s", [request.user.pk])
+            row = c.fetchone()
+            if not row:
+                return Response([])
+            id_ponente = row[0]
+
+            c.execute("""
+                SELECT DISTINCT
+                    p.id_ponencia,
+                    COALESCE(s.nombre, 'Ponencia ' || p.id_ponencia::text) AS titulo,
+                    e.tipo_evento AS tipo_ponencia,
+                    p.id_resumen,
+                    r.revisado AS resumen_revisado,
+                    r.estatus AS resumen_estatus,
+                    r.retroalimentacion AS resumen_retroalimentacion,
+                    p.id_extenso,
+                    ext.revisado AS extenso_revisado,
+                    ext.id_evaluador,
+                    ext.id_evaluador_2,
+                    ext.id_evaluador_3
+                FROM ponente_has_ponencia php
+                JOIN ponencia p ON php.id_ponencia = p.id_ponencia
+                LEFT JOIN evento e ON p.id_evento = e.id_evento
+                LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
+                LEFT JOIN resumen r ON p.id_resumen = r.id_resumen
+                LEFT JOIN extenso ext ON p.id_extenso = ext.id_extenso
+                WHERE php.id_ponente = %s
+                ORDER BY p.id_ponencia
+            """, [id_ponente])
+            cols = ['id_ponencia','titulo','tipo_ponencia','id_resumen','resumen_revisado',
+                    'resumen_estatus','resumen_retroalimentacion','id_extenso','extenso_revisado',
+                    'id_evaluador','id_evaluador_2','id_evaluador_3']
+            ponencias = [dict(zip(cols, row)) for row in c.fetchall()]
+
+            if not ponencias:
+                return Response([])
+
+            extenso_ids = [p['id_extenso'] for p in ponencias if p['id_extenso']]
+            evals_map = {}
+            if extenso_ids:
+                c.execute("""
+                    SELECT DISTINCT ON (id_extenso, id_evaluador) id_extenso, id_evaluador, estatus, retroalimentacion_general
+                    FROM evaluacion
+                    WHERE id_extenso = ANY(%s)
+                    ORDER BY id_extenso, id_evaluador, fecha_de_revision DESC
+                """, [extenso_ids])
+                for id_ext, id_eval, estatus, retro in c.fetchall():
+                    if id_ext not in evals_map:
+                        evals_map[id_ext] = {'por_eval': {}, 'retroalimentacion': None}
+                    evals_map[id_ext]['por_eval'][id_eval] = estatus
+                    if estatus in ('aceptado con ligeras modificaciones', 'aceptado con modificaciones mayores'):
+                        evals_map[id_ext]['retroalimentacion'] = retro
+
+        result = []
+        for p in ponencias:
+            if not p['id_resumen']:
+                continue
+            resumen_revisado = p['resumen_revisado'] or False
+            if not resumen_revisado:
+                estado = 'pendiente_dictaminacion'
+                retroalimentacion = None
+            elif p['resumen_estatus'] == 'rechazado':
+                estado = 'resumen_rechazado'
+                retroalimentacion = p['resumen_retroalimentacion']
+            elif not p['id_extenso']:
+                estado = 'pendiente_extenso'
+                retroalimentacion = None
+            else:
+                ext_data = {
+                    'id_evaluador': p['id_evaluador'],
+                    'id_evaluador_2': p['id_evaluador_2'],
+                    'id_evaluador_3': p['id_evaluador_3'],
+                    'revisado': p['extenso_revisado'] or False,
+                }
+                ev_map = evals_map.get(p['id_extenso'], {}).get('por_eval', {})
+                estado = calcular_estado_extenso(ext_data, ev_map)
+                if estado == 'desacuerdo':
+                    estado = 'en_revision'
+                retroalimentacion = evals_map.get(p['id_extenso'], {}).get('retroalimentacion')
+
+            result.append({
+                'id_ponencia': p['id_ponencia'],
+                'titulo': p['titulo'],
+                'tipo_ponencia': p['tipo_ponencia'],
+                'estado': estado,
+                'retroalimentacion': retroalimentacion,
+                'id_resumen': p['id_resumen'],
+                'id_extenso': p['id_extenso'],
+            })
+        return Response(result)

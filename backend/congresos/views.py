@@ -739,14 +739,16 @@ class MisInscripcionesView(APIView):
     def get(self, request):
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT c.id_congreso
+                SELECT DISTINCT c.id_congreso, c.nombre_congreso
                 FROM pagos p
                 JOIN costos_congreso cc ON cc.id_costos_congreso = p.id_costos
                 JOIN congreso c ON c.id_costos_congreso = cc.id_costos_congreso
                 WHERE p.id_persona = %s
+                ORDER BY c.id_congreso
             """, [request.user.pk])
             rows = cursor.fetchall()
-        return Response({'inscripciones': [r[0] for r in rows]})
+        congresos = [{'id_congreso': r[0], 'nombre_congreso': r[1]} for r in rows]
+        return Response({'inscripciones': [r['id_congreso'] for r in congresos], 'congresos': congresos})
 
 
 class ListaPagosAdminView(APIView):
