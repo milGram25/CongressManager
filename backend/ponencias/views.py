@@ -9,7 +9,7 @@ from users.models import Dictaminador, Evaluador, DictaminadorCongreso, Evaluado
 import os
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import connection, transaction
@@ -305,7 +305,6 @@ class EnviarPonenciaAPIView(APIView):
                         if fechas_row:
                             fecha_inicio, fecha_final = fechas_row
                         else:
-                            from datetime import timedelta
                             fecha_inicio = datetime.now()
                             fecha_final = datetime.now() + timedelta(days=365)
                         cursor.execute("""
