@@ -236,10 +236,7 @@ CREATE TABLE resumen (
     fecha_entrega TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     revisado BOOLEAN DEFAULT FALSE,
     estatus estatus_resumen_enum,
-    retroalimentacion TEXT,
-    titulo VARCHAR(255),
-    palabras_clave VARCHAR(255),
-    contenido TEXT
+    retroalimentacion TEXT
 );
 
 CREATE TABLE extenso (
@@ -247,8 +244,11 @@ CREATE TABLE extenso (
     titulo VARCHAR(255) NOT NULL,
     fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     revisado BOOLEAN DEFAULT FALSE,
-    version_numero INTEGER DEFAULT 1, -- Para manejar "Solicitud de cambios"
-    ruta_archivo VARCHAR(255)
+    version_numero INTEGER DEFAULT 1,
+    id_evaluador INTEGER REFERENCES evaluador(id_evaluador),
+    id_evaluador_2 INTEGER REFERENCES evaluador(id_evaluador),
+    id_evaluador_3 INTEGER REFERENCES evaluador(id_evaluador),
+    ruta_relativa VARCHAR(500)
 );
 
 CREATE TABLE ponencia (
@@ -258,8 +258,7 @@ CREATE TABLE ponencia (
     id_subarea INTEGER NOT NULL REFERENCES subareas(id_subareas),
     id_resumen INTEGER REFERENCES resumen(id_resumen),
     id_extenso INTEGER REFERENCES extenso(id_extenso),
-    id_multimedia INTEGER REFERENCES multimedia(id_material),
-    id_tipo_trabajo INTEGER REFERENCES tipo_trabajo(id_tipo_trabajo)
+    id_multimedia INTEGER REFERENCES multimedia(id_material)
 );
 
 -- Te parece bien asi la tabla de taller?
@@ -315,7 +314,6 @@ CREATE TABLE ponente_has_ponencia (
     id_ponente INTEGER NOT NULL REFERENCES ponente(id_ponente),
     id_ponencia INTEGER NOT NULL REFERENCES ponencia(id_ponencia),
     asistio BOOLEAN DEFAULT FALSE,
-    es_principal BOOLEAN DEFAULT FALSE,
     UNIQUE(id_ponente, id_ponencia)
 );
 

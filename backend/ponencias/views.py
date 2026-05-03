@@ -1,5 +1,6 @@
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db import transaction, connection
@@ -22,6 +23,10 @@ from .models import AsistenteEvento
 from users.models import Asistente
 from congresos.models import Evento
 from congresos.views import clean_date
+
+
+_MODS = ('aceptado con ligeras modificaciones', 'aceptado con modificaciones mayores')
+_DEFINITIVOS = ('aceptado', 'rechazado')
 
 
 def calcular_estado_extenso(ext, evaluaciones_por_eval):
@@ -52,7 +57,7 @@ def calcular_estado_extenso(ext, evaluaciones_por_eval):
     ev2 = evaluaciones_por_eval.get(r2) if r2 else None
 
     if not r2:
-        if ev1 in ('aceptado con ligeras modificaciones', 'aceptado con modificaciones mayores'):
+        if ev1 in _MODS:
             return 'con_modificaciones'
         return 'en_revision'
 
@@ -63,20 +68,20 @@ def calcular_estado_extenso(ext, evaluaciones_por_eval):
             return 'desacuerdo'
         if r1_rechazado and r2_rechazado:
             return 'en_revision'
-        any_mods = any(e in ('aceptado con ligeras modificaciones', 'aceptado con modificaciones mayores')
-                       for e in [ev1, ev2])
+        any_mods = any(e in _MODS for e in [ev1, ev2])
         return 'con_modificaciones' if any_mods else 'en_revision'
 
     ev = ev1 or ev2
-    if ev in ('aceptado con ligeras modificaciones', 'aceptado con modificaciones mayores'):
+    if ev in _MODS:
         return 'con_modificaciones'
     return 'en_revision'
 
 
-def _finalizar_extenso_si_procede(cursor, pk, evaluador_id, r1, r2, r3):
+def _finalizar_extenso_si_procede(cursor, pk, evaluador_id, r1, r2, r3, estatus_actual=None):
     """After inserting evaluation, mark extenso.revisado=TRUE if a final decision is reached."""
     if not r2:
-        cursor.execute("UPDATE extenso SET revisado = TRUE WHERE id_extenso = %s", [pk])
+        if estatus_actual in _DEFINITIVOS:
+            cursor.execute("UPDATE extenso SET revisado = TRUE WHERE id_extenso = %s", [pk])
         return
 
     if r3 and evaluador_id == r3:
@@ -693,6 +698,7 @@ class ExtensosCongresoView(APIView):
                     p.id_extenso,
                     p.id_subarea,
                     ext.titulo,
+                    ext.ruta_relativa,
                     ext.id_evaluador,
                     ext.id_evaluador_2,
                     ext.id_evaluador_3,
@@ -720,8 +726,9 @@ class ExtensosCongresoView(APIView):
                 WHERE e.id_congreso = %s
                 ORDER BY p.id_ponencia
             """, [id_congreso])
-            cols = ['id_ponencia','id_extenso','id_subarea','titulo','id_evaluador','id_evaluador_2',
-                    'id_evaluador_3','revisado','tipo_ponencia','id_congreso',
+            cols = ['id_ponencia','id_extenso','id_subarea','titulo','ruta_relativa',
+                    'id_evaluador','id_evaluador_2','id_evaluador_3','revisado',
+                    'tipo_ponencia','id_congreso',
                     'nombre_evaluador','nombre_evaluador_2','nombre_evaluador_3']
             ponencias = [dict(zip(cols, row)) for row in c.fetchall()]
 
@@ -801,6 +808,7 @@ class ExtensosCongresoView(APIView):
                 'id_congreso': p['id_congreso'],
                 'tipo_ponencia': p['tipo_ponencia'],
                 'title': p['titulo'],
+                'ruta_extenso': p['ruta_relativa'],
                 'autores': autores_map.get(p['id_ponencia'], []),
                 'asignado': p['id_evaluador'] is not None and p['id_evaluador_2'] is not None,
                 'revisado': p['revisado'] or False,
@@ -867,7 +875,7 @@ class MisExtensosView(APIView):
         eid = evaluador.id_evaluador
         with connection.cursor() as c:
             c.execute("""
-                SELECT p.id_ponencia, p.id_extenso, ext.titulo,
+                SELECT p.id_ponencia, p.id_extenso, ext.titulo, ext.ruta_relativa,
                        ext.revisado, cong.nombre_congreso, e.id_congreso,
                        ev.id_evaluacion, ev.estatus AS estatus_evaluacion
                 FROM ponencia p
@@ -875,13 +883,13 @@ class MisExtensosView(APIView):
                 JOIN congreso cong ON e.id_congreso = cong.id_congreso
                 JOIN extenso ext ON p.id_extenso = ext.id_extenso
                 LEFT JOIN evaluacion ev ON ev.id_extenso = ext.id_extenso AND ev.id_evaluador = %s
-                WHERE ext.id_evaluador = %s OR ext.id_evaluador_2 = %s
+                WHERE ext.id_evaluador = %s OR ext.id_evaluador_2 = %s OR ext.id_evaluador_3 = %s
                 ORDER BY ev.id_evaluacion NULLS FIRST, p.id_ponencia
-            """, [eid, eid, eid])
+            """, [eid, eid, eid, eid])
             rows = c.fetchall()
             result = []
             seen = set()
-            for id_ponencia, id_extenso, titulo, revisado, nombre_congreso, id_congreso, id_evaluacion, estatus_evaluacion in rows:
+            for id_ponencia, id_extenso, titulo, ruta_relativa, revisado, nombre_congreso, id_congreso, id_evaluacion, estatus_evaluacion in rows:
                 if id_extenso in seen:
                     continue
                 seen.add(id_extenso)
@@ -889,6 +897,7 @@ class MisExtensosView(APIView):
                     'id': id_ponencia,
                     'id_extenso': id_extenso,
                     'titulo': titulo,
+                    'ruta_extenso': ruta_relativa,
                     'revisado': id_evaluacion is not None,
                     'tiene_evaluacion': id_evaluacion is not None,
                     'estatus_evaluacion': estatus_evaluacion,
@@ -903,6 +912,11 @@ class RubricaExtensoView(APIView):
 
     def get(self, request, pk):
         with connection.cursor() as c:
+            c.execute("SELECT ruta_relativa, titulo FROM extenso WHERE id_extenso = %s", [pk])
+            ext_row = c.fetchone()
+            ruta_extenso = ext_row[0] if ext_row else None
+            titulo_extenso = ext_row[1] if ext_row else None
+
             c.execute("""
                 SELECT rg.id_grupo, rg.nombre_grupo, rc.id_criterio, rc.descripcion, rc.peso
                 FROM ponencia p
@@ -914,8 +928,6 @@ class RubricaExtensoView(APIView):
                 ORDER BY rg.id_grupo, rc.id_criterio
             """, [pk])
             rows = c.fetchall()
-        if not rows:
-            return Response({'detail': 'Sin rúbrica configurada.'}, status=status.HTTP_404_NOT_FOUND)
         grupos = {}
         for id_grupo, nombre_grupo, id_criterio, descripcion, peso in rows:
             if id_grupo not in grupos:
@@ -925,7 +937,11 @@ class RubricaExtensoView(APIView):
                 'descripcion': descripcion,
                 'peso': float(peso) if peso else 1.0,
             })
-        return Response(list(grupos.values()))
+        return Response({
+            'grupos': list(grupos.values()),
+            'ruta_extenso': ruta_extenso,
+            'titulo_extenso': titulo_extenso,
+        })
 
 
 class PreguntasResumenView(APIView):
@@ -985,7 +1001,7 @@ class EnviarEvaluacionView(APIView):
                     INSERT INTO evaluacion_criterio (id_evaluacion, id_criterio, puntaje, comentario_especifico)
                     VALUES (%s, %s, %s, %s)
                 """, [id_evaluacion, criterio['id_criterio'], criterio['puntaje'], criterio.get('comentario', '')])
-            _finalizar_extenso_si_procede(c, pk, eid, r1, r2, r3)
+            _finalizar_extenso_si_procede(c, pk, eid, r1, r2, r3, estatus_actual=estatus_ev)
         return Response({'id_evaluacion': id_evaluacion}, status=status.HTTP_201_CREATED)
 
 
@@ -1101,10 +1117,18 @@ class EstatusPonenteView(APIView):
                     ext.revisado AS extenso_revisado,
                     ext.id_evaluador,
                     ext.id_evaluador_2,
-                    ext.id_evaluador_3
+                    ext.id_evaluador_3,
+                    e.nombre_evento,
+                    e.fecha_hora_inicio,
+                    e.fecha_hora_final,
+                    e.sinopsis,
+                    e.cupos,
+                    e.enlace,
+                    cong.nombre_congreso
                 FROM ponente_has_ponencia php
                 JOIN ponencia p ON php.id_ponencia = p.id_ponencia
                 LEFT JOIN evento e ON p.id_evento = e.id_evento
+                LEFT JOIN congreso cong ON e.id_congreso = cong.id_congreso
                 LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
                 LEFT JOIN resumen r ON p.id_resumen = r.id_resumen
                 LEFT JOIN extenso ext ON p.id_extenso = ext.id_extenso
@@ -1113,7 +1137,8 @@ class EstatusPonenteView(APIView):
             """, [id_ponente])
             cols = ['id_ponencia','titulo','tipo_ponencia','id_resumen','resumen_revisado',
                     'resumen_estatus','resumen_retroalimentacion','id_extenso','extenso_revisado',
-                    'id_evaluador','id_evaluador_2','id_evaluador_3']
+                    'id_evaluador','id_evaluador_2','id_evaluador_3',
+                    'nombre_evento','fecha_hora_inicio','fecha_hora_final','sinopsis','cupos','enlace','nombre_congreso']
             ponencias = [dict(zip(cols, row)) for row in c.fetchall()]
 
             if not ponencias:
@@ -1121,6 +1146,7 @@ class EstatusPonenteView(APIView):
 
             extenso_ids = [p['id_extenso'] for p in ponencias if p['id_extenso']]
             evals_map = {}
+            criterios_mods_map = {}
             if extenso_ids:
                 c.execute("""
                     SELECT DISTINCT ON (id_extenso, id_evaluador) id_extenso, id_evaluador, estatus, retroalimentacion_general
@@ -1132,8 +1158,28 @@ class EstatusPonenteView(APIView):
                     if id_ext not in evals_map:
                         evals_map[id_ext] = {'por_eval': {}, 'retroalimentacion': None}
                     evals_map[id_ext]['por_eval'][id_eval] = estatus
-                    if estatus in ('aceptado con ligeras modificaciones', 'aceptado con modificaciones mayores'):
+                    if estatus in _MODS:
                         evals_map[id_ext]['retroalimentacion'] = retro
+
+                c.execute("""
+                    WITH latest_mods AS (
+                        SELECT DISTINCT ON (id_extenso) id_extenso, id_evaluacion
+                        FROM evaluacion
+                        WHERE id_extenso = ANY(%s) AND estatus::text = ANY(%s)
+                        ORDER BY id_extenso, fecha_de_revision DESC
+                    )
+                    SELECT lm.id_extenso, rc.descripcion, ec.comentario_especifico
+                    FROM latest_mods lm
+                    JOIN evaluacion_criterio ec ON ec.id_evaluacion = lm.id_evaluacion
+                    JOIN rubrica_criterio rc ON ec.id_criterio = rc.id_criterio
+                    WHERE ec.comentario_especifico IS NOT NULL AND TRIM(ec.comentario_especifico) != ''
+                    ORDER BY lm.id_extenso, rc.id_criterio
+                """, [extenso_ids, list(_MODS)])
+                for id_ext, descripcion, comentario in c.fetchall():
+                    criterios_mods_map.setdefault(id_ext, []).append({
+                        'criterio': descripcion,
+                        'comentario': comentario,
+                    })
 
         result = []
         for p in ponencias:
@@ -1162,13 +1208,89 @@ class EstatusPonenteView(APIView):
                     estado = 'en_revision'
                 retroalimentacion = evals_map.get(p['id_extenso'], {}).get('retroalimentacion')
 
+            fecha_inicio = p['fecha_hora_inicio']
+            fecha_fin = p['fecha_hora_final']
             result.append({
                 'id_ponencia': p['id_ponencia'],
                 'titulo': p['titulo'],
                 'tipo_ponencia': p['tipo_ponencia'],
                 'estado': estado,
                 'retroalimentacion': retroalimentacion,
+                'criterio_comentarios': criterios_mods_map.get(p['id_extenso'], []) if estado == 'con_modificaciones' else [],
                 'id_resumen': p['id_resumen'],
                 'id_extenso': p['id_extenso'],
+                'evento': {
+                    'nombre': p['nombre_evento'],
+                    'fecha_inicio': fecha_inicio.isoformat() if fecha_inicio else None,
+                    'fecha_fin': fecha_fin.isoformat() if fecha_fin else None,
+                    'sinopsis': p['sinopsis'],
+                    'cupos': p['cupos'],
+                    'enlace': p['enlace'],
+                    'congreso': p['nombre_congreso'],
+                },
             })
         return Response(result)
+
+
+class SubirExtensoAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, id_resumen):
+        archivo = request.FILES.get('archivo')
+        titulo = request.data.get('titulo', '').strip()
+        if not archivo:
+            return Response({'detail': 'Se requiere un archivo.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not titulo:
+            return Response({'detail': 'El título es obligatorio.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            with transaction.atomic():
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        SELECT p.id_ponencia, p.id_extenso
+                        FROM ponencia p
+                        JOIN ponente_has_ponencia php ON php.id_ponencia = p.id_ponencia
+                        JOIN ponente po ON po.id_ponente = php.id_ponente
+                        WHERE p.id_resumen = %s AND po.id_persona = %s
+                        LIMIT 1
+                    """, [id_resumen, request.user.id_persona])
+                    row = cursor.fetchone()
+                    if not row:
+                        return Response({'detail': 'No autorizado o resumen no encontrado.'}, status=status.HTTP_403_FORBIDDEN)
+                    id_ponencia, id_extenso_existente = row
+
+                    media_dir = os.path.join(settings.MEDIA_ROOT, 'extensos')
+                    os.makedirs(media_dir, exist_ok=True)
+                    safe = "".join(c if c.isalnum() else "_" for c in titulo)[:50]
+                    ts = datetime.now().strftime("%Y%m%d%H%M%S")
+                    uid = uuid.uuid4().hex[:6]
+                    ext = os.path.splitext(archivo.name)[1].lower() or '.pdf'
+                    filename = f"extenso_{safe}_{ts}_{uid}{ext}"
+                    filepath = os.path.join(media_dir, filename)
+                    with open(filepath, 'wb+') as dest:
+                        for chunk in archivo.chunks():
+                            dest.write(chunk)
+                    ruta_relativa = os.path.join('extensos', filename)
+
+                    if id_extenso_existente:
+                        cursor.execute("""
+                            UPDATE extenso
+                            SET titulo = %s, ruta_relativa = %s, fecha_subida = NOW(),
+                                revisado = FALSE, version_numero = version_numero + 1
+                            WHERE id_extenso = %s
+                        """, [titulo, ruta_relativa, id_extenso_existente])
+                        id_extenso = id_extenso_existente
+                    else:
+                        cursor.execute("""
+                            INSERT INTO extenso (titulo, ruta_relativa, revisado, version_numero)
+                            VALUES (%s, %s, FALSE, 1) RETURNING id_extenso
+                        """, [titulo, ruta_relativa])
+                        id_extenso = cursor.fetchone()[0]
+                        cursor.execute("""
+                            UPDATE ponencia SET id_extenso = %s WHERE id_ponencia = %s
+                        """, [id_extenso, id_ponencia])
+
+            return Response({'detail': 'Extenso subido correctamente.', 'id_extenso': id_extenso}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

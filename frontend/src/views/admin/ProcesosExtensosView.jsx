@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ListaExtensos from "./Componentes/ListaExtensos";
 import { getCongresosApi, getEvaluadoresDisponiblesApi } from "../../api/adminApi";
-import { getExtensosCongreso, asignarEvaluadoresApi, asignarEvaluador3Api } from "../../api/ponenciasApi";
+import { getExtensosCongreso, asignarEvaluadoresApi, asignarEvaluador3Api, buildMediaUrl } from "../../api/ponenciasApi";
 
 function LedStatus({ label, active, neutral = false, color = null }) {
   const bg = neutral ? 'bg-gray-400' : color ?? (active ? 'bg-green-500' : 'bg-red-500');
@@ -105,6 +105,16 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
         <div className="mt-4 space-y-2 text-[14px] leading-6 text-slate-700">
           <p><span className="font-semibold text-slate-900">Título:</span> {extenso.title}</p>
           <p><span className="font-semibold text-slate-900">Autores:</span> {extenso.autores?.join(' / ') || 'Sin autores'}</p>
+          {extenso.ruta_extenso && (
+            <a
+              href={buildMediaUrl(extenso.ruta_extenso)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block btn btn-outline btn-xs rounded-lg mt-1"
+            >
+              Descargar archivo
+            </a>
+          )}
         </div>
       </section>
 

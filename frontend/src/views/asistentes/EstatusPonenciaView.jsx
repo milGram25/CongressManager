@@ -14,49 +14,82 @@ const ESTADO_CONFIG = {
 
 function PonenciaCard({ ponencia }) {
   const navigate = useNavigate();
-  const [showMotivo, setShowMotivo] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const config = ESTADO_CONFIG[ponencia.estado] ?? { label: ponencia.estado, border: 'border-l-gray-400', dot: 'bg-gray-400', text: 'text-gray-500' };
+  const tieneFeedback = ponencia.retroalimentacion || ponencia.criterio_comentarios?.length > 0;
 
   return (
-    <div className={`flex flex-col md:flex-row items-start md:items-center justify-between bg-white p-6 mb-4 rounded-xl shadow-sm border-l-[10px] ${config.border}`}>
-      <div className="flex flex-col gap-1 flex-1 min-w-0">
-        <span className={`text-[10px] font-bold uppercase tracking-widest ${config.text}`}>{config.label}</span>
-        <h3 className="text-lg font-semibold text-slate-700 leading-tight mb-1 truncate">{ponencia.titulo}</h3>
-        <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter">ID: {ponencia.id_ponencia}</p>
-        {ponencia.estado === 'con_modificaciones' && ponencia.retroalimentacion && (
-          <p className="text-xs text-slate-500 mt-1 italic">"{ponencia.retroalimentacion}"</p>
-        )}
-      </div>
-      <div className="mt-4 md:mt-0 md:ml-6 flex-shrink-0">
-        {ponencia.estado === 'pendiente_extenso' && (
-          <button className="btn btn-primary btn-sm rounded-lg" onClick={() => navigate(`/ponente/subir-extenso/${ponencia.id_resumen}`)}>
-            Subir Extenso
-          </button>
-        )}
-        {ponencia.estado === 'con_modificaciones' && (
-          <button className="btn btn-warning btn-sm rounded-lg" onClick={() => navigate(`/ponente/subir-extenso/${ponencia.id_extenso}?correccion=true`)}>
-            Subir Corrección
-          </button>
-        )}
-        {(ponencia.estado === 'resumen_rechazado' || ponencia.estado === 'extenso_rechazado') && (
-          <>
-            <button className="btn btn-error btn-outline btn-sm rounded-lg" onClick={() => setShowMotivo(true)}>
+    <div className={`flex flex-col bg-white p-6 mb-4 rounded-xl shadow-sm border-l-[10px] ${config.border}`}>
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex flex-col gap-1 flex-1 min-w-0">
+          <span className={`text-[10px] font-bold uppercase tracking-widest ${config.text}`}>{config.label}</span>
+          <h3 className="text-lg font-semibold text-slate-700 leading-tight mb-1 truncate">{ponencia.titulo}</h3>
+          <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter">ID: {ponencia.id_ponencia}</p>
+        </div>
+        <div className="flex-shrink-0 flex gap-2">
+          {ponencia.estado === 'pendiente_extenso' && (
+            <button className="btn btn-primary btn-sm rounded-lg" onClick={() => navigate(`/asistente/subir-extenso/${ponencia.id_resumen}`)}>
+              Subir Extenso
+            </button>
+          )}
+          {ponencia.estado === 'con_modificaciones' && (
+            <>
+              {tieneFeedback && (
+                <button className="btn btn-outline btn-sm rounded-lg" onClick={() => setShowModal(true)}>
+                  Ver retroalimentación
+                </button>
+              )}
+              <button className="btn btn-warning btn-sm rounded-lg" onClick={() => navigate(`/asistente/subir-extenso/${ponencia.id_resumen}?correccion=true`)}>
+                Subir Corrección
+              </button>
+            </>
+          )}
+          {(ponencia.estado === 'resumen_rechazado' || ponencia.estado === 'extenso_rechazado') && (
+            <button className="btn btn-error btn-outline btn-sm rounded-lg" onClick={() => setShowModal(true)}>
               Ver motivo
             </button>
-            {showMotivo && (
-              <div className="modal modal-open">
-                <div className="modal-box">
-                  <h3 className="font-bold text-lg text-error">Motivo de rechazo</h3>
-                  <p className="py-4 text-sm text-slate-700">{ponencia.retroalimentacion || 'Sin retroalimentación registrada.'}</p>
-                  <div className="modal-action">
-                    <button className="btn btn-sm" onClick={() => setShowMotivo(false)}>Cerrar</button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-        )}
+          )}
+        </div>
       </div>
+
+      {showModal && (
+        <div className="modal modal-open">
+          <div className="modal-box max-w-lg">
+            {ponencia.estado === 'con_modificaciones' ? (
+              <>
+                <h3 className="font-bold text-lg text-warning mb-3">Retroalimentación del revisor</h3>
+                {ponencia.retroalimentacion && (
+                  <div className="mb-4">
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Comentario general</p>
+                    <p className="text-sm text-slate-700 italic">"{ponencia.retroalimentacion}"</p>
+                  </div>
+                )}
+                {ponencia.criterio_comentarios?.length > 0 && (
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Comentarios por criterio</p>
+                    <ul className="space-y-2">
+                      {ponencia.criterio_comentarios.map((c, i) => (
+                        <li key={i} className="border-l-2 border-warning/40 pl-3">
+                          <p className="text-xs font-semibold text-slate-700">{c.criterio}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">{c.comentario}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <h3 className="font-bold text-lg text-error">Motivo de rechazo</h3>
+                <p className="py-4 text-sm text-slate-700">{ponencia.retroalimentacion || 'Sin retroalimentación registrada.'}</p>
+              </>
+            )}
+            <div className="modal-action">
+              <button className="btn btn-sm" onClick={() => setShowModal(false)}>Cerrar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -106,6 +106,11 @@ export async function getRubricaExtenso(accessToken, idExtenso) {
   return res.json();
 }
 
+export function buildMediaUrl(rutaRelativa) {
+  if (!rutaRelativa) return null;
+  return `${API_URL}/media/${rutaRelativa}`;
+}
+
 export async function getPreguntasResumen(accessToken, idResumen) {
   const res = await fetch(`${API_URL}/api/ponencias/resumenes/${idResumen}/preguntas/`, {
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -166,4 +171,18 @@ export async function getMisPonenciasPonenteApi(accessToken) {
   });
   if (!res.ok) throw new Error('Error cargando estatus de ponencias');
   return res.json();
+}
+
+export async function subirExtensoApi(accessToken, idResumen, titulo, archivo) {
+  const form = new FormData();
+  form.append('titulo', titulo);
+  form.append('archivo', archivo);
+  const res = await fetch(`${API_URL}/api/ponencias/resumenes/${idResumen}/subir-extenso/`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: form,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Error al subir el extenso');
+  return data;
 }

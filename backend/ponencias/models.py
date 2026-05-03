@@ -54,6 +54,7 @@ class Resumen(models.Model):
 class Extenso(models.Model):
     id_extenso = models.AutoField(primary_key=True)
     titulo = models.CharField(max_length=255)
+    ruta_relativa = models.CharField(max_length=500, null=True, blank=True)
     fecha_subida = models.DateTimeField(auto_now_add=True)
     revisado = models.BooleanField(default=False)
     version_numero = models.IntegerField(default=1)

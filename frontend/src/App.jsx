@@ -121,6 +121,7 @@ const AsistenteLayoutWrapper = () => {
     { type: 'header', label: 'Ponente' },
     { to: '/asistente/enviar-ponencia', label: 'Enviar Ponencia', icon: MdUploadFile },
     { to: '/asistente/estatus-ponencia', label: 'Estatus Ponencia', icon: GrStatusGood },
+    { to: '/asistente/mis-ponencias', label: 'Mis Ponencias', icon: MdCoPresent },
   ];
 
   return <SidebarLayout roleTitle="Asistente" drawerId="asistente-drawer" menuItems={menuItems} MainIcon={MdSchool} />;
@@ -294,6 +295,8 @@ function App() {
             <Route path="facturas" element={<FacturasView />} />
             <Route path="enviar-ponencia" element={<EnviarPonenciaView />} />
             <Route path="estatus-ponencia" element={<EstatusPonenciaView />} />
+            <Route path="subir-extenso/:id" element={<SubirExtensoView />} />
+            <Route path="mis-ponencias" element={<MisPonenciasView />} />
             <Route
               path="constancias"
               element={<ConstanciasView title="Mis Constancias" />}

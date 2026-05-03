@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MdAssignment, MdComment } from 'react-icons/md';
 import EvaluationSuccessModal from '../../components/EvaluationSuccessModal';
-import { getRubricaExtenso, enviarEvaluacionApi } from '../../api/ponenciasApi';
+import { getRubricaExtenso, enviarEvaluacionApi, buildMediaUrl } from '../../api/ponenciasApi';
 
 export default function DetalleRevisionView() {
   const { id } = useParams();
@@ -10,6 +10,8 @@ export default function DetalleRevisionView() {
   const accessToken = localStorage.getItem('congress_access');
 
   const [grupos, setGrupos] = useState([]);
+  const [rutaExtenso, setRutaExtenso] = useState(null);
+  const [tituloExtenso, setTituloExtenso] = useState(null);
   const [loading, setLoading] = useState(true);
   const [calificaciones, setCalificaciones] = useState({});
   const [comentariosCriterios, setComentariosCriterios] = useState({});
@@ -21,7 +23,11 @@ export default function DetalleRevisionView() {
 
   useEffect(() => {
     getRubricaExtenso(accessToken, id)
-      .then(setGrupos)
+      .then(data => {
+        setGrupos(data.grupos ?? []);
+        setRutaExtenso(data.ruta_extenso ?? null);
+        setTituloExtenso(data.titulo_extenso ?? null);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [id, accessToken]);
@@ -53,8 +59,7 @@ export default function DetalleRevisionView() {
 
   const ESTATUS_MAP = {
     'ACEPTADO': 'aceptado',
-    'CAMBIOS MENORES': 'aceptado con ligeras modificaciones',
-    'CAMBIOS MAYORES': 'aceptado con modificaciones mayores',
+    'CAMBIOS': 'aceptado con ligeras modificaciones',
     'RECHAZADO': 'rechazado',
   };
 
@@ -91,9 +96,21 @@ export default function DetalleRevisionView() {
     <div className="space-y-8 pb-20">
       <EvaluationSuccessModal isOpen={showSuccessModal} onClose={() => { setShowSuccessModal(false); navigate('/revisor/revisiones'); }} decision={finalDecision} type="revision" />
 
-      <header>
-        <span className="text-xs font-bold text-primary uppercase tracking-widest">Detalle de Revisión</span>
-        <h1 className="text-3xl font-bold text-base-content mt-1">Extenso #{id}</h1>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <span className="text-xs font-bold text-primary uppercase tracking-widest">Detalle de Revisión</span>
+          <h1 className="text-3xl font-bold text-base-content mt-1">{tituloExtenso ?? `Extenso #${id}`}</h1>
+        </div>
+        {rutaExtenso && (
+          <a
+            href={buildMediaUrl(rutaExtenso)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-outline btn-sm rounded-xl"
+          >
+            Descargar extenso
+          </a>
+        )}
       </header>
 
       <section className="bg-base-100 p-8 rounded-2xl shadow-sm border border-base-300">
@@ -200,8 +217,7 @@ export default function DetalleRevisionView() {
       <div className="flex flex-col md:flex-row gap-4 pt-4">
         {[
           { label: 'Aceptar', decision: 'ACEPTADO', cls: 'bg-success shadow-success/20' },
-          { label: 'Cambios menores', decision: 'CAMBIOS MENORES', cls: 'bg-warning shadow-warning/20' },
-          { label: 'Cambios mayores', decision: 'CAMBIOS MAYORES', cls: 'bg-orange-500 shadow-orange-500/20' },
+          { label: 'Solicitar cambios', decision: 'CAMBIOS', cls: 'bg-warning shadow-warning/20' },
           { label: 'Rechazar', decision: 'RECHAZADO', cls: 'bg-error shadow-error/20' },
         ].map(({ label, decision, cls }) => (
           <button
