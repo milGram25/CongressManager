@@ -264,31 +264,6 @@ class EnviarPonenciaAPIView(APIView):
                     if not cursor.fetchone():
                         return Response({'detail': 'No tienes inscripción pagada en ese congreso.'}, status=status.HTTP_403_FORBIDDEN)
 
-                    # Buscar un evento de tipo ponencia en el congreso
-                    cursor.execute("""
-                        SELECT id_evento FROM evento
-                        WHERE id_congreso = %s AND tipo_evento = 'ponencia'
-                        ORDER BY id_evento LIMIT 1
-                    """, [id_congreso])
-                    evento_row = cursor.fetchone()
-                    id_evento = evento_row[0] if evento_row else None
-
-                    # Resolver id_subarea
-                    cursor.execute("SELECT id_subareas FROM subareas WHERE nombre ILIKE %s LIMIT 1", [f"%{eje_tematico_nombre}%"])
-                    subarea_row = cursor.fetchone()
-                    if not subarea_row:
-                        cursor.execute("SELECT id_areas_generales FROM areas_generales LIMIT 1")
-                        area_row = cursor.fetchone()
-                        if not area_row:
-                            cursor.execute("INSERT INTO areas_generales (nombre) VALUES ('Area General Default') RETURNING id_areas_generales")
-                            id_area_general = cursor.fetchone()[0]
-                        else:
-                            id_area_general = area_row[0]
-                        cursor.execute("INSERT INTO subareas (nombre, id_area_general) VALUES (%s, %s) RETURNING id_subareas", [eje_tematico_nombre, id_area_general])
-                        id_subarea = cursor.fetchone()[0]
-                    else:
-                        id_subarea = subarea_row[0]
-
                     # Resolver id_tipo_trabajo — acepta ID directo o nombre legacy
                     try:
                         id_tipo_trabajo = int(id_tipo_trabajo_raw)
@@ -305,10 +280,56 @@ class EnviarPonenciaAPIView(APIView):
                         else:
                             id_tipo_trabajo = tipo_trabajo_row[0]
 
-                    # Obtener nombre legible del tipo de trabajo para el archivo
+                    # Obtener nombre legible del tipo de trabajo
                     cursor.execute("SELECT tipo_trabajo FROM tipo_trabajo WHERE id_tipo_trabajo = %s", [id_tipo_trabajo])
                     tt_row = cursor.fetchone()
                     tipo_trabajo_str = tt_row[0] if tt_row else str(id_tipo_trabajo_raw)
+
+                    # Buscar o crear evento de tipo ponencia para este congreso y tipo de trabajo
+                    cursor.execute("""
+                        SELECT id_evento FROM evento
+                        WHERE id_congreso = %s AND tipo_evento = 'ponencia' AND id_tipo_trabajo = %s
+                        ORDER BY id_evento LIMIT 1
+                    """, [id_congreso, id_tipo_trabajo])
+                    evento_row = cursor.fetchone()
+                    if evento_row:
+                        id_evento = evento_row[0]
+                    else:
+                        cursor.execute("""
+                            SELECT fc.fecha_inicio_evento, fc.fecha_final_evento
+                            FROM congreso c
+                            JOIN fechas_congreso fc ON fc.id_fechas_congreso = c.id_fechas_congreso
+                            WHERE c.id_congreso = %s
+                        """, [id_congreso])
+                        fechas_row = cursor.fetchone()
+                        if fechas_row:
+                            fecha_inicio, fecha_final = fechas_row
+                        else:
+                            from datetime import timedelta
+                            fecha_inicio = datetime.now()
+                            fecha_final = datetime.now() + timedelta(days=365)
+                        cursor.execute("""
+                            INSERT INTO evento (id_congreso, nombre_evento, tipo_evento, id_tipo_trabajo, fecha_hora_inicio, fecha_hora_final, cupos)
+                            VALUES (%s, %s, 'ponencia', %s, %s, %s, 0)
+                            RETURNING id_evento
+                        """, [id_congreso, tipo_trabajo_str, id_tipo_trabajo, fecha_inicio, fecha_final])
+                        id_evento = cursor.fetchone()[0]
+
+                    # Resolver id_subarea
+                    cursor.execute("SELECT id_subareas FROM subareas WHERE nombre ILIKE %s LIMIT 1", [f"%{eje_tematico_nombre}%"])
+                    subarea_row = cursor.fetchone()
+                    if not subarea_row:
+                        cursor.execute("SELECT id_areas_generales FROM areas_generales LIMIT 1")
+                        area_row = cursor.fetchone()
+                        if not area_row:
+                            cursor.execute("INSERT INTO areas_generales (nombre) VALUES ('Area General Default') RETURNING id_areas_generales")
+                            id_area_general = cursor.fetchone()[0]
+                        else:
+                            id_area_general = area_row[0]
+                        cursor.execute("INSERT INTO subareas (nombre, id_area_general) VALUES (%s, %s) RETURNING id_subareas", [eje_tematico_nombre, id_area_general])
+                        id_subarea = cursor.fetchone()[0]
+                    else:
+                        id_subarea = subarea_row[0]
 
                     # Crear archivo de resumen con todo el contenido
                     media_dir = os.path.join(settings.MEDIA_ROOT, 'resumenes')
@@ -339,19 +360,12 @@ class EnviarPonenciaAPIView(APIView):
                     """)
                     id_resumen = cursor.fetchone()[0]
 
-                    # Crear ponencia
-                    if id_evento:
-                        cursor.execute("""
-                            INSERT INTO ponencia (tipo_participacion, id_subarea, id_resumen, id_multimedia, id_evento)
-                            VALUES (%s, %s, %s, %s, %s)
-                            RETURNING id_ponencia
-                        """, [tipo_participacion, id_subarea, id_resumen, id_material, id_evento])
-                    else:
-                        cursor.execute("""
-                            INSERT INTO ponencia (tipo_participacion, id_subarea, id_resumen, id_multimedia)
-                            VALUES (%s, %s, %s, %s)
-                            RETURNING id_ponencia
-                        """, [tipo_participacion, id_subarea, id_resumen, id_material])
+                    # Crear ponencia (siempre tiene id_evento garantizado)
+                    cursor.execute("""
+                        INSERT INTO ponencia (tipo_participacion, id_subarea, id_resumen, id_multimedia, id_evento)
+                        VALUES (%s, %s, %s, %s, %s)
+                        RETURNING id_ponencia
+                    """, [tipo_participacion, id_subarea, id_resumen, id_material, id_evento])
                     id_ponencia = cursor.fetchone()[0]
 
                     # Asegurar que el usuario sea ponente
