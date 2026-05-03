@@ -6,6 +6,9 @@ from .views import (
     DictaminadoresDisponiblesView, EvaluadoresDisponiblesView,
     AsignarDictaminadorView, AsignarEvaluadorView,
     ResumenesCongresoView, ExtensosCongresoView,
+    MisResumenesView, MisExtensosView,
+    RubricaExtensoView, PreguntasResumenView,
+    EnviarEvaluacionView, EnviarDictamenView,
 )
 
 app_name = 'ponencias'
@@ -25,4 +28,10 @@ urlpatterns = [
     path('extensos/<int:pk>/asignar/', AsignarEvaluadorView.as_view(), name='asignar-evaluador'),
     path('resumenes/', ResumenesCongresoView.as_view(), name='resumenes-congreso'),
     path('extensos/', ExtensosCongresoView.as_view(), name='extensos-congreso'),
+    path('mis-resumenes/', MisResumenesView.as_view(), name='mis-resumenes'),
+    path('mis-extensos/', MisExtensosView.as_view(), name='mis-extensos'),
+    path('resumenes/<int:pk>/preguntas/', PreguntasResumenView.as_view(), name='preguntas-resumen'),
+    path('extensos/<int:pk>/rubrica/', RubricaExtensoView.as_view(), name='rubrica-extenso'),
+    path('extensos/<int:pk>/evaluacion/', EnviarEvaluacionView.as_view(), name='enviar-evaluacion'),
+    path('resumenes/<int:pk>/dictamen/', EnviarDictamenView.as_view(), name='enviar-dictamen'),
 ]

@@ -81,3 +81,55 @@ export async function asignarEvaluadorApi(accessToken, idExtenso, idEvaluador) {
   if (!res.ok) throw new Error('Error asignando evaluador');
   return res.json();
 }
+
+export async function getMisResumenes(accessToken) {
+  const res = await fetch(`${API_URL}/api/ponencias/mis-resumenes/`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error cargando tus resúmenes');
+  return res.json();
+}
+
+export async function getMisExtensos(accessToken) {
+  const res = await fetch(`${API_URL}/api/ponencias/mis-extensos/`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error cargando tus extensos');
+  return res.json();
+}
+
+export async function getRubricaExtenso(accessToken, idExtenso) {
+  const res = await fetch(`${API_URL}/api/ponencias/extensos/${idExtenso}/rubrica/`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Sin rúbrica configurada');
+  return res.json();
+}
+
+export async function getPreguntasResumen(accessToken, idResumen) {
+  const res = await fetch(`${API_URL}/api/ponencias/resumenes/${idResumen}/preguntas/`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Sin preguntas configuradas');
+  return res.json();
+}
+
+export async function enviarEvaluacionApi(accessToken, idExtenso, data) {
+  const res = await fetch(`${API_URL}/api/ponencias/extensos/${idExtenso}/evaluacion/`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error enviando evaluación');
+  return res.json();
+}
+
+export async function enviarDictamenApi(accessToken, idResumen, data) {
+  const res = await fetch(`${API_URL}/api/ponencias/resumenes/${idResumen}/dictamen/`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error enviando dictamen');
+  return res.json();
+}

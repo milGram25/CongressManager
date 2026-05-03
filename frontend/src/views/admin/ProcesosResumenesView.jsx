@@ -47,11 +47,20 @@ function ResumenDetailCard({ resumen, revisores, dictaminadoresDisponibles, onAs
               value={resumen.id_dictaminador ?? ''}
               onChange={e => onAsignar(resumen.id_resumen, e.target.value ? Number(e.target.value) : null)}
             >
-              <option value="">Sin asignar</option>
-              {dictaminadoresDisponibles?.map(d => (
-                <option key={d.id_dictaminador} value={d.id_dictaminador}>{d.nombre_completo}</option>
-              ))}
+              {dictaminadoresDisponibles?.length === 0 ? (
+                <option value="" disabled>No hay dictaminadores en este congreso</option>
+              ) : (
+                <>
+                  <option value="">Sin asignar</option>
+                  {dictaminadoresDisponibles.map(d => (
+                    <option key={d.id_dictaminador} value={d.id_dictaminador}>{d.nombre_completo}</option>
+                  ))}
+                </>
+              )}
             </select>
+            {dictaminadoresDisponibles?.length === 0 && (
+              <p className="text-xs text-amber-600 italic mt-1">No hay dictaminadores asignados a este congreso.</p>
+            )}
           </div>
         </section>
 

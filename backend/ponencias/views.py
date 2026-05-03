@@ -657,3 +657,193 @@ class ExtensosCongresoView(APIView):
                 'evaluacion': evaluacion,
             })
         return Response(result)
+
+
+class MisResumenesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from users.models import Dictaminador
+        try:
+            dictaminador = Dictaminador.objects.get(id_persona=request.user)
+        except Dictaminador.DoesNotExist:
+            return Response([])
+        with connection.cursor() as c:
+            c.execute("""
+                SELECT p.id_ponencia, p.id_resumen,
+                       COALESCE(s.nombre, 'Ponencia ' || p.id_ponencia::text) AS titulo,
+                       r.revisado, r.estatus, cong.nombre_congreso, e.id_congreso
+                FROM ponencia p
+                JOIN evento e ON p.id_evento = e.id_evento
+                JOIN congreso cong ON e.id_congreso = cong.id_congreso
+                JOIN resumen r ON p.id_resumen = r.id_resumen
+                LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
+                WHERE r.id_dictaminador = %s
+                ORDER BY r.revisado, p.id_ponencia
+            """, [dictaminador.id_dictaminador])
+            rows = c.fetchall()
+            result = []
+            for id_ponencia, id_resumen, titulo, revisado, estatus, nombre_congreso, id_congreso in rows:
+                c.execute("SELECT id_dictamen FROM dictamen_resumen WHERE id_resumen = %s LIMIT 1", [id_resumen])
+                dr = c.fetchone()
+                result.append({
+                    'id': id_ponencia,
+                    'id_resumen': id_resumen,
+                    'titulo': titulo,
+                    'revisado': revisado or False,
+                    'estatus': estatus,
+                    'congreso': nombre_congreso,
+                    'id_congreso': id_congreso,
+                    'tiene_dictamen': dr is not None,
+                })
+        return Response(result)
+
+
+class MisExtensosView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from users.models import Evaluador
+        try:
+            evaluador = Evaluador.objects.get(id_persona=request.user)
+        except Evaluador.DoesNotExist:
+            return Response([])
+        with connection.cursor() as c:
+            c.execute("""
+                SELECT p.id_ponencia, p.id_extenso, ext.titulo,
+                       ext.revisado, ev.id_evaluacion, ev.estatus AS estatus_evaluacion,
+                       cong.nombre_congreso, e.id_congreso
+                FROM ponencia p
+                JOIN evento e ON p.id_evento = e.id_evento
+                JOIN congreso cong ON e.id_congreso = cong.id_congreso
+                JOIN extenso ext ON p.id_extenso = ext.id_extenso
+                LEFT JOIN evaluacion ev ON ev.id_extenso = ext.id_extenso
+                WHERE ext.id_evaluador = %s
+                ORDER BY ext.revisado, p.id_ponencia
+            """, [evaluador.id_evaluador])
+            rows = c.fetchall()
+            result = []
+            for id_ponencia, id_extenso, titulo, revisado, id_evaluacion, estatus_evaluacion, nombre_congreso, id_congreso in rows:
+                result.append({
+                    'id': id_ponencia,
+                    'id_extenso': id_extenso,
+                    'titulo': titulo,
+                    'revisado': revisado or False,
+                    'tiene_evaluacion': id_evaluacion is not None,
+                    'estatus_evaluacion': estatus_evaluacion,
+                    'congreso': nombre_congreso,
+                    'id_congreso': id_congreso,
+                })
+        return Response(result)
+
+
+class RubricaExtensoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        with connection.cursor() as c:
+            c.execute("""
+                SELECT rg.id_grupo, rg.nombre_grupo, rc.id_criterio, rc.descripcion, rc.peso
+                FROM ponencia p
+                JOIN evento e ON p.id_evento = e.id_evento
+                JOIN rubrica r ON r.tipo_trabajo = e.id_tipo_trabajo AND r.id_congreso = e.id_congreso
+                JOIN rubrica_grupo rg ON rg.id_rubrica = r.id_rubrica
+                JOIN rubrica_criterio rc ON rc.id_grupo = rg.id_grupo
+                WHERE p.id_extenso = %s
+                ORDER BY rg.id_grupo, rc.id_criterio
+            """, [pk])
+            rows = c.fetchall()
+        if not rows:
+            return Response({'detail': 'Sin rúbrica configurada.'}, status=status.HTTP_404_NOT_FOUND)
+        grupos = {}
+        for id_grupo, nombre_grupo, id_criterio, descripcion, peso in rows:
+            if id_grupo not in grupos:
+                grupos[id_grupo] = {'id_grupo': id_grupo, 'nombre_grupo': nombre_grupo, 'criterios': []}
+            grupos[id_grupo]['criterios'].append({
+                'id_criterio': id_criterio,
+                'descripcion': descripcion,
+                'peso': float(peso) if peso else 1.0,
+            })
+        return Response(list(grupos.values()))
+
+
+class PreguntasResumenView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        with connection.cursor() as c:
+            c.execute("""
+                SELECT dp.id_pregunta, dp.descripcion
+                FROM ponencia p
+                JOIN evento e ON p.id_evento = e.id_evento
+                JOIN dictamen d ON d.tipo_trabajo = e.id_tipo_trabajo
+                JOIN dictamen_pregunta dp ON dp.id_dictamen = d.id_dictamen
+                WHERE p.id_resumen = %s
+                ORDER BY dp.id_pregunta
+            """, [pk])
+            rows = c.fetchall()
+        if not rows:
+            return Response({'detail': 'Sin preguntas configuradas.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response([{'id_pregunta': r[0], 'descripcion': r[1]} for r in rows])
+
+
+class EnviarEvaluacionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        from users.models import Evaluador
+        try:
+            evaluador = Evaluador.objects.get(id_persona=request.user)
+        except Evaluador.DoesNotExist:
+            return Response({'detail': 'No eres evaluador.'}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            Extenso.objects.get(pk=pk)
+        except Extenso.DoesNotExist:
+            return Response({'detail': 'Extenso no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+        criterios = request.data.get('criterios', [])
+        retroalimentacion = request.data.get('retroalimentacion_general', '')
+        estatus_ev = request.data.get('estatus', 'aceptado')
+        with connection.cursor() as c:
+            c.execute("""
+                INSERT INTO evaluacion (id_extenso, id_evaluador, retroalimentacion_general, estatus)
+                VALUES (%s, %s, %s, %s) RETURNING id_evaluacion
+            """, [pk, evaluador.id_evaluador, retroalimentacion, estatus_ev])
+            id_evaluacion = c.fetchone()[0]
+            for criterio in criterios:
+                c.execute("""
+                    INSERT INTO evaluacion_criterio (id_evaluacion, id_criterio, puntaje, comentario_especifico)
+                    VALUES (%s, %s, %s, %s)
+                """, [id_evaluacion, criterio['id_criterio'], criterio['puntaje'], criterio.get('comentario', '')])
+            c.execute("UPDATE extenso SET revisado = TRUE WHERE id_extenso = %s", [pk])
+        return Response({'id_evaluacion': id_evaluacion}, status=status.HTTP_201_CREATED)
+
+
+class EnviarDictamenView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        from users.models import Dictaminador
+        try:
+            dictaminador = Dictaminador.objects.get(id_persona=request.user)
+        except Dictaminador.DoesNotExist:
+            return Response({'detail': 'No eres dictaminador.'}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            Resumen.objects.get(pk=pk)
+        except Resumen.DoesNotExist:
+            return Response({'detail': 'Resumen no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+        respuestas = request.data.get('respuestas', [])
+        retroalimentacion = request.data.get('retroalimentacion_general', '')
+        estatus_dict = request.data.get('estatus', 'aceptado')
+        with connection.cursor() as c:
+            c.execute("""
+                INSERT INTO dictamen_resumen (id_resumen, id_dictaminador, retroalimentacion_general, estatus)
+                VALUES (%s, %s, %s, %s) RETURNING id_dictamen
+            """, [pk, dictaminador.id_dictaminador, retroalimentacion, estatus_dict])
+            id_dictamen = c.fetchone()[0]
+            for resp in respuestas:
+                c.execute("""
+                    INSERT INTO evaluacion_pregunta (id_dictamen, id_pregunta, cumplio, comentario_especifico)
+                    VALUES (%s, %s, %s, %s)
+                """, [id_dictamen, resp['id_pregunta'], resp['cumplio'], resp.get('comentario', '')])
+            c.execute("UPDATE resumen SET revisado = TRUE, estatus = %s WHERE id_resumen = %s", [estatus_dict, pk])
+        return Response({'id_dictamen': id_dictamen}, status=status.HTTP_201_CREATED)

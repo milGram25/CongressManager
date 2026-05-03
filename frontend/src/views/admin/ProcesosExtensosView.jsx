@@ -88,10 +88,16 @@ function ExtensoDetailCard({ extenso, revisores, evaluadoresDisponibles, onAsign
               value={extenso.id_evaluador ?? ''}
               onChange={e => onAsignar(extenso.id_extenso, e.target.value ? Number(e.target.value) : null)}
             >
-              <option value="">Sin asignar</option>
-              {evaluadoresDisponibles?.map(e => (
-                <option key={e.id_evaluador} value={e.id_evaluador}>{e.nombre_completo}</option>
-              ))}
+              {evaluadoresDisponibles?.length === 0 ? (
+                <option value="" disabled>No hay evaluadores en este congreso</option>
+              ) : (
+                <>
+                  <option value="">Sin asignar</option>
+                  {evaluadoresDisponibles.map(e => (
+                    <option key={e.id_evaluador} value={e.id_evaluador}>{e.nombre_completo}</option>
+                  ))}
+                </>
+              )}
             </select>
           </div>
         </section>
