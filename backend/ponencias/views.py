@@ -498,16 +498,27 @@ class DictaminadoresDisponiblesView(APIView):
         id_congreso = request.query_params.get('id_congreso')
         if not id_congreso:
             return Response({'detail': 'id_congreso requerido.'}, status=status.HTTP_400_BAD_REQUEST)
-        persona_ids = DictaminadorCongreso.objects.filter(
-            id_congreso_id=id_congreso
-        ).values_list('id_persona_id', flat=True)
-        dictaminadores = Dictaminador.objects.filter(id_persona_id__in=persona_ids).select_related('id_persona')
-        data = [{
-            'id_dictaminador': d.id_dictaminador,
-            'nombre_completo': ' '.join(x for x in [
-                d.id_persona.nombre, d.id_persona.primer_apellido, d.id_persona.segundo_apellido
-            ] if x).strip(),
-        } for d in dictaminadores]
+        with connection.cursor() as cursor:
+            # Garantizar registros dictaminador para personas del congreso
+            cursor.execute("""
+                INSERT INTO dictaminador (id_persona)
+                SELECT DISTINCT dc.id_persona
+                FROM dictaminador_congreso dc
+                WHERE dc.id_congreso = %s
+                  AND NOT EXISTS (
+                    SELECT 1 FROM dictaminador d WHERE d.id_persona = dc.id_persona
+                  )
+            """, [id_congreso])
+            cursor.execute("""
+                SELECT d.id_dictaminador,
+                       TRIM(CONCAT_WS(' ', per.nombre, per.primer_apellido, per.segundo_apellido))
+                FROM dictaminador_congreso dc
+                JOIN dictaminador d ON d.id_persona = dc.id_persona
+                JOIN persona per ON per.id_persona = dc.id_persona
+                WHERE dc.id_congreso = %s
+                ORDER BY per.primer_apellido, per.nombre
+            """, [id_congreso])
+            data = [{'id_dictaminador': r[0], 'nombre_completo': r[1]} for r in cursor.fetchall()]
         return Response(data)
 
 
@@ -520,16 +531,27 @@ class EvaluadoresDisponiblesView(APIView):
         id_congreso = request.query_params.get('id_congreso')
         if not id_congreso:
             return Response({'detail': 'id_congreso requerido.'}, status=status.HTTP_400_BAD_REQUEST)
-        persona_ids = EvaluadorCongreso.objects.filter(
-            id_congreso_id=id_congreso
-        ).values_list('id_persona_id', flat=True)
-        evaluadores = Evaluador.objects.filter(id_persona_id__in=persona_ids).select_related('id_persona')
-        data = [{
-            'id_evaluador': e.id_evaluador,
-            'nombre_completo': ' '.join(x for x in [
-                e.id_persona.nombre, e.id_persona.primer_apellido, e.id_persona.segundo_apellido
-            ] if x).strip(),
-        } for e in evaluadores]
+        with connection.cursor() as cursor:
+            # Garantizar registros evaluador para personas del congreso
+            cursor.execute("""
+                INSERT INTO evaluador (id_persona)
+                SELECT DISTINCT ec.id_persona
+                FROM evaluador_congreso ec
+                WHERE ec.id_congreso = %s
+                  AND NOT EXISTS (
+                    SELECT 1 FROM evaluador e WHERE e.id_persona = ec.id_persona
+                  )
+            """, [id_congreso])
+            cursor.execute("""
+                SELECT e.id_evaluador,
+                       TRIM(CONCAT_WS(' ', per.nombre, per.primer_apellido, per.segundo_apellido))
+                FROM evaluador_congreso ec
+                JOIN evaluador e ON e.id_persona = ec.id_persona
+                JOIN persona per ON per.id_persona = ec.id_persona
+                WHERE ec.id_congreso = %s
+                ORDER BY per.primer_apellido, per.nombre
+            """, [id_congreso])
+            data = [{'id_evaluador': r[0], 'nombre_completo': r[1]} for r in cursor.fetchall()]
         return Response(data)
 
 
