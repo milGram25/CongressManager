@@ -21,17 +21,9 @@ const selectStyles = {
   singleValue: (base) => ({ ...base, fontSize: '13px', color: '#374151' }),
 };
 
-const ROL_OPTIONS = [
-  { value: 'asistente', label: 'Asistente' },
-  { value: 'ponente', label: 'Ponente' },
-  { value: 'dictaminador', label: 'Dictaminador' },
-  { value: 'evaluador', label: 'Evaluador / Revisor' },
-];
-
 export default function FilterHeader({ onFilterChange = () => {}, congresos = [] }) {
   const [selectedInstitucion, setSelectedInstitucion] = useState(null);
 
-  // Derive unique institutions from congreso list
   const institucionOptions = useMemo(() => {
     const seen = new Map();
     for (const c of congresos) {
@@ -44,7 +36,6 @@ export default function FilterHeader({ onFilterChange = () => {}, congresos = []
     return Array.from(seen.values());
   }, [congresos]);
 
-  // Filter congreso options by selected institution
   const congresoOptions = useMemo(() => {
     const list = selectedInstitucion
       ? congresos.filter(c => (c.id_institucion_id || c.id_institucion) === selectedInstitucion)
@@ -55,13 +46,12 @@ export default function FilterHeader({ onFilterChange = () => {}, congresos = []
   const handleInstitucionChange = (opt) => {
     const val = opt ? opt.value : null;
     setSelectedInstitucion(val);
-    // Reset congreso selection when institution changes
     onFilterChange('idCongreso', null);
     onFilterChange('institucion', null);
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
       <div>
         <label className="text-[10px] font-bold text-gray-400 ml-1 mb-1.5 block uppercase tracking-widest">Institución</label>
         <Select
@@ -85,16 +75,6 @@ export default function FilterHeader({ onFilterChange = () => {}, congresos = []
           isClearable
           onChange={(opt) => onFilterChange('idCongreso', opt ? opt.value : null)}
           noOptionsMessage={() => 'Sin congresos para esta institución'}
-        />
-      </div>
-      <div>
-        <label className="text-[10px] font-bold text-gray-400 ml-1 mb-1.5 block uppercase tracking-widest">Rol</label>
-        <Select
-          options={ROL_OPTIONS}
-          styles={selectStyles}
-          placeholder="Todos los roles..."
-          isClearable
-          onChange={(opt) => onFilterChange('rol', opt ? opt.value : null)}
         />
       </div>
     </div>

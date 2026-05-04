@@ -13,6 +13,15 @@ export async function getParticipantsApi(accessToken, { idCongreso = null, rol =
   return res.json();
 }
 
+export async function getPendingFacturasApi(accessToken, idCongreso = null) {
+  const params = idCongreso ? `?id_congreso=${idCongreso}` : '';
+  const res = await fetch(`${API_URL}/api/users/facturas/pendientes/${params}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error al obtener facturas pendientes.');
+  return res.json();
+}
+
 export async function uploadConstanciaApi(accessToken, idPersona, idCongreso, file, tipo) {
   const formData = new FormData();
   formData.append('file', file);
