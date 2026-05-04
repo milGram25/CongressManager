@@ -269,6 +269,41 @@ class EnviarPonenciaAPIView(APIView):
                     if not cursor.fetchone():
                         return Response({'detail': 'No tienes inscripción pagada en ese congreso.'}, status=status.HTTP_403_FORBIDDEN)
 
+                    # Verificar cuota de ponencias extras filtrado por congreso
+                    PONENTE_INCLUDED = 3
+                    cursor.execute("SELECT id_ponente FROM ponente WHERE id_persona = %s LIMIT 1", [request.user.id_persona])
+                    ponente_row = cursor.fetchone()
+                    if ponente_row:
+                        id_ponente_check = ponente_row[0]
+                        # Contar ponencias del ponente solo en este congreso
+                        cursor.execute("""
+                            SELECT COUNT(*) FROM ponente_has_ponencia php
+                            JOIN ponencia pon ON pon.id_ponencia = php.id_ponencia
+                            JOIN evento e ON e.id_evento = pon.id_evento
+                            WHERE php.id_ponente = %s AND e.id_congreso = %s
+                        """, [id_ponente_check, id_congreso])
+                        current_count = int(cursor.fetchone()[0])
+                        new_extra = max((current_count + 1) - PONENTE_INCLUDED, 0)
+                        required_slots = 1 + new_extra
+                        # Contar slots pagados solo para este congreso
+                        cursor.execute("""
+                            SELECT id_costos_congreso FROM congreso WHERE id_congreso = %s LIMIT 1
+                        """, [id_congreso])
+                        costos_row = cursor.fetchone()
+                        costos_id_check = costos_row[0] if costos_row else None
+                        cursor.execute("""
+                            SELECT COUNT(*) FROM pagos
+                            WHERE id_persona = %s
+                              AND id_costos = %s
+                              AND (concepto = 'inscripcion_ponente_base' OR concepto LIKE 'inscripcion_ponente_extra_%%')
+                        """, [request.user.id_persona, costos_id_check])
+                        paid_slots = int(cursor.fetchone()[0])
+                        if paid_slots < required_slots:
+                            return Response(
+                                {'detail': 'Para enviar una ponencia adicional debes pagar la cuota de ponencias extras.', 'redirect': 'pagos'},
+                                status=status.HTTP_402_PAYMENT_REQUIRED
+                            )
+
                     # Resolver id_tipo_trabajo — acepta ID directo o nombre legacy
                     try:
                         id_tipo_trabajo = int(id_tipo_trabajo_raw)

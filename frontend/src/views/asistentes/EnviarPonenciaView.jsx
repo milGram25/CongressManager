@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { FaTrashCan } from "react-icons/fa6";
 import { MdLock, MdLibraryBooks } from "react-icons/md";
+import { useNavigate } from 'react-router-dom';
 import { getMisInscripcionesApi } from '../../api/agendaApi';
 import { API_URL } from '../../api/constants';
 
 export default function EnviarPonenciaView() {
   const accessToken = localStorage.getItem('congress_access');
+  const navigate = useNavigate();
 
   const [congresosInscritos, setCongresosInscritos] = useState([]);
   const [loadingCongresos, setLoadingCongresos] = useState(true);
@@ -116,6 +118,11 @@ export default function EnviarPonenciaView() {
         setTipoTrabajo('');
         setPalabrasClaves('');
         setResumen('');
+      } else if (response.status === 402) {
+        const congreso = congresosInscritos.find(c => String(c.id_congreso) === String(selectedCongreso));
+        const nombre = congreso?.nombre_congreso || '';
+        navigate(`/asistente/pagos?id_congreso=${selectedCongreso}&nombre=${encodeURIComponent(nombre)}`);
+        return;
       } else {
         setMensaje({ texto: data.detail || 'Error al enviar la ponencia', tipo: 'error' });
       }

@@ -619,14 +619,14 @@ class RegistrarPagoView(APIView):
                             [request.user.id_persona, base_price, _concept_for_slot(slot), costos_id, requires_invoice],
                         )
 
-            updated_summary = _build_payment_summary(request.user)
+            updated_summary = _build_payment_summary(request.user, id_congreso=id_congreso)
             return Response(
                 {'detail': 'Pagos de ponente registrados correctamente.', 'registered_slots': pending_slots, 'summary': updated_summary},
                 status=status.HTTP_201_CREATED,
             )
 
         concept = f'inscripcion_{role}'
-        already_paid = _has_role_payment(request.user.id_persona, concept)
+        already_paid = _has_role_payment(request.user.id_persona, concept, costos_id=costos_id)
 
         if already_paid:
             return Response(
@@ -877,7 +877,7 @@ def _parse_month(val):
         return d.year, d.month
     except: return None, None
 
-PONENTE_INCLUDED_PONENCIAS = 2
+PONENTE_INCLUDED_PONENCIAS = 3
 PONENTE_MAX_PONENCIAS = 5
 
 
@@ -945,33 +945,62 @@ def _get_ponente_id_for_user(user_id):
     return row[0] if row else None
 
 
-def _count_ponente_ponencias(id_ponente):
+def _count_ponente_ponencias(id_ponente, costos_id=None):
     with connection.cursor() as cursor:
-        cursor.execute("SELECT COUNT(*) FROM ponente_has_ponencia WHERE id_ponente = %s", [id_ponente])
+        if costos_id:
+            cursor.execute(
+                """
+                SELECT COUNT(*) FROM ponente_has_ponencia php
+                JOIN ponencia pon ON pon.id_ponencia = php.id_ponencia
+                JOIN evento e ON e.id_evento = pon.id_evento
+                JOIN congreso c ON c.id_congreso = e.id_congreso
+                WHERE php.id_ponente = %s AND c.id_costos_congreso = %s
+                """,
+                [id_ponente, costos_id],
+            )
+        else:
+            cursor.execute("SELECT COUNT(*) FROM ponente_has_ponencia WHERE id_ponente = %s", [id_ponente])
         row = cursor.fetchone()
     return int(row[0]) if row else 0
 
 
-def _count_paid_ponente_slots(user_id):
+def _count_paid_ponente_slots(user_id, costos_id=None):
     with connection.cursor() as cursor:
-        cursor.execute(
-            """
-            SELECT COUNT(*) FROM pagos
-            WHERE id_persona = %s
-              AND (concepto = 'inscripcion_ponente_base' OR concepto LIKE 'inscripcion_ponente_extra_%%')
-            """,
-            [user_id],
-        )
+        if costos_id:
+            cursor.execute(
+                """
+                SELECT COUNT(*) FROM pagos
+                WHERE id_persona = %s
+                  AND id_costos = %s
+                  AND (concepto = 'inscripcion_ponente_base' OR concepto LIKE 'inscripcion_ponente_extra_%%')
+                """,
+                [user_id, costos_id],
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT COUNT(*) FROM pagos
+                WHERE id_persona = %s
+                  AND (concepto = 'inscripcion_ponente_base' OR concepto LIKE 'inscripcion_ponente_extra_%%')
+                """,
+                [user_id],
+            )
         row = cursor.fetchone()
     return int(row[0]) if row else 0
 
 
-def _has_role_payment(user_id, concept):
+def _has_role_payment(user_id, concept, costos_id=None):
     with connection.cursor() as cursor:
-        cursor.execute(
-            "SELECT 1 FROM pagos WHERE id_persona = %s AND concepto = %s LIMIT 1",
-            [user_id, concept],
-        )
+        if costos_id:
+            cursor.execute(
+                "SELECT 1 FROM pagos WHERE id_persona = %s AND concepto = %s AND id_costos = %s LIMIT 1",
+                [user_id, concept, costos_id],
+            )
+        else:
+            cursor.execute(
+                "SELECT 1 FROM pagos WHERE id_persona = %s AND concepto = %s LIMIT 1",
+                [user_id, concept],
+            )
         return cursor.fetchone() is not None
 
 
@@ -981,6 +1010,7 @@ def _build_payment_summary(user, id_congreso=None):
         return None
 
     role = _get_user_role(user)
+    costos_id = costos['id_costos_congreso']
 
     payload = {
         'price_catalog': {
@@ -992,7 +1022,7 @@ def _build_payment_summary(user, id_congreso=None):
         },
         'user_payment': {
             'role': role,
-            'costos_id': costos['id_costos_congreso'],
+            'costos_id': costos_id,
         },
     }
 
@@ -1013,12 +1043,12 @@ def _build_payment_summary(user, id_congreso=None):
             })
             return payload
 
-        ponencias_count = _count_ponente_ponencias(id_ponente)
+        ponencias_count = _count_ponente_ponencias(id_ponente, costos_id=costos_id)
         overflow_ponencias_count = max(ponencias_count - PONENTE_MAX_PONENCIAS, 0)
         capped_ponencias_count = min(ponencias_count, PONENTE_MAX_PONENCIAS)
         extra_ponencias_count = max(capped_ponencias_count - PONENTE_INCLUDED_PONENCIAS, 0)
         required_slots = 1 + extra_ponencias_count
-        paid_slots = _count_paid_ponente_slots(user.id_persona)
+        paid_slots = _count_paid_ponente_slots(user.id_persona, costos_id=costos_id)
         pending_slots = max(required_slots - paid_slots, 0)
 
         payload['user_payment'].update({
@@ -1041,7 +1071,7 @@ def _build_payment_summary(user, id_congreso=None):
         base_price = costos['costo_asistente']
 
     concept = f'inscripcion_{role}'
-    already_paid = _has_role_payment(user.id_persona, concept)
+    already_paid = _has_role_payment(user.id_persona, concept, costos_id=costos_id)
 
     payload['user_payment'].update({
         'concept': concept,
