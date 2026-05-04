@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { loadStripe } from "@stripe/stripe-js";
-import { Elements } from "@stripe/react-stripe-js";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import PagosForm from "./components/PagosForm";
 import { getPagosResumenApi, registrarPagoApi, solicitarFacturaApi } from "../../api/pagosApi";
@@ -13,8 +11,6 @@ import {
   MdInfoOutline,
   MdArrowBack,
 } from "react-icons/md";
-
-const stripePromise = loadStripe("pk_test_tu_llave_aqui");
 
 function roleLabel(role) {
   if (role === "ponente") return "Ponente";
@@ -445,19 +441,11 @@ export default function PagosView() {
                 {pagoError}
               </div>
             )}
-            <Elements stripe={stripePromise}>
-              <PagosForm
-                total={finalPrice}
-                onSuccess={handleRegistrarPago}
-              />
-            </Elements>
-            <button
-              disabled={!canSubmitPayment || registrandoPago}
-              onClick={handleRegistrarPago}
-              className="btn btn-outline btn-sm w-full mt-3"
-            >
-              {registrandoPago ? "Registrando..." : "Registrar pago"}
-            </button>
+            <PagosForm
+              total={finalPrice}
+              onSuccess={handleRegistrarPago}
+              loading={registrandoPago}
+            />
             <p className="text-[10px] mt-6 opacity-40 text-center italic">
               Al realizar el pago, confirmas que tu información de registro es correcta.
             </p>
