@@ -41,6 +41,7 @@ export default function SidebarLayout({
     '/admin/dashboard',
     '/admin/agenda',
     '/admin/procesos',
+    '/admin/procesos/roles',
     '/admin/eventos',
     '/admin/eventos/congresos',
     '/admin/pagos',

@@ -10,8 +10,8 @@ from datetime import datetime, timedelta
 from calendar import monthrange
 import os
 
-from .models import Sede, Institucion, Congreso, Evento, MesasTrabajo, FechasCongreso, CostosCongreso, Rubrica, TipoTrabajo, Dictamen, DictamenPregunta, Subarea, Taller
-from .serializers import SedeSerializer, InstitucionSerializer, CongresoSerializer, EventoSerializer, MesasTrabajoSerializer, RubricaSerializer, TipoTrabajoSerializer, DictamenSerializer, DictamenPreguntaSerializer, SubareaSerializer, TallerSerializer
+from .models import Sede, Institucion, Congreso, Evento, MesasTrabajo, FechasCongreso, CostosCongreso, Rubrica, RubricaGrupo, RubricaCriterio, TipoTrabajo, Dictamen, DictamenPregunta, Subarea, Taller
+from .serializers import SedeSerializer, InstitucionSerializer, CongresoSerializer, EventoSerializer, MesasTrabajoSerializer, RubricaSerializer, RubricaGrupoSerializer, RubricaCriterioSerializer, TipoTrabajoSerializer, DictamenSerializer, DictamenPreguntaSerializer, SubareaSerializer, TallerSerializer
 
 def clean_date(val, default=None):
     if val is None or (isinstance(val, str) and val.strip() == ""):
@@ -33,6 +33,30 @@ class RubricaViewSet(viewsets.ModelViewSet):
             serializer.save(id_congreso_id=id_congreso)
         else:
             serializer.save()
+
+class RubricaGrupoViewSet(viewsets.ModelViewSet):
+    serializer_class = RubricaGrupoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = RubricaGrupo.objects.all()
+        id_rubrica = self.request.query_params.get('id_rubrica')
+        if id_rubrica:
+            qs = qs.filter(id_rubrica_id=id_rubrica)
+        return qs
+
+
+class RubricaCriterioViewSet(viewsets.ModelViewSet):
+    serializer_class = RubricaCriterioSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = RubricaCriterio.objects.all()
+        id_grupo = self.request.query_params.get('id_grupo')
+        if id_grupo:
+            qs = qs.filter(id_grupo_id=id_grupo)
+        return qs
+
 
 class TipoTrabajoViewSet(viewsets.ModelViewSet):
     serializer_class = TipoTrabajoSerializer
@@ -68,9 +92,15 @@ class TipoTrabajoViewSet(viewsets.ModelViewSet):
             return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class DictamenViewSet(viewsets.ModelViewSet):
-    queryset = Dictamen.objects.all()
     serializer_class = DictamenSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = Dictamen.objects.all()
+        tipo_trabajo = self.request.query_params.get('tipo_trabajo')
+        if tipo_trabajo:
+            qs = qs.filter(tipo_trabajo_id=tipo_trabajo)
+        return qs
 
 class DictamenPreguntaViewSet(viewsets.ModelViewSet):
     queryset = DictamenPregunta.objects.all()
@@ -519,7 +549,7 @@ class AgendaHoyView(APIView):
     def get(self, request):
         today = timezone.localdate()
         start = datetime.combine(today, datetime.min.time())
-        events = _fetch_events_between(start, start + timedelta(days=1))
+        events = _fetch_events_between(start, start + timedelta(days=1), user=request.user)
         return Response({'date': today.isoformat(), 'events': events})
 
 class AgendaCalendarioView(APIView):
@@ -530,28 +560,316 @@ class AgendaCalendarioView(APIView):
         if not year: return Response({'detail': 'Formato inválido.'}, status=status.HTTP_400_BAD_REQUEST)
         start = datetime(year, month, 1)
         _, days = monthrange(year, month)
-        events = _fetch_events_between(start, start + timedelta(days=days))
+        events = _fetch_events_between(start, start + timedelta(days=days), user=request.user)
         return Response({'month': f'{year:04d}-{month:02d}', 'events': events})
 
 class PagosResumenView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        summary = _build_payment_summary(request.user)
-        if not summary: return Response({'detail': 'Sin costos.'}, status=status.HTTP_404_NOT_FOUND)
-        return Response(summary)
+        id_congreso = request.query_params.get('id_congreso')
+        summary = _build_payment_summary(request.user, id_congreso=id_congreso)
+        if not summary:
+            return Response(
+                {'detail': 'No hay configuración de costos registrada.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response(summary, status=status.HTTP_200_OK)
+
 
 class RegistrarPagoView(APIView):
     permission_classes = [IsAuthenticated]
-    def post(self, request):
-        summary = _build_payment_summary(request.user)
-        if not summary: return Response({'detail': 'Sin costos.'}, status=status.HTTP_404_NOT_FOUND)
-        return Response({'detail': 'Pago registrado.'}, status=status.HTTP_201_CREATED)
 
-def _fetch_events_between(start, end):
+    def post(self, request):
+        id_congreso = request.data.get('id_congreso')
+        summary = _build_payment_summary(request.user, id_congreso=id_congreso)
+        if not summary:
+            return Response(
+                {'detail': 'No hay configuración de costos registrada.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        requires_invoice = bool(request.data.get('requiere_factura', False))
+        role = summary['user_payment']['role']
+        costos_id = summary['user_payment']['costos_id']
+        base_price = summary['user_payment']['base_price']
+
+        if role == 'ponente':
+            pending_slots = int(summary['user_payment']['pending_slots'])
+            paid_slots = int(summary['user_payment']['paid_slots'])
+            overflow_ponencias = int(summary['user_payment']['overflow_ponencias_count'])
+
+            if overflow_ponencias > 0:
+                return Response(
+                    {'detail': 'El máximo de ponencias pagables por ponente es 5.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if pending_slots <= 0:
+                return Response(
+                    {'detail': 'No hay pagos pendientes para este ponente.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            with transaction.atomic():
+                with connection.cursor() as cursor:
+                    for slot in range(paid_slots + 1, paid_slots + pending_slots + 1):
+                        cursor.execute(
+                            "INSERT INTO pagos (id_persona, monto, concepto, id_costos, requiere_factura) "
+                            "VALUES (%s, %s, %s, %s, %s)",
+                            [request.user.id_persona, base_price, _concept_for_slot(slot), costos_id, requires_invoice],
+                        )
+
+            updated_summary = _build_payment_summary(request.user, id_congreso=id_congreso)
+            return Response(
+                {'detail': 'Pagos de ponente registrados correctamente.', 'registered_slots': pending_slots, 'summary': updated_summary},
+                status=status.HTTP_201_CREATED,
+            )
+
+        concept = f'inscripcion_{role}'
+        already_paid = _has_role_payment(request.user.id_persona, concept, costos_id=costos_id)
+
+        if already_paid:
+            return Response(
+                {'detail': 'Este usuario ya tiene un pago registrado para su rol.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        raw_monto = request.data.get('monto')
+        monto = base_price
+        if raw_monto is not None:
+            try:
+                monto = float(raw_monto)
+            except (TypeError, ValueError):
+                return Response({'detail': 'El monto enviado no es válido.'}, status=status.HTTP_400_BAD_REQUEST)
+            if monto <= 0:
+                return Response({'detail': 'El monto debe ser mayor a cero.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if role == 'asistente':
+            descuento_estudiante = base_price * 0.5
+            if not (_is_close(monto, base_price) or _is_close(monto, descuento_estudiante)):
+                return Response({'detail': 'Monto no válido para asistente.'}, status=status.HTTP_400_BAD_REQUEST)
+        elif not _is_close(monto, base_price):
+            return Response({'detail': 'Monto no válido para este rol.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO pagos (id_persona, monto, concepto, id_costos, requiere_factura) "
+                    "VALUES (%s, %s, %s, %s, %s)",
+                    [request.user.id_persona, monto, concept, costos_id, requires_invoice],
+                )
+
+        updated_summary = _build_payment_summary(request.user, id_congreso=id_congreso)
+        return Response(
+            {'detail': 'Pago registrado correctamente.', 'summary': updated_summary},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class CongresoEventosView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, id_congreso):
+        from ponencias.models import AsistenteEvento
+        from users.models import Asistente
+        asistente = Asistente.objects.filter(id_persona=request.user).first()
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT e.id_evento, e.nombre_evento, e.tipo_evento,
+                       e.fecha_hora_inicio, e.fecha_hora_final, e.sinopsis, e.cupos, e.enlace
+                FROM evento e
+                WHERE e.id_congreso = %s
+                ORDER BY e.fecha_hora_inicio
+            """, [id_congreso])
+            rows = cursor.fetchall()
+        result = []
+        for r in rows:
+            eid = r[0]
+            cupos = r[6] or 0
+            registrado = AsistenteEvento.objects.filter(id_asistente=asistente, id_evento_id=eid).exists() if asistente else False
+            ocupados = AsistenteEvento.objects.filter(id_evento_id=eid).count()
+            result.append({
+                'id': eid,
+                'titulo': r[1] or '',
+                'tipo': r[2] or '',
+                'fecha_inicio': r[3].isoformat() if r[3] else None,
+                'fecha_fin': r[4].isoformat() if r[4] else None,
+                'sinopsis': r[5] or '',
+                'cupos': cupos,
+                'cupos_ocupados': ocupados,
+                'cupos_disponibles': max(0, cupos - ocupados) if cupos > 0 else None,
+                'lleno': cupos > 0 and ocupados >= cupos,
+                'enlace': r[7] or '',
+                'registrado': registrado,
+            })
+        return Response(result)
+
+
+class InscritesTallerView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, id_evento):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT per.id_persona, per.nombre, per.primer_apellido, per.segundo_apellido,
+                       per.correo_electronico, per.num_telefono, ae.fecha_inscripcion
+                FROM asistente_evento ae
+                JOIN asistente a ON a.id_asistente = ae.id_asistente
+                JOIN persona per ON per.id_persona = a.id_persona
+                WHERE ae.id_evento = %s
+                ORDER BY ae.fecha_inscripcion
+            """, [id_evento])
+            rows = cursor.fetchall()
+            cursor.execute("SELECT cupos FROM evento WHERE id_evento = %s", [id_evento])
+            cupos_row = cursor.fetchone()
+        cupos_max = cupos_row[0] if cupos_row else 0
+        inscritos = [
+            {
+                'id': r[0], 'nombre': r[1] or '', 'primer_apellido': r[2] or '',
+                'segundo_apellido': r[3] or '', 'correo': r[4] or '',
+                'telefono': r[5] or '', 'fecha_inscripcion': r[6].isoformat() if r[6] else None,
+            }
+            for r in rows
+        ]
+        return Response({'cupos_max': cupos_max, 'inscritos': inscritos, 'ocupados': len(inscritos)})
+
+
+class MisInscripcionesView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT DISTINCT c.id_congreso, c.nombre_congreso
+                FROM pagos p
+                JOIN costos_congreso cc ON cc.id_costos_congreso = p.id_costos
+                JOIN congreso c ON c.id_costos_congreso = cc.id_costos_congreso
+                WHERE p.id_persona = %s
+                ORDER BY c.id_congreso
+            """, [request.user.pk])
+            rows = cursor.fetchall()
+        congresos = [{'id_congreso': r[0], 'nombre_congreso': r[1]} for r in rows]
+        return Response({'inscripciones': [r['id_congreso'] for r in congresos], 'congresos': congresos})
+
+
+class ListaPagosAdminView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        id_congreso = request.query_params.get('id_congreso')
+        sql = """
+            SELECT
+                p.id_pagos,
+                per.nombre,
+                per.primer_apellido,
+                per.segundo_apellido,
+                per.num_telefono,
+                per.curp,
+                per.correo_electronico,
+                p.monto,
+                p.fecha_pago_realizado,
+                p.requiere_factura,
+                cc.cuenta_deposito,
+                cc.descuento_prepago,
+                c.nombre_congreso,
+                s.nombre_sede,
+                CASE
+                    WHEN po.id_ponente IS NOT NULL THEN 'Ponente'
+                    WHEN a.id_asistente IS NOT NULL THEN 'Asistente'
+                    ELSE 'Asistente'
+                END AS rol
+            FROM pagos p
+            JOIN persona per ON per.id_persona = p.id_persona
+            LEFT JOIN costos_congreso cc ON cc.id_costos_congreso = p.id_costos
+            LEFT JOIN congreso c ON c.id_costos_congreso = cc.id_costos_congreso
+            LEFT JOIN sede s ON s.id_sede = c.id_sede
+            LEFT JOIN asistente a ON a.id_persona = per.id_persona
+            LEFT JOIN ponente po ON po.id_persona = per.id_persona
+        """
+        params = []
+        if id_congreso:
+            sql += " WHERE c.id_congreso = %s"
+            params.append(id_congreso)
+        sql += " ORDER BY p.id_pagos DESC"
+        with connection.cursor() as cursor:
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
+        result = []
+        for r in rows:
+            result.append({
+                'orden': r[0],
+                'nombre': r[1] or '',
+                'primerApellido': r[2] or '',
+                'segundoApellido': r[3] or '',
+                'telefono': r[4] or '',
+                'curp': r[5] or '',
+                'correo': r[6] or '',
+                'monto': float(r[7]) if r[7] is not None else 0,
+                'fecha': r[8].isoformat() if r[8] else None,
+                'requiere_factura': r[9],
+                'cuentaDeposito': r[10] or '',
+                'descuento': float(r[11]) if r[11] is not None else 0,
+                'congreso': r[12] or '',
+                'sede': r[13] or '',
+                'rol': r[14] or 'Asistente',
+                'estatus': 'Pagado',
+            })
+        return Response(result)
+
+def _fetch_events_between(start, end, user=None):
+    from users.models import Asistente
+    asistente = Asistente.objects.filter(id_persona=user).first() if user else None
+    if not asistente:
+        return []
     with connection.cursor() as cursor:
-        cursor.execute("SELECT e.id_evento, e.nombre_evento FROM evento e WHERE e.fecha_hora_inicio >= %s AND e.fecha_hora_inicio < %s", [start, end])
+        cursor.execute("""
+            SELECT
+                e.id_evento, e.nombre_evento, e.fecha_hora_inicio, e.fecha_hora_final,
+                e.sinopsis, e.tipo_evento, e.enlace,
+                COALESCE(
+                    t.tallerista,
+                    (
+                        SELECT NULLIF(TRIM(CONCAT(per2.nombre, ' ', per2.primer_apellido,
+                                   COALESCE(' ' || per2.segundo_apellido, ''))), '')
+                        FROM ponente_has_ponencia php2
+                        JOIN ponente po2 ON po2.id_ponente = php2.id_ponente
+                        JOIN persona per2 ON per2.id_persona = po2.id_persona
+                        WHERE php2.id_ponencia = p.id_ponencia
+                        LIMIT 1
+                    ),
+                    'Por confirmar'
+                ) AS autor,
+                COALESCE(s.nombre_sede, 'Por confirmar') AS ubicacion,
+                COALESCE(sub.nombre, '') AS eje
+            FROM asistente_evento ae
+            JOIN evento e ON e.id_evento = ae.id_evento
+            LEFT JOIN taller t ON t.id_evento = e.id_evento
+            LEFT JOIN ponencia p ON p.id_evento = e.id_evento
+            LEFT JOIN mesas_trabajo mt ON mt.id_mesas_trabajo = e.id_mesas_trabajo
+            LEFT JOIN sede s ON s.id_sede = mt.id_sede
+            LEFT JOIN subareas sub ON sub.id_subareas = COALESCE(t.id_subarea, p.id_subarea)
+            WHERE ae.id_asistente = %s
+              AND e.fecha_hora_inicio >= %s AND e.fecha_hora_inicio < %s
+            ORDER BY e.fecha_hora_inicio
+        """, [asistente.id_asistente, start, end])
         rows = cursor.fetchall()
-    return [{'id': r[0], 'title': r[1]} for r in rows]
+    result = []
+    for r in rows:
+        result.append({
+            'id': r[0],
+            'title': r[1] or '',
+            'start_iso': r[2].isoformat() if r[2] else None,
+            'time': r[2].strftime('%H:%M') if r[2] else '',
+            'sinopsis': r[4] or '',
+            'type': r[5] or '',
+            'link': r[6] or '',
+            'author': r[7] or 'Por confirmar',
+            'location': r[8] or 'Por confirmar',
+            'eje': r[9] or '',
+            'abstract': r[4] or '',
+            'description': r[4] or '',
+        })
+    return result
 
 def _parse_month(val):
     try:
@@ -559,20 +877,217 @@ def _parse_month(val):
         return d.year, d.month
     except: return None, None
 
-def _get_user_role(u):
-    if u.is_superuser: return 'administrador'
+PONENTE_INCLUDED_PONENCIAS = 3
+PONENTE_MAX_PONENCIAS = 5
+
+
+def _get_user_role(user):
+    if user.is_superuser or user.is_staff:
+        return 'administrador'
+    if hasattr(user, 'dictaminador'):
+        return 'dictaminador'
+    if hasattr(user, 'evaluador'):
+        return 'revisor'
+    if hasattr(user, 'ponente'):
+        return 'ponente'
     return 'asistente'
 
-def _get_latest_costos_congreso():
+
+def _get_costos_congreso(id_congreso=None):
     with connection.cursor() as cursor:
-        cursor.execute("SELECT id_costos_congreso, costo_congreso_asistente, costo_congreso_ponente, costo_congreso_comite FROM costos_congreso ORDER BY id_costos_congreso DESC LIMIT 1")
+        if id_congreso:
+            cursor.execute(
+                """
+                SELECT cc.id_costos_congreso,
+                       cc.costo_congreso_asistente,
+                       cc.costo_congreso_ponente,
+                       cc.costo_congreso_comite,
+                       cc.descuento_prepago,
+                       cc.descuento_estudiante
+                FROM costos_congreso cc
+                JOIN congreso c ON c.id_costos_congreso = cc.id_costos_congreso
+                WHERE c.id_congreso = %s
+                LIMIT 1
+                """,
+                [id_congreso],
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT id_costos_congreso,
+                       costo_congreso_asistente,
+                       costo_congreso_ponente,
+                       costo_congreso_comite,
+                       descuento_prepago,
+                       descuento_estudiante
+                FROM costos_congreso
+                ORDER BY id_costos_congreso DESC
+                LIMIT 1
+                """
+            )
         row = cursor.fetchone()
-    if not row: return None
-    return {'id_costos_congreso': row[0], 'costo_asistente': float(row[1]), 'costo_ponente': float(row[2]), 'costo_comite': float(row[3])}
+    if not row:
+        return None
+    return {
+        'id_costos_congreso': row[0],
+        'costo_asistente': float(row[1]),
+        'costo_ponente': float(row[2]),
+        'costo_comite': float(row[3]),
+        'descuento_prepago': float(row[4] or 0),
+        'descuento_estudiante': float(row[5] or 0),
+    }
 
-def _build_payment_summary(u):
-    costos = _get_latest_costos_congreso()
-    if not costos: return None
-    return {'price_catalog': {'asistente': costos['costo_asistente'], 'ponente': costos['costo_ponente'], 'comite': costos['costo_comite']}, 'user_payment': {'role': 'asistente', 'costos_id': costos['id_costos_congreso'], 'total_due': 0}}
 
-def _has_role_payment(u_id, c): return False
+def _get_ponente_id_for_user(user_id):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id_ponente FROM ponente WHERE id_persona = %s LIMIT 1", [user_id])
+        row = cursor.fetchone()
+    return row[0] if row else None
+
+
+def _count_ponente_ponencias(id_ponente, costos_id=None):
+    with connection.cursor() as cursor:
+        if costos_id:
+            cursor.execute(
+                """
+                SELECT COUNT(*) FROM ponente_has_ponencia php
+                JOIN ponencia pon ON pon.id_ponencia = php.id_ponencia
+                JOIN evento e ON e.id_evento = pon.id_evento
+                JOIN congreso c ON c.id_congreso = e.id_congreso
+                WHERE php.id_ponente = %s AND c.id_costos_congreso = %s
+                """,
+                [id_ponente, costos_id],
+            )
+        else:
+            cursor.execute("SELECT COUNT(*) FROM ponente_has_ponencia WHERE id_ponente = %s", [id_ponente])
+        row = cursor.fetchone()
+    return int(row[0]) if row else 0
+
+
+def _count_paid_ponente_slots(user_id, costos_id=None):
+    with connection.cursor() as cursor:
+        if costos_id:
+            cursor.execute(
+                """
+                SELECT COUNT(*) FROM pagos
+                WHERE id_persona = %s
+                  AND id_costos = %s
+                  AND (concepto = 'inscripcion_ponente_base' OR concepto LIKE 'inscripcion_ponente_extra_%%')
+                """,
+                [user_id, costos_id],
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT COUNT(*) FROM pagos
+                WHERE id_persona = %s
+                  AND (concepto = 'inscripcion_ponente_base' OR concepto LIKE 'inscripcion_ponente_extra_%%')
+                """,
+                [user_id],
+            )
+        row = cursor.fetchone()
+    return int(row[0]) if row else 0
+
+
+def _has_role_payment(user_id, concept, costos_id=None):
+    with connection.cursor() as cursor:
+        if costos_id:
+            cursor.execute(
+                "SELECT 1 FROM pagos WHERE id_persona = %s AND concepto = %s AND id_costos = %s LIMIT 1",
+                [user_id, concept, costos_id],
+            )
+        else:
+            cursor.execute(
+                "SELECT 1 FROM pagos WHERE id_persona = %s AND concepto = %s LIMIT 1",
+                [user_id, concept],
+            )
+        return cursor.fetchone() is not None
+
+
+def _build_payment_summary(user, id_congreso=None):
+    costos = _get_costos_congreso(id_congreso=id_congreso)
+    if not costos:
+        return None
+
+    role = _get_user_role(user)
+    costos_id = costos['id_costos_congreso']
+
+    payload = {
+        'price_catalog': {
+            'asistente': costos['costo_asistente'],
+            'ponente': costos['costo_ponente'],
+            'comite': costos['costo_comite'],
+            'descuento_prepago_pct': costos['descuento_prepago'],
+            'descuento_estudiante_pct': costos['descuento_estudiante'],
+        },
+        'user_payment': {
+            'role': role,
+            'costos_id': costos_id,
+        },
+    }
+
+    if role == 'ponente':
+        id_ponente = _get_ponente_id_for_user(user.id_persona)
+        if not id_ponente:
+            payload['user_payment'].update({
+                'base_price': costos['costo_ponente'],
+                'ponencias_count': 0,
+                'included_ponencias': PONENTE_INCLUDED_PONENCIAS,
+                'max_ponencias': PONENTE_MAX_PONENCIAS,
+                'extra_ponencias_count': 0,
+                'overflow_ponencias_count': 0,
+                'required_slots': 1,
+                'paid_slots': 0,
+                'pending_slots': 1,
+                'total_due': costos['costo_ponente'],
+            })
+            return payload
+
+        ponencias_count = _count_ponente_ponencias(id_ponente, costos_id=costos_id)
+        overflow_ponencias_count = max(ponencias_count - PONENTE_MAX_PONENCIAS, 0)
+        capped_ponencias_count = min(ponencias_count, PONENTE_MAX_PONENCIAS)
+        extra_ponencias_count = max(capped_ponencias_count - PONENTE_INCLUDED_PONENCIAS, 0)
+        required_slots = 1 + extra_ponencias_count
+        paid_slots = _count_paid_ponente_slots(user.id_persona, costos_id=costos_id)
+        pending_slots = max(required_slots - paid_slots, 0)
+
+        payload['user_payment'].update({
+            'base_price': costos['costo_ponente'],
+            'ponencias_count': ponencias_count,
+            'included_ponencias': PONENTE_INCLUDED_PONENCIAS,
+            'max_ponencias': PONENTE_MAX_PONENCIAS,
+            'extra_ponencias_count': extra_ponencias_count,
+            'overflow_ponencias_count': overflow_ponencias_count,
+            'required_slots': required_slots,
+            'paid_slots': paid_slots,
+            'pending_slots': pending_slots,
+            'total_due': pending_slots * costos['costo_ponente'],
+        })
+        return payload
+
+    if role in ('dictaminador', 'revisor', 'administrador'):
+        base_price = costos['costo_comite']
+    else:
+        base_price = costos['costo_asistente']
+
+    concept = f'inscripcion_{role}'
+    already_paid = _has_role_payment(user.id_persona, concept, costos_id=costos_id)
+
+    payload['user_payment'].update({
+        'concept': concept,
+        'base_price': base_price,
+        'already_paid': already_paid,
+        'pending_slots': 0 if already_paid else 1,
+        'total_due': 0 if already_paid else base_price,
+    })
+    return payload
+
+
+def _concept_for_slot(slot):
+    if slot == 1:
+        return 'inscripcion_ponente_base'
+    return f'inscripcion_ponente_extra_{slot + 1}'
+
+
+def _is_close(value_a, value_b):
+    return abs(float(value_a) - float(value_b)) < 0.01

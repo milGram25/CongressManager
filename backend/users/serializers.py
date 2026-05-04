@@ -136,10 +136,16 @@ class RegisterSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     rol = serializers.SerializerMethodField()
     nombre_completo = serializers.SerializerMethodField()
+    es_dictaminador = serializers.SerializerMethodField()
+    es_evaluador = serializers.SerializerMethodField()
 
     class Meta:
         model = Persona
-        fields = ('id_persona', 'correo_electronico', 'nombre', 'primer_apellido', 'segundo_apellido', 'rol', 'nombre_completo')
+        fields = (
+            'id_persona', 'correo_electronico', 'nombre', 'primer_apellido',
+            'segundo_apellido', 'rol', 'nombre_completo',
+            'es_dictaminador', 'es_evaluador',
+        )
 
     def get_rol(self, obj):
         if obj.is_superuser or obj.is_staff:
@@ -159,5 +165,18 @@ class UserSerializer(serializers.ModelSerializer):
         return 'asistente'
 
     def get_nombre_completo(self, obj):
-        partes = [obj.nombre, obj.primer_apellido, obj.segundo_apellido]
-        return " ".join([n for n in partes if n]).strip()
+        return ' '.join(x for x in [obj.nombre, obj.primer_apellido, obj.segundo_apellido] if x).strip()
+
+    def get_es_dictaminador(self, obj):
+        from .models import Dictaminador, DictaminadorCongreso
+        return (
+            Dictaminador.objects.filter(id_persona=obj).exists() or
+            DictaminadorCongreso.objects.filter(id_persona=obj).exists()
+        )
+
+    def get_es_evaluador(self, obj):
+        from .models import Evaluador, EvaluadorCongreso
+        return (
+            Evaluador.objects.filter(id_persona=obj).exists() or
+            EvaluadorCongreso.objects.filter(id_persona=obj).exists()
+        )

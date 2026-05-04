@@ -13,6 +13,15 @@ export async function getParticipantsApi(accessToken, { idCongreso = null, rol =
   return res.json();
 }
 
+export async function getPendingFacturasApi(accessToken, idCongreso = null) {
+  const params = idCongreso ? `?id_congreso=${idCongreso}` : '';
+  const res = await fetch(`${API_URL}/api/users/facturas/pendientes/${params}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error al obtener facturas pendientes.');
+  return res.json();
+}
+
 export async function uploadConstanciaApi(accessToken, idPersona, idCongreso, file, tipo) {
   const formData = new FormData();
   formData.append('file', file);
@@ -316,5 +325,172 @@ export async function deleteTipoTrabajoApi(accessToken, idTipo) {
 export async function getDictamenesApi(accessToken) {
   const res = await fetch(`${API_URL}/api/congresos/dictamenes/`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
   if (!res.ok) throw new Error('Error al obtener dictámenes.');
+  return res.json();
+}
+
+
+export async function getInscritosTallerApi(accessToken, idEvento) {
+  const res = await fetch(`${API_URL}/api/congresos/eventos/${idEvento}/inscritos/`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'No se pudieron cargar los inscritos.');
+  return data;
+}
+
+export async function getAllUsersApi(accessToken, idCongreso) {
+  const res = await fetch(`${API_URL}/api/users/all/?id_congreso=${idCongreso}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error al obtener usuarios.');
+  return res.json();
+}
+
+export async function assignRoleApi(accessToken, idPersona, { rol, idCongreso, password }) {
+  const body = { rol };
+  if (idCongreso) body.id_congreso = idCongreso;
+  if (password) body.password = password;
+  const res = await fetch(`${API_URL}/api/users/${idPersona}/role/assign/`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Error al asignar rol.');
+  return data;
+}
+
+export async function removeRoleApi(accessToken, idPersona, { rol, idCongreso, password }) {
+  const body = { rol };
+  if (idCongreso) body.id_congreso = idCongreso;
+  if (password) body.password = password;
+  const res = await fetch(`${API_URL}/api/users/${idPersona}/role/remove/`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Error al quitar rol.');
+  return data;
+}
+
+// ── Rubrica Grupos ──────────────────────────────────────────────
+export async function createRubricaGrupoApi(accessToken, data) {
+  const res = await fetch(`${API_URL}/api/congresos/rubrica-grupos/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error creando grupo');
+  return res.json();
+}
+
+export async function updateRubricaGrupoApi(accessToken, id, data) {
+  const res = await fetch(`${API_URL}/api/congresos/rubrica-grupos/${id}/`, {
+    method: 'PATCH',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error actualizando grupo');
+  return res.json();
+}
+
+export async function deleteRubricaGrupoApi(accessToken, id) {
+  const res = await fetch(`${API_URL}/api/congresos/rubrica-grupos/${id}/`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error eliminando grupo');
+}
+
+// ── Rubrica Criterios ─────────────────────────────────────────────
+export async function createRubricaCriterioApi(accessToken, data) {
+  const res = await fetch(`${API_URL}/api/congresos/rubrica-criterios/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error creando criterio');
+  return res.json();
+}
+
+export async function updateRubricaCriterioApi(accessToken, id, data) {
+  const res = await fetch(`${API_URL}/api/congresos/rubrica-criterios/${id}/`, {
+    method: 'PATCH',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error actualizando criterio');
+  return res.json();
+}
+
+export async function deleteRubricaCriterioApi(accessToken, id) {
+  const res = await fetch(`${API_URL}/api/congresos/rubrica-criterios/${id}/`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error eliminando criterio');
+}
+
+// ── Dictamen y Preguntas ──────────────────────────────────────────
+export async function createDictamenApi(accessToken, data) {
+  const res = await fetch(`${API_URL}/api/congresos/dictamenes/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error creando dictamen');
+  return res.json();
+}
+
+export async function createDictamenPreguntaApi(accessToken, data) {
+  const res = await fetch(`${API_URL}/api/congresos/preguntas/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error creando pregunta');
+  return res.json();
+}
+
+export async function updateDictamenPreguntaApi(accessToken, id, data) {
+  const res = await fetch(`${API_URL}/api/congresos/preguntas/${id}/`, {
+    method: 'PATCH',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error actualizando pregunta');
+  return res.json();
+}
+
+export async function deleteDictamenPreguntaApi(accessToken, id) {
+  const res = await fetch(`${API_URL}/api/congresos/preguntas/${id}/`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error eliminando pregunta');
+}
+
+export async function getDictamenesConFiltroApi(accessToken, tipoTrabajo = null) {
+  let url = `${API_URL}/api/congresos/dictamenes/`;
+  if (tipoTrabajo) url += `?tipo_trabajo=${tipoTrabajo}`;
+  const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error cargando dictamenes');
+  return res.json();
+}
+
+export async function getDictaminadoresDisponiblesApi(accessToken, idCongreso) {
+  const res = await fetch(`${API_URL}/api/ponencias/dictaminadores-disponibles/?id_congreso=${idCongreso}`, {
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error cargando dictaminadores');
+  return res.json();
+}
+
+export async function getEvaluadoresDisponiblesApi(accessToken, idCongreso) {
+  const res = await fetch(`${API_URL}/api/ponencias/evaluadores-disponibles/?id_congreso=${idCongreso}`, {
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error cargando evaluadores');
   return res.json();
 }

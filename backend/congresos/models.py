@@ -123,11 +123,23 @@ class Rubrica(models.Model):
     def __str__(self):
         return self.nombre
 
+class RubricaGrupo(models.Model):
+    id_grupo = models.AutoField(primary_key=True)
+    id_rubrica = models.ForeignKey(Rubrica, models.CASCADE, db_column='id_rubrica', related_name='grupos')
+    nombre_grupo = models.CharField(max_length=255)
+
+    class Meta:
+        managed = False
+        db_table = 'rubrica_grupo'
+
+    def __str__(self):
+        return self.nombre_grupo
+
 class RubricaCriterio(models.Model):
     id_criterio = models.AutoField(primary_key=True)
-    id_rubrica = models.ForeignKey(Rubrica, models.DO_NOTHING, db_column='id_rubrica', related_name='criterios')
-    descripcion = models.TextField()
-    puntaje_maximo = models.IntegerField()
+    id_grupo = models.ForeignKey(RubricaGrupo, models.CASCADE, db_column='id_grupo', related_name='criterios')
+    descripcion = models.CharField(max_length=255)
+    peso = models.DecimalField(max_digits=3, decimal_places=2, default=1.0)
 
     class Meta:
         managed = False

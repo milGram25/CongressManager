@@ -1,19 +1,20 @@
 import { useState, useEffect, useMemo } from "react";
-import { HiSearch, HiMail, HiFilter } from "react-icons/hi";
-import { MdReceipt, MdPeople } from "react-icons/md";
+import { HiSearch, HiFilter, HiCollection } from "react-icons/hi";
+import { MdReceipt } from "react-icons/md";
 import InvoiceUpload from "./Componentes/InvoiceUpload";
-import UserInvoiceList from "./Componentes/UserInvoiceList";
+import FacturaPendienteList from "./Componentes/FacturaPendienteList";
 import FilterHeader from "./Componentes/FilterHeader";
-import { getParticipantsApi, getCongresosApi, bulkFacturaActionApi } from "../../api/adminApi";
+import { getPendingFacturasApi, getCongresosApi } from "../../api/adminApi";
 
 export default function UsuariosFacturasView() {
-  const [allUsers, setAllUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [facturasPendientes, setFacturasPendientes] = useState([]);
+  const [selectedFactura, setSelectedFactura] = useState(null);
   const [congresos, setCongresos] = useState([]);
-  const [filters, setFilters] = useState({ idCongreso: null, rol: null, institucion: null });
-  const [isBulkSending, setIsBulkSending] = useState(false);
-  const [bulkCount, setBulkCount] = useState(0);
+  const [filters, setFilters] = useState({ idCongreso: null });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [listingAll, setListingAll] = useState(false);
 
   const accessToken = localStorage.getItem('congress_access');
 
@@ -22,89 +23,54 @@ export default function UsuariosFacturasView() {
   }, []);
 
   useEffect(() => {
-    fetchParticipants(filters);
-  }, [filters.idCongreso, filters.rol, filters.institucion]);
+    if (filters.idCongreso) fetchPendientes(filters.idCongreso);
+  }, [filters.idCongreso]);
 
-  const fetchParticipants = async (currentFilters = filters) => {
-    if (!currentFilters.idCongreso) {
-      setAllUsers([]);
-      return;
-    }
+  const fetchPendientes = async (idCongreso = null) => {
+    setLoading(true);
+    setError(null);
     try {
-      const data = await getParticipantsApi(accessToken, {
-        idCongreso: currentFilters.idCongreso,
-        rol: currentFilters.rol,
-        institucion: currentFilters.institucion,
-      });
-      const mapped = data.map(u => ({
-        id: u.id_persona,
-        nombre: u.nombre_completo,
-        email: u.correo_electronico,
-        rol: u.rol,
-        institucion: u.institucion,
-        rfc: u.factura?.rfc || null,
-        razonSocial: u.factura?.razon_social || null,
-        codigoPostal: u.factura?.codigo_postal || null,
-        regimenFiscal: u.factura?.regimen_fiscal || null,
-        facturaEstatus: u.factura?.estatus || null,
-        status: u.factura?.estatus === 'enviada' ? 'green' : u.factura?.estatus === 'pendiente' ? 'orange' : 'gray',
-      }));
-      setAllUsers(mapped);
-    } catch (error) {
-      console.error(error);
+      const data = await getPendingFacturasApi(accessToken, idCongreso);
+      setFacturasPendientes(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleFilterChange = (field, value) => {
     if (field === 'idCongreso') {
-      setSelectedUser(null);
-      setAllUsers([]);
+      setSelectedFactura(null);
+      setListingAll(false);
+      setFacturasPendientes([]);
+      setFilters(prev => ({ ...prev, idCongreso: value }));
     }
-    setFilters(prev => ({ ...prev, [field]: value }));
   };
 
-  const filteredUsers = useMemo(() => {
-    if (!searchTerm) return allUsers;
+  const handleListarTodas = () => {
+    setListingAll(true);
+    setSelectedFactura(null);
+    setFilters({ idCongreso: null });
+    fetchPendientes(null);
+  };
+
+  const handleUploadSuccess = (idFactura) => {
+    setFacturasPendientes(prev => prev.filter(f => f.id_factura !== idFactura));
+    setSelectedFactura(null);
+  };
+
+  const facturasFiltradas = useMemo(() => {
+    if (!searchTerm) return facturasPendientes;
     const term = searchTerm.toLowerCase();
-    return allUsers.filter(u =>
-      u.nombre.toLowerCase().includes(term) ||
-      u.email.toLowerCase().includes(term) ||
-      (u.rfc || '').toLowerCase().includes(term)
+    return facturasPendientes.filter(f =>
+      f.nombre_completo.toLowerCase().includes(term) ||
+      (f.rfc || '').toLowerCase().includes(term) ||
+      (f.nombre_congreso || '').toLowerCase().includes(term)
     );
-  }, [allUsers, searchTerm]);
+  }, [facturasPendientes, searchTerm]);
 
-  const pendingUsers = filteredUsers.filter(u => u.status === 'orange');
-  const sentUsers = filteredUsers.filter(u => u.status === 'green');
-
-  const handleBulkSend = async () => {
-    if (!filters.idCongreso) {
-      alert("Selecciona un congreso primero.");
-      return;
-    }
-    const pendingIds = pendingUsers.map(u => u.id);
-    if (pendingIds.length === 0) {
-      alert("No hay facturas pendientes en el filtro actual.");
-      return;
-    }
-    setIsBulkSending(true);
-    setBulkCount(0);
-    try {
-      await bulkFacturaActionApi(accessToken, filters.idCongreso, pendingIds);
-      await fetchParticipants(filters);
-      let c = 0;
-      const interval = setInterval(() => {
-        c = Math.min(c + Math.ceil(pendingIds.length / 8), pendingIds.length);
-        setBulkCount(c);
-        if (c >= pendingIds.length) {
-          clearInterval(interval);
-          setTimeout(() => setIsBulkSending(false), 700);
-        }
-      }, 120);
-    } catch (error) {
-      alert("Error al procesar facturas: " + error.message);
-      setIsBulkSending(false);
-    }
-  };
+  const sinFiltro = !filters.idCongreso && !listingAll;
 
   return (
     <div className="flex flex-col h-full gap-6 p-2 md:p-4 animate-in fade-in duration-500">
@@ -119,114 +85,98 @@ export default function UsuariosFacturasView() {
             </div>
           </div>
           <button
-            onClick={handleBulkSend}
-            disabled={isBulkSending || !filters.idCongreso || pendingUsers.length === 0}
+            onClick={handleListarTodas}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all
-              ${(filters.idCongreso && pendingUsers.length > 0 && !isBulkSending)
-                ? 'bg-[#005a6a] text-white hover:bg-[#004a5a] shadow-lg shadow-[#005a6a]/20'
-                : 'bg-gray-100 text-gray-300 cursor-not-allowed'}`}
-            title={!filters.idCongreso ? "Selecciona un congreso" : ""}
+              ${listingAll
+                ? 'bg-[#005a6a] text-white shadow-lg shadow-[#005a6a]/20'
+                : 'bg-gray-100 text-gray-600 hover:bg-[#005a6a]/10 hover:text-[#005a6a]'}`}
           >
-            {isBulkSending ? <span className="loading loading-spinner loading-xs"></span> : <HiMail />}
-            Enviar Pendientes {pendingUsers.length > 0 ? `(${pendingUsers.length})` : ''}
+            <HiCollection />
+            Listar todas las pendientes
           </button>
         </div>
 
         <FilterHeader onFilterChange={handleFilterChange} congresos={congresos} />
 
-        {allUsers.length > 0 && (
+        {facturasPendientes.length > 0 && (
           <div className="flex gap-3 pt-1 flex-wrap">
-            <span className="flex items-center gap-1.5 text-xs font-bold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
-              <MdPeople /> {filteredUsers.length} participantes
-            </span>
             <span className="flex items-center gap-1.5 text-xs font-bold text-orange-600 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-100">
-              <MdReceipt /> {pendingUsers.length} pendientes
-            </span>
-            <span className="flex items-center gap-1.5 text-xs font-bold text-green-600 bg-green-50 px-3 py-1.5 rounded-full border border-green-100">
-              {sentUsers.length} enviadas
+              <MdReceipt /> {facturasFiltradas.length} pendientes
             </span>
           </div>
         )}
       </div>
 
-      {/* Alerta sin congreso */}
-      {!filters.idCongreso && (
+      {/* Alerta sin filtro */}
+      {sinFiltro && (
         <div className="bg-blue-50 border-2 border-blue-200 p-4 rounded-2xl flex items-center gap-4 animate-in slide-in-from-top duration-500">
           <div className="bg-blue-400 p-2 rounded-xl text-white"><HiFilter className="text-xl" /></div>
           <div>
-            <p className="text-blue-800 font-bold text-sm">Selecciona una institución y un congreso</p>
-            <p className="text-blue-600 text-xs">Usa los filtros para ver los participantes y gestionar sus facturas.</p>
+            <p className="text-blue-800 font-bold text-sm">Selecciona un congreso o lista todas las pendientes</p>
+            <p className="text-blue-600 text-xs">Usa los filtros o el botón para ver facturas pendientes.</p>
           </div>
         </div>
       )}
 
-      {/* Barra de progreso bulk */}
-      {isBulkSending && (
-        <div className="bg-[#005a6a] p-5 rounded-2xl text-white flex flex-col gap-3 shadow-xl animate-in slide-in-from-top duration-300">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="loading loading-spinner loading-md"></span>
-              <p className="font-black text-xs uppercase tracking-[0.2em]">Procesando facturas pendientes...</p>
-            </div>
-            <p className="text-xs font-mono font-bold bg-white/10 px-3 py-1 rounded-lg">
-              {bulkCount} / {pendingUsers.length}
-            </p>
-          </div>
-          <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
-            <div
-              className="bg-yellow-400 h-full transition-all duration-300"
-              style={{ width: `${pendingUsers.length ? (bulkCount / pendingUsers.length) * 100 : 0}%` }}
-            />
-          </div>
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-2xl">
+          {error}
         </div>
       )}
 
       {/* Contenido principal */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-[600px]">
-        <div className="lg:col-span-5 xl:col-span-4 flex flex-col">
-          <InvoiceUpload
-            selectedUser={selectedUser}
-            idCongreso={filters.idCongreso}
-            onUploadSuccess={() => fetchParticipants(filters)}
-          />
-        </div>
+      {!sinFiltro && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-[600px]">
+          <div className="lg:col-span-5 xl:col-span-4 flex flex-col">
+            <InvoiceUpload
+              selectedFactura={selectedFactura}
+              onUploadSuccess={handleUploadSuccess}
+            />
+          </div>
 
-        <div className="lg:col-span-7 xl:col-span-8 bg-gray-50/50 rounded-3xl shadow-inner border border-gray-100 flex flex-col overflow-hidden">
-          <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white/50 border-b border-gray-100">
-            <h3 className="font-bold text-gray-700 flex items-center gap-2">
-              Participantes
-              <span className="bg-[#005a6a] text-white text-[10px] px-2 py-0.5 rounded-full">{filteredUsers.length}</span>
-            </h3>
-            <div className="relative w-full sm:w-64">
-              <HiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Buscar por nombre, RFC..."
-                className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#005a6a] focus:border-transparent outline-none text-sm bg-white shadow-sm transition-all"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          <div className="lg:col-span-7 xl:col-span-8 bg-gray-50/50 rounded-3xl shadow-inner border border-gray-100 flex flex-col overflow-hidden">
+            <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white/50 border-b border-gray-100">
+              <h3 className="font-bold text-gray-700 flex items-center gap-2">
+                Facturas Pendientes
+                <span className="bg-orange-400 text-white text-[10px] px-2 py-0.5 rounded-full">
+                  {facturasFiltradas.length}
+                </span>
+              </h3>
+              <div className="relative w-full sm:w-64">
+                <HiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre, RFC, congreso..."
+                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#005a6a] focus:border-transparent outline-none text-sm bg-white shadow-sm transition-all"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4">
+              {loading ? (
+                <div className="flex justify-center py-16">
+                  <span className="loading loading-spinner loading-lg text-[#005a6a]" />
+                </div>
+              ) : facturasFiltradas.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-400 py-16">
+                  <MdReceipt className="text-5xl opacity-30" />
+                  <p className="text-sm font-semibold">Sin facturas pendientes</p>
+                </div>
+              ) : (
+                <FacturaPendienteList
+                  facturas={facturasFiltradas}
+                  selectedId={selectedFactura?.id_factura}
+                  onSelect={(f) => setSelectedFactura(
+                    selectedFactura?.id_factura === f.id_factura ? null : f
+                  )}
+                />
+              )}
             </div>
           </div>
-
-          <div className="flex-1 overflow-y-auto p-4">
-            {filteredUsers.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-400 py-16">
-                <MdReceipt className="text-5xl opacity-30" />
-                <p className="text-sm font-semibold">
-                  {filters.idCongreso ? 'Sin participantes con los filtros actuales' : 'Selecciona un congreso para ver participantes'}
-                </p>
-              </div>
-            ) : (
-              <UserInvoiceList
-                users={filteredUsers}
-                selectedUserId={selectedUser?.id}
-                onSelectUser={(user) => setSelectedUser(selectedUser?.id === user?.id ? null : user)}
-              />
-            )}
-          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

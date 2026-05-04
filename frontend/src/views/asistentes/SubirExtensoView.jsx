@@ -1,106 +1,107 @@
-//subir extenso view
-import React, { useState } from "react";
-import {useNavigate} from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { subirExtensoApi } from "../../api/ponenciasApi";
 
 export default function SubirExtensoView() {
-  const[archivos, setArchivos] = useState([]);
-  const[showModal, setShowModal] = useState(false);
-  const[dragActive, setDragActive] = useState(false);
+  const { id } = useParams();
   const navigate = useNavigate();
-    //manejo de archivos, para que no se borren los que se agregan
-  const handleFileChange=(files, maxFiles) => {
-    const nuevosArchivos=[...archivos, ...files];
-    if (nuevosArchivos.length > maxFiles) {
-      alert(`Solo puedes subir ${maxFiles} archivos.`);
-      return;
-    }
-    setArchivos(nuevosArchivos);
-  };
+  const accessToken = localStorage.getItem('congress_access');
 
-  const handleDrop=(e) => {
+  const [titulo, setTitulo] = useState('');
+  const [archivo, setArchivo] = useState(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleDrop = (e) => {
     e.preventDefault();
     setDragActive(false);
-    const files = Array.from(e.dataTransfer.files);
-    handleFileChange(files, 3); //3 archivos maximo
+    const file = e.dataTransfer.files[0];
+    if (file) setArchivo(file);
   };
 
-  const handleSubmit=(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (archivos.length == 0) {
-      alert("Debes seleccionar un archivo");
-      return;
+    if (!archivo) { setError('Selecciona un archivo antes de continuar.'); return; }
+    if (!titulo.trim()) { setError('El título es obligatorio.'); return; }
+    setError(null);
+    setSubmitting(true);
+    try {
+      await subirExtensoApi(accessToken, id, titulo, archivo);
+      navigate('/asistente/estatus-ponencia');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
     }
-    console.log("Subir", archivos);
-    setShowModal(true); //modal de carga de archivos
   };
 
-  return(
-    <div className="p-6">
-        <div className="flex items-center gap-4 mb-4">
-            <button type="button" onClick={() => navigate(-1)}
-                className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-md hover:opacity-90 transition-all group"
-            >
-                <span className="text-white text-4xl font-black leading-none -mt-1 select-none">
-                    ←
-                </span>
-            </button>
-            <h2 className="text-xl font-bold">
-                Subir Extenso
-            </h2>
+  return (
+    <div className="p-6 max-w-xl mx-auto">
+      <div className="flex items-center gap-4 mb-6">
+        <button
+          type="button"
+          onClick={() => navigate('/asistente/estatus-ponencia')}
+          className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-md hover:opacity-90 transition-all"
+        >
+          <span className="text-white text-4xl font-black leading-none -mt-1 select-none">←</span>
+        </button>
+        <h2 className="text-xl font-bold">Subir Extenso</h2>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div>
+          <label className="text-sm font-semibold text-slate-700 mb-1 block">Título del extenso</label>
+          <input
+            type="text"
+            className="input input-bordered w-full rounded-xl"
+            placeholder="Título del trabajo"
+            value={titulo}
+            onChange={e => setTitulo(e.target.value)}
+          />
         </div>
-        <p>Título Ponencia: </p>
-        <p>ID:</p>
-        <p>Resumen:</p>
-        <p>Dictaminador asignado:</p>
-        <p>Revisor asignado:</p>
-        <p>Retroalimentación:</p>
-        {/*arrastrar y subir archivos */}
-        <div className={`border-2 border-dashed rounded-lg p-10 text-center cursor-pointer ${ dragActive ? "border-primary bg-blue-50" : "border-primary"}`}
-            onDragOver={(e) => {
-                e.preventDefault();
-                setDragActive(true);
-            }}
+
+        <div>
+          <label className="text-sm font-semibold text-slate-700 mb-1 block">Archivo</label>
+          <div
+            className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${dragActive ? 'border-primary bg-primary/5' : 'border-primary/50'}`}
+            onDragOver={e => { e.preventDefault(); setDragActive(true); }}
             onDragLeave={() => setDragActive(false)}
             onDrop={handleDrop}
-        >
-            <p className="text-primary">
-                Arrastra tu archivo o haz clic para seleccionarlo
-            </p>
-            <input type="file" multiple className="hidden" id="fileUpload" onChange={(e) =>handleFileChange(Array.from(e.target.files), 3)}/>
-            <label htmlFor="fileUpload" className="btn btn-outline mt-4">
-                Seleccionar archivo
+          >
+            {archivo ? (
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-slate-700">{archivo.name}</p>
+                <p className="text-xs text-slate-400">{(archivo.size / 1024 / 1024).toFixed(2)} MB</p>
+              </div>
+            ) : (
+              <p className="text-primary text-sm">Arrastra tu archivo o haz clic para seleccionarlo</p>
+            )}
+            <input
+              type="file"
+              className="hidden"
+              id="fileUpload"
+              accept=".pdf,.doc,.docx"
+              onChange={e => e.target.files[0] && setArchivo(e.target.files[0])}
+            />
+            <label htmlFor="fileUpload" className="btn btn-outline btn-sm mt-4">
+              Seleccionar archivo
             </label>
+          </div>
         </div>
-        {/*archivos seleccionados */}
-        {archivos.length > 0 &&(
-            <ul className="mt-4 text-sm text-gray-700">
-                {archivos.map((file, i) => (
-                    <li key={i}>{file.name}</li>
-                ))}
-            </ul>
+
+        {error && (
+          <div className="text-sm text-error bg-error/10 px-4 py-2 rounded-xl">{error}</div>
         )}
 
-        {/*boton subir docs, incluye detector de plagio, ia y extenso, faltan validaciones*/}
-        <button onClick={handleSubmit} className="btn btn-primary mt-6">
-            Subir Documentos
+        <button
+          type="submit"
+          disabled={submitting}
+          className="w-full btn btn-primary rounded-xl disabled:opacity-50"
+        >
+          {submitting ? <span className="loading loading-spinner loading-sm" /> : 'Subir Extenso'}
         </button>
-
-        {/*modal de carga correcta de archivos*/}
-        {showModal && (
-            <div className="modal modal-open">
-                <div className="modal-box">
-                    <h3 className="font-bold text-lg">Archivos cargados correctamente</h3>
-                    <p className="py-4">
-                        Los documentos se subieron correctamente.
-                    </p>
-                    <div className="modal-action">
-                        <button className="btn" onClick={() => setShowModal(false)}>
-                            Cerrar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )}
+      </form>
     </div>
   );
 }

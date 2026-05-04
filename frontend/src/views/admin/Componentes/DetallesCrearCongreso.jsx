@@ -325,7 +325,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="bg-gray-50 p-6 rounded-3xl space-y-4">
                             <div><label className={labelClasses}>Asistente</label><input type="number" id="costo_asistente" value={formData.costo_asistente} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
-                            <div><label className={labelClasses}>Ponente</label><input type="number" id="costo_ponente" value={formData.costo_ponente} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
+                            <div><label className={labelClasses}>Ponencias extras</label><input type="number" id="costo_ponente" value={formData.costo_ponente} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
                         </div>
                         <div className="bg-gray-50 p-6 rounded-3xl space-y-4">
                             <div><label className={labelClasses}>Descuento Prepago %</label><input type="number" id="descuento_prepago" value={formData.descuento_prepago} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>

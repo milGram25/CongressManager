@@ -2,7 +2,7 @@ import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'rea
 import { FiEdit2, FiCopy, FiCalendar, FiClock, FiUsers, FiMapPin, FiUser, FiAward, FiFileText, FiLink, FiSave, FiAlertCircle } from 'react-icons/fi';
 import { IoIosCheckmark } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
-import { getInstitucionesApi, getCongresosApi, getSubareasApi, getMesasApi, createPonenciaApi, getPonenciaByIdApi } from '../../../api/adminApi';
+import { getInstitucionesApi, getCongresosApi, getSubareasApi, getMesasApi, createPonenciaApi, getPonenciaByIdApi, getInscritosTallerApi } from '../../../api/adminApi';
 import { API_URL } from '../../../api/constants';
 import { useNavigate } from 'react-router-dom';
 
@@ -33,6 +33,9 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
     const [congresos, setCongresos] = useState([]);
     const [mesas, setMesas] = useState([]);
     const [subareas, setSubareas] = useState([]);
+    const [inscritos, setInscritos] = useState([]);
+    const [cuposMax, setCuposMax] = useState(0);
+    const [loadingInscritos, setLoadingInscritos] = useState(false);
 
     useImperativeHandle(ref, () => ({
         handleSave
@@ -54,9 +57,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                 const realId = ponenciaData?.id || ponenciaData?.id_ponencia;
 
                 if (realId) {
-                    console.log("Cargando ponencia ID:", realId);
                     const realPonencia = await getPonenciaByIdApi(accessToken, realId);
-                    console.log("Datos recibidos:", realPonencia);
                     
                     const formatDate = (dateStr) => {
                         if (!dateStr) return "";
@@ -72,6 +73,19 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                         fecha_hora_inicio: formatDate(realPonencia.fecha_hora_inicio),
                         fecha_hora_final: formatDate(realPonencia.fecha_hora_final)
                     });
+                    const idEvento = realPonencia.id_evento;
+                    if (idEvento) {
+                        setLoadingInscritos(true);
+                        try {
+                            const inscritosData = await getInscritosTallerApi(accessToken, idEvento);
+                            setInscritos(inscritosData.inscritos || []);
+                            setCuposMax(inscritosData.cupos_max || 0);
+                        } catch {
+                            // no bloquear la carga principal
+                        } finally {
+                            setLoadingInscritos(false);
+                        }
+                    }
                 } else if (ponenciaData?.id_congreso) {
                     setFormatData(prev => ({ ...prev, id_congreso: parseInt(ponenciaData.id_congreso) }));
                 }
@@ -282,6 +296,70 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                             <input type="datetime-local" id="fecha_hora_final" className={`${inputClasses} font-mono`} value={formatData.fecha_hora_final} onChange={handleChange} readOnly={!modificando} />
                         </div>
                     </div>
+                </section>
+
+                {/* Sección Inscritos */}
+                <section className="mb-4">
+                    <h3 className={sectionTitleClasses}>
+                        <div className="w-1.5 h-6 bg-primary rounded-full"></div>
+                        <FiUsers className="text-primary" />
+                        Asistentes Inscritos
+                        {cuposMax > 0 && (
+                            <span className="ml-auto text-sm font-normal text-base-content/60">
+                                {inscritos.length} / {cuposMax} cupos
+                            </span>
+                        )}
+                    </h3>
+
+                    {cuposMax > 0 && (
+                        <div className="mb-6">
+                            <div className="flex justify-between text-xs text-base-content/50 mb-1">
+                                <span>Ocupados: {inscritos.length}</span>
+                                <span>Disponibles: {Math.max(0, cuposMax - inscritos.length)}</span>
+                            </div>
+                            <div className="w-full h-2 bg-base-200 rounded-full overflow-hidden">
+                                <div
+                                    className={`h-full rounded-full transition-all ${inscritos.length >= cuposMax ? "bg-error" : inscritos.length / cuposMax > 0.75 ? "bg-warning" : "bg-success"}`}
+                                    style={{ width: `${Math.min(100, (inscritos.length / cuposMax) * 100)}%` }}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {loadingInscritos ? (
+                        <div className="flex justify-center py-8">
+                            <span className="loading loading-spinner loading-md text-primary" />
+                        </div>
+                    ) : inscritos.length === 0 ? (
+                        <p className="text-sm text-base-content/40 text-center py-8">No hay asistentes inscritos aún.</p>
+                    ) : (
+                        <div className="overflow-x-auto rounded-xl border border-base-200">
+                            <table className="table table-sm w-full">
+                                <thead className="bg-base-200 text-[10px] uppercase tracking-widest text-base-content/50">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Nombre</th>
+                                        <th>Correo</th>
+                                        <th>Teléfono</th>
+                                        <th>Fecha de inscripción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {inscritos.map((p, i) => (
+                                        <tr key={p.id} className="hover:bg-base-50">
+                                            <td className="text-base-content/40 font-mono">{i + 1}</td>
+                                            <td className="font-medium">{[p.nombre, p.primer_apellido, p.segundo_apellido].filter(Boolean).join(" ")}</td>
+                                            <td className="text-base-content/70">{p.correo || "—"}</td>
+                                            <td className="text-base-content/70">{p.telefono || "—"}</td>
+                                            <td className="text-base-content/50 text-xs">
+                                                {p.fecha_inscripcion ? new Date(p.fecha_inscripcion).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </section>
 
                 {isFullPage && modificando && (
