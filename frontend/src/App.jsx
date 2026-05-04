@@ -35,13 +35,19 @@ import UsuariosHistorialView from "./views/admin/UsuariosHistorialView";
 import AjustesView from "./views/admin/AjustesView";
 import AjustesAreasView from "./views/admin/AjustesAreasView";
 import AjustesInstitucionesView from "./views/admin/AjustesInstitucionesView";
+import InstitucionDetallesView from "./views/admin/InstitucionDetallesView";
 
 import ProcesosResumenesView from "./views/admin/ProcesosResumenesView";
 import ProcesosExtensosView from "./views/admin/ProcesosExtensosView";
+import ProcesosRolesView from "./views/admin/ProcesosRolesView";
 import TalleresView from "./views/admin/TalleresView";
 import TalleresCrearView from "./views/admin/TalleresCrearView";
+import TallerDetallesView from "./views/admin/TallerDetallesView";
+
 import PonenciasView from "./views/admin/PonenciasView";
 import PonenciaCrearView from "./views/admin/PonenciaCrearView";
+import PonenciaDetallesView from "./views/admin/PonenciaDetallesView";
+
 import CongresosView from "./views/admin/CongresosView";
 import CongresoListaView from "./views/admin/CongresoListaView";
 import CongresoDetallesView from "./views/admin/CongresoDetallesView";
@@ -81,6 +87,8 @@ import {
   MdDescription,
   MdArticle,
   MdReceipt,
+  MdManageAccounts,
+  MdLayers,
 } from "react-icons/md";
 import { FaBook } from "react-icons/fa6";
 const AsistenteLayoutWrapper = () => {
@@ -88,7 +96,7 @@ const AsistenteLayoutWrapper = () => {
 
   const menuItems = [
     // Accesos rápidos para roles con permisos extra
-    ...((user?.rol === 'administrador' || user?.rol === 'revisor' || user?.rol === 'dictaminador') ? [
+    ...((user?.rol === 'administrador' || user?.rol === 'revisor' || user?.rol === 'dictaminador' || user?.es_evaluador || user?.es_dictaminador) ? [
       { type: 'subheader', label: 'Vistas de Rol' },
       {
         type: 'role-icons',
@@ -98,20 +106,22 @@ const AsistenteLayoutWrapper = () => {
             { to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview },
             { to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel },
           ] : [
-            ...(user?.rol === 'revisor' ? [{ to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview }] : []),
-            ...(user?.rol === 'dictaminador' ? [{ to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel }] : []),
+            ...((user?.rol === 'revisor' || user?.es_evaluador) ? [{ to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview }] : []),
+            ...((user?.rol === 'dictaminador' || user?.es_dictaminador) ? [{ to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel }] : []),
           ]),
         ]
       },
     ] : []),
 
     { to: '/asistente/agenda', label: 'Agenda', icon: MdCalendarMonth },
-    { to: '/asistente/catalogo', label: 'Catálogo', icon: MdLibraryBooks },
+    { to: '/asistente/congresos', label: 'Congresos', icon: MdLibraryBooks },
     { to: '/asistente/pagos', label: 'Pagos', icon: MdPayment },
     { to: '/asistente/facturas', label: 'Mis Facturas', icon: MdReceipt },
     { to: '/asistente/constancias', label: 'Mis Constancias', icon: MdBadge },
     { type: 'header', label: 'Ponente' },
     { to: '/asistente/enviar-ponencia', label: 'Enviar Ponencia', icon: MdUploadFile },
+    { to: '/asistente/estatus-ponencia', label: 'Estatus Ponencia', icon: GrStatusGood },
+    { to: '/asistente/mis-ponencias', label: 'Mis Ponencias', icon: MdCoPresent },
   ];
 
   return <SidebarLayout roleTitle="Asistente" drawerId="asistente-drawer" menuItems={menuItems} MainIcon={MdSchool} />;
@@ -122,7 +132,7 @@ const PonenteLayoutWrapper = () => {
 
   const menuItems = [
     // Accesos rápidos para roles con permisos extra
-    ...((user?.rol === 'administrador' || user?.rol === 'revisor' || user?.rol === 'dictaminador') ? [
+    ...((user?.rol === 'administrador' || user?.rol === 'revisor' || user?.rol === 'dictaminador' || user?.es_evaluador || user?.es_dictaminador) ? [
       { type: 'subheader', label: 'Vistas de Rol' },
       {
         type: 'role-icons',
@@ -132,8 +142,8 @@ const PonenteLayoutWrapper = () => {
             { to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview },
             { to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel },
           ] : [
-            ...(user?.rol === 'revisor' ? [{ to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview }] : []),
-            ...(user?.rol === 'dictaminador' ? [{ to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel }] : []),
+            ...((user?.rol === 'revisor' || user?.es_evaluador) ? [{ to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview }] : []),
+            ...((user?.rol === 'dictaminador' || user?.es_dictaminador) ? [{ to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel }] : []),
           ]),
         ]
       },
@@ -161,7 +171,7 @@ const AdminLayoutWrapper = () => {
     {
       type: 'role-icons',
       roles: [
-        { to: '/asistente/agenda', label: 'Asistente', icon: MdPerson },
+        { to: '/asistente/congresos', label: 'Asistente', icon: MdPerson },
         { to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview },
         { to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel },
       ]
@@ -175,22 +185,21 @@ const AdminLayoutWrapper = () => {
     ...(pathname.includes('/admin/procesos') ? [
       { to: '/admin/procesos/resumenes', label: 'Resúmenes', icon: MdDescription, className: 'pl-9 opacity-70' },
       { to: '/admin/procesos/extensos', label: 'Extensos', icon: MdArticle, className: 'pl-9 opacity-70' },
+      { to: '/admin/procesos/roles', label: 'Roles', icon: MdManageAccounts, className: 'pl-9 opacity-70' },
     ] : []),
 
-    // Eventos con sub-menú dinámico
-    { to: '/admin/eventos', label: 'Eventos', icon: MdEvent },
-    ...(pathname.includes('/admin/eventos') ? [
-      { to: '/admin/eventos/talleres', label: 'Talleres', icon: MdGroups, className: 'pl-9 opacity-70' },
-      { to: '/admin/eventos/ponencias', label: 'Ponencias', icon: MdCoPresent, className: 'pl-9 opacity-70' },
-      { to: '/admin/eventos/congresos', label: 'Congresos', icon: MdAccountBalance, className: 'pl-9 opacity-70' },
-      // Sub-sub menú de Congresos
-      ...(pathname.includes('/admin/eventos/congresos') ? [
-        { to: '/admin/eventos/congresos/lista', label: 'Lista', icon: MdInfo, className: 'pl-14 opacity-60' },
-        { to: '/admin/eventos/congresos/sede', label: 'Sede', icon: MdPlace, className: 'pl-14 opacity-60' },
-        { to: '/admin/eventos/congresos/fechas', label: 'Fechas', icon: MdEventAvailable, className: 'pl-14 opacity-60' },
-        { to: '/admin/eventos/congresos/tipos-trabajo', label: 'Tipos Trabajo', icon: MdWork, className: 'pl-14 opacity-60' },
-        { to: '/admin/eventos/congresos/libros', label: 'Libros', icon: FaBook, className: 'pl-14 opacity-70' },
-      ] : [])
+    // Congresos como apartado principal con sub-menú dinámico
+    {
+      to: '/admin/eventos/congresos/lista',
+      label: 'Congresos',
+      icon: MdAccountBalance,
+      activePaths: ['/admin/eventos/talleres', '/admin/eventos/ponencias']
+    },
+    ...(pathname.includes('/admin/eventos/congresos') ? [
+      { to: '/admin/eventos/congresos/lista', label: 'Lista', icon: MdInfo, className: 'pl-9 opacity-70' },
+      { to: '/admin/eventos/congresos/sede', label: 'Sede', icon: MdPlace, className: 'pl-9 opacity-70' },
+
+      { to: '/admin/eventos/congresos/libros', label: 'Libros', icon: FaBook, className: 'pl-9 opacity-70' },
     ] : []),
 
     { to: '/admin/pagos', label: 'Pagos', icon: MdPayment },
@@ -220,10 +229,10 @@ const RevisorLayoutWrapper = () => {
       roles: [
         ...(user?.rol === 'administrador' ? [
           { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
-          { to: '/asistente/agenda', label: 'Asistente', icon: MdPerson },
+          { to: '/asistente/congresos', label: 'Asistente', icon: MdPerson },
           { to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel },
         ] : [
-          { to: '/asistente/agenda', label: 'Asistente', icon: MdPerson },
+          { to: '/asistente/congresos', label: 'Asistente', icon: MdPerson },
         ]),
       ]
     },
@@ -244,10 +253,10 @@ const DictaminadorLayoutWrapper = () => {
       roles: [
         ...(user?.rol === 'administrador' ? [
           { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
-          { to: '/asistente/agenda', label: 'Asistente', icon: MdPerson },
+          { to: '/asistente/congresos', label: 'Asistente', icon: MdPerson },
           { to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview },
         ] : [
-          { to: '/asistente/agenda', label: 'Asistente', icon: MdPerson },
+          { to: '/asistente/congresos', label: 'Asistente', icon: MdPerson },
         ]),
       ]
     },
@@ -280,11 +289,14 @@ function App() {
             }
           >
             <Route index element={<Navigate to="agenda" replace />} />
-            <Route path="agenda" element={<AgendaView />} />
-            <Route path="catalogo" element={<CatalogoView />} />
+            <Route path="agenda" element={<CatalogoView />} />
+            <Route path="congresos" element={<AgendaView />} />
             <Route path="pagos" element={<PagosView />} />
             <Route path="facturas" element={<FacturasView />} />
             <Route path="enviar-ponencia" element={<EnviarPonenciaView />} />
+            <Route path="estatus-ponencia" element={<EstatusPonenciaView />} />
+            <Route path="subir-extenso/:id" element={<SubirExtensoView />} />
+            <Route path="mis-ponencias" element={<MisPonenciasView />} />
             <Route
               path="constancias"
               element={<ConstanciasView title="Mis Constancias" />}
@@ -371,16 +383,19 @@ function App() {
               <Route index element={<ProcesosView />} />
               <Route path="resumenes" element={<ProcesosResumenesView />} />
               <Route path="extensos" element={<ProcesosExtensosView />} />
+              <Route path="roles" element={<ProcesosRolesView />} />
             </Route>
             <Route path="eventos">
               <Route index element={<EventosView />} />
               <Route path="talleres">
                 <Route index element={<TalleresView />} />
                 <Route path="crear" element={<TalleresCrearView />} />
+                <Route path="detalles/:id" element={<TallerDetallesView />} />
               </Route>
               <Route path="ponencias">
                 <Route index element={<PonenciasView />} />
                 <Route path="crear" element={<PonenciaCrearView />} />
+                <Route path="detalles/:id" element={<PonenciaDetallesView />} />
               </Route>
               <Route path="congresos">
                 <Route index element={<CongresosView />} />
@@ -389,7 +404,7 @@ function App() {
                 <Route path="detalles/:id" element={<CongresoDetallesView />} />
                 <Route path="sede" element={<CongresoSedeView />} />
                 <Route path="fechas" element={<CongresoFechasView />} />
-                <Route path="tipos-trabajo" element={<CongresoTiposTrabajoView />} />
+                <Route path="tipos-trabajo/:id" element={<CongresoTiposTrabajoView />} />
                 <Route path="libros" element={<LibrosView title="Gestión de Libros" />} />
               </Route>
             </Route>
@@ -402,9 +417,12 @@ function App() {
             </Route>
             <Route path="ajustes">
               <Route index element={<AjustesView />} />
-              <Route path="instituciones" element={<AjustesInstitucionesView title="Gestión de Instituciones" />} />
+              <Route path="instituciones">
+                <Route index element={<AjustesInstitucionesView title="Gestión de Instituciones" />} />
+                <Route path="crear" element={<InstitucionDetallesView />} />
+                <Route path="editar/:id" element={<InstitucionDetallesView />} />
+              </Route>
               <Route path="areas" element={<AjustesAreasView title="Gestión de Áreas" />} />
-
             </Route>
           </Route>
 

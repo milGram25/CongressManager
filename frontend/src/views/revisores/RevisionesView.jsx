@@ -1,107 +1,74 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getMisExtensos } from '../../api/ponenciasApi';
 
-const RevisionCard = ({ titulo, id, fechaAsignado, fechaLimite, estado, urgente }) => {
+function RevisionCard({ item }) {
   const navigate = useNavigate();
-  
-  // Mapeo de colores basado en urgencia
-  const config = urgente 
-    ? { border: 'border-l-error', text: 'text-error', label: '¡URGENTE! - FECHA LÍMITE PRÓXIMA' }
-    : { border: 'border-l-warning', text: 'text-warning', label: 'ESPERANDO DICTAMEN' };
+  const pendiente = !item.revisado;
+  const config = pendiente
+    ? { border: 'border-l-warning', text: 'text-warning', label: 'PENDIENTE DE REVISIÓN' }
+    : { border: 'border-l-success', text: 'text-success', label: item.estatus_evaluacion?.toUpperCase() ?? 'COMPLETADO' };
 
   return (
     <div className={`flex flex-col md:flex-row items-start md:items-center justify-between bg-base-100 p-6 mb-4 rounded-xl shadow-sm border-l-[10px] ${config.border} transition-all hover:shadow-md`}>
-      <div className="flex flex-col gap-1">
-        <span className={`text-[10px] font-bold uppercase tracking-widest ${config.text}`}>
-          {config.label}
-        </span>
-        <h3 className="text-lg font-semibold text-base-content leading-tight mb-1">{titulo}</h3>
-        <p className="text-xs text-base-content/60 font-bold mb-2 uppercase tracking-tighter">ID: {id}</p>
-        <div className="flex flex-wrap gap-4 md:gap-6 text-[11px] text-base-content/40 font-medium">
-          <span>Asignado: {fechaAsignado}</span>
-          <span className={urgente ? "text-error font-bold underline decoration-error" : ""}>
-            Límite: {fechaLimite}
-          </span>
-        </div>
+      <div className="flex flex-col gap-1 flex-1 min-w-0">
+        <span className={`text-[10px] font-bold uppercase tracking-widest ${config.text}`}>{config.label}</span>
+        <h3 className="text-lg font-semibold text-base-content leading-tight mb-1 truncate">{item.titulo}</h3>
+        <p className="text-xs text-base-content/60 font-bold uppercase tracking-tighter">Congreso: {item.congreso}</p>
       </div>
-      <button 
-        onClick={() => navigate(`/revisor/revision/${id.replace('#', '')}`)}
-        className="mt-4 md:mt-0 bg-primary hover:bg-primary/90 text-white px-7 py-2 rounded-lg font-bold text-sm tracking-wide transition-all shadow-sm active:scale-95"
-      >
-        REVISAR
-      </button>
+      {pendiente && (
+        <button
+          onClick={() => navigate(`/revisor/revision/${item.id_extenso}`)}
+          className="mt-4 md:mt-0 md:ml-6 bg-primary hover:bg-primary/90 text-white px-7 py-2 rounded-lg font-bold text-sm tracking-wide transition-all shadow-sm active:scale-95 flex-shrink-0"
+        >
+          REVISAR
+        </button>
+      )}
     </div>
   );
-};
+}
 
 export default function RevisionesView() {
+  const accessToken = localStorage.getItem('congress_access');
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('pendientes');
 
-  return (
-    <div className="flex flex-col h-full w-full bg-transparent relative">
-      <div className="flex-grow">
-        <h1 className="text-2xl font-semibold text-base-content mb-8">Extensos por revisar</h1>
-        
-        {/* Tabs */}
-        <div className="flex border-b border-base-300 mb-8">
-          <button 
-            onClick={() => setActiveTab('pendientes')}
-            className={`px-8 py-3 border-b-2 text-sm transition-all ${
-              activeTab === 'pendientes' 
-                ? 'border-primary text-primary font-bold' 
-                : 'border-transparent text-base-content/40 font-semibold hover:text-base-content/60'
-            }`}
-          >
-            Pendientes (3)
-          </button>
-          <button 
-            onClick={() => setActiveTab('completadas')}
-            className={`px-8 py-3 border-b-2 text-sm transition-all ${
-              activeTab === 'completadas' 
-                ? 'border-primary text-primary font-bold' 
-                : 'border-transparent text-base-content/40 font-semibold hover:text-base-content/60'
-            }`}
-          >
-            Completadas (12)
-          </button>
-        </div>
+  useEffect(() => {
+    getMisExtensos(accessToken)
+      .then(setItems)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [accessToken]);
 
-        {/* Contenido Dinámico según Tab */}
-        <div className="space-y-4">
-          {activeTab === 'pendientes' ? (
-            <>
-              <RevisionCard 
-                titulo="Impacto de la Inteligencia Artificial en la Educación Superior 2026"
-                id="#ART-9920" 
-                fechaAsignado="10 Feb 2026" 
-                fechaLimite="05 Mar 2026"
-                estado="ESPERANDO DICTAMEN" 
-                urgente={true} 
-              />
-              <RevisionCard 
-                titulo="Análisis de Redes Eléctricas en Zonas Rurales de Jalisco"
-                id="#ART-8845" 
-                fechaAsignado="01 Feb 2026" 
-                fechaLimite="HOY"
-                estado="REVISIÓN TÉCNICA" 
-                urgente={true} 
-              />
-              <RevisionCard 
-                titulo="Nuevas tendencias en el desarrollo de software educativo"
-                id="#ART-7712" 
-                fechaAsignado="15 Feb 2026" 
-                fechaLimite="10 Mar 2026"
-                estado="ESPERANDO DICTAMEN" 
-                urgente={false} 
-              />
-            </>
-          ) : (
-            <div className="py-10 text-center text-base-content/40 italic bg-base-100 rounded-xl border border-dashed border-base-300">
-              Aquí aparecerán tus revisiones ya completadas.
-            </div>
-          )}
-        </div>
+  const pendientes = items.filter(i => !i.revisado);
+  const completados = items.filter(i => i.revisado);
+
+  return (
+    <div className="flex flex-col h-full w-full bg-transparent">
+      <h1 className="text-2xl font-semibold text-base-content mb-8">Extensos por revisar</h1>
+      <div className="flex border-b border-base-300 mb-8">
+        {[['pendientes', `Pendientes (${pendientes.length})`], ['completadas', `Completadas (${completados.length})`]].map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setActiveTab(key)}
+            className={`px-8 py-3 border-b-2 text-sm transition-all ${activeTab === key ? 'border-primary text-primary font-bold' : 'border-transparent text-base-content/40 font-semibold hover:text-base-content/60'}`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
+      {loading ? (
+        <div className="flex justify-center py-10"><span className="loading loading-spinner loading-lg text-primary" /></div>
+      ) : activeTab === 'pendientes' ? (
+        pendientes.length === 0
+          ? <p className="py-10 text-center text-base-content/40 italic">No tienes extensos pendientes de revisión.</p>
+          : pendientes.map(i => <RevisionCard key={i.id_extenso} item={i} />)
+      ) : (
+        completados.length === 0
+          ? <p className="py-10 text-center text-base-content/40 italic">Aquí aparecerán tus revisiones completadas.</p>
+          : completados.map(i => <RevisionCard key={i.id_extenso} item={i} />)
+      )}
     </div>
   );
 }

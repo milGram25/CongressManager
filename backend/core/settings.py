@@ -28,7 +28,6 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -88,6 +87,9 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST', default='localhost'),
         'PORT': config('DB_PORT', default='5432'),
+        'TEST': {
+            'NAME': config('DB_NAME'),
+        },
     }
 }
 
@@ -129,15 +131,18 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 MEDIA_URL = '/media/'
-import os
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
+
+# Si sigue fallando en desarrollo, puedes usar:
+# CORS_ALLOW_ALL_ORIGINS = True
 
 AUTH_USER_MODEL = 'users.Persona'
 

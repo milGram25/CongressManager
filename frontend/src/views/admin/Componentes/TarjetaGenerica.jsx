@@ -6,6 +6,7 @@ import DetallesCrearCongreso from './DetallesCrearCongreso';
 import DetallesEditarTaller from './DetallesEditarTaller';
 import { useNavigate } from 'react-router-dom';
 import DetallesEditarPonencia from './DetallesEditarPonencia';
+import DetallesEditarInstitucion from './DetallesEditarInstitucion';
 
 const TarjetaGenerica = ({
                              titulo,
@@ -16,7 +17,8 @@ const TarjetaGenerica = ({
                              onPublish,
                              children,
                              definirTipoElemento,
-                             indexDatosModal
+                             indexDatosModal,
+                             itemData
                          }) => {
 
     const navigate = useNavigate();
@@ -25,11 +27,11 @@ const TarjetaGenerica = ({
     const renderModalContent = () => {
         switch(definirTipoElemento){
             case "ponencia":
-                return <DetallesEditarPonencia/>;
+                return <DetallesEditarPonencia ponenciaData={itemData || {}} />;
             case "taller":
-                return <DetallesEditarTaller/>;
+                return <DetallesEditarTaller tallerData={itemData || {}} />;
             case "institucion":
-                return null;
+                return <DetallesEditarInstitucion institucionData={itemData || {}} />;
             case "congreso":
                 return <DetallesCrearCongreso indexDatosModal={indexDatosModal}/>;
             default:
@@ -64,6 +66,12 @@ const TarjetaGenerica = ({
                     onClick={() => {
                         if (definirTipoElemento === 'congreso') {
                             navigate(`/admin/eventos/congresos/detalles/${indexDatosModal}`);
+                        } else if (definirTipoElemento === 'institucion') {
+                            navigate(`/admin/ajustes/instituciones/editar/${indexDatosModal}`);
+                        } else if (definirTipoElemento === 'taller') {
+                            navigate(`/admin/eventos/talleres/detalles/${indexDatosModal}`);
+                        } else if (definirTipoElemento === 'ponencia') {
+                            navigate(`/admin/eventos/ponencias/detalles/${indexDatosModal}`);
                         } else {
                             if (onView) onView();
                             else setOpenModal(true);
@@ -96,6 +104,12 @@ const TarjetaGenerica = ({
                         onClick={() => {
                             if (definirTipoElemento === 'congreso') {
                                 navigate(`/admin/eventos/congresos/detalles/${indexDatosModal}?edit=true`);
+                            } else if (definirTipoElemento === 'institucion') {
+                                navigate(`/admin/ajustes/instituciones/editar/${indexDatosModal}`);
+                            } else if (definirTipoElemento === 'taller') {
+                                navigate(`/admin/eventos/talleres/detalles/${indexDatosModal}?edit=true`);
+                            } else if (definirTipoElemento === 'ponencia') {
+                                navigate(`/admin/eventos/ponencias/detalles/${indexDatosModal}?edit=true`);
                             } else {
                                 if (onEdit) onEdit();
                                 else setOpenModal(true);

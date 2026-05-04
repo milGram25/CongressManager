@@ -40,9 +40,9 @@ export default function UserConstanciaList({ users, selectedUserId, onSelectUser
   return (
     <div className="flex flex-col gap-3">
       {users.map((user) => (
-        <div 
+        <div
           key={user.id}
-          onClick={() => onSelectUser(user)}
+          onClick={() => onSelectUser(selectedUserId === user.id ? null : user)}
           className={`group flex items-center gap-4 p-4 cursor-pointer transition-all rounded-2xl border bg-white shadow-sm
             ${selectedUserId === user.id ? "border-[#005a6a] ring-1 ring-[#005a6a]/20" : "border-gray-100 hover:border-[#005a6a]/30"}`}
         >

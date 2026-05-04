@@ -1,20 +1,27 @@
-const API_URL = 'http://localhost:8000';
+import { API_URL } from './constants';
 
 /**
  * Inicia sesión con email y password.
  * Devuelve { user, access, refresh } o lanza un error con mensaje.
  */
 export async function loginApi(email, password) {
-  const res = await fetch(`${API_URL}/api/users/login/`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
-  const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.detail || 'Error al iniciar sesión.');
+  try {
+    const res = await fetch(`${API_URL}/api/users/login/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || 'Error al iniciar sesión.');
+    }
+    return data; // { user, access, refresh }
+  } catch (error) {
+    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+      throw new Error('No se pudo conectar con el servidor. Asegúrate de que el backend esté corriendo en ' + API_URL);
+    }
+    throw error;
   }
-  return data; // { user, access, refresh }
 }
 
 /**
@@ -49,11 +56,18 @@ export async function registerApi(formData) {
  * Obtiene los datos del usuario actual a partir del access token guardado.
  */
 export async function getMeApi(accessToken) {
-  const res = await fetch(`${API_URL}/api/users/me/`, {
-    headers: { 'Authorization': `Bearer ${accessToken}` },
-  });
-  if (!res.ok) throw new Error('Sesión expirada.');
-  return res.json(); // datos del usuario
+  try {
+    const res = await fetch(`${API_URL}/api/users/me/`, {
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+    });
+    if (!res.ok) throw new Error('Sesión expirada.');
+    return res.json(); // datos del usuario
+  } catch (error) {
+    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+      throw new Error('Error de conexión con el servidor.');
+    }
+    throw error;
+  }
 }
 
 /**

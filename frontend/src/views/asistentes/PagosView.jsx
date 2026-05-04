@@ -2,13 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import PagosForm from "./components/PagosForm";
-import { getPagosResumenApi, registrarPagoApi } from "../../api/pagosApi";
+import { getPagosResumenApi, registrarPagoApi, solicitarFacturaApi } from "../../api/pagosApi";
 import {
   MdSchool,
   MdEmail,
   MdVpnKey,
   MdCheckCircle,
   MdInfoOutline,
+  MdArrowBack,
 } from "react-icons/md";
 
 function roleLabel(role) {
@@ -23,6 +24,9 @@ function roleLabel(role) {
 export default function PagosView() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const idCongreso = searchParams.get("id_congreso") || null;
+  const nombreCongreso = searchParams.get("nombre") || null;
 
   const [resumen, setResumen] = useState(null);
   const [loadingResumen, setLoadingResumen] = useState(true);
@@ -40,6 +44,8 @@ export default function PagosView() {
   const [pagoExitoso, setPagoExitoso] = useState(false);
   const [quiereFactura, setQuiereFactura] = useState(false);
   const [solicitudEnviada, setSolicitudEnviada] = useState(false);
+  const [enviandoFactura, setEnviandoFactura] = useState(false);
+  const [errorFactura, setErrorFactura] = useState("");
   const [usarCorreoAlternativo, setUsarCorreoAlternativo] = useState(false);
   const [correoFacturacion, setCorreoFacturacion] = useState("");
   const [datosFacturacion, setDatosFacturacion] = useState({
@@ -106,7 +112,7 @@ export default function PagosView() {
       try {
         const token = localStorage.getItem("congress_access");
         if (!token) throw new Error("No hay sesión activa.");
-        const data = await getPagosResumenApi(token);
+        const data = await getPagosResumenApi(token, idCongreso);
         setResumen(data);
       } catch (err) {
         setResumenError(err.message || "No se pudo cargar la información de pagos.");
@@ -116,7 +122,7 @@ export default function PagosView() {
     };
 
     loadResumen();
-  }, []);
+  }, [idCongreso]);
 
   const isFormValid = useMemo(() => {
     const rfcRegex = /^([A-ZÑ&]{3,4}) ?(?:- ?)?(\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])) ?(?:- ?)?([A-Z\d]{2}[A-Z\d])$/;
@@ -195,9 +201,16 @@ export default function PagosView() {
       const payload = {
         requiere_factura: false,
         monto: finalPrice,
+        ...(idCongreso && { id_congreso: idCongreso }),
       };
       const response = await registrarPagoApi(token, payload);
       setResumen(response.summary);
+      if (idCongreso) {
+        const prev = JSON.parse(localStorage.getItem('congress_inscripciones') || '[]');
+        if (!prev.includes(Number(idCongreso))) {
+          localStorage.setItem('congress_inscripciones', JSON.stringify([...prev, Number(idCongreso)]));
+        }
+      }
       setPagoExitoso(true);
     } catch (err) {
       setPagoError(err.message || "No se pudo registrar el pago.");
@@ -206,26 +219,25 @@ export default function PagosView() {
     }
   };
 
-  const handleEnviarSolicitudFactura = () => {
-    const datosFinales = {
-      id: Date.now(),
-      nombre: user?.nombre || "Usuario Demo",
-      email: usarCorreoAlternativo
-        ? correoFacturacion
-        : user?.correo_electronico || user?.email,
-      institucion: "Institución Demo",
-      congreso: "CIENU 2026",
-      rol: roleLabel(role),
-      status: "red",
-      ...datosFacturacion,
-      fechaSolicitud: new Date().toISOString(),
-    };
-
-    const existingRequests = JSON.parse(localStorage.getItem("invoice_requests") || "[]");
-    localStorage.setItem("invoice_requests", JSON.stringify([...existingRequests, datosFinales]));
-
-    setSolicitudEnviada(true);
-    setQuiereFactura(false);
+  const handleEnviarSolicitudFactura = async () => {
+    setEnviandoFactura(true);
+    setErrorFactura("");
+    try {
+      const token = localStorage.getItem("congress_access");
+      await solicitarFacturaApi(token, {
+        id_congreso: idCongreso ? Number(idCongreso) : null,
+        rfc: datosFacturacion.rfc,
+        razon_social: datosFacturacion.razonSocial,
+        codigo_postal: datosFacturacion.cp,
+        regimen_fiscal: datosFacturacion.regimenFiscal,
+      });
+      setSolicitudEnviada(true);
+      setQuiereFactura(false);
+    } catch (err) {
+      setErrorFactura(err.message || "No se pudo enviar la solicitud.");
+    } finally {
+      setEnviandoFactura(false);
+    }
   };
 
   if (loadingResumen) {
@@ -244,7 +256,18 @@ export default function PagosView() {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <h2 className="text-3xl font-bold mb-8 text-neutral">CIENU 2026 (titulo congreso)</h2>
+      {idCongreso && (
+        <button
+          onClick={() => navigate("/asistente/agenda")}
+          className="btn btn-ghost btn-sm gap-1 mb-4 -ml-2"
+        >
+          <MdArrowBack className="text-lg" />
+          Congresos
+        </button>
+      )}
+      <h2 className="text-3xl font-bold mb-8 text-neutral">
+        {nombreCongreso || "Inscripción al Congreso"}
+      </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2 space-y-6">
@@ -267,7 +290,7 @@ export default function PagosView() {
             {isPonente && (
               <div className="mb-6 p-4 rounded-xl border border-alt/30 bg-alt/10 text-sm space-y-2">
                 <div className="font-bold text-alt">Pago de ponencias</div>
-                <p>El primer pago cubre hasta 2 ponencias, de la ponencia 3 a 5 se paga cuota completa por cada una.</p>
+                <p>El primer pago incluye hasta 3 ponencias. A partir de la cuarta, deberás pagar la cuota de ponencias extras por cada una adicional.</p>
               </div>
             )}
 
@@ -569,14 +592,17 @@ export default function PagosView() {
                   )}
                 </div>
 
+                {errorFactura && (
+                  <p className="text-error text-xs font-bold mt-2 text-center">{errorFactura}</p>
+                )}
                 <button
-                  disabled={!isFormValid}
+                  disabled={!isFormValid || enviandoFactura}
                   onClick={handleEnviarSolicitudFactura}
                   className={`btn w-full mt-4 text-white ${
-                    isFormValid ? "bg-alt hover:bg-alt/80 border-none" : "bg-gray-400 cursor-not-allowed"
+                    isFormValid && !enviandoFactura ? "bg-alt hover:bg-alt/80 border-none" : "bg-gray-400 cursor-not-allowed"
                   }`}
                 >
-                  Enviar Solicitud Factura
+                  {enviandoFactura ? "Enviando..." : "Enviar Solicitud Factura"}
                 </button>
                 <button
                   onClick={() => setQuiereFactura(false)}

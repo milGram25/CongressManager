@@ -16,6 +16,8 @@ CREATE TYPE accion_enum AS ENUM (
 CREATE TABLE institucion (
     id_institucion SERIAL PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL,
+    ubicacion VARCHAR(255),
+    pais VARCHAR(100) DEFAULT 'México',
     ruta_imagen VARCHAR(255)
 );
 
@@ -38,6 +40,7 @@ CREATE TABLE areas_generales (
 
 CREATE TABLE tipo_trabajo (
     id_tipo_trabajo SERIAL PRIMARY KEY,
+    id_congreso INTEGER,
     tipo_trabajo VARCHAR(255) NOT NULL
 );
 
@@ -102,7 +105,8 @@ CREATE TABLE fechas_congreso (
 -- 3. SISTEMA DE RÚBRICAS (Plantillas de evaluación)
 CREATE TABLE rubrica (
     id_rubrica SERIAL PRIMARY KEY,
-    tipo_trabajo INTEGER NOT NULL REFERENCES tipo_trabajo(id_tipo_trabajo),
+    id_congreso INTEGER,
+    tipo_trabajo INTEGER REFERENCES tipo_trabajo(id_tipo_trabajo),
     nombre VARCHAR(255) NOT NULL,
     esta_activo BOOLEAN DEFAULT true,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -149,8 +153,14 @@ CREATE TABLE congreso (
     id_institucion INTEGER NOT NULL REFERENCES institucion(id_institucion),
     id_fechas_congreso INTEGER NOT NULL REFERENCES fechas_congreso(id_fechas_congreso),
     id_costos_congreso INTEGER NOT NULL REFERENCES costos_congreso(id_costos_congreso),
-    id_rubrica_default INTEGER REFERENCES rubrica(id_rubrica) -- Rubrica global del congreso
+    id_rubrica_default INTEGER REFERENCES rubrica(id_rubrica), -- Rubrica global del congreso
+    firma_organizador VARCHAR(255),
+    firma_secretaria VARCHAR(255),
+    firmas_bloqueadas BOOLEAN DEFAULT FALSE
 );
+
+ALTER TABLE tipo_trabajo ADD CONSTRAINT fk_tipo_trabajo_congreso FOREIGN KEY (id_congreso) REFERENCES congreso(id_congreso) ON DELETE CASCADE;
+ALTER TABLE rubrica ADD CONSTRAINT fk_rubrica_congreso FOREIGN KEY (id_congreso) REFERENCES congreso(id_congreso) ON DELETE CASCADE;
 
 -- 5. ROLES Y LOGÍSTICA
 CREATE TABLE evaluador (
@@ -161,6 +171,20 @@ CREATE TABLE evaluador (
 CREATE TABLE dictaminador (
     id_dictaminador SERIAL PRIMARY KEY,
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona)
+);
+
+CREATE TABLE dictaminador_congreso (
+    id_dictaminador_congreso SERIAL PRIMARY KEY,
+    id_persona INTEGER NOT NULL REFERENCES persona(id_persona) ON DELETE CASCADE,
+    id_congreso INTEGER NOT NULL REFERENCES congreso(id_congreso) ON DELETE CASCADE,
+    UNIQUE(id_persona, id_congreso)
+);
+
+CREATE TABLE evaluador_congreso (
+    id_evaluador_congreso SERIAL PRIMARY KEY,
+    id_persona INTEGER NOT NULL REFERENCES persona(id_persona) ON DELETE CASCADE,
+    id_congreso INTEGER NOT NULL REFERENCES congreso(id_congreso) ON DELETE CASCADE,
+    UNIQUE(id_persona, id_congreso)
 );
 
 CREATE TABLE ponente (
@@ -212,10 +236,7 @@ CREATE TABLE resumen (
     fecha_entrega TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     revisado BOOLEAN DEFAULT FALSE,
     estatus estatus_resumen_enum,
-    retroalimentacion TEXT,
-    titulo VARCHAR(255),
-    palabras_clave VARCHAR(255),
-    contenido TEXT
+    retroalimentacion TEXT
 );
 
 CREATE TABLE extenso (
@@ -223,8 +244,11 @@ CREATE TABLE extenso (
     titulo VARCHAR(255) NOT NULL,
     fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     revisado BOOLEAN DEFAULT FALSE,
-    version_numero INTEGER DEFAULT 1, -- Para manejar "Solicitud de cambios"
-    ruta_archivo VARCHAR(255)
+    version_numero INTEGER DEFAULT 1,
+    id_evaluador INTEGER REFERENCES evaluador(id_evaluador),
+    id_evaluador_2 INTEGER REFERENCES evaluador(id_evaluador),
+    id_evaluador_3 INTEGER REFERENCES evaluador(id_evaluador),
+    ruta_relativa VARCHAR(500)
 );
 
 CREATE TABLE ponencia (
@@ -232,10 +256,9 @@ CREATE TABLE ponencia (
     id_evento INTEGER REFERENCES evento(id_evento),
     tipo_participacion tipo_participacion_enum,
     id_subarea INTEGER NOT NULL REFERENCES subareas(id_subareas),
-    id_resumen INTEGER NOT NULL REFERENCES resumen(id_resumen),
+    id_resumen INTEGER REFERENCES resumen(id_resumen),
     id_extenso INTEGER REFERENCES extenso(id_extenso),
-    id_multimedia INTEGER REFERENCES multimedia(id_material),
-    id_tipo_trabajo INTEGER REFERENCES tipo_trabajo(id_tipo_trabajo)
+    id_multimedia INTEGER REFERENCES multimedia(id_material)
 );
 
 -- Te parece bien asi la tabla de taller?
@@ -291,18 +314,21 @@ CREATE TABLE ponente_has_ponencia (
     id_ponente INTEGER NOT NULL REFERENCES ponente(id_ponente),
     id_ponencia INTEGER NOT NULL REFERENCES ponencia(id_ponencia),
     asistio BOOLEAN DEFAULT FALSE,
-    es_principal BOOLEAN DEFAULT FALSE,
     UNIQUE(id_ponente, id_ponencia)
 );
 
 CREATE TABLE factura (
     id_factura SERIAL PRIMARY KEY,
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona),
+    id_congreso INTEGER REFERENCES congreso(id_congreso),
     rfc VARCHAR(13),
     razon_social VARCHAR(255),
     codigo_postal VARCHAR(10),
     regimen_fiscal VARCHAR(255),
-    ruta_pdf_xml VARCHAR(255) NOT NULL
+    ruta_pdf_xml VARCHAR(255),
+    estatus VARCHAR(20) DEFAULT 'pendiente', -- 'pendiente', 'enviada'
+    fecha_solicitud TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_envio TIMESTAMP
 );
 
 CREATE TABLE pagos (
@@ -327,7 +353,11 @@ CREATE TABLE historial_acciones (
 CREATE TABLE constancia (
     id_constancia SERIAL PRIMARY KEY,
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona),
-    ruta_constancia VARCHAR(255) NOT NULL
+    id_congreso INTEGER REFERENCES congreso(id_congreso),
+    ruta_constancia VARCHAR(255),
+    tipo_constancia VARCHAR(50), -- 'Asistente', 'Ponente', etc.
+    estatus VARCHAR(20) DEFAULT 'generada', -- 'generada', 'enviada'
+    fecha_emision TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE libros(
