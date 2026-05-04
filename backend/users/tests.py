@@ -301,3 +301,64 @@ class TokenFlagsTests(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertTrue(res.data['es_dictaminador'])
         self.assertFalse(res.data['es_evaluador'])
+
+
+class FacturasPendientesAdminViewTests(TestCase):
+    databases = ['default']
+
+    def setUp(self):
+        self.client = APIClient()
+        self.admin = _create_persona('admin_fp@test.com', is_staff=True, is_superuser=True)
+        self.user = _create_persona('user_fp@test.com', nombre='María', apellido='González')
+        self.congreso_id = _create_congreso('Congreso FP Test')
+        self.client.force_authenticate(user=self.admin)
+
+        with connection.cursor() as c:
+            c.execute(
+                """INSERT INTO factura (id_persona, id_congreso, rfc, razon_social, estatus, fecha_solicitud)
+                   VALUES (%s, %s, %s, %s, 'pendiente', NOW()) RETURNING id_factura""",
+                [self.user.id_persona, self.congreso_id, 'GOMA800101ABC', 'María González S.A.'],
+            )
+            self.id_factura = c.fetchone()[0]
+
+    def test_requires_staff(self):
+        self.client.force_authenticate(user=self.user)
+        res = self.client.get('/api/users/facturas/pendientes/')
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_returns_pending_facturas(self):
+        res = self.client.get('/api/users/facturas/pendientes/')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        ids = [f['id_factura'] for f in res.data]
+        self.assertIn(self.id_factura, ids)
+
+    def test_filters_by_congreso(self):
+        otro = _create_congreso('Otro Congreso')
+        res = self.client.get(f'/api/users/facturas/pendientes/?id_congreso={otro}')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        ids = [f['id_factura'] for f in res.data]
+        self.assertNotIn(self.id_factura, ids)
+
+    def test_response_shape(self):
+        res = self.client.get(f'/api/users/facturas/pendientes/?id_congreso={self.congreso_id}')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
+        f = res.data[0]
+        self.assertEqual(f['id_factura'], self.id_factura)
+        self.assertEqual(f['rfc'], 'GOMA800101ABC')
+        self.assertIn('nombre_completo', f)
+        self.assertIn('monto_pagado', f)
+        self.assertIn('fecha_solicitud', f)
+        self.assertIn('nombre_congreso', f)
+
+    def test_does_not_return_enviadas(self):
+        with connection.cursor() as c:
+            c.execute(
+                "INSERT INTO factura (id_persona, id_congreso, rfc, estatus, fecha_solicitud)"
+                " VALUES (%s, %s, %s, 'enviada', NOW())",
+                [self.user.id_persona, self.congreso_id, 'ENVIADA999XYZ'],
+            )
+        res = self.client.get(f'/api/users/facturas/pendientes/?id_congreso={self.congreso_id}')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        rfcs = [f.get('rfc') for f in res.data]
+        self.assertNotIn('ENVIADA999XYZ', rfcs)

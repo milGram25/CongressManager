@@ -96,6 +96,16 @@ def _get_congress_participant_ids(id_congreso):
         """, [id_congreso])
         enrolled |= {r[0] for r in cursor.fetchall()}
 
+        # Users who paid for this congress (may not be in any event yet)
+        cursor.execute("""
+            SELECT DISTINCT p.id_persona
+            FROM pagos p
+            JOIN costos_congreso cc ON cc.id_costos_congreso = p.id_costos
+            JOIN congreso c ON c.id_costos_congreso = cc.id_costos_congreso
+            WHERE c.id_congreso = %s
+        """, [id_congreso])
+        enrolled |= {r[0] for r in cursor.fetchall()}
+
     # Dictaminadores and evaluadores are committee members — always included
     enrolled |= set(Dictaminador.objects.values_list('id_persona_id', flat=True))
     enrolled |= set(Evaluador.objects.values_list('id_persona_id', flat=True))
@@ -254,6 +264,128 @@ class BulkFacturaActionView(APIView):
             )
 
         return Response({'detail': f'{len(user_ids)} facturas procesadas.'})
+
+
+class SolicitarFacturaView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        id_congreso = request.data.get('id_congreso')
+        rfc = request.data.get('rfc', '')
+        razon_social = request.data.get('razon_social', '')
+        codigo_postal = request.data.get('codigo_postal', '')
+        regimen_fiscal = request.data.get('regimen_fiscal', '')
+
+        factura = Factura.objects.filter(
+            id_persona=request.user,
+            id_congreso_id=id_congreso if id_congreso else None
+        ).first()
+
+        if factura and factura.estatus == 'enviada':
+            return Response({'detail': 'Ya tienes una factura procesada para este congreso.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if factura:
+            factura.rfc = rfc
+            factura.razon_social = razon_social
+            factura.codigo_postal = codigo_postal
+            factura.regimen_fiscal = regimen_fiscal
+            factura.save()
+        else:
+            factura = Factura.objects.create(
+                id_persona=request.user,
+                id_congreso_id=id_congreso if id_congreso else None,
+                rfc=rfc,
+                razon_social=razon_social,
+                codigo_postal=codigo_postal,
+                regimen_fiscal=regimen_fiscal,
+                estatus='pendiente',
+            )
+
+        return Response(FacturaSerializer(factura).data, status=status.HTTP_200_OK)
+
+
+class MisFacturasView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        facturas = Factura.objects.filter(
+            id_persona=request.user
+        ).select_related('id_congreso').order_by('-fecha_solicitud')
+
+        result = []
+        for f in facturas:
+            result.append({
+                'id_factura': f.id_factura,
+                'rfc': f.rfc,
+                'razon_social': f.razon_social,
+                'codigo_postal': f.codigo_postal,
+                'regimen_fiscal': f.regimen_fiscal,
+                'ruta_pdf_xml': f.ruta_pdf_xml,
+                'estatus': f.estatus,
+                'fecha_solicitud': f.fecha_solicitud.isoformat() if f.fecha_solicitud else None,
+                'fecha_envio': f.fecha_envio.isoformat() if f.fecha_envio else None,
+                'nombre_congreso': f.id_congreso.nombre_congreso if f.id_congreso else None,
+                'id_congreso': f.id_congreso.id_congreso if f.id_congreso else None,
+            })
+
+        return Response(result)
+
+
+class FacturasPendientesAdminView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not request.user.is_staff:
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+
+        id_congreso = request.query_params.get('id_congreso')
+
+        facturas = (
+            Factura.objects
+            .filter(estatus='pendiente')
+            .select_related('id_persona', 'id_congreso')
+            .order_by('fecha_solicitud')
+        )
+        if id_congreso:
+            facturas = facturas.filter(id_congreso_id=id_congreso)
+
+        result = []
+        with connection.cursor() as cursor:
+            for f in facturas:
+                persona = f.id_persona
+                nombre = ' '.join(
+                    x for x in [persona.nombre, persona.primer_apellido, persona.segundo_apellido] if x
+                ).strip()
+
+                monto = 0
+                if f.id_congreso_id:
+                    cursor.execute("""
+                        SELECT COALESCE(SUM(p.monto), 0)
+                        FROM pagos p
+                        JOIN costos_congreso cc ON cc.id_costos_congreso = p.id_costos
+                        WHERE p.id_persona = %s AND cc.id_costos_congreso = (
+                            SELECT id_costos_congreso FROM congreso WHERE id_congreso = %s LIMIT 1
+                        )
+                    """, [persona.id_persona, f.id_congreso_id])
+                    row = cursor.fetchone()
+                    monto = float(row[0]) if row else 0
+
+                result.append({
+                    'id_factura': f.id_factura,
+                    'id_persona': persona.id_persona,
+                    'nombre_completo': nombre,
+                    'correo_electronico': persona.correo_electronico,
+                    'rfc': f.rfc,
+                    'razon_social': f.razon_social,
+                    'regimen_fiscal': f.regimen_fiscal,
+                    'codigo_postal': f.codigo_postal,
+                    'nombre_congreso': f.id_congreso.nombre_congreso if f.id_congreso else None,
+                    'id_congreso': f.id_congreso_id,
+                    'fecha_solicitud': f.fecha_solicitud,
+                    'monto_pagado': monto,
+                })
+
+        return Response(result)
 
 
 class BulkConstanciaActionView(APIView):
