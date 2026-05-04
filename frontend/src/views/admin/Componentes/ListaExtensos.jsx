@@ -103,7 +103,12 @@ function IconBtn({ active, title, popoverContent, children }) {
 
 // Extensos el listado lateral
 function PopoverAsignado({ item, dictaminadores }) {
-  const asignados = dictaminadores.filter((dictaminador) => item.revisores.includes(dictaminador.id));
+  // Para extensos, combinamos revisor 1, 2 y 3 si existen
+  const idsAsignados = item.revisores || [item.id_evaluador, item.id_evaluador_2, item.id_evaluador_3].filter(id => id);
+  const asignados = dictaminadores.filter((d) => {
+    const dId = d.id || d.id_dictaminador || d.id_evaluador;
+    return idsAsignados.map(id => String(id)).includes(String(dId));
+  });
 
   return (
     <div>
@@ -237,7 +242,7 @@ function ExtensoRow({ item, dictaminadores, selected, onView }) {
 
 
 export default function ListaExtensos({ listaElementos = [], dictaminadores = [], selectedId = null, onView = () => { } }) {
-  const [ordenarItem, setOrdenarItem] = useState("pendientes");
+  const [ordenarItem, setOrdenarItem] = useState("todos");
   const [valorInput, setValorInput] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const filterRef = useRef(null);

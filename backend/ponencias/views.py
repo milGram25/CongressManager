@@ -533,31 +533,19 @@ class DictaminadoresDisponiblesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not request.user.is_staff:
+        if not (request.user.is_staff or request.user.is_superuser):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_congreso = request.query_params.get('id_congreso')
         if not id_congreso:
             return Response({'detail': 'id_congreso requerido.'}, status=status.HTTP_400_BAD_REQUEST)
         with connection.cursor() as cursor:
-            # Garantizar registros dictaminador para personas del congreso
-            cursor.execute("""
-                INSERT INTO dictaminador (id_persona)
-                SELECT DISTINCT dc.id_persona
-                FROM dictaminador_congreso dc
-                WHERE dc.id_congreso = %s
-                  AND NOT EXISTS (
-                    SELECT 1 FROM dictaminador d WHERE d.id_persona = dc.id_persona
-                  )
-            """, [id_congreso])
             cursor.execute("""
                 SELECT d.id_dictaminador,
                        TRIM(CONCAT_WS(' ', per.nombre, per.primer_apellido, per.segundo_apellido))
-                FROM dictaminador_congreso dc
-                JOIN dictaminador d ON d.id_persona = dc.id_persona
-                JOIN persona per ON per.id_persona = dc.id_persona
-                WHERE dc.id_congreso = %s
+                FROM dictaminador d
+                JOIN persona per ON per.id_persona = d.id_persona
                 ORDER BY per.primer_apellido, per.nombre
-            """, [id_congreso])
+            """)
             data = [{'id_dictaminador': r[0], 'nombre_completo': r[1]} for r in cursor.fetchall()]
         return Response(data)
 
@@ -566,31 +554,19 @@ class EvaluadoresDisponiblesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not request.user.is_staff:
+        if not (request.user.is_staff or request.user.is_superuser):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_congreso = request.query_params.get('id_congreso')
         if not id_congreso:
             return Response({'detail': 'id_congreso requerido.'}, status=status.HTTP_400_BAD_REQUEST)
         with connection.cursor() as cursor:
-            # Garantizar registros evaluador para personas del congreso
-            cursor.execute("""
-                INSERT INTO evaluador (id_persona)
-                SELECT DISTINCT ec.id_persona
-                FROM evaluador_congreso ec
-                WHERE ec.id_congreso = %s
-                  AND NOT EXISTS (
-                    SELECT 1 FROM evaluador e WHERE e.id_persona = ec.id_persona
-                  )
-            """, [id_congreso])
             cursor.execute("""
                 SELECT e.id_evaluador,
                        TRIM(CONCAT_WS(' ', per.nombre, per.primer_apellido, per.segundo_apellido))
-                FROM evaluador_congreso ec
-                JOIN evaluador e ON e.id_persona = ec.id_persona
-                JOIN persona per ON per.id_persona = ec.id_persona
-                WHERE ec.id_congreso = %s
+                FROM evaluador e
+                JOIN persona per ON per.id_persona = e.id_persona
                 ORDER BY per.primer_apellido, per.nombre
-            """, [id_congreso])
+            """)
             data = [{'id_evaluador': r[0], 'nombre_completo': r[1]} for r in cursor.fetchall()]
         return Response(data)
 
@@ -599,7 +575,7 @@ class AsignarDictaminadorView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-        if not request.user.is_staff:
+        if not (request.user.is_staff or request.user.is_superuser):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         try:
             resumen = Resumen.objects.get(pk=pk)
@@ -615,7 +591,7 @@ class AsignarEvaluadorView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-        if not request.user.is_staff:
+        if not (request.user.is_staff or request.user.is_superuser):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         try:
             extenso = Extenso.objects.get(pk=pk)
@@ -631,7 +607,7 @@ class ResumenesCongresoView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not request.user.is_staff:
+        if not (request.user.is_staff or request.user.is_superuser):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_congreso = request.query_params.get('id_congreso')
         if not id_congreso:
@@ -720,7 +696,7 @@ class ExtensosCongresoView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not request.user.is_staff:
+        if not (request.user.is_staff or request.user.is_superuser):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_congreso = request.query_params.get('id_congreso')
         if not id_congreso:
@@ -1074,7 +1050,7 @@ class AsignarEvaluadoresView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-        if not request.user.is_staff:
+        if not (request.user.is_staff or request.user.is_superuser):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_evaluador = request.data.get('id_evaluador')
         id_evaluador_2 = request.data.get('id_evaluador_2')
@@ -1096,7 +1072,7 @@ class AsignarEvaluador3View(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-        if not request.user.is_staff:
+        if not (request.user.is_staff or request.user.is_superuser):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_evaluador_3 = request.data.get('id_evaluador_3')
         if not id_evaluador_3:
