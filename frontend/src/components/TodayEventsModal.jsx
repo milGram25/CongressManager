@@ -6,6 +6,9 @@ import EventDetailModal from "./EventDetailModal";
 export default function TodayEventsModal({ selectedDate, events }) {
   const [selectedEvent, setSelectedEvent] = useState(null);
 
+  const labelStyle =
+    "inline-flex items-center rounded-full border border-base-300 bg-base-200 px-2 py-0.5 text-[10px] font-semibold text-base-content/70";
+
   const handleOpenDetail = (event) => {
     setSelectedEvent(event);
     const modal = document.getElementById("detail_modal");
@@ -41,15 +44,26 @@ export default function TodayEventsModal({ selectedDate, events }) {
                     <h4 className="font-medium text-base-content">
                       {evt.title}
                     </h4>
-                    <p className="text-sm opacity-60">{evt.author || "Sin autor"}</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm opacity-60">{evt.author || "Sin autor"}</p>
+                      {Array.isArray(evt.sources) && evt.sources.length > 0 && (
+                        <div className="flex items-center gap-1">
+                          {evt.sources.map((src) => (
+                            <span key={src} className={labelStyle}>
+                              {src}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">
                   <span className="font-bold text-primary">
-                    {evt.time.split(" ")[0]}
+                    {(evt.time || "--:--").split(" ")[0]}
                   </span>
                   <span className="text-xs opacity-60 block">
-                    {evt.time.split(" ")[1]}
+                    {(evt.time || "").split(" ")[1] || ""}
                   </span>
                 </div>
               </div>

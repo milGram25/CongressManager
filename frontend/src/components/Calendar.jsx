@@ -28,6 +28,7 @@ function mapBackendEventsToCalendar(events) {
     abstract: event.abstract,
     eje: event.eje,
     link: event.link,
+    sources: event.sources,
   }));
 }
 

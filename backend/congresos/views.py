@@ -817,20 +817,71 @@ class ListaPagosAdminView(APIView):
         return Response(result)
 
 def _fetch_events_between(start, end, user=None):
-    from users.models import Asistente
+    from users.models import Asistente, Ponente
+
+    # "Mi agenda" es consistente entre roles:
+    # - Inscrito: asistente_evento
+    # - Ponente: autor por ponente_has_ponencia -> ponencia -> evento
     asistente = Asistente.objects.filter(id_persona=user).first() if user else None
-    if not asistente:
+    ponente = Ponente.objects.filter(id_persona=user).first() if user else None
+    if not asistente and not ponente:
         return []
+
+    union_parts = []
+    params = []
+
+    if asistente:
+        union_parts.append(
+            "SELECT ae.id_evento, 'Inscrito'::text AS source FROM asistente_evento ae WHERE ae.id_asistente = %s"
+        )
+        params.append(asistente.id_asistente)
+
+    if ponente:
+        union_parts.append(
+            """
+            SELECT p.id_evento, 'Ponente'::text AS source
+            FROM ponente_has_ponencia php
+            JOIN ponencia p ON p.id_ponencia = php.id_ponencia
+            WHERE php.id_ponente = %s
+            """.strip()
+        )
+        params.append(ponente.id_ponente)
+
     with connection.cursor() as cursor:
-        cursor.execute("""
+        cursor.execute(
+            f"""
+            WITH my_events AS (
+                {' UNION ALL '.join(union_parts)}
+            ),
+            my_agg AS (
+                SELECT id_evento, array_agg(DISTINCT source) AS sources
+                FROM my_events
+                GROUP BY id_evento
+            )
             SELECT
-                e.id_evento, e.nombre_evento, e.fecha_hora_inicio, e.fecha_hora_final,
-                e.sinopsis, e.tipo_evento, e.enlace,
+                e.id_evento,
+                e.nombre_evento,
+                e.fecha_hora_inicio,
+                e.fecha_hora_final,
+                e.sinopsis,
+                e.tipo_evento,
+                e.enlace,
+                c.id_congreso,
+                c.nombre_congreso,
                 COALESCE(
                     t.tallerista,
                     (
-                        SELECT NULLIF(TRIM(CONCAT(per2.nombre, ' ', per2.primer_apellido,
-                                   COALESCE(' ' || per2.segundo_apellido, ''))), '')
+                        SELECT NULLIF(
+                            TRIM(
+                                CONCAT(
+                                    per2.nombre,
+                                    ' ',
+                                    per2.primer_apellido,
+                                    COALESCE(' ' || per2.segundo_apellido, '')
+                                )
+                            ),
+                            ''
+                        )
                         FROM ponente_has_ponencia php2
                         JOIN ponente po2 ON po2.id_ponente = php2.id_ponente
                         JOIN persona per2 ON per2.id_persona = po2.id_persona
@@ -840,35 +891,49 @@ def _fetch_events_between(start, end, user=None):
                     'Por confirmar'
                 ) AS autor,
                 COALESCE(s.nombre_sede, 'Por confirmar') AS ubicacion,
-                COALESCE(sub.nombre, '') AS eje
-            FROM asistente_evento ae
-            JOIN evento e ON e.id_evento = ae.id_evento
+                COALESCE(sub.nombre, '') AS eje,
+                ma.sources
+            FROM my_agg ma
+            JOIN evento e ON e.id_evento = ma.id_evento
+            JOIN congreso c ON c.id_congreso = e.id_congreso
             LEFT JOIN taller t ON t.id_evento = e.id_evento
             LEFT JOIN ponencia p ON p.id_evento = e.id_evento
             LEFT JOIN mesas_trabajo mt ON mt.id_mesas_trabajo = e.id_mesas_trabajo
             LEFT JOIN sede s ON s.id_sede = mt.id_sede
             LEFT JOIN subareas sub ON sub.id_subareas = COALESCE(t.id_subarea, p.id_subarea)
-            WHERE ae.id_asistente = %s
-              AND e.fecha_hora_inicio >= %s AND e.fecha_hora_inicio < %s
+            WHERE e.fecha_hora_inicio >= %s AND e.fecha_hora_inicio < %s
             ORDER BY e.fecha_hora_inicio
-        """, [asistente.id_asistente, start, end])
+            """,
+            [*params, start, end],
+        )
         rows = cursor.fetchall()
+
     result = []
     for r in rows:
-        result.append({
-            'id': r[0],
-            'title': r[1] or '',
-            'start_iso': r[2].isoformat() if r[2] else None,
-            'time': r[2].strftime('%H:%M') if r[2] else '',
-            'sinopsis': r[4] or '',
-            'type': r[5] or '',
-            'link': r[6] or '',
-            'author': r[7] or 'Por confirmar',
-            'location': r[8] or 'Por confirmar',
-            'eje': r[9] or '',
-            'abstract': r[4] or '',
-            'description': r[4] or '',
-        })
+        dt = r[2]
+        dt_end = r[3]
+        result.append(
+            {
+                'id': r[0],
+                'title': r[1] or '',
+                'start_iso': dt.isoformat() if dt else None,
+                'end_iso': dt_end.isoformat() if dt_end else None,
+                # El frontend espera "HH:MM am/pm" y hace split por espacio.
+                'time': dt.strftime('%I:%M %p').lower() if dt else '--:--',
+                'sinopsis': r[4] or '',
+                'type': r[5] or '',
+                'link': r[6] or '',
+                'id_congreso': r[7],
+                'congreso': r[8] or '',
+                'author': r[9] or 'Por confirmar',
+                'location': r[10] or 'Por confirmar',
+                'eje': r[11] or '',
+                'abstract': r[4] or '',
+                'description': r[4] or '',
+                'sources': list(r[12]) if r[12] else [],
+            }
+        )
+
     return result
 
 def _parse_month(val):
