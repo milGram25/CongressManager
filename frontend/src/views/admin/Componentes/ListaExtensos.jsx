@@ -96,7 +96,7 @@ function IconBtn({ active, title, popoverContent, children }) {
       >
         {children}
       </button>
-      {open ? <Popover onClose={() => setOpen(false)}>{popoverContent}</Popover> : null}
+      {/*open ? <Popover onClose={() => setOpen(false)}>{popoverContent}</Popover> : null*/}
     </div>
   );
 }
@@ -211,7 +211,7 @@ function ExtensoRow({ item, dictaminadores, selected, onView }) {
         type="button"
         onClick={() => onView(item)}
         className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#000000] text-white transition-colors hover:bg-gray-500"
-        title={`Ver informacion de ${item.title}`}
+        title={`Ver informacion de "${item.title}"`}
       >
         <MdVisibility size={18} />
       </button>
@@ -222,7 +222,7 @@ function ExtensoRow({ item, dictaminadores, selected, onView }) {
 
       <div className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-[#f0f2f4] px-3 py-1.5">
         <StatusDot active={item.asignado} />
-        <IconBtn active={item.asignado} title="Ver evaluadores asignados" popoverContent={<PopoverAsignado item={item} dictaminadores={dictaminadores} />}>
+        <IconBtn active={item.asignado} title="Evaluadores asignados" popoverContent={<PopoverAsignado item={item} dictaminadores={dictaminadores} />}>
           <MdPerson size={15} />
         </IconBtn>
 

@@ -5,10 +5,10 @@ import { getCongresosApi, getEvaluadoresDisponiblesApi } from "../../api/adminAp
 import { getExtensosCongreso, asignarEvaluadoresApi, asignarEvaluador3Api, buildMediaUrl } from "../../api/ponenciasApi";
 import BuscadorPersonal from "./Componentes/BuscadorPersonal";
 
-function LedStatus({ label, active, neutral = false, color = null }) {
+function LedStatus({ label, active, neutral = false, color = null, title=""}) {
   const bg = neutral ? 'bg-gray-400' : color ?? (active ? 'bg-green-500' : 'bg-red-500');
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 " title={title}>
       <div className={`w-3 h-3 rounded-full ${bg} shadow-sm`} />
       <span className="text-xs font-medium text-gray-600">{label}</span>
     </div>
@@ -121,7 +121,7 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
 
       <section className="flex flex-wrap gap-3 p-4 bg-gray-50 rounded-2xl">
         <LedStatus label="Revisores asignados" active={!!yaAsignados} />
-        <LedStatus label="En revisión" active={!!yaAsignados && estado !== 'extenso_aceptado' && estado !== 'extenso_rechazado'} neutral={!yaAsignados} />
+        <LedStatus label="Revisado" active={(estado !== 'extenso_aceptado' && estado !== 'extenso_rechazado')? false: true} title={!yaAsignados ? "Sin asignar" : (estado === 'extenso_aceptado' || estado === 'extenso_rechazado') ? "Revisado":"Pendiente"} neutral={!yaAsignados} />
         {estado === 'desacuerdo' && <LedStatus label="Desacuerdo" active={true} color="bg-orange-500" />}
         <LedStatus label="Aceptado" active={estado === 'extenso_aceptado'} neutral={estado !== 'extenso_aceptado' && estado !== 'extenso_rechazado'} />
       </section>
@@ -137,7 +137,7 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
         </section>
       )}
 
-      {!yaAsignados && !extenso.revisado && (
+      {!extenso.revisado && (
         <section>
           <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700 mb-2">Asignar revisores (ambos obligatorios)</h4>
           {evaluadoresDisponibles.length === 0 ? (
