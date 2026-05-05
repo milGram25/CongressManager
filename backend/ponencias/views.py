@@ -533,7 +533,7 @@ class DictaminadoresDisponiblesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not (request.user.is_staff or request.user.is_superuser):
+        if not (request.user.is_staff):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_congreso = request.query_params.get('id_congreso')
         if not id_congreso:
@@ -554,7 +554,7 @@ class EvaluadoresDisponiblesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not (request.user.is_staff or request.user.is_superuser):
+        if not (request.user.is_staff):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_congreso = request.query_params.get('id_congreso')
         if not id_congreso:
@@ -575,7 +575,7 @@ class AsignarDictaminadorView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-        if not (request.user.is_staff or request.user.is_superuser):
+        if not (request.user.is_staff):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         try:
             resumen = Resumen.objects.get(pk=pk)
@@ -591,7 +591,7 @@ class AsignarEvaluadorView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-        if not (request.user.is_staff or request.user.is_superuser):
+        if not (request.user.is_staff):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         try:
             extenso = Extenso.objects.get(pk=pk)
@@ -607,7 +607,7 @@ class ResumenesCongresoView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not (request.user.is_staff or request.user.is_superuser):
+        if not (request.user.is_staff):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_congreso = request.query_params.get('id_congreso')
         if not id_congreso:
@@ -696,7 +696,7 @@ class ExtensosCongresoView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not (request.user.is_staff or request.user.is_superuser):
+        if not (request.user.is_staff):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_congreso = request.query_params.get('id_congreso')
         if not id_congreso:
@@ -1050,7 +1050,7 @@ class AsignarEvaluadoresView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-        if not (request.user.is_staff or request.user.is_superuser):
+        if not (request.user.is_staff):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_evaluador = request.data.get('id_evaluador')
         id_evaluador_2 = request.data.get('id_evaluador_2')
@@ -1072,7 +1072,7 @@ class AsignarEvaluador3View(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-        if not (request.user.is_staff or request.user.is_superuser):
+        if not (request.user.is_staff):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_evaluador_3 = request.data.get('id_evaluador_3')
         if not id_evaluador_3:

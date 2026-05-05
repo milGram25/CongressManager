@@ -35,7 +35,7 @@ const BuscadorPersonal = ({ options, value, onChange, placeholder, disabled }) =
           }`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
       >
-        <div className={`w-2.5 h-2.5 rounded-full shrink-0 animate-pulse ${value ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]'}`} />
+        <div className={`w-2.5 h-2.5 rounded-full shrink-0 animate-pulse`} />
         <MdPerson className="text-slate-400" size={18} />
         <span className={`flex-1 truncate ${!selectedOption ? 'text-slate-400' : 'text-slate-700 font-medium'}`}>
           {selectedOption ? selectedOption.nombre : placeholder}
@@ -44,7 +44,7 @@ const BuscadorPersonal = ({ options, value, onChange, placeholder, disabled }) =
       </div>
 
       {isOpen && (
-        <div className="absolute top-full left-0 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl z-[100] overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="absolute top-full left-0 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl z-[100] animate-in fade-in zoom-in duration-200">
           <div className="p-2 border-b border-slate-100 bg-slate-50/50">
             <div className="relative">
               <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />

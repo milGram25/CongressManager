@@ -240,7 +240,7 @@ function ResumenRow({ item, dictaminadores, selected, onView }) {
 }
 
 export default function ListaResumenes({ listaElementos = [], dictaminadores = [], selectedId = null, onView = () => { } }) {
-  const [ordenarItem, setOrdenarItem] = useState("todos");
+  const [ordenarItem, setOrdenarItem] = useState("pendientes");
   const [valorInput, setValorInput] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const filterRef = useRef(null);
