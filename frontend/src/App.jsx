@@ -313,8 +313,8 @@ function App() {
             }
           >
             <Route index element={<Navigate to="agenda" replace />} />
-            <Route path="agenda" element={<AgendaView />} />
-            <Route path="catalogo" element={<CatalogoView />} />
+            <Route path="agenda" element={<CatalogoView />} />
+            <Route path="catalogo" element={<AgendaView />} />
             <Route path="pagos" element={<PagosView />} />
             <Route path="facturas" element={<FacturasView />} />
             <Route path="mis-ponencias" element={<MisPonenciasView />} />

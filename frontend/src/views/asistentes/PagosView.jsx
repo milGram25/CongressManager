@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import PagosForm from "./components/PagosForm";
 import { getPagosResumenApi, registrarPagoApi, solicitarFacturaApi } from "../../api/pagosApi";
@@ -294,12 +294,12 @@ export default function PagosView() {
               </div>
             )}
 
-            {!isPonente && alreadyPaid && (
-              <div className="mb-6 p-4 rounded-xl border border-secondary/40 bg-secondary/10 text-sm space-y-2">
-                <div className="font-bold text-secondary">Pago registrado</div>
-                <p>Ya cuentas con un pago registrado para tu rol y no tienes pagos pendientes por ahora.</p>
-              </div>
-            )}
+             {!isPonente && alreadyPaid && (
+               <div className="mb-6 p-4 rounded-xl border border-secondary/40 bg-secondary/10 text-sm space-y-2">
+                 <div className="font-bold text-secondary">Pago registrado</div>
+                 <p>No tienes pagos pendientes para este congreso.</p>
+               </div>
+             )}
 
             {role === "asistente" && isStudent !== false && (
               <div
