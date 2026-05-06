@@ -14,6 +14,12 @@ class PonenciaSerializer(serializers.ModelSerializer):
     sinopsis = serializers.CharField(source='id_evento.sinopsis', read_only=True)
     id_mesas_trabajo = serializers.IntegerField(source='id_evento.id_mesas_trabajo.id_mesas_trabajo', read_only=True)
     nombre_subarea = serializers.CharField(source='id_subarea.nombre', read_only=True)
+    nombres_ponentes = serializers.SerializerMethodField() #retorna a todos los ponentes de esa misma ponencia
+
+    def get_nombres_ponentes(self,obj):
+        ponentes = obj.ponentehasponencia_set.all()
+        return [rel.ponente.nombre for rel in ponentes]
+        
 
     class Meta:
         model = Ponencia
@@ -21,7 +27,7 @@ class PonenciaSerializer(serializers.ModelSerializer):
             'id', 'id_ponencia', 'id_evento', 'id_congreso', 'nombre_evento', 'nombre_congreso',
             'fecha_hora_inicio', 'fecha_hora_final', 'cupos',
             'tipo_participacion', 'id_subarea', 'nombre_subarea',
-            'id_resumen', 'id_extenso', 'id_multimedia', 'enlace', 'sinopsis', 'id_mesas_trabajo'
+            'id_resumen', 'id_extenso', 'id_multimedia', 'enlace', 'sinopsis', 'id_mesas_trabajo','nombres_ponentes'
         ]
 
 class AsistenteEventoSerializer(serializers.ModelSerializer):

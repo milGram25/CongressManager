@@ -216,12 +216,24 @@ function ResumenRow({ item, dictaminadores, selected, onView }) {
       </button>
 
       <button type="button" onClick={() => onView(item)} className="min-w-0 flex-1 text-left">
-        <p className="truncate text-sm font-semibold text-slate-800">{item.title}</p>
+        <p
+          className="truncate text-sm font-semibold text-slate-800"
+          title={
+            item.title
+              ? `Subárea: ${item.title}` //Se está mostrando la subárea aquí
+              : "No se hay subárea"
+          }
+        >
+          {item.autores?.length > 0
+            ? `Ponentes: ${item.autores.join(', ')}`
+            : `Subárea: ${item.title}`
+          }
+        </p>
       </button>
 
       <div className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-[#f0f2f4] px-3 py-1.5">
         <StatusDot active={item.asignado} />
-        <IconBtn active={item.asignado} title="Ver revisores asignados" popoverContent={<PopoverAsignado item={item} dictaminadores={dictaminadores} />}>
+        <IconBtn active={item.asignado} title="Revisores asignados" >
           <MdPerson size={15} />
         </IconBtn>
 
@@ -262,7 +274,7 @@ export default function ListaResumenes({ listaElementos = [], dictaminadores = [
       if (ordenarItem === "no_asignados") return !item.asignado;
       if (ordenarItem === "revisados") return item.revisado;
       if (ordenarItem === "aceptados") return item.aceptado;
-      if (ordenarItem === "pendientes") return !item.revisado; // Cambiado para mayor claridad
+      if (ordenarItem === "pendientes") return !item.revisado;
       return true;
     });
   }, [listaElementos, ordenarItem, valorInput]);

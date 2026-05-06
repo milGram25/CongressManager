@@ -217,7 +217,7 @@ function ExtensoRow({ item, dictaminadores, selected, onView }) {
       </button>
 
       <button type="button" onClick={() => onView(item)} className="min-w-0 flex-1 text-left">
-        <p className="truncate text-sm font-semibold text-slate-800">{item.title}</p>
+        <p className="truncate text-sm font-semibold text-slate-800" title={`${item.title}`}>{item.title} </p>
       </button>
 
       <div className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-[#f0f2f4] px-3 py-1.5">
@@ -242,7 +242,7 @@ function ExtensoRow({ item, dictaminadores, selected, onView }) {
 
 
 export default function ListaExtensos({ listaElementos = [], dictaminadores = [], selectedId = null, onView = () => { } }) {
-  const [ordenarItem, setOrdenarItem] = useState("todos");
+  const [ordenarItem, setOrdenarItem] = useState("pendientes");
   const [valorInput, setValorInput] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const filterRef = useRef(null);

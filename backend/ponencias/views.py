@@ -646,15 +646,18 @@ class ResumenesCongresoView(APIView):
             ponencia_ids = [p['id_ponencia'] for p in ponencias]
             resumen_ids = [p['id_resumen'] for p in ponencias]
 
-            c.execute("""
+            format_strings = ','.join(['%s'] * len(ponencia_ids))
+
+            c.execute(f"""
                 SELECT php.id_ponencia,
-                       per.nombre || ' ' || per.primer_apellido
+                    per.nombre || ' ' || per.primer_apellido
                 FROM ponente_has_ponencia php
-                JOIN ponente po ON php.id_ponente = po.id_ponente
-                JOIN persona per ON po.id_persona = per.id_persona
-                WHERE php.id_ponencia = ANY(%s)
-            """, [ponencia_ids])
+                LEFT JOIN ponente po ON php.id_ponente = po.id_ponente
+                LEFT JOIN persona per ON po.id_persona = per.id_persona
+                WHERE php.id_ponencia IN ({format_strings})
+            """, ponencia_ids)
             autores_map = {}
+            
             for id_pon, nombre in c.fetchall():
                 autores_map.setdefault(id_pon, []).append(nombre)
 
@@ -666,6 +669,8 @@ class ResumenesCongresoView(APIView):
                 WHERE dr.id_resumen = ANY(%s)
             """, [resumen_ids])
             dictamen_map = {}
+            
+            
             for id_res, pregunta, cumplio, comentario in c.fetchall():
                 dictamen_map.setdefault(id_res, []).append({
                     'pregunta': pregunta,
@@ -675,6 +680,7 @@ class ResumenesCongresoView(APIView):
 
         result = []
         for p in ponencias:
+           
             result.append({
                 'id': p['id_ponencia'],
                 'id_resumen': p['id_resumen'],
