@@ -675,8 +675,38 @@ class CongresoEventosView(APIView):
         with connection.cursor() as cursor:
             cursor.execute("""
                 SELECT e.id_evento, e.nombre_evento, e.tipo_evento,
-                       e.fecha_hora_inicio, e.fecha_hora_final, e.sinopsis, e.cupos, e.enlace
+                       e.fecha_hora_inicio, e.fecha_hora_final, e.sinopsis, e.cupos, e.enlace,
+                       COALESCE(
+                           t.tallerista,
+                           (
+                               SELECT NULLIF(
+                                   TRIM(
+                                       CONCAT(
+                                           per2.nombre,
+                                           ' ',
+                                           per2.primer_apellido,
+                                           COALESCE(' ' || per2.segundo_apellido, '')
+                                       )
+                                   ),
+                                   ''
+                               )
+                               FROM ponente_has_ponencia php2
+                               JOIN ponente po2 ON po2.id_ponente = php2.id_ponente
+                               JOIN persona per2 ON per2.id_persona = po2.id_persona
+                               WHERE php2.id_ponencia = p.id_ponencia
+                               LIMIT 1
+                           ),
+                           'Por confirmar'
+                       ) AS autor,
+                       COALESCE(s.nombre_sede, 'Por confirmar') AS ubicacion,
+                       COALESCE(sub.nombre, '') AS eje,
+                       COALESCE(p.tipo_participacion::text, t.tipo_participacion::text, 'Presencial') AS modalidad
                 FROM evento e
+                LEFT JOIN taller t ON t.id_evento = e.id_evento
+                LEFT JOIN ponencia p ON p.id_evento = e.id_evento
+                LEFT JOIN mesas_trabajo mt ON mt.id_mesas_trabajo = e.id_mesas_trabajo
+                LEFT JOIN sede s ON s.id_sede = mt.id_sede
+                LEFT JOIN subareas sub ON sub.id_subareas = COALESCE(t.id_subarea, p.id_subarea)
                 WHERE e.id_congreso = %s
                 ORDER BY e.fecha_hora_inicio
             """, [id_congreso])
@@ -699,6 +729,10 @@ class CongresoEventosView(APIView):
                 'cupos_disponibles': max(0, cupos - ocupados) if cupos > 0 else None,
                 'lleno': cupos > 0 and ocupados >= cupos,
                 'enlace': r[7] or '',
+                'autor': r[8] or 'Por confirmar',
+                'ubicacion': r[9] or 'Por confirmar',
+                'eje': r[10] or '',
+                'modalidad': r[11] or 'Presencial',
                 'registrado': registrado,
             })
         return Response(result)

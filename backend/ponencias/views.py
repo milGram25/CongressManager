@@ -348,10 +348,10 @@ class EnviarPonenciaAPIView(APIView):
                             fecha_inicio = datetime.now()
                             fecha_final = datetime.now() + timedelta(days=365)
                         cursor.execute("""
-                            INSERT INTO evento (id_congreso, nombre_evento, tipo_evento, id_tipo_trabajo, fecha_hora_inicio, fecha_hora_final, cupos)
-                            VALUES (%s, %s, 'ponencia', %s, %s, %s, 0)
+                            INSERT INTO evento (id_congreso, nombre_evento, tipo_evento, id_tipo_trabajo, fecha_hora_inicio, fecha_hora_final, cupos, sinopsis)
+                            VALUES (%s, %s, 'ponencia', %s, %s, %s, 0, %s)
                             RETURNING id_evento
-                        """, [id_congreso, tipo_trabajo_str, id_tipo_trabajo, fecha_inicio, fecha_final])
+                        """, [id_congreso, tipo_trabajo_str, id_tipo_trabajo, fecha_inicio, fecha_final, resumen_texto])
                         id_evento = cursor.fetchone()[0]
 
                     # Resolver id_subarea
