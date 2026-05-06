@@ -1,15 +1,66 @@
-# Replicación del Entorno de Python
+# Guía de Setup del Backend
 
-Replicar el entorno de Python.
+## Requisitos previos
 
-## Crear el entorno virtual (Opcional pero recomendado):
+- Python 3.11+
+- PostgreSQL 14+ instalado y corriendo
+
+---
+
+## Paso 1 — Crear la base de datos y el usuario en PostgreSQL
+
+Abre la terminal de PostgreSQL (`psql`) y ejecuta:
+
+```sql
+CREATE USER congress_admin WITH PASSWORD '1234';
+CREATE DATABASE congress_manager OWNER congress_admin;
+GRANT ALL PRIVILEGES ON DATABASE congress_manager TO congress_admin;
+\q
+```
+
+> Puedes usar otro usuario/contraseña/nombre de BD, pero debes reflejarlo en el `.env` del siguiente paso.
+
+---
+
+## Paso 2 — Configurar variables de entorno
+
+Copia el archivo de ejemplo y edítalo con tus credenciales:
+
+**En Windows:**
+```bash
+copy backend\.env.example backend\.env
+```
+
+**En Linux/Mac:**
+```bash
+cp backend/.env.example backend/.env
+```
+
+Abre `backend/.env` y llena los valores:
+
+```
+SECRET_KEY=cualquier-clave-larga-y-aleatoria
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=congress_manager
+DB_USER=congress_admin
+DB_PASSWORD=1234
+DB_HOST=localhost
+DB_PORT=5432
+```
+
+**IMPORTANTE:** Nunca subas tu `.env` al repo. El `.gitignore` ya lo excluye.
+
+---
+
+## Paso 3 — Crear y activar el entorno virtual
 
 ```bash
 cd backend
 python -m venv venv
 ```
-
-## Activar el entorno:
 
 **En Windows:**
 ```bash
@@ -21,30 +72,58 @@ python -m venv venv
 source venv/bin/activate
 ```
 
-## Instalar dependencias:
+---
+
+## Paso 4 — Instalar dependencias
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Variables de Entorno (.env):
+---
 
-**IMPORTANTE:** Nunca suban sus contraseñas de base de datos al repo.
+## Paso 5 — Crear el esquema de la base de datos
 
-- DB_NAME  
-- DB_USER  
-- DB_PASSWORD  
-- SECRET_KEY
+Ejecuta el script SQL desde la raíz del proyecto. Este script crea todas las tablas necesarias y es seguro correrlo más de una vez (`IF NOT EXISTS`):
 
-Crear un archivo con .env y agregar las variables de entorno:
-
+**En Windows (psql):**
 ```bash
-copy backend\.env.example backend\.env
+psql -U congress_admin -d congress_manager -f database\congress.sql
 ```
 
-## Migraciones y Servidor:
+**En Linux/Mac:**
+```bash
+psql -U congress_admin -d congress_manager -f database/congress.sql
+```
+
+> Si te pide contraseña, escribe `1234` (o la que usaste en el Paso 1).
+
+---
+
+## Paso 6 — Aplicar migraciones de Django
+
+Las migraciones crean las tablas internas de Django y las tablas `dictaminador_congreso` y `evaluador_congreso`:
 
 ```bash
+python manage.py migrate
+```
+
+---
+
+## Paso 7 — Correr el servidor
+
+```bash
+python manage.py runserver
+```
+
+El servidor corre en `http://localhost:8000`.
+
+---
+
+## Resumen rápido (para quien ya lo hizo antes)
+
+```bash
+source venv/bin/activate          # o .\venv\Scripts\activate en Windows
 python manage.py migrate
 python manage.py runserver
 ```
