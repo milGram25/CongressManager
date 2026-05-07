@@ -31,53 +31,50 @@ function formatHour(iso) {
 function EventoDetalleModal({ evento, onClose }) {
   if (!evento) return null;
   const tipoLabel = { ponencia: "Ponencia", taller: "Taller" }[evento.tipo] ?? evento.tipo;
+  
   return (
     <dialog className="modal modal-bottom sm:modal-middle" open>
-      <div className="modal-box max-w-2xl bg-base-100">
-        <div className="flex items-start gap-3 border-b border-base-200 pb-4 mb-4">
-          <div className="flex-1">
-            <h3 className="font-bold text-xl text-primary leading-snug">{evento.titulo}</h3>
-            <span className="badge badge-ghost mt-2 text-xs capitalize">{tipoLabel}</span>
+      <div className="modal-box max-w-2xl bg-base-100 p-8 rounded-xl shadow-lg border border-base-200">
+        <button onClick={onClose} className="btn btn-sm btn-circle btn-ghost absolute right-4 top-4">✕</button>
+
+        <div className="flex flex-col items-center text-center space-y-4 mb-6">
+          <h3 className="text-lg font-medium text-base-content leading-snug">
+            <span className="font-bold">Título {tipoLabel}:</span> "{evento.titulo}"
+          </h3>
+          
+          <p className="text-base text-base-content">
+            <span className="font-bold">Nombre {tipoLabel === 'Taller' ? 'Tallerista' : 'Ponente'}:</span> {evento.autor !== 'Por confirmar' ? evento.autor : 'Por confirmar'}
+          </p>
+
+          <p className="text-base text-base-content capitalize">
+            <span className="font-bold">Modalidad:</span> {evento.modalidad || 'Presencial'}
+          </p>
+
+          <p className="text-base text-base-content">
+            <span className="font-bold">Lugar:</span> {evento.ubicacion !== 'Por confirmar' ? evento.ubicacion : 'Por confirmar'}
+          </p>
+
+          <div className="flex justify-center gap-12 text-base text-base-content w-full">
+            <p><span className="font-bold">Fecha:</span> {formatDate(evento.fecha_inicio)}</p>
+            <p><span className="font-bold">Hora:</span> {formatHour(evento.fecha_inicio)}</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 bg-base-200 p-4 rounded-lg text-sm mb-4">
-          <div>
-            <span className="font-bold block opacity-50 uppercase text-[10px] mb-1">
-              Fecha y hora inicio
-            </span>
-            <p>
-              {formatDate(evento.fecha_inicio)} · {formatHour(evento.fecha_inicio)}
-            </p>
-          </div>
-          {evento.fecha_fin && (
-            <div>
-              <span className="font-bold block opacity-50 uppercase text-[10px] mb-1">
-                Hora fin
-              </span>
-              <p>{formatHour(evento.fecha_fin)}</p>
-            </div>
-          )}
-          <div className="col-span-2">
-            <span className="font-bold block opacity-50 uppercase text-[10px] mb-1">
-              Congreso
-            </span>
-            <p>{evento.congreso}</p>
-          </div>
+        <div className="mb-8 px-4">
+          <span className="font-bold block text-base-content mb-2 text-center">Sinopsis:</span>
+          <p className="text-sm leading-relaxed text-base-content/90 whitespace-pre-wrap text-justify">
+            {evento.sinopsis || "Sinopsis no disponible."}
+          </p>
         </div>
 
-        {evento.sinopsis && (
-          <div className="mb-2">
-            <span className="font-bold block text-primary mb-2">Sinopsis</span>
-            <p className="text-sm leading-relaxed text-base-content/80">{evento.sinopsis}</p>
+        {evento.enlace && (
+          <div className="mb-6 text-center">
+            <span className="font-bold block text-base-content mb-1">Enlace:</span>
+            <a href={evento.enlace} target="_blank" rel="noopener noreferrer" className="link link-primary text-sm break-all">
+              {evento.enlace}
+            </a>
           </div>
         )}
-
-        <div className="modal-action">
-          <button className="btn btn-primary text-white px-8" onClick={onClose}>
-            Cerrar
-          </button>
-        </div>
       </div>
       <div className="modal-backdrop" onClick={onClose}>
         <button>close</button>
@@ -116,6 +113,10 @@ function MisEventosHoy() {
           congreso: e.congreso,
           id_congreso: e.id_congreso,
           sources: e.sources,
+          autor: e.author,
+          ubicacion: e.location,
+          eje: e.eje,
+          enlace: e.link,
         }));
 
         setEventos(mapped);
