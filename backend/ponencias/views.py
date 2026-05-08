@@ -1159,10 +1159,13 @@ class EstatusPonenteView(APIView):
                     e.sinopsis,
                     e.cupos,
                     e.enlace,
-                    cong.nombre_congreso
+                    cong.nombre_congreso,
+                    p.tipo_participacion,
+                    m.nombre AS lugar
                 FROM ponente_has_ponencia php
                 JOIN ponencia p ON php.id_ponencia = p.id_ponencia
                 LEFT JOIN evento e ON p.id_evento = e.id_evento
+                LEFT JOIN mesas_trabajo m ON e.id_mesas_trabajo = m.id_mesas_trabajo
                 LEFT JOIN congreso cong ON e.id_congreso = cong.id_congreso
                 LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
                 LEFT JOIN resumen r ON p.id_resumen = r.id_resumen
@@ -1173,7 +1176,7 @@ class EstatusPonenteView(APIView):
             cols = ['id_ponencia','titulo','tipo_ponencia','id_resumen','resumen_revisado',
                     'resumen_estatus','resumen_retroalimentacion','id_extenso','extenso_revisado',
                     'id_evaluador','id_evaluador_2','id_evaluador_3',
-                    'nombre_evento','fecha_hora_inicio','fecha_hora_final','sinopsis','cupos','enlace','nombre_congreso']
+                    'nombre_evento','fecha_hora_inicio','fecha_hora_final','sinopsis','cupos','enlace','nombre_congreso','tipo_participacion','lugar']
             ponencias = [dict(zip(cols, row)) for row in c.fetchall()]
 
             if not ponencias:
@@ -1254,6 +1257,7 @@ class EstatusPonenteView(APIView):
                 'criterio_comentarios': criterios_mods_map.get(p['id_extenso'], []) if estado == 'con_modificaciones' else [],
                 'id_resumen': p['id_resumen'],
                 'id_extenso': p['id_extenso'],
+                'tipo_participacion': p['tipo_participacion'],
                 'evento': {
                     'nombre': p['nombre_evento'],
                     'fecha_inicio': fecha_inicio.isoformat() if fecha_inicio else None,
@@ -1262,6 +1266,7 @@ class EstatusPonenteView(APIView):
                     'cupos': p['cupos'],
                     'enlace': p['enlace'],
                     'congreso': p['nombre_congreso'],
+                    'lugar': p['lugar'],
                 },
             })
         return Response(result)
