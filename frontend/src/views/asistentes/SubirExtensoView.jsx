@@ -7,7 +7,6 @@ export default function SubirExtensoView() {
   const navigate = useNavigate();
   const accessToken = localStorage.getItem('congress_access');
 
-  const [titulo, setTitulo] = useState('');
   const [archivo, setArchivo] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -23,11 +22,10 @@ export default function SubirExtensoView() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!archivo) { setError('Selecciona un archivo antes de continuar.'); return; }
-    if (!titulo.trim()) { setError('El título es obligatorio.'); return; }
     setError(null);
     setSubmitting(true);
     try {
-      await subirExtensoApi(accessToken, id, titulo, archivo);
+      await subirExtensoApi(accessToken, id, archivo);
       navigate('/asistente/estatus-ponencia');
     } catch (err) {
       setError(err.message);
@@ -50,17 +48,6 @@ export default function SubirExtensoView() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label className="text-sm font-semibold text-slate-700 mb-1 block">Título del extenso</label>
-          <input
-            type="text"
-            className="input input-bordered w-full rounded-xl"
-            placeholder="Título del trabajo"
-            value={titulo}
-            onChange={e => setTitulo(e.target.value)}
-          />
-        </div>
-
         <div>
           <label className="text-sm font-semibold text-slate-700 mb-1 block">Archivo</label>
           <div

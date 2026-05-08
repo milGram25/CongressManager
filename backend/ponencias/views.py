@@ -1273,27 +1273,27 @@ class SubirExtensoAPIView(APIView):
 
     def post(self, request, id_resumen):
         archivo = request.FILES.get('archivo')
-        titulo = request.data.get('titulo', '').strip()
         if not archivo:
             return Response({'detail': 'Se requiere un archivo.'}, status=status.HTTP_400_BAD_REQUEST)
-        if not titulo:
-            return Response({'detail': 'El título es obligatorio.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             with transaction.atomic():
                 with connection.cursor() as cursor:
                     cursor.execute("""
-                        SELECT p.id_ponencia, p.id_extenso
+                        SELECT p.id_ponencia, p.id_extenso, s.nombre
                         FROM ponencia p
                         JOIN ponente_has_ponencia php ON php.id_ponencia = p.id_ponencia
                         JOIN ponente po ON po.id_ponente = php.id_ponente
+                        LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
                         WHERE p.id_resumen = %s AND po.id_persona = %s
                         LIMIT 1
                     """, [id_resumen, request.user.id_persona])
                     row = cursor.fetchone()
                     if not row:
                         return Response({'detail': 'No autorizado o resumen no encontrado.'}, status=status.HTTP_403_FORBIDDEN)
-                    id_ponencia, id_extenso_existente = row
+                    id_ponencia, id_extenso_existente, subarea_nombre = row
+                    
+                    titulo = subarea_nombre if subarea_nombre else f"Extenso de Ponencia {id_ponencia}"
 
                     media_dir = os.path.join(settings.MEDIA_ROOT, 'extensos')
                     os.makedirs(media_dir, exist_ok=True)
@@ -1311,14 +1311,14 @@ class SubirExtensoAPIView(APIView):
                     if id_extenso_existente:
                         cursor.execute("""
                             UPDATE extenso
-                            SET titulo = %s, ruta_relativa = %s, fecha_subida = NOW(),
+                            SET titulo = %s, ruta_archivo = %s, fecha_subida = NOW(),
                                 revisado = FALSE, version_numero = version_numero + 1
                             WHERE id_extenso = %s
                         """, [titulo, ruta_relativa, id_extenso_existente])
                         id_extenso = id_extenso_existente
                     else:
                         cursor.execute("""
-                            INSERT INTO extenso (titulo, ruta_relativa, revisado, version_numero)
+                            INSERT INTO extenso (titulo, ruta_archivo, revisado, version_numero)
                             VALUES (%s, %s, FALSE, 1) RETURNING id_extenso
                         """, [titulo, ruta_relativa])
                         id_extenso = cursor.fetchone()[0]
