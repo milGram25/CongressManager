@@ -17,16 +17,10 @@ import string
 
 
 def _get_rol_persona(persona):
-    try:
-        persona.dictaminador
+    if DictaminadorCongreso.objects.filter(id_persona=persona).exists():
         return 'Dictaminador'
-    except Exception:
-        pass
-    try:
-        persona.evaluador
+    if EvaluadorCongreso.objects.filter(id_persona=persona).exists():
         return 'Evaluador'
-    except Exception:
-        pass
     try:
         persona.ponente
         return 'Ponente'
@@ -442,25 +436,18 @@ def get_tokens_for_user(user):
     if user.is_superuser or user.is_staff:
         rol = 'administrador'
     else:
-        try:
-            user.dictaminador; rol = 'dictaminador'
-        except Exception:
+        if DictaminadorCongreso.objects.filter(id_persona=user).exists():
+            rol = 'dictaminador'
+        elif EvaluadorCongreso.objects.filter(id_persona=user).exists():
+            rol = 'revisor'
+        else:
             try:
-                user.evaluador; rol = 'revisor'
+                user.ponente; rol = 'ponente'
             except Exception:
-                try:
-                    user.ponente; rol = 'ponente'
-                except Exception:
-                    pass
+                pass
     refresh['rol'] = rol
-    refresh['es_dictaminador'] = (
-        Dictaminador.objects.filter(id_persona=user).exists() or
-        DictaminadorCongreso.objects.filter(id_persona=user).exists()
-    )
-    refresh['es_evaluador'] = (
-        Evaluador.objects.filter(id_persona=user).exists() or
-        EvaluadorCongreso.objects.filter(id_persona=user).exists()
-    )
+    refresh['es_dictaminador'] = DictaminadorCongreso.objects.filter(id_persona=user).exists()
+    refresh['es_evaluador'] = EvaluadorCongreso.objects.filter(id_persona=user).exists()
     return {
         'refresh': str(refresh),
         'access': str(refresh.access_token),
@@ -634,8 +621,48 @@ class RoleRemoveView(APIView):
             if not id_congreso:
                 return Response({'detail': 'id_congreso es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
             if rol == 'dictaminador':
+                from ponencias.models import Resumen, Ponencia
+                dictaminadores = Dictaminador.objects.filter(id_persona=persona)
+                if dictaminadores.exists():
+                    resumen_ids = list(
+                        Ponencia.objects.filter(
+                            id_evento__id_congreso=id_congreso,
+                            id_resumen__isnull=False
+                        ).values_list('id_resumen', flat=True)
+                    )
+                    if Resumen.objects.filter(
+                        id_dictaminador__in=dictaminadores,
+                        revisado=False,
+                        id_resumen__in=resumen_ids
+                    ).exists():
+                        return Response(
+                            {'detail': 'No se puede quitar el rol: el usuario tiene dictaminaciones pendientes.'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
                 DictaminadorCongreso.objects.filter(id_persona=persona, id_congreso_id=id_congreso).delete()
             else:
+                from ponencias.models import Extenso, Ponencia
+                from django.db.models import Q
+                evaluadores = Evaluador.objects.filter(id_persona=persona)
+                if evaluadores.exists():
+                    extenso_ids = list(
+                        Ponencia.objects.filter(
+                            id_evento__id_congreso=id_congreso,
+                            id_extenso__isnull=False
+                        ).values_list('id_extenso', flat=True)
+                    )
+                    if Extenso.objects.filter(
+                        revisado=False,
+                        id_extenso__in=extenso_ids
+                    ).filter(
+                        Q(id_evaluador__in=evaluadores) |
+                        Q(id_evaluador_2__in=evaluadores) |
+                        Q(id_evaluador_3__in=evaluadores)
+                    ).exists():
+                        return Response(
+                            {'detail': 'No se puede quitar el rol: el usuario tiene revisiones pendientes.'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
                 EvaluadorCongreso.objects.filter(id_persona=persona, id_congreso_id=id_congreso).delete()
 
         dict_ids = set(DictaminadorCongreso.objects.filter(id_congreso_id=id_congreso).values_list('id_persona_id', flat=True)) if id_congreso else set()
