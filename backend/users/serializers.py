@@ -41,16 +41,11 @@ class ParticipantSerializer(serializers.ModelSerializer):
         return " ".join([n for n in partes if n]).strip()
 
     def get_rol(self, obj):
-        try:
-            obj.dictaminador
+        from .models import DictaminadorCongreso, EvaluadorCongreso
+        if DictaminadorCongreso.objects.filter(id_persona=obj).exists():
             return 'Dictaminador'
-        except Exception:
-            pass
-        try:
-            obj.evaluador
+        if EvaluadorCongreso.objects.filter(id_persona=obj).exists():
             return 'Evaluador'
-        except Exception:
-            pass
         try:
             obj.ponente
             return 'Ponente'
@@ -150,14 +145,11 @@ class UserSerializer(serializers.ModelSerializer):
     def get_rol(self, obj):
         if obj.is_superuser or obj.is_staff:
             return 'administrador'
-        try:
-            obj.dictaminador; return 'dictaminador'
-        except Exception:
-            pass
-        try:
-            obj.evaluador; return 'revisor'
-        except Exception:
-            pass
+        from .models import DictaminadorCongreso, EvaluadorCongreso
+        if DictaminadorCongreso.objects.filter(id_persona=obj).exists():
+            return 'dictaminador'
+        if EvaluadorCongreso.objects.filter(id_persona=obj).exists():
+            return 'revisor'
         try:
             obj.ponente; return 'ponente'
         except Exception:
@@ -168,15 +160,9 @@ class UserSerializer(serializers.ModelSerializer):
         return ' '.join(x for x in [obj.nombre, obj.primer_apellido, obj.segundo_apellido] if x).strip()
 
     def get_es_dictaminador(self, obj):
-        from .models import Dictaminador, DictaminadorCongreso
-        return (
-            Dictaminador.objects.filter(id_persona=obj).exists() or
-            DictaminadorCongreso.objects.filter(id_persona=obj).exists()
-        )
+        from .models import DictaminadorCongreso
+        return DictaminadorCongreso.objects.filter(id_persona=obj).exists()
 
     def get_es_evaluador(self, obj):
-        from .models import Evaluador, EvaluadorCongreso
-        return (
-            Evaluador.objects.filter(id_persona=obj).exists() or
-            EvaluadorCongreso.objects.filter(id_persona=obj).exists()
-        )
+        from .models import EvaluadorCongreso
+        return EvaluadorCongreso.objects.filter(id_persona=obj).exists()

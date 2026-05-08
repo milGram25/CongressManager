@@ -981,11 +981,12 @@ PONENTE_MAX_PONENCIAS = 5
 
 
 def _get_user_role(user):
+    from users.models import DictaminadorCongreso, EvaluadorCongreso
     if user.is_superuser or user.is_staff:
         return 'administrador'
-    if hasattr(user, 'dictaminador'):
+    if DictaminadorCongreso.objects.filter(id_persona=user).exists():
         return 'dictaminador'
-    if hasattr(user, 'evaluador'):
+    if EvaluadorCongreso.objects.filter(id_persona=user).exists():
         return 'revisor'
     if hasattr(user, 'ponente'):
         return 'ponente'
