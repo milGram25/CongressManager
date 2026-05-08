@@ -147,13 +147,14 @@ export default function PagosView() {
   const isPonente = role === "ponente";
   const basePrice = Number(userPayment?.base_price || 0);
   const pendingSlots = Number(userPayment?.pending_slots || 0);
+  const paidSlots = Number(userPayment?.paid_slots || 0);
   const overflowPonencias = Number(userPayment?.overflow_ponencias_count || 0);
-  const alreadyPaid = Boolean(userPayment?.already_paid);
+  const alreadyPaid = isPonente ? paidSlots >= 1 : Boolean(userPayment?.already_paid);
   const backendTotalDue = Number(userPayment?.total_due || 0);
 
   const finalPrice = useMemo(() => {
     if (!userPayment) return 0;
-    if (isPonente) return Number(userPayment.total_due || 0);
+    if (isPonente) return backendTotalDue;
     if (role === "asistente") {
       if (alreadyPaid) return 0;
       if (isVerified) return basePrice * 0.5;
@@ -165,6 +166,7 @@ export default function PagosView() {
   const canSubmitPayment = useMemo(() => {
     if (!userPayment) return false;
     if (isPonente) {
+      // Un ponente puede pagar si tiene slots pendientes, incluso si ya pagó el base
       return overflowPonencias === 0 && pendingSlots > 0 && finalPrice > 0;
     }
     return finalPrice > 0;
@@ -288,18 +290,21 @@ export default function PagosView() {
             </div>
 
             {isPonente && (
-              <div className="mb-6 p-4 rounded-xl border border-alt/30 bg-alt/10 text-sm space-y-2">
-                <div className="font-bold text-alt">Pago de ponencias</div>
-                <p>El primer pago incluye hasta 3 ponencias. A partir de la cuarta, deberás pagar la cuota de ponencias extras por cada una adicional.</p>
+              <div className="mb-6 p-4 rounded-xl border-l-4 border-alt/50 bg-alt/5 text-sm py-3 px-4 shadow-sm">
+                <div className="flex items-center gap-2 mb-1 text-alt">
+                  <MdInfoOutline className="text-base" />
+                  <span className="font-bold uppercase text-[10px] tracking-widest">Regla de Ponencias</span>
+                </div>
+                <p className="text-neutral/80 text-xs leading-relaxed">
+                  El pago base cubre <b>2 ponencias</b>. De la 3ª a la 5ª, se aplica un cargo adicional por cada una.
+                </p>
+                {userPayment?.ponencias_count > 0 && (
+                  <p className="text-[10px] mt-2 font-medium text-alt/70 italic">
+                    * Actualmente tienes <b>{userPayment.ponencias_count}</b> ponencias registradas.
+                  </p>
+                )}
               </div>
             )}
-
-             {!isPonente && alreadyPaid && (
-               <div className="mb-6 p-4 rounded-xl border border-secondary/40 bg-secondary/10 text-sm space-y-2">
-                 <div className="font-bold text-secondary">Pago registrado</div>
-                 <p>No tienes pagos pendientes para este congreso.</p>
-               </div>
-             )}
 
             {role === "asistente" && isStudent !== false && (
               <div
@@ -411,10 +416,35 @@ export default function PagosView() {
             )}
 
             <div className="mt-8 pt-6 border-t border-base-200 space-y-2 text-neutral">
-              <div className="flex justify-between text-sm">
-                <span className="opacity-60">Precio base ({roleLabel(role)})</span>
-                <span>${basePrice.toFixed(2)} MXN</span>
-              </div>
+              {((!isPonente && alreadyPaid) || (isPonente && pendingSlots === 0 && paidSlots > 0)) && (
+                <div className="mb-4 opacity-80">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Sin pagos pendientes</span>
+                </div>
+              )}
+              {isPonente ? (
+                <>
+                  {paidSlots === 0 && pendingSlots > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="opacity-60">Inscripción Base (1-2 ponencias)</span>
+                      <span>${basePrice.toFixed(2)} MXN</span>
+                    </div>
+                  )}
+                  {pendingSlots > (paidSlots === 0 ? 1 : 0) && (
+                    <div className="flex justify-between text-sm">
+                      <span className="opacity-60">
+                        Ponencias adicionales (x{pendingSlots - (paidSlots === 0 ? 1 : 0)})
+                      </span>
+                      <span>${((pendingSlots - (paidSlots === 0 ? 1 : 0)) * basePrice).toFixed(2)} MXN</span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex justify-between text-sm">
+                  <span className="opacity-60">Precio base ({roleLabel(role)})</span>
+                  <span>${basePrice.toFixed(2)} MXN</span>
+                </div>
+              )}
+
               {role === "asistente" && isVerified && (
                 <div className="flex justify-between text-sm text-alt font-bold">
                   <span>Descuento Estudiante (50%)</span>

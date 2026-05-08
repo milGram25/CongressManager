@@ -976,7 +976,7 @@ def _parse_month(val):
         return d.year, d.month
     except: return None, None
 
-PONENTE_INCLUDED_PONENCIAS = 3
+PONENTE_INCLUDED_PONENCIAS = 2
 PONENTE_MAX_PONENCIAS = 5
 
 
