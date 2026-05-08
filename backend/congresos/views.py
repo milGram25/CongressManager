@@ -10,8 +10,8 @@ from datetime import datetime, timedelta
 from calendar import monthrange
 import os
 
-from .models import Sede, Institucion, Congreso, Evento, MesasTrabajo, FechasCongreso, CostosCongreso, Rubrica, RubricaGrupo, RubricaCriterio, TipoTrabajo, Dictamen, DictamenPregunta, Subarea, Taller
-from .serializers import SedeSerializer, InstitucionSerializer, CongresoSerializer, EventoSerializer, MesasTrabajoSerializer, RubricaSerializer, RubricaGrupoSerializer, RubricaCriterioSerializer, TipoTrabajoSerializer, DictamenSerializer, DictamenPreguntaSerializer, SubareaSerializer, TallerSerializer
+from .models import Sede, Institucion, Congreso, Evento, MesasTrabajo, FechasCongreso, CostosCongreso, Rubrica, RubricaGrupo, RubricaCriterio, TipoTrabajo, Dictamen, DictamenPregunta, Subarea, Taller, Libros, LibroHasPonencia
+from .serializers import SedeSerializer, InstitucionSerializer, CongresoSerializer, EventoSerializer, MesasTrabajoSerializer, RubricaSerializer, RubricaGrupoSerializer, RubricaCriterioSerializer, TipoTrabajoSerializer, DictamenSerializer, DictamenPreguntaSerializer, SubareaSerializer, TallerSerializer,LibrosSerializer,LibroHasPonenciaSerializer
 
 def clean_date(val, default=None):
     if val is None or (isinstance(val, str) and val.strip() == ""):
@@ -815,6 +815,25 @@ class ListaPagosAdminView(APIView):
                 'estatus': 'Pagado',
             })
         return Response(result)
+    
+class LibrosView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, id_congreso):
+
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response(
+                {'detail': 'No autorizado.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        libros = Libros.objects.filter(id_congreso=id_congreso)
+
+        serializer = LibrosSerializer(libros, many=True)
+
+        return Response(serializer.data)
+
+
 
 def _fetch_events_between(start, end, user=None):
     from users.models import Asistente
@@ -1091,3 +1110,4 @@ def _concept_for_slot(slot):
 
 def _is_close(value_a, value_b):
     return abs(float(value_a) - float(value_b)) < 0.01
+

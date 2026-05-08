@@ -494,3 +494,10 @@ export async function getEvaluadoresDisponiblesApi(accessToken, idCongreso) {
   if (!res.ok) throw new Error('Error cargando evaluadores');
   return res.json();
 }
+
+export async function getLibrosApi(accessToken, idCongreso) {
+  let url = `${API_URL}/api/congresos/libros/${idCongreso}/`;
+  const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener congresos.');
+  return res.json();
+}

@@ -1,14 +1,111 @@
 import ListaDesplegableElementosGenerica from "./Componentes/ListaDesplegableElementosGenerica.jsx";
 import { MdDelete, MdAdd, MdSave, MdCheck } from 'react-icons/md';
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { FiEye, FiCopy, FiEdit2 } from 'react-icons/fi';
 import { FaAngleDown, FaCaretDown, FaCaretUp } from "react-icons/fa";
 import { RiPencilFill } from "react-icons/ri";
 import { IoCloseOutline } from "react-icons/io5";
 import { MdOutlineChangeCircle } from "react-icons/md";
+import { getCongresosApi, getInstitucionesApi,getLibrosApi } from "../../api/adminApi";
+
+
+
 
 
 export default function LibrosView({ librosRecibidos, congreso }) {
+    const accessToken = localStorage.getItem('congress_access');
+    const [loading,setLoading] = useState(null);
+    const [instituciones,setInstituciones] = useState([]);
+    const [congresos,setCongresos] = useState([]);
+    const [instId,setInstId] = useState(0);
+    const [selectedInst,setSelectedInst] = useState(null);
+    const [selectedCongId,setSelectedCongId] = useState(null);
+
+    const fetchInitialData = async () => {
+        try {
+            setLoading(true);
+
+            const instData = await getInstitucionesApi(accessToken);
+            setInstituciones(instData);
+            //await fetchCongresos("");
+            } catch (error) {
+                console.error("Error al cargar datos:", error);
+            } finally {
+            
+
+            
+            setLoading(false);
+        }
+    };
+    const fetchCongresos = async (instId) => {
+        try {
+            const congData = await getCongresosApi(accessToken, instId);
+            setCongresos(congData);
+            } catch (error) {
+            console.error("Error al cargar congresos:", error);
+        }
+        
+    };
+    const fetchLibros = async (selectedCongId) => {
+        try {
+            const congData = await getLibrosApi(accessToken, selectedCongId);
+            setLibros(congData);
+            } catch (error) {
+            console.error("Error al cargar libros:", error);
+        }
+        
+    };
+
+    useEffect(() => {
+        fetchInitialData();
+        
+    }, []);
+
+    useEffect(()=>{
+        fetchCongresos(instId);
+
+    },[instId]);
+
+    useEffect(()=>{
+        if(selectedCongId){
+            fetchLibros(selectedCongId);
+        }
+    },[selectedCongId]);
+
+    
+    /*const [loading,setLoading] = useState(null);
+    const [instituciones,setInstituciones] = useState([]);
+    const [congresos,setCongresos] = useSatete([]);
+
+    const fetchInitialData = async () => {
+        try {
+          const instData = await getInstitucionesApi(accessToken);
+          setInstituciones(instData);
+          await fetchCongresos("");
+        } catch (error) {
+          console.error("Error al cargar datos:", error);
+        } finally {
+          setLoading(false);
+        }
+    };
+
+    const fetchCongresos = async (instId) => {
+        try {
+          const congData = await getCongresosApi(accessToken, instId);
+          setCongresos(congData);
+        } catch (error) {
+          console.error("Error al cargar congresos:", error);
+        }
+    };
+
+    const fetchLibros = async (congId) => {
+        try {
+          const congData = await getCongresosApi(accessToken, congId);
+          setCongresos(congData);
+        } catch (error) {
+          console.error("Error al cargar congresos:", error);
+        }
+    };*/
 
     const MOCK_CONGRESOS = [
         {
@@ -51,7 +148,7 @@ export default function LibrosView({ librosRecibidos, congreso }) {
             id: 1,
             titulo: "LIBRO CIENU 2024",
             descripcion: "Libro de memorias del CIENU 2024",
-            fecha: "2024-10-10T:10:00",
+            fecha: "2024-10-10T10:00",
             id_congreso: 1,
             ponencias: [
                 {
@@ -133,7 +230,7 @@ export default function LibrosView({ librosRecibidos, congreso }) {
             subarea: "matemáticas"
         }
     ]
-    const [libros, setLibros] = useState(MOCK_LIBROS); //por el momento, el mock pero debería ser la variable "Libros!"
+    const [libros, setLibros] = useState([]); //por el momento, el mock pero debería ser la variable "Libros!"
     const [ponencias, setPonencias] = useState(MOCK_TODAS_LAS_PONENCIAS);
     const [congresoSelected, setCongresoSelected] = useState(congreso);
     const [editingLibro, setEditingLibro] = useState(null);
@@ -142,6 +239,8 @@ export default function LibrosView({ librosRecibidos, congreso }) {
         descripcion: '',
         fecha: ''
     });
+
+    
     const [mostrarPonenciasId, setMostrarPonenciasId] = useState(null);
     const [seleccionarPonenciasId, setSeleccionarPonenciasId] = useState(null);
 
@@ -156,6 +255,19 @@ export default function LibrosView({ librosRecibidos, congreso }) {
             )
         );
     };
+
+    const handleSelectInstitucion = async (instId) =>{
+        setSelectedInst(instId);
+        setLoading(true);
+        await fetchCongresos(instId);
+        setLoading(false);
+
+    }
+
+    const handleSelectCongreso = (selectedCongId) =>{
+        setSelectedCongId(selectedCongId);
+    
+    }
 
     function handleAgregarLibro() {
         const nuevoIndex = libros.length;
@@ -256,8 +368,8 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                     <div className="flex-2">
                         <label htmlFor="" className={labelStyle}>Ponente</label>
                         <input
-                            id="fecha"
-                            type="datetime-local"
+                            id="ponente"
+                            type="text"
                             readOnly={editingLibro !== index2}
                             value={ponencia.ponente}
                             className={inputStyle}
@@ -310,8 +422,8 @@ export default function LibrosView({ librosRecibidos, congreso }) {
             </div>
             <div className="flex justify-center gap-10 mb-4">
 
-                <ListaDesplegableElementosGenerica titulo={"Instituciones"} lista={MOCK_INSTITUCIONES} onChange={(e) => seleccionarCongreso(e)} />
-                <ListaDesplegableElementosGenerica titulo={"Congresos"} lista={MOCK_CONGRESOS} onChange={(e) => seleccionarInstitucion(e)} />
+                <ListaDesplegableElementosGenerica titulo={"Instituciones"} lista={instituciones} onSelect={handleSelectInstitucion}  value={selectedInst}/>
+                <ListaDesplegableElementosGenerica titulo={"Congresos"} lista={congresos}  onSelect={handleSelectCongreso} value={(selectedCongId)}/>
             </div>
             <div className="bg-base-100 rounded-3xl shadow-sm">
                 {/*header*/}
@@ -332,12 +444,13 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                     </div>
 
                     <div className="flex flex-col w-full gap-1">
-                        {libros.map((libro, index) => (
+                        
+                        {libros.length>0?libros.map((libro, index) => (
                             <div className="grid border-b pb-3 border-slate-300" key={index}>
                                 <p className="mr-4">{index + 1}° </p>
                                 <div className="flex flex-1 gap-3">
 
-                                    <div className="flex-2">
+                                    <div className="flex-3">
                                         <label htmlFor="" className={labelStyle}>Titulo</label>
                                         <input
                                             id="titulo"
@@ -352,15 +465,15 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                                         <label htmlFor="" className={labelStyle}>Fecha de publicación</label>
                                         <input
                                             id="fecha"
-                                            type="datetime-local"
+                                            type="date"
                                             readOnly={editingLibro !== index}
-                                            value={libro.fecha}
+                                            value={libro.fecha_publicacion}
                                             className={inputStyle}
                                             onChange={(e) => handleChange(e, index)}
                                         />
 
                                     </div>
-                                    <div className="flex-2">
+                                    <div className="flex-5">
                                         <label htmlFor="" className={labelStyle}>Descripción</label>
                                         <input
                                             id="descripcion"
@@ -432,7 +545,8 @@ export default function LibrosView({ librosRecibidos, congreso }) {
 
                             </div>
 
-                        ))}
+                        )):<div className="flex-1 items-center justify-center text-slate-500 text-lg">Aún no hay libros creados para este congreso</div>}
+                       
 
                     </div>
 

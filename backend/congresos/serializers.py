@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Congreso, Institucion, Sede, MesasTrabajo, Evento, FechasCongreso, CostosCongreso, Rubrica, RubricaGrupo, RubricaCriterio, TipoTrabajo, Dictamen, DictamenPregunta, AreaGeneral, Subarea, Taller
+from .models import Congreso, Institucion, Sede, MesasTrabajo, Evento, FechasCongreso, CostosCongreso, Rubrica, RubricaGrupo, RubricaCriterio, TipoTrabajo, Dictamen, DictamenPregunta, AreaGeneral, Subarea, Taller,Libros,LibroHasPonencia
 
 class InstitucionSerializer(serializers.ModelSerializer):
     congresos_totales = serializers.SerializerMethodField()
@@ -154,3 +154,12 @@ class EventoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Evento
         fields = '__all__'
+class LibrosSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Libros
+        fields='__all__'
+
+class LibroHasPonenciaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LibroHasPonencia
+        fields='__all__'

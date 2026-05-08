@@ -14,8 +14,8 @@ export default function ListaDesplegableElementosGenerica({ titulo, lista, onSel
                 >
                     <option value="">Todos</option>
                     {lista.map((item) => (
-                        <option key={item.id_institucion || item.id} value={item.id_institucion || item.id}>
-                            {item.nombre || item.nombre_institucion}
+                        <option key={item.id_congreso || item.id_institucion || item.id} value={item.id_congreso || item.id_institucion || item.id}>
+                            {item.nombre_congreso || item.nombre || item.nombre_institucion}
                         </option>
                     ))}
                 </select>
