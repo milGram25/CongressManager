@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   MdArrowBack, MdAdd, MdEdit, MdDelete, MdAccountTree,
-  MdCheck, MdClose, MdSettings,
+  MdCheck, MdClose, MdRefresh,
 } from "react-icons/md";
 import {
   obtenerAreasApi, crearAreaApi, editarAreaApi, eliminarAreaApi,
@@ -306,7 +306,7 @@ export default function AreasGeneralesView() {
         <div className="flex gap-2">
           <button onClick={cargarAreas} title="Recargar"
             className="w-8 h-8 rounded-full border-2 border-white/50 text-white flex items-center justify-center hover:bg-white/20 transition-colors">
-            <MdSettings size={15} />
+            <MdRefresh size={15} />
           </button>
           <button onClick={() => { setAdding(true); setNewVal(""); }} title="Agregar área"
             className="w-8 h-8 rounded-full border-2 border-white/50 text-white flex items-center justify-center hover:bg-white/20 transition-colors">
