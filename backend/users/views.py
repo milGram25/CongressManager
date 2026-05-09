@@ -7,9 +7,13 @@ from django.contrib.auth import authenticate
 from django.core.files.storage import FileSystemStorage
 from django.db import connection, IntegrityError
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings
 from .models import Persona, Asistente, Dictaminador, Evaluador, Ponente, Factura, Constancia, HistorialAcciones, DictaminadorCongreso, EvaluadorCongreso
 from .serializers import RegisterSerializer, UserSerializer, ParticipantSerializer, FacturaSerializer, ConstanciaSerializer, HistorialAccionesSerializer
 import os
+import random
+import string
 
 
 def _get_rol_persona(persona):
@@ -642,3 +646,69 @@ class RoleRemoveView(APIView):
             'evaluador': persona.id_persona in eval_ids,
             'administrador': persona.is_staff or persona.is_superuser,
         })
+
+
+class EnviarCodigoVerificacionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        email_institucional = request.data.get('email_institucional')
+        if not email_institucional:
+            return Response({'detail': 'Email institucional es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validar dominio simple
+        if not (email_institucional.endswith('.edu') or email_institucional.endswith('.edu.mx') or 'alumnos.udg.mx' in email_institucional):
+            return Response({'detail': 'El dominio del correo no es válido para descuento de estudiante.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            asistente = Asistente.objects.get(id_persona=request.user)
+        except Asistente.DoesNotExist:
+            return Response({'detail': 'El usuario no tiene un perfil de asistente.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Generar código de 6 dígitos
+        codigo = ''.join(random.choices(string.digits, k=6))
+        asistente.codigo_verificacion = codigo
+        asistente.email_institucional = email_institucional
+        asistente.fecha_envio_codigo = timezone.now()
+        asistente.save()
+
+        # Enviar correo (Se imprimirá en consola según settings)
+        subject = 'Código de Verificación - Descuento Estudiante CIENU 2026'
+        message = f'Hola {request.user.nombre},\n\nTu código de verificación para obtener el descuento de estudiante es: {codigo}\n\nSi no solicitaste este código, puedes ignorar este mensaje.'
+        
+        try:
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else 'noreply@cienu2026.com',
+                [email_institucional],
+                fail_silently=False,
+            )
+        except Exception as e:
+            return Response({'detail': f'Error al enviar el correo: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({'detail': 'Código enviado con éxito.'}, status=status.HTTP_200_OK)
+
+
+class VerificarCodigoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        codigo = request.data.get('codigo')
+        if not codigo:
+            return Response({'detail': 'El código es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            asistente = Asistente.objects.get(id_persona=request.user)
+        except Asistente.DoesNotExist:
+            return Response({'detail': 'El usuario no tiene un perfil de asistente.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if asistente.codigo_verificacion == codigo:
+            asistente.es_estudiante_validado = True
+            asistente.save()
+            return Response({
+                'detail': 'Estudiante validado con éxito.',
+                'es_estudiante_validado': True
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({'detail': 'Código incorrecto.'}, status=status.HTTP_400_BAD_REQUEST)
