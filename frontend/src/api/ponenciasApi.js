@@ -173,9 +173,8 @@ export async function getMisPonenciasPonenteApi(accessToken) {
   return res.json();
 }
 
-export async function subirExtensoApi(accessToken, idResumen, titulo, archivo) {
+export async function subirExtensoApi(accessToken, idResumen, archivo) {
   const form = new FormData();
-  form.append('titulo', titulo);
   form.append('archivo', archivo);
   const res = await fetch(`${API_URL}/api/ponencias/resumenes/${idResumen}/subir-extenso/`, {
     method: 'POST',

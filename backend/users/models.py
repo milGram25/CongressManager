@@ -67,9 +67,16 @@ class Asistente(models.Model):
     id_asistente = models.AutoField(primary_key=True)
     id_persona = models.OneToOneField(Persona, on_delete=models.CASCADE, db_column='id_persona')
     institucion_procedencia = models.CharField(max_length=255, blank=True, null=True)
+    
+    # Campos para validación de estudiante (Alineados con DB existente)
+    es_estudiante_validado = models.BooleanField(default=False)
+    email_institucional = models.EmailField(max_length=255, blank=True, null=True)
+    codigo_verificacion = models.CharField(max_length=6, blank=True, null=True)
+    fecha_envio_codigo = models.DateTimeField(blank=True, null=True)
+
     class Meta:
         db_table = 'asistente'
-        managed = False
+        managed = True
 
 class Factura(models.Model):
     id_factura = models.AutoField(primary_key=True)

@@ -1,11 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import Calendar from "../../components/Calendar";
-import { getMiAgendaApi } from "../../api/ponenciasApi";
+import { getAgendaHoyApi } from "../../api/agendaApi";
 import { MdCalendarMonth, MdEvent } from "react-icons/md";
 
 function formatDate(iso) {
   if (!iso) return "";
-  return new Date(iso).toLocaleDateString("es-MX", {
+
+  // Evita el corrimiento de día por timezone cuando el backend manda "YYYY-MM-DD".
+  const date =
+    typeof iso === "string" && /^\d{4}-\d{2}-\d{2}$/.test(iso)
+      ? new Date(`${iso}T00:00:00`)
+      : new Date(iso);
+
+  return date.toLocaleDateString("es-MX", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -24,53 +31,50 @@ function formatHour(iso) {
 function EventoDetalleModal({ evento, onClose }) {
   if (!evento) return null;
   const tipoLabel = { ponencia: "Ponencia", taller: "Taller" }[evento.tipo] ?? evento.tipo;
+  
   return (
     <dialog className="modal modal-bottom sm:modal-middle" open>
-      <div className="modal-box max-w-2xl bg-base-100">
-        <div className="flex items-start gap-3 border-b border-base-200 pb-4 mb-4">
-          <div className="flex-1">
-            <h3 className="font-bold text-xl text-primary leading-snug">{evento.titulo}</h3>
-            <span className="badge badge-ghost mt-2 text-xs capitalize">{tipoLabel}</span>
+      <div className="modal-box max-w-2xl bg-base-100 p-8 rounded-xl shadow-lg border border-base-200">
+        <button onClick={onClose} className="btn btn-sm btn-circle btn-ghost absolute right-4 top-4">✕</button>
+
+        <div className="flex flex-col items-center text-center space-y-4 mb-6">
+          <h3 className="text-lg font-medium text-base-content leading-snug">
+            <span className="font-bold">Título {tipoLabel}:</span> "{evento.titulo}"
+          </h3>
+          
+          <p className="text-base text-base-content">
+            <span className="font-bold">Nombre {tipoLabel === 'Taller' ? 'Tallerista' : 'Ponente'}:</span> {evento.autor !== 'Por confirmar' ? evento.autor : 'Por confirmar'}
+          </p>
+
+          <p className="text-base text-base-content capitalize">
+            <span className="font-bold">Modalidad:</span> {evento.modalidad || 'Presencial'}
+          </p>
+
+          <p className="text-base text-base-content">
+            <span className="font-bold">Lugar:</span> {evento.ubicacion !== 'Por confirmar' ? evento.ubicacion : 'Por confirmar'}
+          </p>
+
+          <div className="flex justify-center gap-12 text-base text-base-content w-full">
+            <p><span className="font-bold">Fecha:</span> {formatDate(evento.fecha_inicio)}</p>
+            <p><span className="font-bold">Hora:</span> {formatHour(evento.fecha_inicio)}</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 bg-base-200 p-4 rounded-lg text-sm mb-4">
-          <div>
-            <span className="font-bold block opacity-50 uppercase text-[10px] mb-1">
-              Fecha y hora inicio
-            </span>
-            <p>
-              {formatDate(evento.fecha_inicio)} · {formatHour(evento.fecha_inicio)}
-            </p>
-          </div>
-          {evento.fecha_fin && (
-            <div>
-              <span className="font-bold block opacity-50 uppercase text-[10px] mb-1">
-                Hora fin
-              </span>
-              <p>{formatHour(evento.fecha_fin)}</p>
-            </div>
-          )}
-          <div className="col-span-2">
-            <span className="font-bold block opacity-50 uppercase text-[10px] mb-1">
-              Congreso
-            </span>
-            <p>{evento.congreso}</p>
-          </div>
+        <div className="mb-8 px-4">
+          <span className="font-bold block text-base-content mb-2 text-center">Sinopsis:</span>
+          <p className="text-sm leading-relaxed text-base-content/90 whitespace-pre-wrap text-justify">
+            {evento.sinopsis || "Sinopsis no disponible."}
+          </p>
         </div>
 
-        {evento.sinopsis && (
-          <div className="mb-2">
-            <span className="font-bold block text-primary mb-2">Sinopsis</span>
-            <p className="text-sm leading-relaxed text-base-content/80">{evento.sinopsis}</p>
+        {evento.enlace && (
+          <div className="mb-6 text-center">
+            <span className="font-bold block text-base-content mb-1">Enlace:</span>
+            <a href={evento.enlace} target="_blank" rel="noopener noreferrer" className="link link-primary text-sm break-all">
+              {evento.enlace}
+            </a>
           </div>
         )}
-
-        <div className="modal-action">
-          <button className="btn btn-primary text-white px-8" onClick={onClose}>
-            Cerrar
-          </button>
-        </div>
       </div>
       <div className="modal-backdrop" onClick={onClose}>
         <button>close</button>
@@ -86,18 +90,37 @@ function MisEventosHoy() {
   const [error, setError] = useState("");
   const [selectedCongresoId, setSelectedCongresoId] = useState(null);
   const [eventoDetalle, setEventoDetalle] = useState(null);
+  const [agendaDateIso, setAgendaDateIso] = useState("");
 
   useEffect(() => {
     const load = async () => {
       try {
         const token = localStorage.getItem("congress_access");
         if (!token) throw new Error("No hay sesión activa.");
-        const data = await getMiAgendaApi(token);
-        const arr = Array.isArray(data) ? data : [];
-        setEventos(arr);
-        if (arr.length > 0) {
-          setSelectedCongresoId(arr[0].id_congreso);
-        }
+        const data = await getAgendaHoyApi(token);
+
+        // La agenda de hoy viene en { date, events }.
+        setAgendaDateIso(typeof data?.date === "string" ? data.date : "");
+
+        const arr = Array.isArray(data?.events) ? data.events : [];
+        const mapped = arr.map((e) => ({
+          id: e.id,
+          titulo: e.title,
+          tipo: e.type,
+          fecha_inicio: e.start_iso,
+          fecha_fin: e.end_iso,
+          sinopsis: e.sinopsis,
+          congreso: e.congreso,
+          id_congreso: e.id_congreso,
+          sources: e.sources,
+          autor: e.author,
+          ubicacion: e.location,
+          eje: e.eje,
+          enlace: e.link,
+        }));
+
+        setEventos(mapped);
+        if (mapped.length > 0) setSelectedCongresoId(mapped[0].id_congreso);
       } catch (err) {
         setError(err.message || "No se pudo cargar tu agenda.");
       } finally {
@@ -147,6 +170,7 @@ function MisEventosHoy() {
           <span>MI AGENDA</span>
         </div>
         <h2 className="text-2xl font-bold">{selectedCongresoNombre}</h2>
+        {agendaDateIso && <p className="opacity-80 mt-1">{formatDate(agendaDateIso)}</p>}
       </div>
 
       {/* Filtro de congreso */}
@@ -218,13 +242,25 @@ function MisEventosHoy() {
                       <h4 className="font-medium text-base-content">
                         {evento.titulo}
                       </h4>
-                      <div className="flex items-center gap-2 mt-0.5">
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         <span className="text-[10px] badge badge-ghost uppercase opacity-70">
                           {tipoLabel}
                         </span>
                         <p className="text-sm opacity-60">
                           {formatDate(evento.fecha_inicio)}
                         </p>
+                        {Array.isArray(evento.sources) && evento.sources.length > 0 && (
+                          <div className="flex items-center gap-1">
+                            {evento.sources.map((src) => (
+                              <span
+                                key={src}
+                                className="inline-flex items-center rounded-full border border-base-300 bg-base-200 px-2 py-0.5 text-[10px] font-semibold text-base-content/70"
+                              >
+                                {src}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

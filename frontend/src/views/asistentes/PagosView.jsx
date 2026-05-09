@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import PagosForm from "./components/PagosForm";
 import { getPagosResumenApi, registrarPagoApi, solicitarFacturaApi } from "../../api/pagosApi";
+import { getCongresosApi } from "../../api/adminApi";
+import { enviarCodigoEstudianteApi, verificarCodigoEstudianteApi } from "../../api/authApi";
 import {
   MdSchool,
   MdEmail,
@@ -10,6 +12,7 @@ import {
   MdCheckCircle,
   MdInfoOutline,
   MdArrowBack,
+  MdDateRange,
 } from "react-icons/md";
 
 function roleLabel(role) {
@@ -24,22 +27,25 @@ function roleLabel(role) {
 export default function PagosView() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const idCongreso = searchParams.get("id_congreso") || null;
   const nombreCongreso = searchParams.get("nombre") || null;
 
+  const [listaCongresos, setListaCongresos] = useState([]);
   const [resumen, setResumen] = useState(null);
   const [loadingResumen, setLoadingResumen] = useState(true);
   const [resumenError, setResumenError] = useState("");
   const [registrandoPago, setRegistrandoPago] = useState(false);
   const [pagoError, setPagoError] = useState("");
 
-  const [isStudent, setIsStudent] = useState(null);
-  const [studentEmail, setStudentEmail] = useState("");
+  const [isStudent, setIsStudent] = useState(user?.es_estudiante_validado ? true : null);
+  const [studentEmail, setStudentEmail] = useState(user?.email_institucional || "");
   const [showVerification, setShowVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
   const [error, setError] = useState("");
-  const [isVerified, setIsVerified] = useState(false);
+  const [isVerified, setIsVerified] = useState(user?.es_estudiante_validado || false);
+  const [enviandoCodigo, setEnviandoCodigo] = useState(false);
+  const [verificandoCodigo, setVerificandoCodigo] = useState(false);
 
   const [pagoExitoso, setPagoExitoso] = useState(false);
   const [quiereFactura, setQuiereFactura] = useState(false);
@@ -105,8 +111,62 @@ export default function PagosView() {
     { code: "CN01", label: "Nómina" },
   ];
 
+  // 1. Cargar lista de congresos una sola vez al montar
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const token = localStorage.getItem("congress_access");
+        if (!token) return;
+        const list = await getCongresosApi(token);
+        setListaCongresos(list);
+
+        const now = new Date();
+        const future = list.filter(c => new Date(c.congreso_fin) >= now);
+        future.sort((a, b) => new Date(a.congreso_inicio) - new Date(b.congreso_inicio));
+
+        // Obtener id_congreso actual de los params (fresco)
+        const params = new URLSearchParams(window.location.search);
+        const currentId = params.get("id_congreso");
+
+        if (!currentId) {
+          if (future.length > 0) {
+            setSearchParams({ 
+              id_congreso: future[0].id_congreso.toString(), 
+              nombre: future[0].nombre_congreso 
+            });
+          } else {
+            setResumenError("No hay congresos activos disponibles para pago.");
+            setLoadingResumen(false);
+          }
+        } else {
+          // Validar el que ya viene en la URL
+          const selected = list.find(c => c.id_congreso.toString() === currentId);
+          if (!selected || new Date(selected.congreso_fin) < now) {
+            if (future.length > 0) {
+              setSearchParams({ 
+                id_congreso: future[0].id_congreso.toString(), 
+                nombre: future[0].nombre_congreso 
+              });
+            } else {
+              setResumenError("El congreso seleccionado ha finalizado o no es válido.");
+              setLoadingResumen(false);
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Error al inicializar congresos:", e);
+        setResumenError("Error al cargar la lista de congresos.");
+        setLoadingResumen(false);
+      }
+    };
+    init();
+  }, []); // Solo al montar
+
+  // 2. Cargar resumen cuando cambie idCongreso
   useEffect(() => {
     const loadResumen = async () => {
+      if (!idCongreso) return;
+      
       setLoadingResumen(true);
       setResumenError("");
       try {
@@ -147,13 +207,14 @@ export default function PagosView() {
   const isPonente = role === "ponente";
   const basePrice = Number(userPayment?.base_price || 0);
   const pendingSlots = Number(userPayment?.pending_slots || 0);
+  const paidSlots = Number(userPayment?.paid_slots || 0);
   const overflowPonencias = Number(userPayment?.overflow_ponencias_count || 0);
-  const alreadyPaid = Boolean(userPayment?.already_paid);
+  const alreadyPaid = isPonente ? paidSlots >= 1 : Boolean(userPayment?.already_paid);
   const backendTotalDue = Number(userPayment?.total_due || 0);
 
   const finalPrice = useMemo(() => {
     if (!userPayment) return 0;
-    if (isPonente) return Number(userPayment.total_due || 0);
+    if (isPonente) return backendTotalDue;
     if (role === "asistente") {
       if (alreadyPaid) return 0;
       if (isVerified) return basePrice * 0.5;
@@ -165,12 +226,13 @@ export default function PagosView() {
   const canSubmitPayment = useMemo(() => {
     if (!userPayment) return false;
     if (isPonente) {
+      // Un ponente puede pagar si tiene slots pendientes, incluso si ya pagó el base
       return overflowPonencias === 0 && pendingSlots > 0 && finalPrice > 0;
     }
     return finalPrice > 0;
   }, [userPayment, isPonente, overflowPonencias, pendingSlots, finalPrice]);
 
-  const handleEmailSubmit = (e) => {
+  const handleEmailSubmit = async (e) => {
     e.preventDefault();
     setError("");
     const eduRegex = /(\.edu(\.[a-z]{2,3})?|alumnos\.udg\.mx)$/i;
@@ -178,16 +240,32 @@ export default function PagosView() {
       setError("El correo debe ser institucional válido (.edu, .edu.mx, alumnos.udg.mx, etc).");
       return;
     }
-    setShowVerification(true);
+    
+    setEnviandoCodigo(true);
+    try {
+      const token = localStorage.getItem("congress_access");
+      await enviarCodigoEstudianteApi(token, studentEmail);
+      setShowVerification(true);
+    } catch (err) {
+      setError(err.message || "Error al enviar el código.");
+    } finally {
+      setEnviandoCodigo(false);
+    }
   };
 
-  const handleVerifyCode = (e) => {
+  const handleVerifyCode = async (e) => {
     e.preventDefault();
-    if (verificationCode === "123456") {
+    setError("");
+    setVerificandoCodigo(true);
+    try {
+      const token = localStorage.getItem("congress_access");
+      await verificarCodigoEstudianteApi(token, verificationCode);
       setIsVerified(true);
       setShowVerification(false);
-    } else {
-      setError("Código de verificación incorrecto.");
+    } catch (err) {
+      setError(err.message || "Código incorrecto.");
+    } finally {
+      setVerificandoCodigo(false);
     }
   };
 
@@ -240,18 +318,8 @@ export default function PagosView() {
     }
   };
 
-  if (loadingResumen) {
+  if (loadingResumen && !resumenError && listaCongresos.length === 0) {
     return <div className="max-w-4xl mx-auto p-4">Cargando información de pagos...</div>;
-  }
-
-  if (resumenError) {
-    return (
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="bg-error/10 border border-error/20 text-error text-sm px-4 py-3 rounded-xl">
-          {resumenError}
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -265,9 +333,53 @@ export default function PagosView() {
           Congresos
         </button>
       )}
+
       <h2 className="text-3xl font-bold mb-8 text-neutral">
         {nombreCongreso || "Inscripción al Congreso"}
       </h2>
+
+      {/* Selector de Congreso - Arriba del panel principal */}
+      {listaCongresos.length > 0 && (
+        <div className="mb-8 p-6 bg-base-100 rounded-2xl border-2 border-base-300 shadow-sm">
+          <label className="text-[10px] font-bold opacity-50 uppercase mb-1 block px-1">
+            Selecciona el Congreso para realizar el pago
+          </label>
+          <div className="relative">
+            <MdDateRange className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" />
+            <select
+              className="select select-bordered w-full pl-12 font-bold text-sm"
+              value={idCongreso || ""}
+              onChange={(e) => {
+                const selected = listaCongresos.find(
+                  (c) => c.id_congreso.toString() === e.target.value
+                );
+                if (selected) {
+                  setSearchParams({
+                    id_congreso: selected.id_congreso.toString(),
+                    nombre: selected.nombre_congreso,
+                  });
+                }
+              }}
+            >
+              {listaCongresos.map((c) => (
+                <option
+                  key={c.id_congreso}
+                  value={c.id_congreso}
+                  disabled={new Date(c.congreso_fin) < new Date()}
+                >
+                  {c.nombre_congreso}{" "}
+                  {new Date(c.congreso_fin) < new Date() ? "(PASADO)" : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+          {resumenError && (
+            <p className="text-error font-bold text-[11px] mt-4 uppercase tracking-wider px-1">
+              {resumenError}
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2 space-y-6">
@@ -276,171 +388,200 @@ export default function PagosView() {
               Detalle de Inscripción
             </h3>
 
-            <div className="grid grid-cols-2 gap-4 text-sm mb-6">
-              <div>
-                <p className="opacity-50 uppercase font-bold text-[10px] tracking-widest">Nombre</p>
-                <p className="font-medium text-neutral">{user?.nombre || "Usuario Demo"}</p>
+              <div className="grid grid-cols-2 gap-4 text-sm mb-6">
+                <div>
+                  <p className="opacity-50 uppercase font-bold text-[10px] tracking-widest">Nombre</p>
+                  <p className="font-medium text-neutral">{user?.nombre || "Usuario Demo"}</p>
+                </div>
+                <div>
+                  <p className="opacity-50 uppercase font-bold text-[10px] tracking-widest">Categoría</p>
+                  <p className="font-bold text-alt">{roleLabel(role).toUpperCase()}</p>
+                </div>
               </div>
-              <div>
-                <p className="opacity-50 uppercase font-bold text-[10px] tracking-widest">Categoría</p>
-                <p className="font-bold text-alt">{roleLabel(role).toUpperCase()}</p>
-              </div>
-            </div>
 
-            {isPonente && (
-              <div className="mb-6 p-4 rounded-xl border border-alt/30 bg-alt/10 text-sm space-y-2">
-                <div className="font-bold text-alt">Pago de ponencias</div>
-                <p>El primer pago incluye hasta 3 ponencias. A partir de la cuarta, deberás pagar la cuota de ponencias extras por cada una adicional.</p>
-              </div>
-            )}
+              {isPonente && (
+                <div className="mb-6 p-4 rounded-xl border-l-4 border-alt/50 bg-alt/5 text-sm py-3 px-4 shadow-sm">
+                  <div className="flex items-center gap-2 mb-1 text-alt">
+                    <MdInfoOutline className="text-base" />
+                    <span className="font-bold uppercase text-[10px] tracking-widest">Regla de Ponencias</span>
+                  </div>
+                  <p className="text-neutral/80 text-xs leading-relaxed">
+                    El pago base cubre <b>2 ponencias</b>. De la 3ª a la 5ª, se aplica un cargo adicional por cada una.
+                  </p>
+                  {userPayment?.ponencias_count > 0 && (
+                    <p className="text-[10px] mt-2 font-medium text-alt/70 italic">
+                      * Actualmente tienes <b>{userPayment.ponencias_count}</b> ponencias registradas.
+                    </p>
+                  )}
+                </div>
+              )}
 
-            {!isPonente && alreadyPaid && (
-              <div className="mb-6 p-4 rounded-xl border border-secondary/40 bg-secondary/10 text-sm space-y-2">
-                <div className="font-bold text-secondary">Pago registrado</div>
-                <p>Ya cuentas con un pago registrado para tu rol y no tienes pagos pendientes por ahora.</p>
-              </div>
-            )}
-
-            {role === "asistente" && isStudent !== false && (
-              <div
-                className={`p-6 rounded-2xl border-2 transition-all ${isVerified ? "border-secondary bg-alt/5" : "border-dashed border-base-300"}`}
-              >
-                {!isVerified ? (
-                  <>
-                    {isStudent === null && (
-                      <div className="text-center space-y-4">
-                        <MdSchool className="text-4xl mx-auto text-secondary opacity-80" />
-                        <h4 className="font-bold text-neutral">¿Eres estudiante activo?</h4>
-                        <p className="text-sm opacity-70 text-neutral">
-                          Obtén un 50% de descuento adicional validando tu correo institucional.
-                        </p>
-                        <div className="flex justify-center gap-4">
-                          <button
-                            onClick={() => setIsStudent(true)}
-                            className="btn bg-seconday hover:bg-secondary/80 border-none text-secondary hover:text-white btn-sm rounded-full px-8"
-                          >
-                            Sí, soy estudiante
-                          </button>
-                          <button
-                            onClick={() => setIsStudent(false)}
-                            className="btn btn-ghost btn-sm rounded-full opacity-60 text-neutral"
-                          >
-                            No, tarifa general
-                          </button>
+              {role === "asistente" && isStudent !== false && (
+                <div
+                  className={`p-6 rounded-2xl border-2 transition-all ${isVerified ? "border-secondary bg-alt/5" : "border-dashed border-base-300"}`}
+                >
+                  {!isVerified ? (
+                    <>
+                      {isStudent === null && (
+                        <div className="text-center space-y-4">
+                          <MdSchool className="text-4xl mx-auto text-secondary opacity-80" />
+                          <h4 className="font-bold text-neutral">¿Eres estudiante activo?</h4>
+                          <p className="text-sm opacity-70 text-neutral">
+                            Obtén un 50% de descuento adicional validando tu correo institucional.
+                          </p>
+                          <div className="flex justify-center gap-4">
+                            <button
+                              onClick={() => setIsStudent(true)}
+                              className="btn bg-seconday hover:bg-secondary/80 border-none text-secondary hover:text-white btn-sm rounded-full px-8"
+                            >
+                              Sí, soy estudiante
+                            </button>
+                            <button
+                              onClick={() => setIsStudent(false)}
+                              className="btn btn-ghost btn-sm rounded-full opacity-60 text-neutral"
+                            >
+                              No, tarifa general
+                            </button>
+                          </div>
                         </div>
+                      )}
+
+                      {isStudent === true && !showVerification && (
+                        <form onSubmit={handleEmailSubmit} className="space-y-4 text-neutral">
+                          <div className="flex items-center gap-2 mb-2">
+                            <button
+                              type="button"
+                              onClick={() => setIsStudent(null)}
+                              className="btn btn-ghost btn-xs"
+                            >
+                              ← Volver
+                            </button>
+                            <span className="text-sm font-bold">Validación Institucional</span>
+                          </div>
+                          <div className="relative">
+                            <MdEmail className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary" />
+                            <input
+                              type="email"
+                              required
+                              placeholder="Tu correo institucional (.edu, alumnos.udg.mx)"
+                              className="w-full pl-12 pr-4 py-3 rounded-xl bg-base-200 border-none outline-none focus:ring-2 focus:ring-secondary text-sm"
+                              value={studentEmail}
+                              onChange={(e) => setStudentEmail(e.target.value)}
+                            />
+                          </div>
+                          {error && <p className="text-error text-[10px] px-2">{error}</p>}
+                          <button
+                            type="submit"
+                            disabled={enviandoCodigo}
+                            className={`btn bg-secondary hover:bg-secondary/80 border-none w-full text-white rounded-xl ${enviandoCodigo ? 'loading' : ''}`}
+                          >
+                            {enviandoCodigo ? "Enviando..." : "Enviar código de verificación"}
+                          </button>
+                          </form>
+                          )}
+
+                          {showVerification && (
+                          <form onSubmit={handleVerifyCode} className="space-y-4 text-neutral">
+                          <div className="text-center">
+                            <p className="text-sm font-bold mb-1">Verifica tu correo</p>
+                            <p className="text-[10px] opacity-60">Enviamos un código a {studentEmail}</p>
+                          </div>
+                          <div className="relative">
+                            <MdVpnKey className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary" />
+                            <input
+                              type="text"
+                              required
+                              placeholder="Introduce el código (123456)"
+                              className="w-full pl-12 pr-4 py-3 rounded-xl bg-base-200 border-none outline-none focus:ring-2 focus:ring-secondary text-sm font-bold"
+                              value={verificationCode}
+                              onChange={(e) => setVerificationCode(e.target.value)}
+                            />
+                          </div>
+                          {error && <p className="text-error text-[10px] px-2">{error}</p>}
+                          <button
+                            type="submit"
+                            disabled={verificandoCodigo}
+                            className={`btn bg-secondary hover:bg-secondary/80 border-none w-full text-white rounded-xl ${verificandoCodigo ? 'loading' : ''}`}
+                          >
+                            {verificandoCodigo ? "Verificando..." : "Verificar código"}
+                          </button>                          <button
+                            type="button"
+                            onClick={() => setShowVerification(false)}
+                            className="btn btn-link btn-xs w-full opacity-50 text-neutral"
+                          >
+                            Cambiar correo
+                          </button>
+                        </form>
+                      )}
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-4 py-2">
+                      <MdCheckCircle className="text-5xl text-secondary" />
+                      <div>
+                        <h4 className="font-bold text-alt uppercase tracking-tight">Descuento Aplicado</h4>
+                        <p className="text-xs opacity-70 text-neutral">Validado vía: {studentEmail}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-8 pt-6 border-t border-base-200 space-y-2 text-neutral">
+                {((!isPonente && alreadyPaid) || (isPonente && pendingSlots === 0 && paidSlots > 0)) && (
+                  <div className="mb-4 opacity-80">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Sin pagos pendientes</span>
+                  </div>
+                )}
+                {isPonente ? (
+                  <>
+                    {paidSlots === 0 && pendingSlots > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="opacity-60">Inscripción Base (1-2 ponencias)</span>
+                        <span>${basePrice.toFixed(2)} MXN</span>
                       </div>
                     )}
-
-                    {isStudent === true && !showVerification && (
-                      <form onSubmit={handleEmailSubmit} className="space-y-4 text-neutral">
-                        <div className="flex items-center gap-2 mb-2">
-                          <button
-                            type="button"
-                            onClick={() => setIsStudent(null)}
-                            className="btn btn-ghost btn-xs"
-                          >
-                            ← Volver
-                          </button>
-                          <span className="text-sm font-bold">Validación Institucional</span>
-                        </div>
-                        <div className="relative">
-                          <MdEmail className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary" />
-                          <input
-                            type="email"
-                            required
-                            placeholder="Tu correo institucional (.edu, alumnos.udg.mx)"
-                            className="w-full pl-12 pr-4 py-3 rounded-xl bg-base-200 border-none outline-none focus:ring-2 focus:ring-secondary text-sm"
-                            value={studentEmail}
-                            onChange={(e) => setStudentEmail(e.target.value)}
-                          />
-                        </div>
-                        {error && <p className="text-error text-[10px] px-2">{error}</p>}
-                        <button
-                          type="submit"
-                          className="btn bg-secondary hover:bg-secondary/80 border-none w-full text-white rounded-xl"
-                        >
-                          Enviar código de verificación
-                        </button>
-                      </form>
-                    )}
-
-                    {showVerification && (
-                      <form onSubmit={handleVerifyCode} className="space-y-4 text-neutral">
-                        <div className="text-center">
-                          <p className="text-sm font-bold mb-1">Verifica tu correo</p>
-                          <p className="text-[10px] opacity-60">Enviamos un código a {studentEmail}</p>
-                        </div>
-                        <div className="relative">
-                          <MdVpnKey className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary" />
-                          <input
-                            type="text"
-                            required
-                            placeholder="Introduce el código (123456)"
-                            className="w-full pl-12 pr-4 py-3 rounded-xl bg-base-200 border-none outline-none focus:ring-2 focus:ring-secondary text-sm font-bold"
-                            value={verificationCode}
-                            onChange={(e) => setVerificationCode(e.target.value)}
-                          />
-                        </div>
-                        {error && <p className="text-error text-[10px] px-2">{error}</p>}
-                        <button
-                          type="submit"
-                          className="btn bg-secondary hover:bg-secondary/80 border-none w-full text-white rounded-xl"
-                        >
-                          Verificar código
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setShowVerification(false)}
-                          className="btn btn-link btn-xs w-full opacity-50 text-neutral"
-                        >
-                          Cambiar correo
-                        </button>
-                      </form>
+                    {pendingSlots > (paidSlots === 0 ? 1 : 0) && (
+                      <div className="flex justify-between text-sm">
+                        <span className="opacity-60">
+                          Ponencias adicionales (x{pendingSlots - (paidSlots === 0 ? 1 : 0)})
+                        </span>
+                        <span>${((pendingSlots - (paidSlots === 0 ? 1 : 0)) * basePrice).toFixed(2)} MXN</span>
+                      </div>
                     )}
                   </>
                 ) : (
-                  <div className="flex items-center gap-4 py-2">
-                    <MdCheckCircle className="text-5xl text-secondary" />
-                    <div>
-                      <h4 className="font-bold text-alt uppercase tracking-tight">Descuento Aplicado</h4>
-                      <p className="text-xs opacity-70 text-neutral">Validado vía: {studentEmail}</p>
-                    </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="opacity-60">Precio base ({roleLabel(role)})</span>
+                    <span>${basePrice.toFixed(2)} MXN</span>
                   </div>
                 )}
-              </div>
-            )}
 
-            <div className="mt-8 pt-6 border-t border-base-200 space-y-2 text-neutral">
-              <div className="flex justify-between text-sm">
-                <span className="opacity-60">Precio base ({roleLabel(role)})</span>
-                <span>${basePrice.toFixed(2)} MXN</span>
-              </div>
-              {role === "asistente" && isVerified && (
-                <div className="flex justify-between text-sm text-alt font-bold">
-                  <span>Descuento Estudiante (50%)</span>
-                  <span>-${(basePrice * 0.5).toFixed(2)} MXN</span>
+                {role === "asistente" && isVerified && (
+                  <div className="flex justify-between text-sm text-alt font-bold">
+                    <span>Descuento Estudiante (50%)</span>
+                    <span>-${(basePrice * 0.5).toFixed(2)} MXN</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-end pt-4">
+                  <span className="text-lg font-bold">Total Final</span>
+                  <span className="text-3xl font-black text-primary">${finalPrice.toFixed(2)} MXN</span>
                 </div>
-              )}
-              <div className="flex justify-between items-end pt-4">
-                <span className="text-lg font-bold">Total Final</span>
-                <span className="text-3xl font-black text-primary">${finalPrice.toFixed(2)} MXN</span>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="md:col-span-1">
-          <div className="bg-base-200 p-6 rounded-2xl sticky top-24 shadow-sm text-neutral">
-            <h3 className="font-bold text-xl mb-6">Resumen de Pago</h3>
-            <div className="flex justify-between text-xs mb-4 opacity-70 italic">
-              <span>Categoría:</span>
-              <span className="text-right">{roleLabel(role)}</span>
-            </div>
-            {pagoError && (
-              <div className="bg-error/10 border border-error/20 text-error text-xs px-3 py-2 rounded-lg mb-4">
-                {pagoError}
+          <div className="md:col-span-1">
+            <div className="bg-base-200 p-6 rounded-2xl sticky top-24 shadow-sm text-neutral">
+              <h3 className="font-bold text-xl mb-6">Resumen de Pago</h3>
+              <div className="flex justify-between text-xs mb-4 opacity-70 italic">
+                <span>Categoría:</span>
+                <span className="text-right">{roleLabel(role)}</span>
               </div>
-            )}
+              {pagoError && (
+                <div className="bg-error/10 border border-error/20 text-error text-xs px-3 py-2 rounded-lg mb-4">
+                  {pagoError}
+                </div>
+              )}
             <PagosForm
               total={finalPrice}
               onSuccess={handleRegistrarPago}

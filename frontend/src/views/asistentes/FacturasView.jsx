@@ -78,7 +78,6 @@ export default function FacturasView() {
         <MdErrorOutline className="text-alt mt-1 size-3 shrink-0" />
         <p className="text-xs text-neutral leading-relaxed">
           <span className="font-bold text-primary">Nota importante:</span> El procesamiento de facturas toma de <b>24 a 72 horas hábiles</b>.
-          En caso de duda, contacta a <b className="text-alt underline">finanzas@cienu2026.com</b>
         </p>
       </div>
 
