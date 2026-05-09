@@ -195,7 +195,11 @@ CREATE TABLE ponente (
 CREATE TABLE asistente (
     id_asistente SERIAL PRIMARY KEY,
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona) ON DELETE CASCADE,
-    institucion_procedencia VARCHAR(255)
+    institucion_procedencia VARCHAR(255),
+    es_estudiante_validado BOOLEAN DEFAULT FALSE,
+    email_institucional VARCHAR(255),
+    codigo_verificacion VARCHAR(6),
+    fecha_envio_codigo TIMESTAMP
 );
 
 CREATE TABLE mesas_trabajo (
