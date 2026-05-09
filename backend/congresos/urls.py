@@ -56,6 +56,9 @@ urlpatterns = [
     path('<int:id_congreso>/eventos/', CongresoEventosView.as_view(), name='congreso_eventos'),
     path('eventos/<int:id_evento>/inscritos/', InscritesTallerView.as_view(), name='evento_inscritos'),
     path('<int:id_congreso>/signatures/', CongresoSignaturesView.as_view(), name='congreso_signatures'),
-    path('libros/<int:id_congreso>/',LibrosView.as_view(),name='libros'),
-    path('librohasponencia/<int:id_libro>/',LibroHasPonenciaView.as_view(),name='libros_has_ponencia'),
+    path('libros/<int:id_congreso>/', LibrosView.as_view(), name='libros'),
+    path('libro/<int:id_libro>/', LibrosView.as_view(), name='libro_detail'),
+    path('librohasponencia/', LibroHasPonenciaView.as_view(), name='libros_has_ponencia_base'),
+    path('librohasponencia/<int:id_libro>/', LibroHasPonenciaView.as_view(), name='libros_has_ponencia'),
+    path('librohasponencia/ponencia/<int:id_ponencia>/', LibroHasPonenciaView.as_view(), name='libros_has_ponencia_ponencia'),
 ]

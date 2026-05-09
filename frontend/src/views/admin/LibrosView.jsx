@@ -1,12 +1,16 @@
 import ListaDesplegableElementosGenerica from "./Componentes/ListaDesplegableElementosGenerica.jsx";
 import { MdDelete, MdAdd, MdSave, MdCheck } from 'react-icons/md';
-import { useState,useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FiEye, FiCopy, FiEdit2 } from 'react-icons/fi';
 import { FaAngleDown, FaCaretDown, FaCaretUp } from "react-icons/fa";
 import { RiPencilFill } from "react-icons/ri";
 import { IoCloseOutline } from "react-icons/io5";
 import { MdOutlineChangeCircle } from "react-icons/md";
-import { getCongresosApi, getInstitucionesApi,getLibrosApi, getPonenciasApi,getLibroHasPonenciaApi } from "../../api/adminApi";
+import {
+    getCongresosApi, getInstitucionesApi, getLibrosApi, getPonenciasApi, getLibroHasPonenciaApi,
+    createLibroApi, updateLibroApi, deleteLibroApi,
+    addPonenciaToLibroApi, removePonenciaFromLibroApi, transferPonenciaApi
+} from "../../api/adminApi";
 
 
 
@@ -14,13 +18,13 @@ import { getCongresosApi, getInstitucionesApi,getLibrosApi, getPonenciasApi,getL
 
 export default function LibrosView({ librosRecibidos, congreso }) {
     const accessToken = localStorage.getItem('congress_access');
-    const [loading,setLoading] = useState(null);
-    const [instituciones,setInstituciones] = useState([]);
-    const [congresos,setCongresos] = useState([]);
-    const [instId,setInstId] = useState(0);
-    const [selectedInst,setSelectedInst] = useState(null);
-    const [selectedCongId,setSelectedCongId] = useState(null);
-    const [libroHasPonencia,setLibroHasPonencia] = useState([]);
+    const [loading, setLoading] = useState(null);
+    const [instituciones, setInstituciones] = useState([]);
+    const [congresos, setCongresos] = useState([]);
+    const [instId, setInstId] = useState(0);
+    const [selectedInst, setSelectedInst] = useState(null);
+    const [selectedCongId, setSelectedCongId] = useState(null);
+    const [libroHasPonencia, setLibroHasPonencia] = useState([]);
     const [libros, setLibros] = useState([]); //por el momento, el mock pero debería ser la variable "Libros!"
     //const [ponencias, setPonencias] = useState(MOCK_TODAS_LAS_PONENCIAS);
     const [ponencias, setPonencias] = useState([]);
@@ -32,10 +36,13 @@ export default function LibrosView({ librosRecibidos, congreso }) {
         fecha: ''
     });
 
-    
+
     const [mostrarPonenciasIdVisual, setMostrarPonenciasIdVisual] = useState(null);
     const [mostrarPonenciasIdReal, setMostrarPonenciasIdReal] = useState(null);
     const [seleccionarPonenciasId, setSeleccionarPonenciasId] = useState(null);
+    const [isSwapModalOpen, setIsSwapModalOpen] = useState(false);
+    const [swapData, setSwapData] = useState({ ponencia: null, currentLibroIndex: null, currentPonenciaIndex: null });
+    const [loadingPonencias, setLoadingPonencias] = useState(false);
 
     const fetchInitialData = async () => {
         try {
@@ -44,12 +51,12 @@ export default function LibrosView({ librosRecibidos, congreso }) {
             const instData = await getInstitucionesApi(accessToken);
             setInstituciones(instData);
             //await fetchCongresos("");
-            } catch (error) {
-                console.error("Error al cargar datos:", error);
-            } finally {
-            
+        } catch (error) {
+            console.error("Error al cargar datos:", error);
+        } finally {
 
-            
+
+
             setLoading(false);
         }
     };
@@ -57,32 +64,29 @@ export default function LibrosView({ librosRecibidos, congreso }) {
         try {
             const congData = await getCongresosApi(accessToken, instId);
             setCongresos(congData);
-            } catch (error) {
+        } catch (error) {
             console.error("Error al cargar congresos:", error);
         }
-        
+
     };
-    const fetchLibros = async (selectedCongId) => { 
+    const fetchLibros = async (selectedCongId) => {
         try {
             const congData = await getLibrosApi(accessToken, selectedCongId);
             setLibros(congData);
-            } catch (error) {
+        } catch (error) {
             console.error("Error al cargar libros:", error);
         }
-        
+
     };
 
-    const fetchPonencias = async (selectedCongId)=>{
-        console.log(selectedCongId);
-        console.log("PONENCIAS:", ponencias);
-        console.log("LHP:", libroHasPonencia);
-        try{
+    const fetchPonencias = async (selectedCongId) => {
+        try {
             const ponenciasData = await getPonenciasApi(accessToken, selectedCongId);
             setPonencias(ponenciasData);
-            
+
         }
         catch (error) {
-            console.error("Error al cargar libros:", error);
+            console.error("Error al cargar ponencias:", error);
         }
     };
 
@@ -93,8 +97,6 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                     accessToken,
                     mostrarPonenciasIdReal
                 );
-            console.log("LHP2:", libroHasPonenciaData);
-            console.log("PONENCIAS ACTUALES:", ponencias);
 
             const nuevasPonencias = libroHasPonenciaData
                 .map((lhp) =>
@@ -105,209 +107,54 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                 .filter(Boolean);
 
             setLibroHasPonencia(nuevasPonencias);
-            
-
         } catch (error) {
-            console.error("Error al cargar libros:", error);
+            console.error("Error al cargar detalles de las ponencias del libro:", error);
+        } finally {
+            setLoadingPonencias(false);
         }
     };
 
     useEffect(() => {
         fetchInitialData();
-        
+
     }, []);
 
-    useEffect(()=>{
+    useEffect(() => {
         fetchCongresos(instId);
 
-    },[instId]);
+    }, [instId]);
 
-    useEffect(()=>{
-        if(selectedCongId!==null&&selectedCongId!==undefined){
+    useEffect(() => {
+        if (selectedCongId !== null && selectedCongId !== undefined) {
             fetchLibros(selectedCongId);
             fetchPonencias(selectedCongId);
         }
-    },[selectedCongId]);
+    }, [selectedCongId]);
 
-    useEffect(()=>{
-        if(mostrarPonenciasIdReal!==null && mostrarPonenciasIdReal!==undefined){
+    useEffect(() => {
+        if (mostrarPonenciasIdReal !== null && mostrarPonenciasIdReal !== undefined) {
             fetchLibroHasPonencia(mostrarPonenciasIdReal);
         }
 
-    },[mostrarPonenciasIdReal])
+    }, [mostrarPonenciasIdReal])
 
-    
 
-    
-    /*const [loading,setLoading] = useState(null);
-    const [instituciones,setInstituciones] = useState([]);
-    const [congresos,setCongresos] = useSatete([]);
+    const totalPonenciasAsignadas = libros.reduce((acc, libro) => acc + (libro.ponencias?.length || 0), 0);
+    const totalPonenciasDisponibles = ponencias.length;
 
-    const fetchInitialData = async () => {
-        try {
-          const instData = await getInstitucionesApi(accessToken);
-          setInstituciones(instData);
-          await fetchCongresos("");
-        } catch (error) {
-          console.error("Error al cargar datos:", error);
-        } finally {
-          setLoading(false);
-        }
-    };
 
-    const fetchCongresos = async (instId) => {
-        try {
-          const congData = await getCongresosApi(accessToken, instId);
-          setCongresos(congData);
-        } catch (error) {
-          console.error("Error al cargar congresos:", error);
-        }
-    };
-
-    const fetchLibros = async (congId) => {
-        try {
-          const congData = await getCongresosApi(accessToken, congId);
-          setCongresos(congData);
-        } catch (error) {
-          console.error("Error al cargar congresos:", error);
-        }
-    };*/
-
-    const MOCK_CONGRESOS = [
-        {
-            id: 1,
-            nombre: "CIENU 2024",
-
-        },
-        {
-            id: 2,
-            nombre: "CIENU 2025",
-
-        },
-        {
-            id: 3,
-            nombre: "CIENU 2026",
-
-        },
-        {
-            id: 4,
-            nombre: "CIENU 2027",
-
-        }
-    ];
-
-    const MOCK_INSTITUCIONES = [
-        {
-            id: 1,
-            nombre: "CIENU",
-
-        },
-        {
-            id: 2,
-            nombre: "RIDMAE",
-
-        }
-    ];
-
-    const MOCK_LIBROS = [
-        {
-            id: 1,
-            titulo: "LIBRO CIENU 2024",
-            descripcion: "Libro de memorias del CIENU 2024",
-            fecha: "2024-10-10T10:00",
-            id_congreso: 1,
-            ponencias: [
-                {
-                    nombre_ponencia: "Buena ponencia",
-                    ponente: "El master",
-                    subarea: "matemáticas"
-                },
-                {
-                    nombre_ponencia: "Excelente ponencia",
-                    ponente: "El master",
-                    subarea: "matemáticas"
-                },
-                {
-                    nombre_ponencia: "Preciosa ponencia",
-                    ponente: "El master",
-                    subarea: "matemáticas"
-                }
-            ]
-        },
-        {
-            id: 2,
-            titulo: "LIBRO CIENU 2025",
-            descripcion: "Libro de memorias del CIENU 2025",
-            fecha: "2024-10-10T:10:00",
-            id_congreso: 1,
-            ponencias: [
-                {
-                    nombre_ponencia: "Buena ponencia",
-                    ponente: "El master",
-                    subarea: "matemáticas"
-                }
-            ]
-        },
-        {
-            id: 3,
-            titulo: "LIBRO CIENU 2026",
-            descripcion: "Libro de memorias del CIENU 2026",
-            fecha: "2024-10-10T:10:00",
-            id_congreso: 1,
-            ponencias: [
-                {
-                    nombre_ponencia: "Buena ponencia",
-                    ponente: "El master",
-                    subarea: "matemáticas"
-                }
-            ]
-        }
-    ];
-
-    const MOCK_TODAS_LAS_PONENCIAS = [
-        {
-            id: 1,
-            nombre_ponencia: "Otras ponencias",
-            ponente: "El master",
-            subarea: "matemáticas"
-        },
-        {
-            id: 2,
-            nombre_ponencia: "Otras ponencias 2",
-            ponente: "El master",
-            subarea: "matemáticas"
-        },
-        {
-            id: 3,
-            nombre_ponencia: "Otras ponencias 3",
-            ponente: "El master",
-            subarea: "matemáticas"
-        },
-        {
-            id: 4,
-            nombre_ponencia: "Otras ponencias 4",
-            ponente: "El master",
-            subarea: "matemáticas"
-        },
-        {
-            id: 5,
-            nombre_ponencia: "Otras ponencias 5",
-            ponente: "El master",
-            subarea: "matemáticas"
-        }
-    ]
-
-    function handleMostrarPonencias(index,libro){
-        if(index !== mostrarPonenciasIdVisual){
+    function handleMostrarPonencias(index, libro) {
+        if (index !== mostrarPonenciasIdVisual) {
+            setLibroHasPonencia([]); // Limpiar para evitar inconsistencia visual
+            setLoadingPonencias(true);
             setMostrarPonenciasIdVisual(index);
             setMostrarPonenciasIdReal(libro.id_libro);
-
-        }else{
+        } else {
             setMostrarPonenciasIdVisual(null);
             setMostrarPonenciasIdReal(null);
         }
     }
-    
+
 
     function handleChange(e, index) {
         const { id, value } = e.target;
@@ -321,7 +168,7 @@ export default function LibrosView({ librosRecibidos, congreso }) {
         );
     };
 
-    const handleSelectInstitucion = async (instId) =>{
+    const handleSelectInstitucion = async (instId) => {
         setSelectedInst(instId);
         setLoading(true);
         await fetchCongresos(instId);
@@ -329,27 +176,30 @@ export default function LibrosView({ librosRecibidos, congreso }) {
 
     }
 
-    const handleSelectCongreso = (selectedCongId) =>{
+    const handleSelectCongreso = (selectedCongId) => {
         setSelectedCongId(selectedCongId);
-    
+
     }
 
-    function handleAgregarLibro() {
-        const nuevoIndex = libros.length;
+    async function handleAgregarLibro() {
+        if (!selectedCongId) {
+            alert("Por favor seleccione un congreso primero.");
+            return;
+        }
 
-        setLibros([
-            ...libros,
-            {
-                id: Date.now(),
-                titulo: '',
-                descripcion: '',
-                fecha: '',
-                id_congreso: congresoSelected,
-                ponencias: []
-            }
-        ]);
-
-        setEditingLibro(nuevoIndex);
+        try {
+            const data = {
+                titulo: 'Nuevo Libro',
+                descripcion: 'Descripción del libro',
+                fecha_publicacion: new Date().toISOString().split('T')[0]
+            };
+            const nuevoLibro = await createLibroApi(accessToken, selectedCongId, data);
+            setLibros([...libros, nuevoLibro]);
+            setEditingLibro(libros.length);
+        } catch (error) {
+            console.error("Error al crear libro:", error);
+            alert("No se pudo crear el libro en la base de datos.");
+        }
     };
 
 
@@ -357,61 +207,174 @@ export default function LibrosView({ librosRecibidos, congreso }) {
     const labelStyle = "text-gray-500 text-sm";
     const buttonStyle = "bg-black rounded-full h-8 w-8 text-white flex justify-center items-center hover:bg-gray-500 hover:cursor-pointer transition-colors";
 
-    function agregarPonencia(libroIndex, e) {
+    async function agregarPonencia(libroIndex, e) {
         const ponenciaId = parseInt(e.target.value);
         if (!ponenciaId) return;
 
+        const libro = libros[libroIndex];
         const ponenciaToAdd = ponencias.find(p => p.id_ponencia === ponenciaId);
         if (!ponenciaToAdd) return;
 
-        setLibros(prevLibros => {
-            const nuevosLibros = [...prevLibros];
-            const libro = { ...nuevosLibros[libroIndex] };
-            const ponenciasDelLibro = [...(libro.ponencias || [])];
+        try {
+            await addPonenciaToLibroApi(accessToken, {
+                id_libro: libro.id_libro,
+                id_ponencia: ponenciaId,
+                orden: (libro.ponencias?.length || 0) + 1
+            });
 
-            ponenciasDelLibro.unshift({ ...ponenciaToAdd });
+            setLibros(prevLibros => {
+                const nuevosLibros = [...prevLibros];
+                const libroToUpdate = { ...nuevosLibros[libroIndex] };
+                const ponenciasIds = [...(libroToUpdate.ponencias || [])];
+                ponenciasIds.unshift(ponenciaId);
+                libroToUpdate.ponencias = ponenciasIds;
+                nuevosLibros[libroIndex] = libroToUpdate;
+                return nuevosLibros;
+            });
 
-            libro.ponencias = ponenciasDelLibro;
-            nuevosLibros[libroIndex] = libro;
-            return nuevosLibros;
-        });
-
-        e.target.value = "";
-    }
-    function moverPonencia(libroIndex, ponenciaIndex, direccion) {
-        setLibros(prevLibros => {
-            const nuevosLibros = [...prevLibros];
-            const libro = { ...nuevosLibros[libroIndex] };
-            const ponencias = [...(libro.ponencias || [])];
-
-            if (direccion === "arriba" && ponenciaIndex > 0) {
-                const temp = ponencias[ponenciaIndex - 1];
-                ponencias[ponenciaIndex - 1] = ponencias[ponenciaIndex];
-                ponencias[ponenciaIndex] = temp;
-            } else if (direccion === "abajo" && ponenciaIndex < ponencias.length - 1) {
-                const temp = ponencias[ponenciaIndex + 1];
-                ponencias[ponenciaIndex + 1] = ponencias[ponenciaIndex];
-                ponencias[ponenciaIndex] = temp;
+            if (mostrarPonenciasIdVisual === libroIndex) {
+                setLibroHasPonencia(prev => [ponenciaToAdd, ...prev]);
             }
 
-            libro.ponencias = ponencias;
+            e.target.value = "";
+        } catch (error) {
+            console.error("Error al asignar ponencia:", error);
+            alert("No se pudo asignar la ponencia en la base de datos.");
+        }
+    }
+    function moverPonencia(libroIndex, ponenciaIndex, direccion) {
+        setLibroHasPonencia(prev => {
+            const nuevasPonencias = [...prev];
+            if (direccion === "arriba" && ponenciaIndex > 0) {
+                [nuevasPonencias[ponenciaIndex - 1], nuevasPonencias[ponenciaIndex]] = [nuevasPonencias[ponenciaIndex], nuevasPonencias[ponenciaIndex - 1]];
+            } else if (direccion === "abajo" && ponenciaIndex < nuevasPonencias.length - 1) {
+                [nuevasPonencias[ponenciaIndex + 1], nuevasPonencias[ponenciaIndex]] = [nuevasPonencias[ponenciaIndex], nuevasPonencias[ponenciaIndex + 1]];
+            }
+            return nuevasPonencias;
+        });
+
+        // También sincronizar con el estado de libros (IDs)
+        setLibros(prevLibros => {
+            const nuevosLibros = [...prevLibros];
+            const libro = { ...nuevosLibros[libroIndex] };
+            const ponenciasIds = [...(libro.ponencias || [])];
+            if (direccion === "arriba" && ponenciaIndex > 0) {
+                [ponenciasIds[ponenciaIndex - 1], ponenciasIds[ponenciaIndex]] = [ponenciasIds[ponenciaIndex], ponenciasIds[ponenciaIndex - 1]];
+            } else if (direccion === "abajo" && ponenciaIndex < ponenciasIds.length - 1) {
+                [ponenciasIds[ponenciaIndex + 1], ponenciasIds[ponenciaIndex]] = [ponenciasIds[ponenciaIndex], ponenciasIds[ponenciaIndex + 1]];
+            }
+            libro.ponencias = ponenciasIds;
             nuevosLibros[libroIndex] = libro;
             return nuevosLibros;
         });
     }
 
-    function borrarPonencia(libroIndex, ponenciaIndex) {
-        setLibros(prevLibros => {
-            const nuevosLibros = [...prevLibros];
-            const libro = { ...nuevosLibros[libroIndex] };
-            const ponencias = [...(libro.ponencias || [])];
+    async function borrarPonencia(libroIndex, ponenciaIndex) {
+        const ponenciaABorrar = libroHasPonencia[ponenciaIndex];
+        if (!ponenciaABorrar) return;
 
-            ponencias.splice(ponenciaIndex, 1);
+        try {
+            await removePonenciaFromLibroApi(accessToken, ponenciaABorrar.id_ponencia);
 
-            libro.ponencias = ponencias;
-            nuevosLibros[libroIndex] = libro;
-            return nuevosLibros;
-        });
+            setLibroHasPonencia(prev => {
+                const nuevasPonencias = [...prev];
+                nuevasPonencias.splice(ponenciaIndex, 1);
+                return nuevasPonencias;
+            });
+
+            setLibros(prevLibros => {
+                const nuevosLibros = [...prevLibros];
+                const libro = { ...nuevosLibros[libroIndex] };
+                const ponenciasIds = [...(libro.ponencias || [])];
+                const idABorrar = ponenciaABorrar.id_ponencia;
+                libro.ponencias = ponenciasIds.filter(id => id !== idABorrar);
+                nuevosLibros[libroIndex] = libro;
+                return nuevosLibros;
+            });
+        } catch (error) {
+            console.error("Error al quitar ponencia:", error);
+            alert("No se pudo quitar la ponencia de la base de datos.");
+        }
+    }
+
+    function openSwapModal(libroIndex, ponenciaIndex, ponencia) {
+        setSwapData({ ponencia, currentLibroIndex: libroIndex, currentPonenciaIndex: ponenciaIndex });
+        setIsSwapModalOpen(true);
+    }
+
+    async function transferirPonencia(targetLibroIndex) {
+        const { ponencia, currentLibroIndex, currentPonenciaIndex } = swapData;
+        if (!ponencia || targetLibroIndex === currentLibroIndex) return;
+
+        const ponenciaId = ponencia.id_ponencia;
+        const targetLibro = libros[targetLibroIndex];
+
+        try {
+            await transferPonenciaApi(accessToken, ponenciaId, targetLibro.id_libro);
+
+            setLibros(prevLibros => {
+                const nuevosLibros = [...prevLibros];
+
+                // Quitar del libro actual
+                const currentLibro = { ...nuevosLibros[currentLibroIndex] };
+                currentLibro.ponencias = (currentLibro.ponencias || []).filter(id => id !== ponenciaId);
+                nuevosLibros[currentLibroIndex] = currentLibro;
+
+                // Añadir al libro destino
+                const targetLibroUpdate = { ...nuevosLibros[targetLibroIndex] };
+                targetLibroUpdate.ponencias = [ponenciaId, ...(targetLibroUpdate.ponencias || [])];
+                nuevosLibros[targetLibroIndex] = targetLibroUpdate;
+
+                return nuevosLibros;
+            });
+
+            // Si el libro actual es el que se está mostrando, actualizar libroHasPonencia
+            if (currentLibroIndex === mostrarPonenciasIdVisual) {
+                setLibroHasPonencia(prev => prev.filter(p => p.id_ponencia !== ponenciaId));
+            }
+
+            setIsSwapModalOpen(false);
+            setSwapData({ ponencia: null, currentLibroIndex: null, currentPonenciaIndex: null });
+        } catch (error) {
+            console.error("Error al transferir ponencia:", error);
+            alert("No se pudo transferir la ponencia en la base de datos.");
+        }
+    }
+
+    async function handleToggleEdit(index) {
+        if (editingLibro === index) {
+            // Guardar cambios
+            const libro = libros[index];
+            try {
+                await updateLibroApi(accessToken, libro.id_libro, {
+                    titulo: libro.titulo,
+                    descripcion: libro.descripcion,
+                    fecha_publicacion: libro.fecha_publicacion
+                });
+                setEditingLibro(null);
+            } catch (error) {
+                console.error("Error al actualizar libro:", error);
+                alert("No se pudieron guardar los cambios en la base de datos.");
+            }
+        } else {
+            setEditingLibro(index);
+        }
+    }
+
+    async function borrarLibro(index) {
+        if (!window.confirm("¿Está seguro de que desea eliminar este libro? Se eliminarán todas sus ponencias asignadas de este libro (quedarán disponibles para otros libros).")) return;
+        const libro = libros[index];
+        try {
+            await deleteLibroApi(accessToken, libro.id_libro);
+            setLibros(prevLibros => prevLibros.filter((_, i) => i !== index));
+            if (mostrarPonenciasIdVisual === index) {
+                setMostrarPonenciasIdVisual(null);
+                setMostrarPonenciasIdReal(null);
+            }
+        } catch (error) {
+            console.error("Error al eliminar libro:", error);
+            alert("No se pudo eliminar el libro de la base de datos.");
+        }
     }
     const listaPonenciasLibro = (ponencia, index2, libroIndex) => {
         console.log("PONENCIA COMPLETA:", ponencia);
@@ -424,8 +387,8 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                         <label htmlFor="" className={labelStyle}>Nombre ponencia</label>
                         <input
                             id="titulo"
-                            readOnly={editingLibro !== index2}
-                            value={ponencia.id_ponencia}
+                            readOnly
+                            value={ponencia.nombre_evento || ''}
                             className={inputStyle}
 
                         />
@@ -436,8 +399,8 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                         <input
                             id="ponente"
                             type="text"
-                            readOnly={editingLibro !== index2}
-                            value={ponencia.id_ponencia}
+                            readOnly
+                            value={ponencia.nombres_ponentes?.join(', ') || 'Sin ponente'}
                             className={inputStyle}
 
                         />
@@ -447,8 +410,8 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                         <label htmlFor="" className={labelStyle}>Subárea</label>
                         <input
                             id="descripcion"
-                            readOnly={editingLibro !== index2}
-                            value={ponencia.id_ponencia}
+                            readOnly
+                            value={ponencia.nombre_subarea || ''}
                             className={inputStyle}
 
                         />
@@ -464,7 +427,7 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                         <button className={buttonStyle} onClick={() => borrarPonencia(libroIndex, index2)} title="Eliminar ponencia de este libro">
                             <MdDelete />
                         </button>
-                        <button className={buttonStyle} title="Intercambiar esta ponencia con otra">
+                        <button className={buttonStyle} onClick={() => openSwapModal(libroIndex, index2, ponencia)} title="Intercambiar esta ponencia con otra">
                             <MdOutlineChangeCircle />
                         </button>
                     </div>
@@ -488,8 +451,8 @@ export default function LibrosView({ librosRecibidos, congreso }) {
             </div>
             <div className="flex justify-center gap-10 mb-4">
 
-                <ListaDesplegableElementosGenerica titulo={"Instituciones"} lista={instituciones} onSelect={handleSelectInstitucion}  value={selectedInst}/>
-                <ListaDesplegableElementosGenerica titulo={"Congresos"} lista={congresos}  onSelect={handleSelectCongreso} value={(selectedCongId)}/>
+                <ListaDesplegableElementosGenerica titulo={"Instituciones"} lista={instituciones} onSelect={handleSelectInstitucion} value={selectedInst} />
+                <ListaDesplegableElementosGenerica titulo={"Congresos"} lista={congresos} onSelect={handleSelectCongreso} value={(selectedCongId)} />
             </div>
             <div className="bg-base-100 rounded-3xl shadow-sm">
                 {/*header*/}
@@ -500,6 +463,10 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                 {/*Libros*/}
                 <div className="bg-base-100 border border-base-300 p-6 flex flex-col h-fit rounded-b-3xl">
                     <div className="flex gap-10 items-center h-15">
+                        <div className="flex flex-col border-r pr-6 border-slate-200">
+                            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Ponencias Asignadas</h2>
+                            <p className="text-2xl font-black text-primary">{totalPonenciasAsignadas} <span className="text-sm font-normal text-gray-400">/ {totalPonenciasDisponibles}</span></p>
+                        </div>
                         <h3 className="text-lg font-bold text-primary flex items-center gap-2">
                             <div className="w-2 h-6 bg-primary rounded-full"></div> Libros
                         </h3>
@@ -510,10 +477,14 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                     </div>
 
                     <div className="flex flex-col w-full gap-1">
-                        
-                        {libros.length>0?libros.map((libro, index) => (
-                            <div className="grid border-b pb-3 border-slate-300" key={index}>
-                                <p className="mr-4">{index + 1}° </p>
+
+                        {libros.length > 0 ? libros.map((libro, index) => (
+                            <div className="flex flex-col border-b pb-3 border-slate-300" key={index}>
+                                <div>
+                                    <p className="mr-4">{index + 1}° </p>
+
+                                </div>
+
                                 <div className="flex flex-1 gap-3">
 
                                     <div className="flex-3">
@@ -524,22 +495,24 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                                             value={libro.titulo}
                                             className={inputStyle}
                                             onChange={(e) => handleChange(e, index)}
+                                            title={libro.titulo}
                                         />
 
                                     </div>
                                     <div className="flex-2">
                                         <label htmlFor="" className={labelStyle}>Fecha de publicación</label>
                                         <input
-                                            id="fecha"
+                                            id="fecha_publicacion"
                                             type="date"
                                             readOnly={editingLibro !== index}
                                             value={libro.fecha_publicacion}
-                                            className={inputStyle}
+                                            className={inputStyle + " flex justify-center"}
                                             onChange={(e) => handleChange(e, index)}
+                                            title={libro.fecha_publicacion}
                                         />
 
                                     </div>
-                                    <div className="flex-5">
+                                    <div className="flex-4">
                                         <label htmlFor="" className={labelStyle}>Descripción</label>
                                         <input
                                             id="descripcion"
@@ -547,12 +520,23 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                                             value={libro.descripcion}
                                             className={inputStyle}
                                             onChange={(e) => handleChange(e, index)}
+                                            title={libro.descripcion}
                                         />
 
                                     </div>
-                                    <div className="flex items-center gap-1 rounded-full h-10 p-1 pt-10">
-                                        <button className={buttonStyle} onClick={() => index !== editingLibro ?
-                                            setEditingLibro(index) : setEditingLibro(null)}>
+                                    <div className="flex-1" title="Número de ponencias asignadas a este libro">
+                                        <label htmlFor="" className={labelStyle}>N° Ponencias</label>
+                                        <input
+                                            id="numero_ponencias"
+                                            readOnly
+                                            value={libro.ponencias?.length || 0}
+                                            className={inputStyle + " flex text-center"}
+                                        />
+
+                                    </div>
+                                    <div className="flex items-center gap-1 rounded-full h-10 p-1 pt-11">
+
+                                        <button className={buttonStyle} onClick={() => handleToggleEdit(index)}>
                                             {index !== editingLibro ?
                                                 <RiPencilFill /> :
                                                 <MdCheck />
@@ -561,7 +545,8 @@ export default function LibrosView({ librosRecibidos, congreso }) {
 
                                         </button>
 
-                                        <button className={buttonStyle}>
+                                        <button className={buttonStyle} onClick={() => index !== editingLibro ?
+                                            borrarLibro(index) : setEditingLibro(null)}>
                                             {index !== editingLibro ?
                                                 <MdDelete /> :
                                                 <IoCloseOutline />
@@ -569,7 +554,7 @@ export default function LibrosView({ librosRecibidos, congreso }) {
 
 
                                         </button>
-                                        <button className={buttonStyle} onClick={() => handleMostrarPonencias(index,libro)}>
+                                        <button className={buttonStyle} onClick={() => handleMostrarPonencias(index, libro)}>
                                             <FaAngleDown />
 
                                         </button>
@@ -581,36 +566,37 @@ export default function LibrosView({ librosRecibidos, congreso }) {
 
                                     {index === mostrarPonenciasIdVisual ?
                                         <div className="pt-4">
-                                            <div className="pl-2 flex items-center mb-4 h-15 bg-gray-100 rounded-lg p-2 m-4">
-                                                <p className="flex-2">Agregue una ponencia al libro</p>
-                                                <select className="flex-5 border rounded-full bg-white pl-5 h-10" onChange={(e) => agregarPonencia(index, e)} defaultValue="">
-                                                    <option value="" disabled>Seleccione una ponencia...</option>
-                                                    
-                                                    {
-                                                        /*ponencias.filter(p => !libro.ponencias?.some(lp => lp.nombre_ponencia === p.nombre_ponencia))
-                                                            .map((ponencia) => (
-                                                                <option key={ponencia.id} value={ponencia.id}>{ponencia.nombre_ponencia}</option>
-                                                            ))*/
-                                                        
-                                                        libroHasPonencia.map((ponencia) => (
-                                                            <option
-                                                                key={ponencia.id_ponencia}
-                                                                value={ponencia.id_ponencia}
-                                                            >
-                                                                {ponencia.nombre_ponencia}
-                                                            </option>
-                                                        ))
-                                                    }
-                                                </select>
-                                            </div>
-                                            <div className="border-l border-gray-200 pl-4   pr-3">
-                                                {libroHasPonencia.map((ponencia, index2) => (
-                                                    listaPonenciasLibro(ponencia, index2, index)
-                                                ))}
+                                            {loadingPonencias ? (
+                                                <div className="flex justify-center items-center py-10 text-gray-400 animate-pulse">
+                                                    <p className="italic">Cargando ponencias...</p>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <div className="pl-2 flex items-center mb-4 h-15 bg-gray-100 rounded-lg p-2 m-4">
+                                                        <p className="flex-2">Agregue una ponencia al libro</p>
+                                                        <select className="flex-5 border rounded-full bg-white pl-5 h-10" onChange={(e) => agregarPonencia(index, e)} defaultValue="">
+                                                            <option value="" disabled>Seleccione una ponencia...</option>
 
-                                            </div>
+                                                            {
+                                                                ponencias.filter(p => !libros.some(l => l.ponencias?.includes(p.id_ponencia)))
+                                                                    .map((ponencia) => (
+                                                                        <option key={ponencia.id_ponencia} value={ponencia.id_ponencia}>
+                                                                            {ponencia.nombre_evento}
+                                                                        </option>
+                                                                    ))
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                    <div className="border-l border-gray-200 pl-4   pr-3">
+                                                        {libroHasPonencia.map((ponencia, index2) => (
+                                                            listaPonenciasLibro(ponencia, index2, index)
+                                                        ))}
+
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
-                                        : ""
+                                        : null
                                     }
                                 </div>
 
@@ -619,14 +605,61 @@ export default function LibrosView({ librosRecibidos, congreso }) {
 
                             </div>
 
-                        )):<div className="flex-1 items-center justify-center text-slate-500 text-lg">Aún no hay libros creados para este congreso</div>}
-                       
+                        )) : <div className="flex-1 items-center justify-center text-slate-500 text-lg">Aún no hay libros creados para este congreso</div>}
+
 
                     </div>
 
                 </div>
 
             </div>
+
+            {/* Modal de Intercambio */}
+            {isSwapModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold text-gray-800">Transferir Ponencia</h3>
+                            <button onClick={() => setIsSwapModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                                <IoCloseOutline size={28} />
+                            </button>
+                        </div>
+
+                        <div className="mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                            <p className="text-sm text-gray-500 mb-1">Ponencia seleccionada:</p>
+                            <p className="font-semibold text-gray-800">{swapData.ponencia?.nombre_evento}</p>
+                        </div>
+
+                        <p className="text-sm font-medium text-gray-600 mb-3">Seleccione el libro destino:</p>
+                        <div className="max-h-60 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                            {libros.map((l, idx) => (
+                                idx !== swapData.currentLibroIndex && (
+                                    <button
+                                        key={l.id_libro}
+                                        onClick={() => transferirPonencia(idx)}
+                                        className="w-full text-left p-4 rounded-2xl border border-gray-100 hover:border-blue-400 hover:bg-blue-50 transition-all group flex items-center justify-between"
+                                    >
+                                        <span className="font-medium text-gray-700 group-hover:text-blue-700">{l.titulo || 'Sin título'}</span>
+                                        <MdAdd className="text-gray-300 group-hover:text-blue-500" size={20} />
+                                    </button>
+                                )
+                            ))}
+                            {libros.filter((_, idx) => idx !== swapData.currentLibroIndex).length === 0 && (
+                                <p className="text-center text-gray-400 py-4 italic">No hay otros libros disponibles.</p>
+                            )}
+                        </div>
+
+                        <div className="mt-8 flex justify-end">
+                            <button
+                                onClick={() => setIsSwapModalOpen(false)}
+                                className="px-6 py-2.5 rounded-full text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div >
     );
 }

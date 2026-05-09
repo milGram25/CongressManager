@@ -155,9 +155,16 @@ class EventoSerializer(serializers.ModelSerializer):
         model = Evento
         fields = '__all__'
 class LibrosSerializer(serializers.ModelSerializer):
+    id_libro = serializers.IntegerField(read_only=True)
+    ponencias = serializers.SerializerMethodField()
+
     class Meta:
         model = Libros
-        fields='__all__'
+        fields = ['id_libro', 'titulo', 'fecha_publicacion', 'descripcion', 'id_congreso', 'ponencias']
+
+    def get_ponencias(self, obj):
+        # Retorna solo los IDs de las ponencias asignadas a este libro
+        return list(LibroHasPonencia.objects.filter(id_libro=obj).values_list('id_ponencia_id', flat=True))
 
 class LibroHasPonenciaSerializer(serializers.ModelSerializer):
     class Meta:

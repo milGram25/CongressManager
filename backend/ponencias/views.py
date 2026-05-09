@@ -112,7 +112,12 @@ class PonenciaViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Ponencia.objects.all().select_related('id_evento', 'id_subarea', 'id_evento__id_congreso')
+        queryset = Ponencia.objects.all().select_related('id_evento', 'id_subarea', 'id_evento__id_congreso')
+        id_congreso = self.request.query_params.get('id_congreso')
+        if id_congreso:
+            # Filtramos por el ID del congreso a través del evento usando el campo id_congreso
+            queryset = queryset.filter(id_evento__id_congreso_id=id_congreso)
+        return queryset
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()

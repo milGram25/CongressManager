@@ -18,7 +18,7 @@ class PonenciaSerializer(serializers.ModelSerializer):
 
     def get_nombres_ponentes(self,obj):
         ponentes = obj.ponentehasponencia_set.all()
-        return [rel.ponente.nombre for rel in ponentes]
+        return [f"{rel.id_ponente.id_persona.nombre} {rel.id_ponente.id_persona.primer_apellido}" for rel in ponentes]
         
 
     class Meta:
