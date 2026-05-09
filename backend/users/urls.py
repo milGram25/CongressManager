@@ -9,6 +9,7 @@ from .views import (
     FacturasPendientesAdminView,
     UserActionHistoryView,
     AllUsersView, RoleAssignView, RoleRemoveView,
+    EnviarCodigoVerificacionView, VerificarCodigoView,
 )
 
 app_name = 'users'
@@ -30,4 +31,6 @@ urlpatterns = [
     path('all/', AllUsersView.as_view(), name='all-users'),
     path('<int:id_persona>/role/assign/', RoleAssignView.as_view(), name='role-assign'),
     path('<int:id_persona>/role/remove/', RoleRemoveView.as_view(), name='role-remove'),
+    path('estudiante/validar/enviar-codigo/', EnviarCodigoVerificacionView.as_view(), name='enviar-codigo'),
+    path('estudiante/validar/verificar-codigo/', VerificarCodigoView.as_view(), name='verificar-codigo'),
 ]
