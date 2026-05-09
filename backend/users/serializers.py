@@ -138,14 +138,29 @@ class UserSerializer(serializers.ModelSerializer):
     nombre_completo = serializers.SerializerMethodField()
     es_dictaminador = serializers.SerializerMethodField()
     es_evaluador = serializers.SerializerMethodField()
+    es_estudiante_validado = serializers.SerializerMethodField()
+    email_institucional = serializers.SerializerMethodField()
 
     class Meta:
         model = Persona
         fields = (
             'id_persona', 'correo_electronico', 'nombre', 'primer_apellido',
             'segundo_apellido', 'rol', 'nombre_completo',
-            'es_dictaminador', 'es_evaluador',
+            'es_dictaminador', 'es_evaluador', 'es_estudiante_validado',
+            'email_institucional'
         )
+
+    def get_es_estudiante_validado(self, obj):
+        try:
+            return obj.asistente.es_estudiante_validado
+        except Exception:
+            return False
+
+    def get_email_institucional(self, obj):
+        try:
+            return obj.asistente.email_institucional
+        except Exception:
+            return None
 
     def get_rol(self, obj):
         if obj.is_superuser or obj.is_staff:

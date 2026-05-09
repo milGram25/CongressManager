@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import PagosForm from "./components/PagosForm";
 import { getPagosResumenApi, registrarPagoApi, solicitarFacturaApi } from "../../api/pagosApi";
 import { getCongresosApi } from "../../api/adminApi";
+import { enviarCodigoEstudianteApi, verificarCodigoEstudianteApi } from "../../api/authApi";
 import {
   MdSchool,
   MdEmail,
@@ -37,12 +38,14 @@ export default function PagosView() {
   const [registrandoPago, setRegistrandoPago] = useState(false);
   const [pagoError, setPagoError] = useState("");
 
-  const [isStudent, setIsStudent] = useState(null);
-  const [studentEmail, setStudentEmail] = useState("");
+  const [isStudent, setIsStudent] = useState(user?.es_estudiante_validado ? true : null);
+  const [studentEmail, setStudentEmail] = useState(user?.email_institucional || "");
   const [showVerification, setShowVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
   const [error, setError] = useState("");
-  const [isVerified, setIsVerified] = useState(false);
+  const [isVerified, setIsVerified] = useState(user?.es_estudiante_validado || false);
+  const [enviandoCodigo, setEnviandoCodigo] = useState(false);
+  const [verificandoCodigo, setVerificandoCodigo] = useState(false);
 
   const [pagoExitoso, setPagoExitoso] = useState(false);
   const [quiereFactura, setQuiereFactura] = useState(false);
@@ -229,7 +232,7 @@ export default function PagosView() {
     return finalPrice > 0;
   }, [userPayment, isPonente, overflowPonencias, pendingSlots, finalPrice]);
 
-  const handleEmailSubmit = (e) => {
+  const handleEmailSubmit = async (e) => {
     e.preventDefault();
     setError("");
     const eduRegex = /(\.edu(\.[a-z]{2,3})?|alumnos\.udg\.mx)$/i;
@@ -237,16 +240,32 @@ export default function PagosView() {
       setError("El correo debe ser institucional válido (.edu, .edu.mx, alumnos.udg.mx, etc).");
       return;
     }
-    setShowVerification(true);
+    
+    setEnviandoCodigo(true);
+    try {
+      const token = localStorage.getItem("congress_access");
+      await enviarCodigoEstudianteApi(token, studentEmail);
+      setShowVerification(true);
+    } catch (err) {
+      setError(err.message || "Error al enviar el código.");
+    } finally {
+      setEnviandoCodigo(false);
+    }
   };
 
-  const handleVerifyCode = (e) => {
+  const handleVerifyCode = async (e) => {
     e.preventDefault();
-    if (verificationCode === "123456") {
+    setError("");
+    setVerificandoCodigo(true);
+    try {
+      const token = localStorage.getItem("congress_access");
+      await verificarCodigoEstudianteApi(token, verificationCode);
       setIsVerified(true);
       setShowVerification(false);
-    } else {
-      setError("Código de verificación incorrecto.");
+    } catch (err) {
+      setError(err.message || "Código incorrecto.");
+    } finally {
+      setVerificandoCodigo(false);
     }
   };
 
@@ -453,15 +472,16 @@ export default function PagosView() {
                           {error && <p className="text-error text-[10px] px-2">{error}</p>}
                           <button
                             type="submit"
-                            className="btn bg-secondary hover:bg-secondary/80 border-none w-full text-white rounded-xl"
+                            disabled={enviandoCodigo}
+                            className={`btn bg-secondary hover:bg-secondary/80 border-none w-full text-white rounded-xl ${enviandoCodigo ? 'loading' : ''}`}
                           >
-                            Enviar código de verificación
+                            {enviandoCodigo ? "Enviando..." : "Enviar código de verificación"}
                           </button>
-                        </form>
-                      )}
+                          </form>
+                          )}
 
-                      {showVerification && (
-                        <form onSubmit={handleVerifyCode} className="space-y-4 text-neutral">
+                          {showVerification && (
+                          <form onSubmit={handleVerifyCode} className="space-y-4 text-neutral">
                           <div className="text-center">
                             <p className="text-sm font-bold mb-1">Verifica tu correo</p>
                             <p className="text-[10px] opacity-60">Enviamos un código a {studentEmail}</p>
@@ -480,11 +500,11 @@ export default function PagosView() {
                           {error && <p className="text-error text-[10px] px-2">{error}</p>}
                           <button
                             type="submit"
-                            className="btn bg-secondary hover:bg-secondary/80 border-none w-full text-white rounded-xl"
+                            disabled={verificandoCodigo}
+                            className={`btn bg-secondary hover:bg-secondary/80 border-none w-full text-white rounded-xl ${verificandoCodigo ? 'loading' : ''}`}
                           >
-                            Verificar código
-                          </button>
-                          <button
+                            {verificandoCodigo ? "Verificando..." : "Verificar código"}
+                          </button>                          <button
                             type="button"
                             onClick={() => setShowVerification(false)}
                             className="btn btn-link btn-xs w-full opacity-50 text-neutral"

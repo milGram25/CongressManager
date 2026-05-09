@@ -83,3 +83,37 @@ export async function refreshTokenApi(refreshToken) {
   if (!res.ok) throw new Error('No se pudo renovar la sesión.');
   return data.access;
 }
+
+/**
+ * Envía un código de verificación al correo institucional.
+ */
+export async function enviarCodigoEstudianteApi(accessToken, emailInstitucional) {
+  const res = await fetch(`${API_URL}/api/users/estudiante/validar/enviar-codigo/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ email_institucional: emailInstitucional }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Error al enviar código.');
+  return data;
+}
+
+/**
+ * Verifica el código enviado al correo institucional.
+ */
+export async function verificarCodigoEstudianteApi(accessToken, codigo) {
+  const res = await fetch(`${API_URL}/api/users/estudiante/validar/verificar-codigo/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ codigo }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Código incorrecto.');
+  return data;
+}

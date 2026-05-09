@@ -92,6 +92,18 @@ Es la parte más compleja, donde se gestionan los archivos y las revisiones.
 
 ---
 
+## Validación de Estudiantes
+
+validación mediante correo institucional (.edu, .edu.mx, alumnos.udg.mx).
+
+### Configuración en .env:
+Asegúrate de tener esta variable para ver los códigos en consola:
+```bash
+EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+```
+
+---
+
 ## 🐍 Archivos Clave en cada App
 
 Todos los folders de apps (users, congresos, ponencias) tienen estos archivos:
