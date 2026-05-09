@@ -5,6 +5,9 @@ import { RxCross2 } from "react-icons/rx";
 import { getInstitucionesApi, getCongresosApi, getSubareasApi, getMesasApi, createPonenciaApi, getPonenciaByIdApi, getInscritosTallerApi } from '../../../api/adminApi';
 import { API_URL } from '../../../api/constants';
 import { useNavigate } from 'react-router-dom';
+import { LuCrown } from "react-icons/lu";
+import { FaLink } from "react-icons/fa6";
+import { TbFileSymlink } from "react-icons/tb";
 
 const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = false, isFullPage = false }, ref) => {
     const navigate = useNavigate();
@@ -37,6 +40,77 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
     const [cuposMax, setCuposMax] = useState(0);
     const [loadingInscritos, setLoadingInscritos] = useState(false);
 
+    const [isMagistral, setIsMagistral] = useState(true);
+
+    function retornarAsistentes(isMagistral) {
+        if (isMagistral) {
+            return (
+
+                <p className='flex text-center text-slate-500 text-lg italic'>
+                    Todos pueden asistir a las ponencias magistrales, por lo que no hay asistencias ni inscripciones a estas
+                </p>
+
+
+            );
+
+
+        } else {
+            return (
+                <div>
+                    {cuposMax > 0 && (
+                        <div className="mb-6">
+                            <div className="flex justify-between text-xs text-base-content/50 mb-1">
+                                <span>Ocupados: {inscritos.length}</span>
+                                <span>Disponibles: {Math.max(0, cuposMax - inscritos.length)}</span>
+                            </div>
+                            <div className="w-full h-2 bg-base-200 rounded-full overflow-hidden">
+                                <div
+                                    className={`h-full rounded-full transition-all ${inscritos.length >= cuposMax ? "bg-error" : inscritos.length / cuposMax > 0.75 ? "bg-warning" : "bg-success"}`}
+                                    style={{ width: `${Math.min(100, (inscritos.length / cuposMax) * 100)}%` }}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {loadingInscritos ? (
+                        <div className="flex justify-center py-8">
+                            <span className="loading loading-spinner loading-md text-primary" />
+                        </div>
+                    ) : inscritos.length === 0 ? (
+                        <p className="text-sm text-base-content/40 text-center py-8">No hay asistentes inscritos aún.</p>
+                    ) : (
+                        <div className="overflow-x-auto rounded-xl border border-base-200">
+                            <table className="table table-sm w-full">
+                                <thead className="bg-base-200 text-[10px] uppercase tracking-widest text-base-content/50">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Nombre</th>
+                                        <th>Correo</th>
+                                        <th>Teléfono</th>
+                                        <th>Fecha de inscripción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {inscritos.map((p, i) => (
+                                        <tr key={p.id} className="hover:bg-base-50">
+                                            <td className="text-base-content/40 font-mono">{i + 1}</td>
+                                            <td className="font-medium">{[p.nombre, p.primer_apellido, p.segundo_apellido].filter(Boolean).join(" ")}</td>
+                                            <td className="text-base-content/70">{p.correo || "—"}</td>
+                                            <td className="text-base-content/70">{p.telefono || "—"}</td>
+                                            <td className="text-base-content/50 text-xs">
+                                                {p.fecha_inscripcion ? new Date(p.fecha_inscripcion).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>);
+        }
+
+    }
+
     useImperativeHandle(ref, () => ({
         handleSave
     }));
@@ -58,7 +132,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
 
                 if (realId) {
                     const realPonencia = await getPonenciaByIdApi(accessToken, realId);
-                    
+
                     const formatDate = (dateStr) => {
                         if (!dateStr) return "";
                         return dateStr.substring(0, 16);
@@ -138,7 +212,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                 await createPonenciaApi(accessToken, formatData);
                 alert("Ponencia creada con éxito");
             }
-            
+
             if (isFullPage) navigate(`/admin/eventos/congresos/lista`);
             else window.location.reload();
         } catch (err) {
@@ -202,13 +276,25 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">
                             <div>
+                                <label className={labelClasses}>Institución</label> {/*Mostrar institución*/}
+                                <input
+                                    id="institucion"
+                                    type="text"
+                                    className={inputClasses}
+                                    value={""}
+                                    readOnly
+                                    placeholder="Institución organizadora"
+                                />
+                            </div>
+                            <div>
                                 <label className={labelClasses}>Congreso</label>
                                 {congressLocked ? (
-                                    <input 
-                                        type="text" 
-                                        className={inputClasses} 
-                                        value={congresos.find(c => c.id_congreso === formatData.id_congreso)?.nombre_congreso || "Congreso seleccionado"} 
-                                        readOnly 
+                                    <input
+                                        id="congreso_input"
+                                        type="text"
+                                        className={inputClasses}
+                                        value={congresos.find(c => c.id_congreso === formatData.id_congreso)?.nombre_congreso || "Congreso seleccionado"}
+                                        readOnly
                                     />
                                 ) : (
                                     <select id="id_congreso" value={formatData.id_congreso} className={inputClasses} onChange={handleChange} disabled={!modificando}>
@@ -219,6 +305,18 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                                     </select>
                                 )}
                             </div>
+                            <div>
+                                <label className={labelClasses}>Tipo de trabajo</label> {/*Mostrar tipo de trabajo*/}
+                                <input
+                                    id="tipo_trabajo"
+                                    type="text"
+                                    className={inputClasses}
+                                    value={""}
+                                    readOnly
+                                    placeholder="Tipo de trabajo del congreso"
+                                />
+                            </div>
+
                         </div>
                         <div className="flex flex-col items-center justify-center bg-base-200 border-2 border-dashed border-base-300 rounded-3xl p-8 gap-6 group hover:border-primary/30 transition-all">
                             <FiAward size={48} className="text-base-content/20" />
@@ -236,6 +334,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                             <label className={labelClasses}>Título de la ponencia</label>
                             <input id="nombre_evento" type="text" className={`${inputClasses} font-bold text-base`} value={formatData.nombre_evento} onChange={handleChange} readOnly={!modificando} />
                         </div>
+
                         <div>
                             <label className={labelClasses}>Subárea Académica</label>
                             <select id="id_subarea" value={formatData.id_subarea} className={inputClasses} onChange={handleChange} disabled={!modificando}>
@@ -244,6 +343,19 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                                     <option key={item.id_subareas} value={item.id_subareas}>{item.nombre}</option>
                                 ))}
                             </select>
+                        </div>
+                        <div>
+
+                            <label className={labelClasses}>Tipo de ponencia</label>
+                            <div className='flex items-center '>
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><LuCrown /></span>
+                                <select id="tipo_participacion" value={isMagistral ? "magistral" : "normal"} className={inputClasses + "flex-1 pl-8"} onChange={handleChange} disabled={true} title="Los tipos de ponencia no se pueden modificar">
+                                    <option value="normal">Ponencia normal</option>
+                                    <option value="magistral">Ponencia magistral</option>
+
+                                </select>
+                            </div>
+
                         </div>
                         <div>
                             <label className={labelClasses}>Tipo de Participación</label>
@@ -257,12 +369,39 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                             <label className={labelClasses}>Cupos</label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FiUsers /></span>
-                                <input id="cupos" type="number" min="0" className={`${inputClasses} pl-11 font-mono`} value={formatData.cupos} onChange={handleChange} readOnly={!modificando} />
+                                {isMagistral ?
+                                    <input id="cupos" type="text" className={`${inputClasses} pl-11 font-mono text-xs text-slate-500`} value={"No se hay límite de cupos en ponencias magistrales"} readOnly />
+
+                                    :
+                                    <input id="cupos" type="number" min="0" className={`${inputClasses} pl-11 font-mono`} value={formatData.cupos} onChange={handleChange} readOnly={!modificando} />
+
+                                }
+
+                            </div>
+                        </div>
+                        <div>
+                            <label className={labelClasses}>Enlace a videollamada</label>
+                            <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FaLink /></span>
+                                <input id="videollamada" type="url" className={`${inputClasses} pl-11 font-mono`} value={formatData.enlace_videollamada} onChange={handleChange} readOnly={!modificando} />
+                            </div>
+                        </div>
+                        <div>
+                            <label className={labelClasses}>Enlace a multimedia</label>
+                            <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><TbFileSymlink /></span>
+                                <input id="multimedia" type="text" className={`${inputClasses} pl-11 font-mono`} value={formatData.enlace_multimedia} onChange={handleChange} readOnly={!modificando} />
                             </div>
                         </div>
                         <div className="md:col-span-2">
+                            {isMagistral ?
+                                <textarea id="sinopsis" className={`${inputClasses} min-h-[120px] py-3 resize-none text-slate-500 font-mono`} value={"No hay sinopsis en ponencias magistrales"} readOnly></textarea>
+
+                                :
+                                <textarea id="sinopsis" className={`${inputClasses} min-h-[120px] py-3 resize-none`} value={formatData.sinopsis} onChange={handleChange} readOnly={!modificando} placeholder="Escribe aquí el resumen..."></textarea>
+                            }
                             <label className={labelClasses}>Sinopsis / Resumen</label>
-                            <textarea id="sinopsis" className={`${inputClasses} min-h-[120px] py-3 resize-none`} value={formatData.sinopsis} onChange={handleChange} readOnly={!modificando} placeholder="Escribe aquí el resumen..."></textarea>
+
                         </div>
                     </div>
                 </section>
@@ -274,11 +413,19 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="md:col-span-2">
                             <label className={labelClasses}>Mesa Asignada</label>
-                            <select id="id_mesas_trabajo" value={formatData.id_mesas_trabajo} className={inputClasses} onChange={handleChange} disabled={!modificando}>
-                                <option value="">Sin mesa asignada</option>
-                                {mesas.map((item) => (
-                                    <option key={item.id_mesas_trabajo} value={item.id_mesas_trabajo}>{item.nombre}</option>
-                                ))}
+                            <select id="id_mesas_trabajo" value={formatData.id_mesas_trabajo} className={inputClasses + (isMagistral ? " font-mono text-slate-500" : "")} onChange={handleChange} disabled={isMagistral || !modificando}>
+                                {
+                                    isMagistral ? (
+                                        <option value="">No hay mesas en ponencias magistrales</option>
+                                    ) : (
+                                        <>
+                                            <option value="">Sin mesa asignada</option>
+                                            {mesas.map((item) => (
+                                                <option key={item.id_mesas_trabajo} value={item.id_mesas_trabajo}>{item.nombre}</option>
+                                            ))}
+                                        </>
+                                    )
+                                }
                             </select>
                         </div>
                         <div>
@@ -301,6 +448,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                 {/* Sección Inscritos */}
                 <section className="mb-4">
                     <h3 className={sectionTitleClasses}>
+
                         <div className="w-1.5 h-6 bg-primary rounded-full"></div>
                         <FiUsers className="text-primary" />
                         Asistentes Inscritos
@@ -311,55 +459,8 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                         )}
                     </h3>
 
-                    {cuposMax > 0 && (
-                        <div className="mb-6">
-                            <div className="flex justify-between text-xs text-base-content/50 mb-1">
-                                <span>Ocupados: {inscritos.length}</span>
-                                <span>Disponibles: {Math.max(0, cuposMax - inscritos.length)}</span>
-                            </div>
-                            <div className="w-full h-2 bg-base-200 rounded-full overflow-hidden">
-                                <div
-                                    className={`h-full rounded-full transition-all ${inscritos.length >= cuposMax ? "bg-error" : inscritos.length / cuposMax > 0.75 ? "bg-warning" : "bg-success"}`}
-                                    style={{ width: `${Math.min(100, (inscritos.length / cuposMax) * 100)}%` }}
-                                />
-                            </div>
-                        </div>
-                    )}
 
-                    {loadingInscritos ? (
-                        <div className="flex justify-center py-8">
-                            <span className="loading loading-spinner loading-md text-primary" />
-                        </div>
-                    ) : inscritos.length === 0 ? (
-                        <p className="text-sm text-base-content/40 text-center py-8">No hay asistentes inscritos aún.</p>
-                    ) : (
-                        <div className="overflow-x-auto rounded-xl border border-base-200">
-                            <table className="table table-sm w-full">
-                                <thead className="bg-base-200 text-[10px] uppercase tracking-widest text-base-content/50">
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Nombre</th>
-                                        <th>Correo</th>
-                                        <th>Teléfono</th>
-                                        <th>Fecha de inscripción</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {inscritos.map((p, i) => (
-                                        <tr key={p.id} className="hover:bg-base-50">
-                                            <td className="text-base-content/40 font-mono">{i + 1}</td>
-                                            <td className="font-medium">{[p.nombre, p.primer_apellido, p.segundo_apellido].filter(Boolean).join(" ")}</td>
-                                            <td className="text-base-content/70">{p.correo || "—"}</td>
-                                            <td className="text-base-content/70">{p.telefono || "—"}</td>
-                                            <td className="text-base-content/50 text-xs">
-                                                {p.fecha_inscripcion ? new Date(p.fecha_inscripcion).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                    {retornarAsistentes(isMagistral)}
                 </section>
 
                 {isFullPage && modificando && (
