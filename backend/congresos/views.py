@@ -1,4 +1,5 @@
 from rest_framework import status, viewsets, generics
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,7 +11,7 @@ from datetime import datetime, timedelta
 from calendar import monthrange
 import os
 
-from .models import Sede, Institucion, Congreso, Evento, MesasTrabajo, FechasCongreso, CostosCongreso, Rubrica, RubricaGrupo, RubricaCriterio, TipoTrabajo, Dictamen, DictamenPregunta, Subarea, Taller, Libros, LibroHasPonencia
+from .models import Sede, Institucion, Congreso, Evento, MesasTrabajo, FechasCongreso, CostosCongreso, Rubrica, RubricaGrupo, RubricaCriterio, TipoTrabajo, Dictamen, DictamenPregunta, Subarea, Taller, Libros, LibroHasPonencia, AreaGeneral,AreaGeneralSerializer
 from .serializers import SedeSerializer, InstitucionSerializer, CongresoSerializer, EventoSerializer, MesasTrabajoSerializer, RubricaSerializer, RubricaGrupoSerializer, RubricaCriterioSerializer, TipoTrabajoSerializer, DictamenSerializer, DictamenPreguntaSerializer, SubareaSerializer, TallerSerializer,LibrosSerializer,LibroHasPonenciaSerializer
 
 def clean_date(val, default=None):
@@ -121,6 +122,134 @@ class SubareaViewSet(viewsets.ModelViewSet):
     queryset = Subarea.objects.all()
     serializer_class = SubareaSerializer
     permission_classes = [IsAuthenticated]
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        nombre = request.data.get('nombre', '').strip()
+        if not nombre:
+            return Response({'detail': 'El nombre es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "UPDATE subareas SET nombre = %s WHERE id_subareas = %s",
+                [nombre, instance.id_subareas],
+            )
+        return Response({'id': instance.id_subareas, 'nombre': nombre})
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        pk = instance.id_subareas
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT (
+                    EXISTS (SELECT 1 FROM mesas_trabajo WHERE id_subarea = %s)
+                    OR EXISTS (SELECT 1 FROM ponencia WHERE id_subarea = %s)
+                    OR EXISTS (SELECT 1 FROM taller WHERE id_subarea = %s)
+                    OR EXISTS (SELECT 1 FROM ponencia_magistral WHERE id_subarea = %s)
+                )
+                """,
+                [pk, pk, pk, pk],
+            )
+            referenced = cursor.fetchone()[0]
+        if referenced:
+            return Response(
+                {'detail': 'No se puede eliminar: la subárea está asignada a mesas, ponencias o talleres.'},
+                status=status.HTTP_409_CONFLICT,
+            )
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM subareas WHERE id_subareas = %s", [pk])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AreaGeneralViewSet(viewsets.ModelViewSet):
+    serializer_class = AreaGeneralSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return AreaGeneral.objects.prefetch_related('subarea_set').all()
+
+    def list(self, request, *args, **kwargs):
+        areas = self.get_queryset()
+        data = [
+            {
+                'id': a.id_areas_generales,
+                'nombre': a.nombre,
+                'subAreas': [
+                    {'id': s.id_subareas, 'nombre': s.nombre}
+                    for s in a.subarea_set.all()
+                ],
+            }
+            for a in areas
+        ]
+        return Response(data)
+
+    def create(self, request, *args, **kwargs):
+        nombre = request.data.get('nombre', '').strip()
+        if not nombre:
+            return Response({'detail': 'El nombre es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO areas_generales (nombre) VALUES (%s) RETURNING id_areas_generales",
+                [nombre],
+            )
+            new_id = cursor.fetchone()[0]
+        return Response({'id': new_id, 'nombre': nombre, 'subAreas': []}, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        nombre = request.data.get('nombre', '').strip()
+        if not nombre:
+            return Response({'detail': 'El nombre es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "UPDATE areas_generales SET nombre = %s WHERE id_areas_generales = %s",
+                [nombre, instance.id_areas_generales],
+            )
+        return Response({'id': instance.id_areas_generales, 'nombre': nombre})
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        pk = instance.id_areas_generales
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT COUNT(*) FROM subareas s
+                WHERE s.id_area_general = %s
+                  AND (
+                    EXISTS (SELECT 1 FROM mesas_trabajo mt WHERE mt.id_subarea = s.id_subareas)
+                    OR EXISTS (SELECT 1 FROM ponencia po WHERE po.id_subarea = s.id_subareas)
+                    OR EXISTS (SELECT 1 FROM taller ta WHERE ta.id_subarea = s.id_subareas)
+                    OR EXISTS (SELECT 1 FROM ponencia_magistral pm WHERE pm.id_subarea = s.id_subareas)
+                  )
+                """,
+                [pk],
+            )
+            ref_count = cursor.fetchone()[0]
+        if ref_count > 0:
+            return Response(
+                {'detail': 'No se puede eliminar: existen subáreas con ponencias, talleres o mesas asignadas.'},
+                status=status.HTTP_409_CONFLICT,
+            )
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute("DELETE FROM subareas WHERE id_area_general = %s", [pk])
+                cursor.execute("DELETE FROM areas_generales WHERE id_areas_generales = %s", [pk])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['post'], url_path='subareas')
+    def crear_subarea(self, request, pk=None):
+        area = self.get_object()
+        nombre = request.data.get('nombre', '').strip()
+        if not nombre:
+            return Response({'detail': 'El nombre es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO subareas (nombre, id_area_general) VALUES (%s, %s) RETURNING id_subareas",
+                [nombre, area.id_areas_generales],
+            )
+            new_id = cursor.fetchone()[0]
+        return Response({'id': new_id, 'nombre': nombre}, status=status.HTTP_201_CREATED)
+
 
 class EventoViewSet(viewsets.ModelViewSet):
     queryset = Evento.objects.all()
@@ -675,8 +804,38 @@ class CongresoEventosView(APIView):
         with connection.cursor() as cursor:
             cursor.execute("""
                 SELECT e.id_evento, e.nombre_evento, e.tipo_evento,
-                       e.fecha_hora_inicio, e.fecha_hora_final, e.sinopsis, e.cupos, e.enlace
+                       e.fecha_hora_inicio, e.fecha_hora_final, e.sinopsis, e.cupos, e.enlace,
+                       COALESCE(
+                           t.tallerista,
+                           (
+                               SELECT NULLIF(
+                                   TRIM(
+                                       CONCAT(
+                                           per2.nombre,
+                                           ' ',
+                                           per2.primer_apellido,
+                                           COALESCE(' ' || per2.segundo_apellido, '')
+                                       )
+                                   ),
+                                   ''
+                               )
+                               FROM ponente_has_ponencia php2
+                               JOIN ponente po2 ON po2.id_ponente = php2.id_ponente
+                               JOIN persona per2 ON per2.id_persona = po2.id_persona
+                               WHERE php2.id_ponencia = p.id_ponencia
+                               LIMIT 1
+                           ),
+                           'Por confirmar'
+                       ) AS autor,
+                       COALESCE(s.nombre_sede, 'Por confirmar') AS ubicacion,
+                       COALESCE(sub.nombre, '') AS eje,
+                       COALESCE(p.tipo_participacion::text, t.tipo_participacion::text, 'Presencial') AS modalidad
                 FROM evento e
+                LEFT JOIN taller t ON t.id_evento = e.id_evento
+                LEFT JOIN ponencia p ON p.id_evento = e.id_evento
+                LEFT JOIN mesas_trabajo mt ON mt.id_mesas_trabajo = e.id_mesas_trabajo
+                LEFT JOIN sede s ON s.id_sede = mt.id_sede
+                LEFT JOIN subareas sub ON sub.id_subareas = COALESCE(t.id_subarea, p.id_subarea)
                 WHERE e.id_congreso = %s
                 ORDER BY e.fecha_hora_inicio
             """, [id_congreso])
@@ -699,6 +858,10 @@ class CongresoEventosView(APIView):
                 'cupos_disponibles': max(0, cupos - ocupados) if cupos > 0 else None,
                 'lleno': cupos > 0 and ocupados >= cupos,
                 'enlace': r[7] or '',
+                'autor': r[8] or 'Por confirmar',
+                'ubicacion': r[9] or 'Por confirmar',
+                'eje': r[10] or '',
+                'modalidad': r[11] or 'Presencial',
                 'registrado': registrado,
             })
         return Response(result)
@@ -911,20 +1074,71 @@ class LibroHasPonenciaView(APIView):
 
 
 def _fetch_events_between(start, end, user=None):
-    from users.models import Asistente
+    from users.models import Asistente, Ponente
+
+    # "Mi agenda" es consistente entre roles:
+    # - Inscrito: asistente_evento
+    # - Ponente: autor por ponente_has_ponencia -> ponencia -> evento
     asistente = Asistente.objects.filter(id_persona=user).first() if user else None
-    if not asistente:
+    ponente = Ponente.objects.filter(id_persona=user).first() if user else None
+    if not asistente and not ponente:
         return []
+
+    union_parts = []
+    params = []
+
+    if asistente:
+        union_parts.append(
+            "SELECT ae.id_evento, 'Inscrito'::text AS source FROM asistente_evento ae WHERE ae.id_asistente = %s"
+        )
+        params.append(asistente.id_asistente)
+
+    if ponente:
+        union_parts.append(
+            """
+            SELECT p.id_evento, 'Ponente'::text AS source
+            FROM ponente_has_ponencia php
+            JOIN ponencia p ON p.id_ponencia = php.id_ponencia
+            WHERE php.id_ponente = %s
+            """.strip()
+        )
+        params.append(ponente.id_ponente)
+
     with connection.cursor() as cursor:
-        cursor.execute("""
+        cursor.execute(
+            f"""
+            WITH my_events AS (
+                {' UNION ALL '.join(union_parts)}
+            ),
+            my_agg AS (
+                SELECT id_evento, array_agg(DISTINCT source) AS sources
+                FROM my_events
+                GROUP BY id_evento
+            )
             SELECT
-                e.id_evento, e.nombre_evento, e.fecha_hora_inicio, e.fecha_hora_final,
-                e.sinopsis, e.tipo_evento, e.enlace,
+                e.id_evento,
+                e.nombre_evento,
+                e.fecha_hora_inicio,
+                e.fecha_hora_final,
+                e.sinopsis,
+                e.tipo_evento,
+                e.enlace,
+                c.id_congreso,
+                c.nombre_congreso,
                 COALESCE(
                     t.tallerista,
                     (
-                        SELECT NULLIF(TRIM(CONCAT(per2.nombre, ' ', per2.primer_apellido,
-                                   COALESCE(' ' || per2.segundo_apellido, ''))), '')
+                        SELECT NULLIF(
+                            TRIM(
+                                CONCAT(
+                                    per2.nombre,
+                                    ' ',
+                                    per2.primer_apellido,
+                                    COALESCE(' ' || per2.segundo_apellido, '')
+                                )
+                            ),
+                            ''
+                        )
                         FROM ponente_has_ponencia php2
                         JOIN ponente po2 ON po2.id_ponente = php2.id_ponente
                         JOIN persona per2 ON per2.id_persona = po2.id_persona
@@ -934,35 +1148,49 @@ def _fetch_events_between(start, end, user=None):
                     'Por confirmar'
                 ) AS autor,
                 COALESCE(s.nombre_sede, 'Por confirmar') AS ubicacion,
-                COALESCE(sub.nombre, '') AS eje
-            FROM asistente_evento ae
-            JOIN evento e ON e.id_evento = ae.id_evento
+                COALESCE(sub.nombre, '') AS eje,
+                ma.sources
+            FROM my_agg ma
+            JOIN evento e ON e.id_evento = ma.id_evento
+            JOIN congreso c ON c.id_congreso = e.id_congreso
             LEFT JOIN taller t ON t.id_evento = e.id_evento
             LEFT JOIN ponencia p ON p.id_evento = e.id_evento
             LEFT JOIN mesas_trabajo mt ON mt.id_mesas_trabajo = e.id_mesas_trabajo
             LEFT JOIN sede s ON s.id_sede = mt.id_sede
             LEFT JOIN subareas sub ON sub.id_subareas = COALESCE(t.id_subarea, p.id_subarea)
-            WHERE ae.id_asistente = %s
-              AND e.fecha_hora_inicio >= %s AND e.fecha_hora_inicio < %s
+            WHERE e.fecha_hora_inicio >= %s AND e.fecha_hora_inicio < %s
             ORDER BY e.fecha_hora_inicio
-        """, [asistente.id_asistente, start, end])
+            """,
+            [*params, start, end],
+        )
         rows = cursor.fetchall()
+
     result = []
     for r in rows:
-        result.append({
-            'id': r[0],
-            'title': r[1] or '',
-            'start_iso': r[2].isoformat() if r[2] else None,
-            'time': r[2].strftime('%H:%M') if r[2] else '',
-            'sinopsis': r[4] or '',
-            'type': r[5] or '',
-            'link': r[6] or '',
-            'author': r[7] or 'Por confirmar',
-            'location': r[8] or 'Por confirmar',
-            'eje': r[9] or '',
-            'abstract': r[4] or '',
-            'description': r[4] or '',
-        })
+        dt = r[2]
+        dt_end = r[3]
+        result.append(
+            {
+                'id': r[0],
+                'title': r[1] or '',
+                'start_iso': dt.isoformat() if dt else None,
+                'end_iso': dt_end.isoformat() if dt_end else None,
+                # El frontend espera "HH:MM am/pm" y hace split por espacio.
+                'time': dt.strftime('%I:%M %p').lower() if dt else '--:--',
+                'sinopsis': r[4] or '',
+                'type': r[5] or '',
+                'link': r[6] or '',
+                'id_congreso': r[7],
+                'congreso': r[8] or '',
+                'author': r[9] or 'Por confirmar',
+                'location': r[10] or 'Por confirmar',
+                'eje': r[11] or '',
+                'abstract': r[4] or '',
+                'description': r[4] or '',
+                'sources': list(r[12]) if r[12] else [],
+            }
+        )
+
     return result
 
 def _parse_month(val):
@@ -971,16 +1199,17 @@ def _parse_month(val):
         return d.year, d.month
     except: return None, None
 
-PONENTE_INCLUDED_PONENCIAS = 3
+PONENTE_INCLUDED_PONENCIAS = 2
 PONENTE_MAX_PONENCIAS = 5
 
 
 def _get_user_role(user):
+    from users.models import DictaminadorCongreso, EvaluadorCongreso
     if user.is_superuser or user.is_staff:
         return 'administrador'
-    if hasattr(user, 'dictaminador'):
+    if DictaminadorCongreso.objects.filter(id_persona=user).exists():
         return 'dictaminador'
-    if hasattr(user, 'evaluador'):
+    if EvaluadorCongreso.objects.filter(id_persona=user).exists():
         return 'revisor'
     if hasattr(user, 'ponente'):
         return 'ponente'

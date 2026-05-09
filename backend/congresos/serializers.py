@@ -170,3 +170,17 @@ class LibroHasPonenciaSerializer(serializers.ModelSerializer):
     class Meta:
         model = LibroHasPonencia
         fields='__all__'
+
+class AreaGeneralSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source='id_areas_generales', read_only=True)
+    subAreas = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AreaGeneral
+        fields = ['id', 'nombre', 'subAreas']
+
+    def get_subAreas(self, obj):
+        return [
+            {'id': s.id_subareas, 'nombre': s.nombre}
+            for s in obj.subarea_set.all()
+        ]

@@ -7,22 +7,20 @@ from django.contrib.auth import authenticate
 from django.core.files.storage import FileSystemStorage
 from django.db import connection, IntegrityError
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings
 from .models import Persona, Asistente, Dictaminador, Evaluador, Ponente, Factura, Constancia, HistorialAcciones, DictaminadorCongreso, EvaluadorCongreso
 from .serializers import RegisterSerializer, UserSerializer, ParticipantSerializer, FacturaSerializer, ConstanciaSerializer, HistorialAccionesSerializer
 import os
+import random
+import string
 
 
 def _get_rol_persona(persona):
-    try:
-        persona.dictaminador
+    if DictaminadorCongreso.objects.filter(id_persona=persona).exists():
         return 'Dictaminador'
-    except Exception:
-        pass
-    try:
-        persona.evaluador
+    if EvaluadorCongreso.objects.filter(id_persona=persona).exists():
         return 'Evaluador'
-    except Exception:
-        pass
     try:
         persona.ponente
         return 'Ponente'
@@ -438,25 +436,18 @@ def get_tokens_for_user(user):
     if user.is_superuser or user.is_staff:
         rol = 'administrador'
     else:
-        try:
-            user.dictaminador; rol = 'dictaminador'
-        except Exception:
+        if DictaminadorCongreso.objects.filter(id_persona=user).exists():
+            rol = 'dictaminador'
+        elif EvaluadorCongreso.objects.filter(id_persona=user).exists():
+            rol = 'revisor'
+        else:
             try:
-                user.evaluador; rol = 'revisor'
+                user.ponente; rol = 'ponente'
             except Exception:
-                try:
-                    user.ponente; rol = 'ponente'
-                except Exception:
-                    pass
+                pass
     refresh['rol'] = rol
-    refresh['es_dictaminador'] = (
-        Dictaminador.objects.filter(id_persona=user).exists() or
-        DictaminadorCongreso.objects.filter(id_persona=user).exists()
-    )
-    refresh['es_evaluador'] = (
-        Evaluador.objects.filter(id_persona=user).exists() or
-        EvaluadorCongreso.objects.filter(id_persona=user).exists()
-    )
+    refresh['es_dictaminador'] = DictaminadorCongreso.objects.filter(id_persona=user).exists()
+    refresh['es_evaluador'] = EvaluadorCongreso.objects.filter(id_persona=user).exists()
     return {
         'refresh': str(refresh),
         'access': str(refresh.access_token),
@@ -630,8 +621,48 @@ class RoleRemoveView(APIView):
             if not id_congreso:
                 return Response({'detail': 'id_congreso es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
             if rol == 'dictaminador':
+                from ponencias.models import Resumen, Ponencia
+                dictaminadores = Dictaminador.objects.filter(id_persona=persona)
+                if dictaminadores.exists():
+                    resumen_ids = list(
+                        Ponencia.objects.filter(
+                            id_evento__id_congreso=id_congreso,
+                            id_resumen__isnull=False
+                        ).values_list('id_resumen', flat=True)
+                    )
+                    if Resumen.objects.filter(
+                        id_dictaminador__in=dictaminadores,
+                        revisado=False,
+                        id_resumen__in=resumen_ids
+                    ).exists():
+                        return Response(
+                            {'detail': 'No se puede quitar el rol: el usuario tiene dictaminaciones pendientes.'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
                 DictaminadorCongreso.objects.filter(id_persona=persona, id_congreso_id=id_congreso).delete()
             else:
+                from ponencias.models import Extenso, Ponencia
+                from django.db.models import Q
+                evaluadores = Evaluador.objects.filter(id_persona=persona)
+                if evaluadores.exists():
+                    extenso_ids = list(
+                        Ponencia.objects.filter(
+                            id_evento__id_congreso=id_congreso,
+                            id_extenso__isnull=False
+                        ).values_list('id_extenso', flat=True)
+                    )
+                    if Extenso.objects.filter(
+                        revisado=False,
+                        id_extenso__in=extenso_ids
+                    ).filter(
+                        Q(id_evaluador__in=evaluadores) |
+                        Q(id_evaluador_2__in=evaluadores) |
+                        Q(id_evaluador_3__in=evaluadores)
+                    ).exists():
+                        return Response(
+                            {'detail': 'No se puede quitar el rol: el usuario tiene revisiones pendientes.'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
                 EvaluadorCongreso.objects.filter(id_persona=persona, id_congreso_id=id_congreso).delete()
 
         dict_ids = set(DictaminadorCongreso.objects.filter(id_congreso_id=id_congreso).values_list('id_persona_id', flat=True)) if id_congreso else set()
@@ -642,3 +673,69 @@ class RoleRemoveView(APIView):
             'evaluador': persona.id_persona in eval_ids,
             'administrador': persona.is_staff or persona.is_superuser,
         })
+
+
+class EnviarCodigoVerificacionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        email_institucional = request.data.get('email_institucional')
+        if not email_institucional:
+            return Response({'detail': 'Email institucional es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validar dominio simple
+        if not (email_institucional.endswith('.edu') or email_institucional.endswith('.edu.mx') or 'alumnos.udg.mx' in email_institucional):
+            return Response({'detail': 'El dominio del correo no es válido para descuento de estudiante.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            asistente = Asistente.objects.get(id_persona=request.user)
+        except Asistente.DoesNotExist:
+            return Response({'detail': 'El usuario no tiene un perfil de asistente.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Generar código de 6 dígitos
+        codigo = ''.join(random.choices(string.digits, k=6))
+        asistente.codigo_verificacion = codigo
+        asistente.email_institucional = email_institucional
+        asistente.fecha_envio_codigo = timezone.now()
+        asistente.save()
+
+        # Enviar correo (Se imprimirá en consola según settings)
+        subject = 'Código de Verificación - Descuento Estudiante CIENU 2026'
+        message = f'Hola {request.user.nombre},\n\nTu código de verificación para obtener el descuento de estudiante es: {codigo}\n\nSi no solicitaste este código, puedes ignorar este mensaje.'
+        
+        try:
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL if hasattr(settings, 'DEFAULT_FROM_EMAIL') else 'noreply@cienu2026.com',
+                [email_institucional],
+                fail_silently=False,
+            )
+        except Exception as e:
+            return Response({'detail': f'Error al enviar el correo: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({'detail': 'Código enviado con éxito.'}, status=status.HTTP_200_OK)
+
+
+class VerificarCodigoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        codigo = request.data.get('codigo')
+        if not codigo:
+            return Response({'detail': 'El código es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            asistente = Asistente.objects.get(id_persona=request.user)
+        except Asistente.DoesNotExist:
+            return Response({'detail': 'El usuario no tiene un perfil de asistente.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if asistente.codigo_verificacion == codigo:
+            asistente.es_estudiante_validado = True
+            asistente.save()
+            return Response({
+                'detail': 'Estudiante validado con éxito.',
+                'es_estudiante_validado': True
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({'detail': 'Código incorrecto.'}, status=status.HTTP_400_BAD_REQUEST)

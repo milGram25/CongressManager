@@ -42,7 +42,6 @@ export default function MisPonenciasView() {
           {ponencias.map(p => (
             <div key={p.id_ponencia} className="card bg-base-100 border border-base-300 p-8 max-w-2xl w-full relative shadow-sm hover:shadow-md transition-all">
               <div className="text-center space-y-3">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-success">Ponencia aceptada</span>
                 <h3 className="text-xl font-bold italic">"{p.titulo}"</h3>
                 <p className="font-bold text-sm">Congreso: <span className="font-normal">{p.evento?.congreso ?? '—'}</span></p>
 
@@ -51,17 +50,30 @@ export default function MisPonenciasView() {
                   <p className="font-bold text-sm">Fin: <span className="font-normal">{formatFecha(p.evento?.fecha_fin)}</span></p>
                 </div>
 
-                {p.evento?.cupos > 0 && (
-                  <p className="font-bold text-sm">Cupos: <span className="font-normal">{p.evento.cupos}</span></p>
+                <div className="flex flex-wrap justify-center gap-6 text-sm">
+                  <p className="font-bold">Modalidad: <span className="font-normal capitalize">{p.tipo_participacion || '—'}</span></p>
+                  {p.tipo_participacion === 'presencial' ? (
+                    <p className="font-bold">Lugar: <span className="font-normal">{p.evento?.lugar || 'Por definir'}</span></p>
+                  ) : p.evento?.enlace ? (
+                    <p className="font-bold">Enlace: <a href={p.evento.enlace} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-normal">Ver Enlace</a></p>
+                  ) : null}
+                </div>
+
+                {p.evento?.sinopsis && (
+                  <div className="mt-3 text-sm text-neutral/80 line-clamp-2 text-justify px-4">
+                    {p.evento.sinopsis}
+                  </div>
                 )}
               </div>
 
-              <button
-                onClick={() => setSeleccionada(p)}
-                className="absolute bottom-4 right-4 btn btn-primary btn-circle btn-sm text-2xl pb-1"
-              >
-                +
-              </button>
+              <div className="mt-6 flex justify-end w-full">
+                <button
+                  onClick={() => setSeleccionada(p)}
+                  className="btn btn-primary btn-sm px-6 rounded-full shadow-sm"
+                >
+                  Ver Detalles
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -92,12 +104,23 @@ export default function MisPonenciasView() {
                   <p className="font-bold text-xs uppercase tracking-wider text-slate-500">Fin</p>
                   <p className="text-sm">{formatFecha(seleccionada.evento?.fecha_fin)}</p>
                 </div>
-                {seleccionada.evento?.cupos > 0 && (
+                <div>
+                  <p className="font-bold text-xs uppercase tracking-wider text-slate-500">Modalidad</p>
+                  <p className="text-sm capitalize">{seleccionada.tipo_participacion || '—'}</p>
+                </div>
+                {seleccionada.tipo_participacion === 'presencial' ? (
                   <div>
-                    <p className="font-bold text-xs uppercase tracking-wider text-slate-500">Cupos</p>
-                    <p className="text-sm">{seleccionada.evento.cupos}</p>
+                    <p className="font-bold text-xs uppercase tracking-wider text-slate-500">Lugar</p>
+                    <p className="text-sm">{seleccionada.evento?.lugar || 'Por definir'}</p>
                   </div>
-                )}
+                ) : seleccionada.evento?.enlace ? (
+                  <div>
+                    <p className="font-bold text-xs uppercase tracking-wider text-slate-500">Enlace</p>
+                    <a href={seleccionada.evento.enlace} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
+                      Abrir enlace
+                    </a>
+                  </div>
+                ) : null}
               </div>
 
               {seleccionada.evento?.sinopsis && (
@@ -107,16 +130,7 @@ export default function MisPonenciasView() {
                 </div>
               )}
 
-              {seleccionada.evento?.enlace && (
-                <a
-                  href={seleccionada.evento.enlace}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-outline btn-sm rounded-xl mt-2"
-                >
-                  Ver enlace del evento
-                </a>
-              )}
+              {/* Removido el boton duplicado de enlace ya que se agregó arriba */}
             </div>
           </div>
         </div>

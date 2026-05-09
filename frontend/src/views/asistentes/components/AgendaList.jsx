@@ -9,6 +9,9 @@ export default function AgendaList({ events = [], loading = false, error = "" })
   const [filtroEje, setFiltroEje] = useState("Todos");
   const date = new Date();
 
+  const labelStyle =
+    "inline-flex items-center rounded-full border border-base-300 bg-base-200 px-2 py-0.5 text-[10px] font-semibold text-base-content/70";
+
   const ejesTematicos = useMemo(() => {
     const unique = Array.from(new Set(events.map((item) => item.eje).filter(Boolean)));
     return ["Todos", ...unique];
@@ -19,10 +22,10 @@ export default function AgendaList({ events = [], loading = false, error = "" })
     document.getElementById("detail_modal").showModal();
   };
 
-  const filteredSchedule = useMemo(() => {
-    if (filtroEje === "Todos") return events;
-    return events.filter((item) => item.eje === filtroEje);
-  }, [filtroEje, events]);
+  const filteredSchedule =
+    filtroEje === "Todos"
+      ? events
+      : events.filter((item) => item.eje === filtroEje);
 
   return (
     <div className="max-w-3xl mx-auto w-full bg-base-100 rounded-xl shadow-sm border border-base-300 overflow-hidden">
@@ -102,9 +105,18 @@ export default function AgendaList({ events = [], loading = false, error = "" })
                     <div className="w-1 h-10 bg-primary/80 rounded-full"></div>
                     <div>
                       <h4 className="font-medium text-base-content">{item.title}</h4>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[10px] badge badge-ghost uppercase opacity-70">{item.eje || "Sin eje"}</span>
                         <p className="text-sm opacity-60">{item.author || "Sin autor"}</p>
+                        {Array.isArray(item.sources) && item.sources.length > 0 && (
+                          <div className="flex items-center gap-1">
+                            {item.sources.map((src) => (
+                              <span key={src} className={labelStyle}>
+                                {src}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -116,7 +128,7 @@ export default function AgendaList({ events = [], loading = false, error = "" })
               ))
             ) : (
               <div className="py-12 text-center opacity-50 italic">
-                No hay ponencias registradas para este eje temático hoy.
+                No hay eventos registrados para este eje temático hoy.
               </div>
             )}
           </div>

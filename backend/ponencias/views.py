@@ -353,10 +353,10 @@ class EnviarPonenciaAPIView(APIView):
                             fecha_inicio = datetime.now()
                             fecha_final = datetime.now() + timedelta(days=365)
                         cursor.execute("""
-                            INSERT INTO evento (id_congreso, nombre_evento, tipo_evento, id_tipo_trabajo, fecha_hora_inicio, fecha_hora_final, cupos)
-                            VALUES (%s, %s, 'ponencia', %s, %s, %s, 0)
+                            INSERT INTO evento (id_congreso, nombre_evento, tipo_evento, id_tipo_trabajo, fecha_hora_inicio, fecha_hora_final, cupos, sinopsis)
+                            VALUES (%s, %s, 'ponencia', %s, %s, %s, 0, %s)
                             RETURNING id_evento
-                        """, [id_congreso, tipo_trabajo_str, id_tipo_trabajo, fecha_inicio, fecha_final])
+                        """, [id_congreso, tipo_trabajo_str, id_tipo_trabajo, fecha_inicio, fecha_final, resumen_texto])
                         id_evento = cursor.fetchone()[0]
 
                     # Resolver id_subarea
@@ -1146,10 +1146,13 @@ class EstatusPonenteView(APIView):
                     e.sinopsis,
                     e.cupos,
                     e.enlace,
-                    cong.nombre_congreso
+                    cong.nombre_congreso,
+                    p.tipo_participacion,
+                    m.nombre AS lugar
                 FROM ponente_has_ponencia php
                 JOIN ponencia p ON php.id_ponencia = p.id_ponencia
                 LEFT JOIN evento e ON p.id_evento = e.id_evento
+                LEFT JOIN mesas_trabajo m ON e.id_mesas_trabajo = m.id_mesas_trabajo
                 LEFT JOIN congreso cong ON e.id_congreso = cong.id_congreso
                 LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
                 LEFT JOIN resumen r ON p.id_resumen = r.id_resumen
@@ -1160,7 +1163,7 @@ class EstatusPonenteView(APIView):
             cols = ['id_ponencia','titulo','tipo_ponencia','id_resumen','resumen_revisado',
                     'resumen_estatus','resumen_retroalimentacion','id_extenso','extenso_revisado',
                     'id_evaluador','id_evaluador_2','id_evaluador_3',
-                    'nombre_evento','fecha_hora_inicio','fecha_hora_final','sinopsis','cupos','enlace','nombre_congreso']
+                    'nombre_evento','fecha_hora_inicio','fecha_hora_final','sinopsis','cupos','enlace','nombre_congreso','tipo_participacion','lugar']
             ponencias = [dict(zip(cols, row)) for row in c.fetchall()]
 
             if not ponencias:
@@ -1241,6 +1244,7 @@ class EstatusPonenteView(APIView):
                 'criterio_comentarios': criterios_mods_map.get(p['id_extenso'], []) if estado == 'con_modificaciones' else [],
                 'id_resumen': p['id_resumen'],
                 'id_extenso': p['id_extenso'],
+                'tipo_participacion': p['tipo_participacion'],
                 'evento': {
                     'nombre': p['nombre_evento'],
                     'fecha_inicio': fecha_inicio.isoformat() if fecha_inicio else None,
@@ -1249,6 +1253,7 @@ class EstatusPonenteView(APIView):
                     'cupos': p['cupos'],
                     'enlace': p['enlace'],
                     'congreso': p['nombre_congreso'],
+                    'lugar': p['lugar'],
                 },
             })
         return Response(result)
@@ -1260,27 +1265,27 @@ class SubirExtensoAPIView(APIView):
 
     def post(self, request, id_resumen):
         archivo = request.FILES.get('archivo')
-        titulo = request.data.get('titulo', '').strip()
         if not archivo:
             return Response({'detail': 'Se requiere un archivo.'}, status=status.HTTP_400_BAD_REQUEST)
-        if not titulo:
-            return Response({'detail': 'El título es obligatorio.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             with transaction.atomic():
                 with connection.cursor() as cursor:
                     cursor.execute("""
-                        SELECT p.id_ponencia, p.id_extenso
+                        SELECT p.id_ponencia, p.id_extenso, s.nombre
                         FROM ponencia p
                         JOIN ponente_has_ponencia php ON php.id_ponencia = p.id_ponencia
                         JOIN ponente po ON po.id_ponente = php.id_ponente
+                        LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
                         WHERE p.id_resumen = %s AND po.id_persona = %s
                         LIMIT 1
                     """, [id_resumen, request.user.id_persona])
                     row = cursor.fetchone()
                     if not row:
                         return Response({'detail': 'No autorizado o resumen no encontrado.'}, status=status.HTTP_403_FORBIDDEN)
-                    id_ponencia, id_extenso_existente = row
+                    id_ponencia, id_extenso_existente, subarea_nombre = row
+                    
+                    titulo = subarea_nombre if subarea_nombre else f"Extenso de Ponencia {id_ponencia}"
 
                     media_dir = os.path.join(settings.MEDIA_ROOT, 'extensos')
                     os.makedirs(media_dir, exist_ok=True)
@@ -1298,14 +1303,14 @@ class SubirExtensoAPIView(APIView):
                     if id_extenso_existente:
                         cursor.execute("""
                             UPDATE extenso
-                            SET titulo = %s, ruta_relativa = %s, fecha_subida = NOW(),
+                            SET titulo = %s, ruta_archivo = %s, fecha_subida = NOW(),
                                 revisado = FALSE, version_numero = version_numero + 1
                             WHERE id_extenso = %s
                         """, [titulo, ruta_relativa, id_extenso_existente])
                         id_extenso = id_extenso_existente
                     else:
                         cursor.execute("""
-                            INSERT INTO extenso (titulo, ruta_relativa, revisado, version_numero)
+                            INSERT INTO extenso (titulo, ruta_archivo, revisado, version_numero)
                             VALUES (%s, %s, FALSE, 1) RETURNING id_extenso
                         """, [titulo, ruta_relativa])
                         id_extenso = cursor.fetchone()[0]
