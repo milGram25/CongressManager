@@ -1,4 +1,5 @@
 from rest_framework import status, viewsets, generics
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,8 +11,8 @@ from datetime import datetime, timedelta
 from calendar import monthrange
 import os
 
-from .models import Sede, Institucion, Congreso, Evento, MesasTrabajo, FechasCongreso, CostosCongreso, Rubrica, RubricaGrupo, RubricaCriterio, TipoTrabajo, Dictamen, DictamenPregunta, Subarea, Taller
-from .serializers import SedeSerializer, InstitucionSerializer, CongresoSerializer, EventoSerializer, MesasTrabajoSerializer, RubricaSerializer, RubricaGrupoSerializer, RubricaCriterioSerializer, TipoTrabajoSerializer, DictamenSerializer, DictamenPreguntaSerializer, SubareaSerializer, TallerSerializer
+from .models import Sede, Institucion, Congreso, Evento, MesasTrabajo, FechasCongreso, CostosCongreso, Rubrica, RubricaGrupo, RubricaCriterio, TipoTrabajo, Dictamen, DictamenPregunta, Subarea, AreaGeneral, Taller
+from .serializers import SedeSerializer, InstitucionSerializer, CongresoSerializer, EventoSerializer, MesasTrabajoSerializer, RubricaSerializer, RubricaGrupoSerializer, RubricaCriterioSerializer, TipoTrabajoSerializer, DictamenSerializer, DictamenPreguntaSerializer, SubareaSerializer, AreaGeneralSerializer, TallerSerializer
 
 def clean_date(val, default=None):
     if val is None or (isinstance(val, str) and val.strip() == ""):
@@ -121,6 +122,134 @@ class SubareaViewSet(viewsets.ModelViewSet):
     queryset = Subarea.objects.all()
     serializer_class = SubareaSerializer
     permission_classes = [IsAuthenticated]
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        nombre = request.data.get('nombre', '').strip()
+        if not nombre:
+            return Response({'detail': 'El nombre es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "UPDATE subareas SET nombre = %s WHERE id_subareas = %s",
+                [nombre, instance.id_subareas],
+            )
+        return Response({'id': instance.id_subareas, 'nombre': nombre})
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        pk = instance.id_subareas
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT (
+                    EXISTS (SELECT 1 FROM mesas_trabajo WHERE id_subarea = %s)
+                    OR EXISTS (SELECT 1 FROM ponencia WHERE id_subarea = %s)
+                    OR EXISTS (SELECT 1 FROM taller WHERE id_subarea = %s)
+                    OR EXISTS (SELECT 1 FROM ponencia_magistral WHERE id_subarea = %s)
+                )
+                """,
+                [pk, pk, pk, pk],
+            )
+            referenced = cursor.fetchone()[0]
+        if referenced:
+            return Response(
+                {'detail': 'No se puede eliminar: la subárea está asignada a mesas, ponencias o talleres.'},
+                status=status.HTTP_409_CONFLICT,
+            )
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM subareas WHERE id_subareas = %s", [pk])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AreaGeneralViewSet(viewsets.ModelViewSet):
+    serializer_class = AreaGeneralSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return AreaGeneral.objects.prefetch_related('subarea_set').all()
+
+    def list(self, request, *args, **kwargs):
+        areas = self.get_queryset()
+        data = [
+            {
+                'id': a.id_areas_generales,
+                'nombre': a.nombre,
+                'subAreas': [
+                    {'id': s.id_subareas, 'nombre': s.nombre}
+                    for s in a.subarea_set.all()
+                ],
+            }
+            for a in areas
+        ]
+        return Response(data)
+
+    def create(self, request, *args, **kwargs):
+        nombre = request.data.get('nombre', '').strip()
+        if not nombre:
+            return Response({'detail': 'El nombre es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO areas_generales (nombre) VALUES (%s) RETURNING id_areas_generales",
+                [nombre],
+            )
+            new_id = cursor.fetchone()[0]
+        return Response({'id': new_id, 'nombre': nombre, 'subAreas': []}, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        nombre = request.data.get('nombre', '').strip()
+        if not nombre:
+            return Response({'detail': 'El nombre es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "UPDATE areas_generales SET nombre = %s WHERE id_areas_generales = %s",
+                [nombre, instance.id_areas_generales],
+            )
+        return Response({'id': instance.id_areas_generales, 'nombre': nombre})
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        pk = instance.id_areas_generales
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT COUNT(*) FROM subareas s
+                WHERE s.id_area_general = %s
+                  AND (
+                    EXISTS (SELECT 1 FROM mesas_trabajo mt WHERE mt.id_subarea = s.id_subareas)
+                    OR EXISTS (SELECT 1 FROM ponencia po WHERE po.id_subarea = s.id_subareas)
+                    OR EXISTS (SELECT 1 FROM taller ta WHERE ta.id_subarea = s.id_subareas)
+                    OR EXISTS (SELECT 1 FROM ponencia_magistral pm WHERE pm.id_subarea = s.id_subareas)
+                  )
+                """,
+                [pk],
+            )
+            ref_count = cursor.fetchone()[0]
+        if ref_count > 0:
+            return Response(
+                {'detail': 'No se puede eliminar: existen subáreas con ponencias, talleres o mesas asignadas.'},
+                status=status.HTTP_409_CONFLICT,
+            )
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute("DELETE FROM subareas WHERE id_area_general = %s", [pk])
+                cursor.execute("DELETE FROM areas_generales WHERE id_areas_generales = %s", [pk])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['post'], url_path='subareas')
+    def crear_subarea(self, request, pk=None):
+        area = self.get_object()
+        nombre = request.data.get('nombre', '').strip()
+        if not nombre:
+            return Response({'detail': 'El nombre es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO subareas (nombre, id_area_general) VALUES (%s, %s) RETURNING id_subareas",
+                [nombre, area.id_areas_generales],
+            )
+            new_id = cursor.fetchone()[0]
+        return Response({'id': new_id, 'nombre': nombre}, status=status.HTTP_201_CREATED)
+
 
 class EventoViewSet(viewsets.ModelViewSet):
     queryset = Evento.objects.all()
