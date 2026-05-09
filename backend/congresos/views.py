@@ -123,6 +123,18 @@ class SubareaViewSet(viewsets.ModelViewSet):
     serializer_class = SubareaSerializer
     permission_classes = [IsAuthenticated]
 
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        nombre = request.data.get('nombre', '').strip()
+        if not nombre:
+            return Response({'detail': 'El nombre es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "UPDATE subareas SET nombre = %s WHERE id_subareas = %s",
+                [nombre, instance.id_subareas],
+            )
+        return Response({'id': instance.id_subareas, 'nombre': nombre})
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         pk = instance.id_subareas
