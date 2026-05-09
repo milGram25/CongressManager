@@ -37,47 +37,48 @@ const Register = () => {
     setFormData({ ...formData, pais: value.label });
   };
 
+  const triggerError = (message) => {
+    setError(message);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     // Validación de campos obligatorios (manual para mostrar en el cuadro central)
-    if (!formData.nombres.trim()) return setError('El nombre es obligatorio.');
-    if (!formData.apellidos.trim()) return setError('El apellido es obligatorio.');
-    if (!formData.genero) return setError('El género es obligatorio.');
-    if (!formData.pais) return setError('El país es obligatorio.');
+    if (!formData.nombres.trim()) return triggerError('El nombre es obligatorio.');
+    if (!formData.apellidos.trim()) return triggerError('El apellido es obligatorio.');
+    if (!formData.genero) return triggerError('El género es obligatorio.');
+    if (!formData.pais) return triggerError('El país es obligatorio.');
     if (formData.tieneDiscapacidad === 'Si' && !formData.discapacidad.trim()) {
-      return setError('Por favor especifique su discapacidad.');
+      return triggerError('Por favor especifique su discapacidad.');
     }
 
     // Validación de correo electrónico
-    if (!formData.email.trim()) return setError('El correo electrónico es obligatorio.');
+    if (!formData.email.trim()) return triggerError('El correo electrónico es obligatorio.');
     
     // 1. Debe contener un @
     // 2. Debe empezar con minúscula
     const emailRegex = /^[a-z].*@.*$/;
     if (!emailRegex.test(formData.email)) {
-      setError('Correo inválido.');
-      return;
+      return triggerError('Correo inválido.');
     }
 
     // Validación de teléfono (exactamente 10 dígitos)
-    if (!formData.telefono.trim()) return setError('El teléfono celular es obligatorio.');
+    if (!formData.telefono.trim()) return triggerError('El teléfono celular es obligatorio.');
     const phoneDigits = formData.telefono.replace(/\D/g, '');
     if (phoneDigits.length !== 10) {
-      setError('El teléfono debe tener exactamente 10 dígitos.');
-      return;
+      return triggerError('El teléfono debe tener exactamente 10 dígitos.');
     }
 
     // Validación de contraseñas
-    if (!formData.password) return setError('La contraseña es obligatoria.');
+    if (!formData.password) return triggerError('La contraseña es obligatoria.');
     if (formData.password.length < 8) {
-      setError('La contraseña debe tener al menos 8 caracteres.');
-      return;
+      return triggerError('La contraseña debe tener al menos 8 caracteres.');
     }
     if (formData.password !== formData.confirmPassword) {
-      setError('Las contraseñas no coinciden.');
-      return;
+      return triggerError('Las contraseñas no coinciden.');
     }
 
     setLoading(true);
@@ -97,7 +98,7 @@ const Register = () => {
         navigate('/asistente', { replace: true });
       }
     } else {
-      setError(result.message);
+      triggerError(result.message);
       setLoading(false);
     }
   };
