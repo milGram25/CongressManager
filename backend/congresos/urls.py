@@ -24,6 +24,7 @@ from .views import (
     DictamenPreguntaViewSet,
     MesasTrabajoViewSet,
     LibrosView,
+    LibroHasPonenciaView,
 )
 
 app_name = 'congresos'
@@ -56,4 +57,5 @@ urlpatterns = [
     path('eventos/<int:id_evento>/inscritos/', InscritesTallerView.as_view(), name='evento_inscritos'),
     path('<int:id_congreso>/signatures/', CongresoSignaturesView.as_view(), name='congreso_signatures'),
     path('libros/<int:id_congreso>/',LibrosView.as_view(),name='libros'),
+    path('librohasponencia/<int:id_libro>/',LibroHasPonenciaView.as_view(),name='libros_has_ponencia'),
 ]

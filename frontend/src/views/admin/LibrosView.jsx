@@ -6,7 +6,7 @@ import { FaAngleDown, FaCaretDown, FaCaretUp } from "react-icons/fa";
 import { RiPencilFill } from "react-icons/ri";
 import { IoCloseOutline } from "react-icons/io5";
 import { MdOutlineChangeCircle } from "react-icons/md";
-import { getCongresosApi, getInstitucionesApi,getLibrosApi } from "../../api/adminApi";
+import { getCongresosApi, getInstitucionesApi,getLibrosApi, getPonenciasApi,getLibroHasPonenciaApi } from "../../api/adminApi";
 
 
 
@@ -20,6 +20,22 @@ export default function LibrosView({ librosRecibidos, congreso }) {
     const [instId,setInstId] = useState(0);
     const [selectedInst,setSelectedInst] = useState(null);
     const [selectedCongId,setSelectedCongId] = useState(null);
+    const [libroHasPonencia,setLibroHasPonencia] = useState([]);
+    const [libros, setLibros] = useState([]); //por el momento, el mock pero debería ser la variable "Libros!"
+    //const [ponencias, setPonencias] = useState(MOCK_TODAS_LAS_PONENCIAS);
+    const [ponencias, setPonencias] = useState([]);
+    const [congresoSelected, setCongresoSelected] = useState(congreso);
+    const [editingLibro, setEditingLibro] = useState(null);
+    const [formData, setFormData] = useState({
+        titulo: '',
+        descripcion: '',
+        fecha: ''
+    });
+
+    
+    const [mostrarPonenciasIdVisual, setMostrarPonenciasIdVisual] = useState(null);
+    const [mostrarPonenciasIdReal, setMostrarPonenciasIdReal] = useState(null);
+    const [seleccionarPonenciasId, setSeleccionarPonenciasId] = useState(null);
 
     const fetchInitialData = async () => {
         try {
@@ -46,7 +62,7 @@ export default function LibrosView({ librosRecibidos, congreso }) {
         }
         
     };
-    const fetchLibros = async (selectedCongId) => {
+    const fetchLibros = async (selectedCongId) => { 
         try {
             const congData = await getLibrosApi(accessToken, selectedCongId);
             setLibros(congData);
@@ -54,6 +70,46 @@ export default function LibrosView({ librosRecibidos, congreso }) {
             console.error("Error al cargar libros:", error);
         }
         
+    };
+
+    const fetchPonencias = async (selectedCongId)=>{
+        console.log(selectedCongId);
+        console.log("PONENCIAS:", ponencias);
+        console.log("LHP:", libroHasPonencia);
+        try{
+            const ponenciasData = await getPonenciasApi(accessToken, selectedCongId);
+            setPonencias(ponenciasData);
+            
+        }
+        catch (error) {
+            console.error("Error al cargar libros:", error);
+        }
+    };
+
+    const fetchLibroHasPonencia = async (mostrarPonenciasIdReal) => {
+        try {
+            const libroHasPonenciaData =
+                await getLibroHasPonenciaApi(
+                    accessToken,
+                    mostrarPonenciasIdReal
+                );
+            console.log("LHP2:", libroHasPonenciaData);
+            console.log("PONENCIAS ACTUALES:", ponencias);
+
+            const nuevasPonencias = libroHasPonenciaData
+                .map((lhp) =>
+                    ponencias.find(
+                        p => p.id_ponencia === lhp.id_ponencia
+                    )
+                )
+                .filter(Boolean);
+
+            setLibroHasPonencia(nuevasPonencias);
+            
+
+        } catch (error) {
+            console.error("Error al cargar libros:", error);
+        }
     };
 
     useEffect(() => {
@@ -67,10 +123,20 @@ export default function LibrosView({ librosRecibidos, congreso }) {
     },[instId]);
 
     useEffect(()=>{
-        if(selectedCongId){
+        if(selectedCongId!==null&&selectedCongId!==undefined){
             fetchLibros(selectedCongId);
+            fetchPonencias(selectedCongId);
         }
     },[selectedCongId]);
+
+    useEffect(()=>{
+        if(mostrarPonenciasIdReal!==null && mostrarPonenciasIdReal!==undefined){
+            fetchLibroHasPonencia(mostrarPonenciasIdReal);
+        }
+
+    },[mostrarPonenciasIdReal])
+
+    
 
     
     /*const [loading,setLoading] = useState(null);
@@ -230,19 +296,18 @@ export default function LibrosView({ librosRecibidos, congreso }) {
             subarea: "matemáticas"
         }
     ]
-    const [libros, setLibros] = useState([]); //por el momento, el mock pero debería ser la variable "Libros!"
-    const [ponencias, setPonencias] = useState(MOCK_TODAS_LAS_PONENCIAS);
-    const [congresoSelected, setCongresoSelected] = useState(congreso);
-    const [editingLibro, setEditingLibro] = useState(null);
-    const [formData, setFormData] = useState({
-        titulo: '',
-        descripcion: '',
-        fecha: ''
-    });
 
+    function handleMostrarPonencias(index,libro){
+        if(index !== mostrarPonenciasIdVisual){
+            setMostrarPonenciasIdVisual(index);
+            setMostrarPonenciasIdReal(libro.id_libro);
+
+        }else{
+            setMostrarPonenciasIdVisual(null);
+            setMostrarPonenciasIdReal(null);
+        }
+    }
     
-    const [mostrarPonenciasId, setMostrarPonenciasId] = useState(null);
-    const [seleccionarPonenciasId, setSeleccionarPonenciasId] = useState(null);
 
     function handleChange(e, index) {
         const { id, value } = e.target;
@@ -296,7 +361,7 @@ export default function LibrosView({ librosRecibidos, congreso }) {
         const ponenciaId = parseInt(e.target.value);
         if (!ponenciaId) return;
 
-        const ponenciaToAdd = ponencias.find(p => p.id === ponenciaId);
+        const ponenciaToAdd = ponencias.find(p => p.id_ponencia === ponenciaId);
         if (!ponenciaToAdd) return;
 
         setLibros(prevLibros => {
@@ -349,6 +414,7 @@ export default function LibrosView({ librosRecibidos, congreso }) {
         });
     }
     const listaPonenciasLibro = (ponencia, index2, libroIndex) => {
+        console.log("PONENCIA COMPLETA:", ponencia);
         return (
             <div className="flex border-b pb-3 border-slate-200" key={index2}>
                 <p className="mr-4">{index2 + 1}° </p>
@@ -359,7 +425,7 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                         <input
                             id="titulo"
                             readOnly={editingLibro !== index2}
-                            value={ponencia.nombre_ponencia}
+                            value={ponencia.id_ponencia}
                             className={inputStyle}
 
                         />
@@ -371,7 +437,7 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                             id="ponente"
                             type="text"
                             readOnly={editingLibro !== index2}
-                            value={ponencia.ponente}
+                            value={ponencia.id_ponencia}
                             className={inputStyle}
 
                         />
@@ -382,7 +448,7 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                         <input
                             id="descripcion"
                             readOnly={editingLibro !== index2}
-                            value={ponencia.subarea}
+                            value={ponencia.id_ponencia}
                             className={inputStyle}
 
                         />
@@ -503,8 +569,7 @@ export default function LibrosView({ librosRecibidos, congreso }) {
 
 
                                         </button>
-                                        <button className={buttonStyle} onClick={() => index !== mostrarPonenciasId ?
-                                            setMostrarPonenciasId(index) : setMostrarPonenciasId(null)}>
+                                        <button className={buttonStyle} onClick={() => handleMostrarPonencias(index,libro)}>
                                             <FaAngleDown />
 
                                         </button>
@@ -514,24 +579,33 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                                 </div>
                                 <div className="ml-6 mt-3 rounded-lg bg-gray-200">
 
-                                    {index === mostrarPonenciasId ?
+                                    {index === mostrarPonenciasIdVisual ?
                                         <div className="pt-4">
                                             <div className="pl-2 flex items-center mb-4 h-15 bg-gray-100 rounded-lg p-2 m-4">
                                                 <p className="flex-2">Agregue una ponencia al libro</p>
                                                 <select className="flex-5 border rounded-full bg-white pl-5 h-10" onChange={(e) => agregarPonencia(index, e)} defaultValue="">
                                                     <option value="" disabled>Seleccione una ponencia...</option>
+                                                    
                                                     {
-                                                        ponencias.filter(p => !libro.ponencias?.some(lp => lp.nombre_ponencia === p.nombre_ponencia))
+                                                        /*ponencias.filter(p => !libro.ponencias?.some(lp => lp.nombre_ponencia === p.nombre_ponencia))
                                                             .map((ponencia) => (
                                                                 <option key={ponencia.id} value={ponencia.id}>{ponencia.nombre_ponencia}</option>
-                                                            ))
+                                                            ))*/
+                                                        
+                                                        libroHasPonencia.map((ponencia) => (
+                                                            <option
+                                                                key={ponencia.id_ponencia}
+                                                                value={ponencia.id_ponencia}
+                                                            >
+                                                                {ponencia.nombre_ponencia}
+                                                            </option>
+                                                        ))
                                                     }
                                                 </select>
                                             </div>
                                             <div className="border-l border-gray-200 pl-4   pr-3">
-                                                {libro.ponencias?.map((ponencia, index2) => (
+                                                {libroHasPonencia.map((ponencia, index2) => (
                                                     listaPonenciasLibro(ponencia, index2, index)
-
                                                 ))}
 
                                             </div>

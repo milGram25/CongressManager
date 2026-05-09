@@ -833,6 +833,22 @@ class LibrosView(APIView):
 
         return Response(serializer.data)
 
+class LibroHasPonenciaView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, id_libro):
+
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response(
+                {'detail': 'No autorizado.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        librohasponencia = LibroHasPonencia.objects.filter(id_libro=id_libro)
+
+        serializer = LibroHasPonenciaSerializer(librohasponencia, many=True)
+
+        return Response(serializer.data)
 
 
 def _fetch_events_between(start, end, user=None):

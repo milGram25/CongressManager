@@ -228,7 +228,7 @@ export async function getTalleresApi(accessToken, idCongreso = null) {
 
 export async function getPonenciasApi(accessToken, idCongreso = null) {
   let url = `${API_URL}/api/ponencias/lista/`;
-  if (idCongreso) url += `?id_congreso=${idCongreso}`;
+  if (idCongreso!==null && idCongreso !==undefined) url += `?id_congreso=${idCongreso}`;
   const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
   if (!res.ok) throw new Error('Error al obtener ponencias.');
   return res.json();
@@ -497,6 +497,13 @@ export async function getEvaluadoresDisponiblesApi(accessToken, idCongreso) {
 
 export async function getLibrosApi(accessToken, idCongreso) {
   let url = `${API_URL}/api/congresos/libros/${idCongreso}/`;
+  const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener congresos.');
+  return res.json();
+}
+
+export async function getLibroHasPonenciaApi(accessToken, idLibro) {
+  let url = `${API_URL}/api/congresos/librohasponencia/${idLibro}/`;
   const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
   if (!res.ok) throw new Error('Error al obtener congresos.');
   return res.json();
