@@ -1,9 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { 
-  MdReceipt, 
-  MdFileDownload, 
-  MdAccessTime, 
+import { getMisConstanciasApi } from "../../api/pagosApi";
+import { API_URL } from "../../api/constants";
+import {
+  MdReceipt,
+  MdFileDownload,
+  MdAccessTime,
   MdErrorOutline,
   MdBusiness,
   MdFilterList
@@ -11,25 +13,25 @@ import {
 
 export default function ConstanciasView() {
   const { user } = useAuth();
+  const accessToken = localStorage.getItem('congress_access');
 
-  const [misConstancias, setMisConstancias] = useState([
-    {
-      id: "CONST-2026-001",
-      congreso: "CIENU 2026",
-      fechaEmision: "2026-04-01",
-      tipo: "Asistente",
-      estatus: "disponible",
-      pdfUrl: "#",
-    },
-    {
-      id: "CONST-2025-002",
-      congreso: "CIENU 2025",
-      fechaEmision: "2025-04-05",
-      tipo: "Ponente",
-      estatus: "en_proceso",
-      pdfUrl: null,
-    }
-  ]);
+  const [misConstancias, setMisConstancias] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchConstancias = async () => {
+      try {
+        const data = await getMisConstanciasApi(accessToken);
+        setMisConstancias(data);
+      } catch (err) {
+        setError('No se pudieron cargar tus constancias.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchConstancias();
+  }, []);
 
   const [configFiltro, setConfigFiltro] = useState("todas_desc");
 
@@ -51,6 +53,18 @@ export default function ConstanciasView() {
   }, [misConstancias, configFiltro]);
 
   const enProcesoCount = misConstancias.filter(c => c.estatus === "en_proceso").length;
+
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <span className="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+  );
+
+  if (error) return (
+    <div className="max-w-5xl mx-auto p-6">
+      <div className="bg-error/10 border border-error/30 text-error p-4 rounded-xl text-sm font-medium">{error}</div>
+    </div>
+  );
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6 bg-base-100 min-h-screen">
@@ -153,8 +167,11 @@ export default function ConstanciasView() {
 
                 <div className="flex items-center gap-2 md:border-l md:pl-6 border-base-200 min-w-[150px]">
                   {constancia.estatus === "disponible" ? (
-                    <a 
-                      href={constancia.pdfUrl} 
+                    <a
+                      href={constancia.pdfUrl ? `${API_URL}${constancia.pdfUrl}` : '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download
                       className="btn btn-xs btn-ghost border-base-300 hover:bg-primary hover:text-white normal-case gap-2 w-full h-9"
                     >
                       <MdFileDownload className="text-lg" /> Descargar PDF
