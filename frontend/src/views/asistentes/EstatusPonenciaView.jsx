@@ -4,13 +4,21 @@ import { getMisPonenciasPonenteApi } from '../../api/ponenciasApi';
 
 const ESTADO_CONFIG = {
   pendiente_dictaminacion: { label: 'En espera de dictamen', border: 'border-l-gray-400', dot: 'bg-gray-400', text: 'text-gray-500' },
-  resumen_rechazado:       { label: 'Resumen rechazado',    border: 'border-l-error',   dot: 'bg-error',   text: 'text-error' },
-  pendiente_extenso:       { label: 'Resumen aceptado — sube tu extenso', border: 'border-l-primary', dot: 'bg-primary', text: 'text-primary' },
-  en_revision:             { label: 'En revisión',          border: 'border-l-warning', dot: 'bg-warning', text: 'text-warning' },
-  con_modificaciones:      { label: 'Con modificaciones',   border: 'border-l-warning', dot: 'bg-warning', text: 'text-warning' },
-  extenso_aceptado:        { label: '¡Ponencia aceptada!',  border: 'border-l-success', dot: 'bg-success', text: 'text-success' },
-  extenso_rechazado:       { label: 'Ponencia rechazada',   border: 'border-l-error',   dot: 'bg-error',   text: 'text-error' },
+  resumen_rechazado: { label: 'Resumen rechazado', border: 'border-l-error', dot: 'bg-error', text: 'text-error' },
+  pendiente_extenso: { label: 'Resumen aceptado — sube tu extenso', border: 'border-l-primary', dot: 'bg-primary', text: 'text-primary' },
+  en_revision: { label: 'En revisión', border: 'border-l-warning', dot: 'bg-warning', text: 'text-warning' },
+  con_modificaciones: { label: 'Con modificaciones', border: 'border-l-warning', dot: 'bg-warning', text: 'text-warning' },
+  extenso_aceptado: { label: '¡Ponencia aceptada!', border: 'border-l-success', dot: 'bg-success', text: 'text-success' },
+  extenso_rechazado: { label: 'Ponencia rechazada', border: 'border-l-error', dot: 'bg-error', text: 'text-error' },
 };
+//simplificacion de los estados
+const LEYENDA_ESTADOS = [
+  { label: 'En espera', dot: 'bg-gray-400' },
+  { label: 'Resumen / Ponencia rechazada', dot: 'bg-error' },
+  { label: 'Resumen aceptado — sube tu extenso', dot: 'bg-primary' },
+  { label: 'En revisión / Con modificaciones', dot: 'bg-warning' },
+  { label: '¡Ponencia aceptada!', dot: 'bg-success' },
+];
 
 function PonenciaCard({ ponencia }) {
   const navigate = useNavigate();
@@ -125,7 +133,7 @@ export default function EstatusPonenciaView() {
       <p className="text-sm text-slate-500 mb-6">Sigue el progreso de tus ponencias enviadas.</p>
 
       <div className="flex flex-row flex-wrap gap-4 mb-8 p-4 bg-white rounded-xl shadow-sm">
-        {Object.entries(ESTADO_CONFIG).map(([, cfg]) => (
+        {LEYENDA_ESTADOS.map((cfg) => (
           <div key={cfg.label} className="flex items-center gap-2">
             <span className={`w-3 h-3 rounded-full ${cfg.dot}`}></span>
             <p className="text-xs text-slate-600">{cfg.label}</p>

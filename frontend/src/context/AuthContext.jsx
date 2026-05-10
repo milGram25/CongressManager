@@ -44,6 +44,20 @@ export function AuthProvider({ children }) {
   };
 
   /**
+   * Refresca la sesión actual consultando getMeApi de nuevo.
+   */
+  const refreshSession = async () => {
+    const accessToken = localStorage.getItem("congress_access");
+    if (!accessToken) return;
+    try {
+      const userData = await getMeApi(accessToken);
+      setUser({ ...userData, rol: mapRol(userData.rol) });
+    } catch (err) {
+      console.error("Error refreshing session:", err);
+    }
+  };
+
+  /**
    * Registra un usuario en el backend. Devuelve { success: true } o { success: false, message }.
    */
   const register = async (formData) => {
@@ -66,7 +80,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register, authLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, register, authLoading, refreshSession }}>
       {children}
     </AuthContext.Provider>
   );

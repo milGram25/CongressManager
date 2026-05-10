@@ -642,7 +642,7 @@ class ResumenesCongresoView(APIView):
                 SELECT
                     p.id_ponencia,
                     p.id_resumen,
-                    COALESCE(s.nombre, 'Ponencia ' || p.id_ponencia::text) AS titulo,
+                    COALESCE(mul.nombre, s.nombre, 'Ponencia ' || p.id_ponencia::text) AS titulo,
                     r.id_dictaminador,
                     r.revisado,
                     r.estatus,
@@ -655,6 +655,7 @@ class ResumenesCongresoView(APIView):
                 JOIN evento e ON p.id_evento = e.id_evento
                 JOIN resumen r ON p.id_resumen = r.id_resumen
                 LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
+                LEFT JOIN multimedia mul ON p.id_multimedia = mul.id_material
                 LEFT JOIN dictaminador d ON r.id_dictaminador = d.id_dictaminador
                 LEFT JOIN persona d_per ON d.id_persona = d_per.id_persona
                 WHERE e.id_congreso = %s
@@ -871,13 +872,14 @@ class MisResumenesView(APIView):
         with connection.cursor() as c:
             c.execute("""
                 SELECT p.id_ponencia, p.id_resumen,
-                       COALESCE(s.nombre, 'Ponencia ' || p.id_ponencia::text) AS titulo,
+                       COALESCE(mul.nombre, s.nombre, 'Ponencia ' || p.id_ponencia::text) AS titulo,
                        r.revisado, r.estatus, cong.nombre_congreso, e.id_congreso
                 FROM ponencia p
                 JOIN evento e ON p.id_evento = e.id_evento
                 JOIN congreso cong ON e.id_congreso = cong.id_congreso
                 JOIN resumen r ON p.id_resumen = r.id_resumen
                 LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
+                LEFT JOIN multimedia mul ON p.id_multimedia = mul.id_material
                 WHERE r.id_dictaminador = %s
                 ORDER BY r.revisado, p.id_ponencia
             """, [dictaminador.id_dictaminador])
@@ -1142,7 +1144,7 @@ class EstatusPonenteView(APIView):
             c.execute("""
                 SELECT DISTINCT
                     p.id_ponencia,
-                    COALESCE(s.nombre, 'Ponencia ' || p.id_ponencia::text) AS titulo,
+                    COALESCE(mul.nombre, ext.titulo, s.nombre, 'Ponencia ' || p.id_ponencia::text) AS titulo,
                     e.tipo_evento AS tipo_ponencia,
                     p.id_resumen,
                     r.revisado AS resumen_revisado,
@@ -1170,6 +1172,7 @@ class EstatusPonenteView(APIView):
                 LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
                 LEFT JOIN resumen r ON p.id_resumen = r.id_resumen
                 LEFT JOIN extenso ext ON p.id_extenso = ext.id_extenso
+                LEFT JOIN multimedia mul ON p.id_multimedia = mul.id_material
                 WHERE php.id_ponente = %s
                 ORDER BY p.id_ponencia
             """, [id_ponente])
@@ -1285,20 +1288,21 @@ class SubirExtensoAPIView(APIView):
             with transaction.atomic():
                 with connection.cursor() as cursor:
                     cursor.execute("""
-                        SELECT p.id_ponencia, p.id_extenso, s.nombre
+                        SELECT p.id_ponencia, p.id_extenso, COALESCE(mul.nombre, s.nombre)
                         FROM ponencia p
                         JOIN ponente_has_ponencia php ON php.id_ponencia = p.id_ponencia
                         JOIN ponente po ON po.id_ponente = php.id_ponente
                         LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
+                        LEFT JOIN multimedia mul ON p.id_multimedia = mul.id_material
                         WHERE p.id_resumen = %s AND po.id_persona = %s
                         LIMIT 1
                     """, [id_resumen, request.user.id_persona])
                     row = cursor.fetchone()
                     if not row:
                         return Response({'detail': 'No autorizado o resumen no encontrado.'}, status=status.HTTP_403_FORBIDDEN)
-                    id_ponencia, id_extenso_existente, subarea_nombre = row
+                    id_ponencia, id_extenso_existente, titulo_ponencia = row
                     
-                    titulo = subarea_nombre if subarea_nombre else f"Extenso de Ponencia {id_ponencia}"
+                    titulo = titulo_ponencia if titulo_ponencia else f"Extenso de Ponencia {id_ponencia}"
 
                     media_dir = os.path.join(settings.MEDIA_ROOT, 'extensos')
                     os.makedirs(media_dir, exist_ok=True)
