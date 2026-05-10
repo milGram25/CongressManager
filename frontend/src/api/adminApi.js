@@ -228,7 +228,7 @@ export async function getTalleresApi(accessToken, idCongreso = null) {
 
 export async function getPonenciasApi(accessToken, idCongreso = null) {
   let url = `${API_URL}/api/ponencias/lista/`;
-  if (idCongreso) url += `?id_congreso=${idCongreso}`;
+  if (idCongreso!==null && idCongreso !==undefined) url += `?id_congreso=${idCongreso}`;
   const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
   if (!res.ok) throw new Error('Error al obtener ponencias.');
   return res.json();
@@ -492,5 +492,77 @@ export async function getEvaluadoresDisponiblesApi(accessToken, idCongreso) {
     headers: { 'Authorization': `Bearer ${accessToken}` },
   });
   if (!res.ok) throw new Error('Error cargando evaluadores');
+  return res.json();
+}
+
+export async function getLibrosApi(accessToken, idCongreso) {
+  let url = `${API_URL}/api/congresos/libros/${idCongreso}/`;
+  const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener libros.');
+  return res.json();
+}
+
+export async function createLibroApi(accessToken, idCongreso, data) {
+  const res = await fetch(`${API_URL}/api/congresos/libros/${idCongreso}/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error al crear libro.');
+  return res.json();
+}
+
+export async function updateLibroApi(accessToken, idLibro, data) {
+  const res = await fetch(`${API_URL}/api/congresos/libro/${idLibro}/`, {
+    method: 'PUT',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error al actualizar libro.');
+  return res.json();
+}
+
+export async function deleteLibroApi(accessToken, idLibro) {
+  const res = await fetch(`${API_URL}/api/congresos/libro/${idLibro}/`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error al eliminar libro.');
+  return true;
+}
+
+export async function getLibroHasPonenciaApi(accessToken, idLibro) {
+  let url = `${API_URL}/api/congresos/librohasponencia/${idLibro}/`;
+  const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener ponencias del libro.');
+  return res.json();
+}
+
+export async function addPonenciaToLibroApi(accessToken, data) {
+  const res = await fetch(`${API_URL}/api/congresos/librohasponencia/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error al asignar ponencia.');
+  return res.json();
+}
+
+export async function removePonenciaFromLibroApi(accessToken, idPonencia) {
+  const res = await fetch(`${API_URL}/api/congresos/librohasponencia/ponencia/${idPonencia}/`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error al quitar ponencia.');
+  return true;
+}
+
+export async function transferPonenciaApi(accessToken, idPonencia, idLibroDestino) {
+  const res = await fetch(`${API_URL}/api/congresos/librohasponencia/ponencia/${idPonencia}/`, {
+    method: 'PATCH',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id_libro: idLibroDestino }),
+  });
+  if (!res.ok) throw new Error('Error al transferir ponencia.');
   return res.json();
 }

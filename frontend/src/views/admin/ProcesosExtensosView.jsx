@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import ListaExtensos from "./Componentes/ListaExtensos";
 import { getCongresosApi, getEvaluadoresDisponiblesApi } from "../../api/adminApi";
 import { getExtensosCongreso, asignarEvaluadoresApi, asignarEvaluador3Api, buildMediaUrl } from "../../api/ponenciasApi";
+import BuscadorPersonal from "./Componentes/BuscadorPersonal";
 
-function LedStatus({ label, active, neutral = false, color = null }) {
+function LedStatus({ label, active, neutral = false, color = null, title=""}) {
   const bg = neutral ? 'bg-gray-400' : color ?? (active ? 'bg-green-500' : 'bg-red-500');
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 " title={title}>
       <div className={`w-3 h-3 rounded-full ${bg} shadow-sm`} />
       <span className="text-xs font-medium text-gray-600">{label}</span>
     </div>
@@ -120,7 +121,7 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
 
       <section className="flex flex-wrap gap-3 p-4 bg-gray-50 rounded-2xl">
         <LedStatus label="Revisores asignados" active={!!yaAsignados} />
-        <LedStatus label="En revisión" active={!!yaAsignados && estado !== 'extenso_aceptado' && estado !== 'extenso_rechazado'} neutral={!yaAsignados} />
+        <LedStatus label="Revisado" active={(estado !== 'extenso_aceptado' && estado !== 'extenso_rechazado')? false: true} title={!yaAsignados ? "Sin asignar" : (estado === 'extenso_aceptado' || estado === 'extenso_rechazado') ? "Revisado":"Pendiente"} neutral={!yaAsignados} />
         {estado === 'desacuerdo' && <LedStatus label="Desacuerdo" active={true} color="bg-orange-500" />}
         <LedStatus label="Aceptado" active={estado === 'extenso_aceptado'} neutral={estado !== 'extenso_aceptado' && estado !== 'extenso_rechazado'} />
       </section>
@@ -136,29 +137,35 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
         </section>
       )}
 
-      {!yaAsignados && !extenso.revisado && (
+      {!extenso.revisado && (
         <section>
           <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700 mb-2">Asignar revisores (ambos obligatorios)</h4>
           {evaluadoresDisponibles.length === 0 ? (
             <p className="text-xs text-amber-600 italic">No hay evaluadores asignados a este congreso.</p>
           ) : (
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                <select className="select select-bordered select-sm flex-1 rounded-xl" value={r1Sel} onChange={e => setR1Sel(e.target.value)}>
-                  <option value="">Revisor 1</option>
-                  {evaluadoresDisponibles.map(e => (
-                    <option key={e.id_evaluador} value={e.id_evaluador}>{e.nombre_completo}</option>
-                  ))}
-                </select>
-                <select className="select select-bordered select-sm flex-1 rounded-xl" value={r2Sel} onChange={e => setR2Sel(e.target.value)}>
-                  <option value="">Revisor 2</option>
-                  {evaluadoresDisponibles.map(e => (
-                    <option key={e.id_evaluador} value={e.id_evaluador}>{e.nombre_completo}</option>
-                  ))}
-                </select>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase text-slate-400 ml-1">Revisor 1</p>
+                  <BuscadorPersonal
+                    options={evaluadoresDisponibles}
+                    value={r1Sel}
+                    onChange={setR1Sel}
+                    placeholder="Busca Revisor 1..."
+                  />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold uppercase text-slate-400 ml-1">Revisor 2</p>
+                  <BuscadorPersonal
+                    options={evaluadoresDisponibles}
+                    value={r2Sel}
+                    onChange={setR2Sel}
+                    placeholder="Busca Revisor 2..."
+                  />
+                </div>
               </div>
               {r1Sel && r2Sel && r1Sel === r2Sel && (
-                <p className="text-xs text-error">El Revisor 1 y el Revisor 2 no pueden ser la misma persona.</p>
+                <p className="text-xs text-error font-medium">El Revisor 1 y el Revisor 2 no pueden ser la misma persona.</p>
               )}
               <button
                 onClick={handleAsignarDos}
@@ -176,18 +183,18 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
         <section>
           <h4 className="text-sm font-semibold uppercase tracking-wide text-orange-600 mb-2">Asignar 3er revisor (desempate)</h4>
           <div className="flex gap-2">
-            <select className="select select-bordered select-sm flex-1 rounded-xl" value={r3Sel} onChange={e => setR3Sel(e.target.value)}>
-              <option value="">Selecciona revisor 3</option>
-              {evaluadoresParaR3.map(e => (
-                <option key={e.id_evaluador} value={e.id_evaluador}>{e.nombre_completo}</option>
-              ))}
-            </select>
+            <BuscadorPersonal
+              options={evaluadoresParaR3}
+              value={r3Sel}
+              onChange={setR3Sel}
+              placeholder="Selecciona revisor 3"
+            />
             <button
               onClick={handleAsignarTres}
               disabled={!r3Sel || assigning}
-              className="btn btn-warning btn-sm rounded-xl disabled:opacity-50"
+              className="btn btn-black w-full rounded-xl disabled:opacity-50 mt-2"
             >
-              {assigning ? '...' : 'Asignar'}
+              {assigning ? 'Asignando...' : 'Confirmar tercer revisor'}
             </button>
           </div>
         </section>
@@ -253,7 +260,9 @@ export default function ProcesosExtensosView() {
         setEvaluadores(evalData);
         setViewItem(extData[0] ?? null);
       })
-      .catch(console.error)
+      .catch(err => {
+        console.error("Error al cargar datos de extensos:", err);
+      })
       .finally(() => setLoading(false));
   }, [selectedCongreso, accessToken]);
 

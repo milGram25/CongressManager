@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import ListaResumenes from "./Componentes/ListaResumenes";
 import { getCongresosApi, getDictaminadoresDisponiblesApi } from "../../api/adminApi";
 import { getResumenesCongreso, asignarDictaminadorApi, getResumenDetalleApi } from "../../api/ponenciasApi";
+import BuscadorPersonal from "./Componentes/BuscadorPersonal";
 
 function PreguntasDictamen({ dictamen }) {
   if (!dictamen)
@@ -124,8 +125,8 @@ function AsignarDictaminadorCard({ resumen, dictaminadores, onAsignado }) {
     iso ? new Date(iso).toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" }) : null;
 
   return (
-    <article className="rounded-[26px] border border-black/55 bg-white shadow-sm overflow-hidden">
-      <header className="bg-black px-6 py-4">
+    <article className="rounded-[26px] border border-black/55 bg-white shadow-sm">
+      <header className="bg-black px-6 py-4 rounded-t-[25px]">
         <h3 className="text-white font-bold text-lg leading-tight">{resumen.title}</h3>
         <p className="text-gray-400 text-sm mt-0.5">{resumen.autores?.join(', ') || 'Sin autores'}</p>
       </header>
@@ -169,23 +170,19 @@ function AsignarDictaminadorCard({ resumen, dictaminadores, onAsignado }) {
           {dictaminadores.length === 0 ? (
             <p className="text-xs text-amber-600 italic">No hay dictaminadores registrados en este congreso.</p>
           ) : (
-            <div className="flex gap-2">
-              <select
-                className="select select-bordered select-sm flex-1 rounded-xl"
+            <div className="flex flex-col gap-3">
+              <BuscadorPersonal
+                options={dictaminadores}
                 value={sel}
-                onChange={e => setSel(e.target.value)}
-              >
-                <option value="">Selecciona un dictaminador</option>
-                {dictaminadores.map(d => (
-                  <option key={d.id_dictaminador} value={d.id_dictaminador}>{d.nombre_completo}</option>
-                ))}
-              </select>
+                onChange={setSel}
+                placeholder="Busca un dictaminador..."
+              />
               <button
                 onClick={handleAsignar}
                 disabled={!sel || assigning}
-                className="btn btn-primary btn-sm rounded-xl disabled:opacity-50 min-w-[90px]"
+                className="btn btn-black w-full rounded-xl disabled:opacity-50"
               >
-                {assigning ? <span className="loading loading-spinner loading-xs" /> : 'Asignar'}
+                {assigning ? <span className="loading loading-spinner loading-xs" /> : 'Confirmar asignación'}
               </button>
             </div>
           )}
@@ -231,7 +228,9 @@ export default function ProcesosResumenesView() {
         setDictaminadores(dicts);
         setViewItem(resumenes[0] ?? null);
       })
-      .catch(console.error)
+      .catch(err => {
+        console.error("Error al cargar datos de resúmenes:", err);
+      })
       .finally(() => setLoading(false));
   }, [selectedCongreso, accessToken]);
 
@@ -274,11 +273,11 @@ export default function ProcesosResumenesView() {
         <p className="text-center py-10 text-base-content/40 italic">No hay ponencias con resumen en este congreso.</p>
       ) : (
         <section className="grid items-start gap-6 xl:grid-cols-2">
-          <ListaResumenes
-            listaElementos={items}
-            dictaminadores={[]}
-            selectedId={viewItem?.id_resumen ?? null} 
-            onView={setViewItem}
+           <ListaResumenes
+             listaElementos={items}
+             dictaminadores={dictaminadores}
+             selectedId={viewItem?.id_resumen ?? null} 
+             onView={setViewItem}
           />
           <AsignarDictaminadorCard
             resumen={viewItem}
