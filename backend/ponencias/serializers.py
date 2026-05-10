@@ -1,173 +1,127 @@
 from rest_framework import serializers
-from .models import AsistenteEvento, Ponencia, PonenciaMagistral, PonenciaMagistralHasPonentemagistral
-from congresos.models import Evento
+from django.db import connection, transaction
+from .models import Ponencia, AsistenteEvento, PonenciaMagistral, Resumen, Extenso
+from congresos.models import Evento, Subareas, Congreso
 
 class PonenciaSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source='id_ponencia', read_only=True)
-    id_congreso = serializers.IntegerField(source='id_evento.id_congreso.id_congreso', read_only=True)
-    nombre_evento = serializers.CharField(source='id_evento.nombre_evento', read_only=True)
-    nombre_congreso = serializers.CharField(source='id_evento.id_congreso.nombre_congreso', read_only=True)
-    fecha_hora_inicio = serializers.DateTimeField(source='id_evento.fecha_hora_inicio', read_only=True)
-    fecha_hora_final = serializers.DateTimeField(source='id_evento.fecha_hora_final', read_only=True)
-    cupos = serializers.IntegerField(source='id_evento.cupos', read_only=True)
-    enlace = serializers.CharField(source='id_evento.enlace', read_only=True)
-    sinopsis = serializers.CharField(source='id_evento.sinopsis', read_only=True)
-    id_mesas_trabajo = serializers.IntegerField(source='id_evento.id_mesas_trabajo.id_mesas_trabajo', read_only=True)
-    nombre_subarea = serializers.CharField(source='id_subarea.nombre', read_only=True)
-    nombres_ponentes = serializers.SerializerMethodField() #retorna a todos los ponentes de esa misma ponencia
-
-    def get_nombres_ponentes(self,obj):
-        ponentes = obj.ponentehasponencia_set.all()
-        return [f"{rel.id_ponente.id_persona.nombre} {rel.id_ponente.id_persona.primer_apellido}" for rel in ponentes]
-        
-
     class Meta:
         model = Ponencia
-        fields = [
-            'id', 'id_ponencia', 'id_evento', 'id_congreso', 'nombre_evento', 'nombre_congreso',
-            'fecha_hora_inicio', 'fecha_hora_final', 'cupos',
-            'tipo_participacion', 'id_subarea', 'nombre_subarea',
-            'id_resumen', 'id_extenso', 'id_multimedia', 'enlace', 'sinopsis', 'id_mesas_trabajo','nombres_ponentes'
-        ]
+        fields = '__all__'
+
+class CatalogoEventoSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source='id_evento')
+    class Meta:
+        model = Evento
+        fields = ['id', 'nombre_evento', 'tipo_evento', 'fecha_hora_inicio', 'fecha_hora_final', 'sinopsis', 'cupos', 'enlace']
 
 class AsistenteEventoSerializer(serializers.ModelSerializer):
     class Meta:
         model = AsistenteEvento
-        fields = ['id_asistente_evento', 'id_asistente', 'id_evento', 'fecha_inscripcion']
-
-class CatalogoEventoSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source='id_evento', read_only=True)
-    titulo = serializers.CharField(source='nombre_evento')
-    ponente = serializers.SerializerMethodField()
-    modalidad = serializers.SerializerMethodField()
-    lugar = serializers.SerializerMethodField()
-    fecha = serializers.SerializerMethodField()
-    hora = serializers.SerializerMethodField()
-    # sinopsis viene directo del modelo Evento
-
-    class Meta:
-        model = Evento
-        fields = ['id', 'titulo', 'ponente', 'modalidad', 'lugar', 'fecha', 'hora', 'sinopsis']
-
-    def get_ponente(self, obj):
-        # Buscar el ponente relacionado a través de ponencia -> ponente_has_ponencia -> ponente -> persona
-        ponencia = Ponencia.objects.filter(id_evento=obj).first()
-        if ponencia:
-            rel = ponencia.ponentehasponencia_set.first()
-            if rel and rel.id_ponente and rel.id_ponente.id_persona:
-                persona = rel.id_ponente.id_persona
-                return f"{persona.nombre} {persona.primer_apellido} {persona.segundo_apellido or ''}".strip()
-        return "Por confirmar"
-
-    def get_modalidad(self, obj):
-        ponencia = Ponencia.objects.filter(id_evento=obj).first()
-        if ponencia:
-            return ponencia.tipo_participacion
-        return "Presencial" # default
-
-    def get_lugar(self, obj):
-        if obj.id_mesas_trabajo and obj.id_mesas_trabajo.id_sede:
-            return obj.id_mesas_trabajo.id_sede.nombre_sede
-        return "Por confirmar"
-
-    def get_fecha(self, obj):
-        if obj.fecha_hora_inicio:
-            # Formato: 30 - Abril - 2026
-            meses = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
-            dia = obj.fecha_hora_inicio.day
-            mes = meses[obj.fecha_hora_inicio.month]
-            anio = obj.fecha_hora_inicio.year
-            return f"{dia} - {mes} - {anio}"
-        return ""
-
-    def get_hora(self, obj):
-        if obj.fecha_hora_inicio:
-            return obj.fecha_hora_inicio.strftime('%I:%M %p').lower()
-        return ""
-
-
-class PonentemagistralSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PonenciaMagistralHasPonentemagistral
-        fields = ['id_ponencia_magistral_has_ponente_magistral', 'nombre_persona']
-
+        fields = '__all__'
 
 class PonenciaMagistralSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(source='id_ponencia_magistral', read_only=True)
     nombre_subarea = serializers.CharField(source='id_subarea.nombre', read_only=True)
     nombre_congreso = serializers.CharField(source='id_congreso.nombre_congreso', read_only=True)
-    ponentes = PonentemagistralSerializer(many=True, read_only=True)
-    tipo_ponencia = serializers.SerializerMethodField()
-    
-    
+    ponentes = serializers.SerializerMethodField()
 
     class Meta:
         model = PonenciaMagistral
-        fields = [
-            'id', 'id_ponencia_magistral', 'titulo', 'tipo_participacion',
-            'id_subarea', 'nombre_subarea', 'fecha_inicio', 'fecha_fin',
-            'id_congreso', 'nombre_congreso', 'id_multimedia', 'ponentes',
-            'tipo_ponencia'
-        ]
+        fields = '__all__'
 
-    def get_tipo_ponencia(self, obj):
-        return 'magistral'
+    def get_ponentes(self, obj):
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT p.id_persona, per.nombre, per.primer_apellido, per.segundo_apellido
+                FROM ponente_has_ponencia_magistral phpm
+                JOIN ponente p ON phpm.id_ponente = p.id_ponente
+                JOIN persona per ON p.id_persona = per.id_persona
+                WHERE phpm.id_ponencia_magistral = %s
+            """, [obj.id_ponencia_magistral])
+            rows = cursor.fetchall()
+            return [
+                {
+                    "id_persona": r[0],
+                    "nombre_completo": f"{r[1]} {r[2]} {r[3]}".strip()
+                } for r in rows
+            ]
 
-
-class PonenciaMagistralCreateSerializer(serializers.Serializer):
-    """Serializer para CREAR ponencias magistrales (sin evento)."""
-    titulo = serializers.CharField(max_length=255, required=True)
-    tipo_participacion = serializers.CharField(max_length=50, required=True)
-    id_subarea = serializers.IntegerField(required=True)
-    id_congreso = serializers.IntegerField(required=True)
-    fecha_inicio = serializers.DateTimeField(required=False, allow_null=True)
-    fecha_fin = serializers.DateTimeField(required=False, allow_null=True)
-    id_multimedia = serializers.IntegerField(required=False, allow_null=True)
-    ponentes = serializers.ListField(
-        child=serializers.CharField(max_length=100),
-        required=False,
-        allow_empty=True
-    )
+class PonenciaMagistralCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PonenciaMagistral
+        fields = '__all__'
 
     def create(self, validated_data):
-        """Crea ponencia magistral SOLO en ponencia_magistral y ponencia_magistral_has_ponente_magistral."""
-        from django.db import transaction, connection
+        id_congreso = validated_data.get('id_congreso').id_congreso
+        id_subarea = validated_data.get('id_subarea').id_subareas
+        titulo = validated_data.get('titulo')
+        resumen = validated_data.get('resumen')
+        fecha = validated_data.get('fecha')
+        hora = validated_data.get('hora')
         
-        try:
-            with transaction.atomic():
-                # 1. Normalizar tipo_participacion
-                tipo_p = str(validated_data.get('tipo_participacion', 'presencial')).lower()
-                if 'híbrido' in tipo_p or 'hibrido' in tipo_p:
-                    tipo_p = 'hibrida'
-                
-                # 2. Insertar en ponencia_magistral (SIN evento)
-                with connection.cursor() as cursor:
-                    cursor.execute("""
-                        INSERT INTO ponencia_magistral 
-                        (titulo, tipo_participacion, id_subarea, id_congreso, fecha_inicio, fecha_fin, id_multimedia)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)
-                        RETURNING id_ponencia_magistral
-                    """, [
-                        validated_data['titulo'],
-                        tipo_p,
-                        validated_data['id_subarea'],
-                        validated_data['id_congreso'],
-                        validated_data.get('fecha_inicio'),
-                        validated_data.get('fecha_fin'),
-                        validated_data.get('id_multimedia')
-                    ])
-                    id_ponencia_magistral = cursor.fetchone()[0]
-                    
-                    # 3. Insertar ponentes en ponencia_magistral_has_ponente_magistral
-                    ponentes = validated_data.get('ponentes', [])
-                    for nombre_persona in ponentes:
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO ponencia_magistral (titulo, resumen, fecha, hora, id_congreso, id_subarea)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    RETURNING id_ponencia_magistral
+                """, [titulo, resumen, fecha, hora, id_congreso, id_subarea])
+                id_magistral = cursor.fetchone()[0]
+
+                ponentes_data = self.initial_data.get('ponentes', [])
+                for p_data in ponentes_data:
+                    id_persona = p_data.get('id_persona')
+                    if id_persona:
+                        cursor.execute("SELECT id_ponente FROM ponente WHERE id_persona = %s", [id_persona])
+                        row = cursor.fetchone()
+                        if row:
+                            id_ponente = row[0]
+                        else:
+                            cursor.execute("INSERT INTO ponente (id_persona) VALUES (%s) RETURNING id_ponente", [id_persona])
+                            id_ponente = cursor.fetchone()[0]
+
                         cursor.execute("""
-                            INSERT INTO ponencia_magistral_has_ponente_magistral
-                            (id_ponencia_magistral, nombre_persona)
+                            INSERT INTO ponente_has_ponencia_magistral (id_ponente, id_ponencia_magistral)
                             VALUES (%s, %s)
-                        """, [id_ponencia_magistral, nombre_persona])
+                        """, [id_ponente, id_magistral])
                 
-                # Retornar el objeto creado
-                return PonenciaMagistral.objects.get(id_ponencia_magistral=id_ponencia_magistral)
-        except Exception as e:
-            raise serializers.ValidationError(f"Error al crear ponencia magistral: {str(e)}")
+                return PonenciaMagistral.objects.get(id_ponencia_magistral=id_magistral)
+
+    def update(self, instance, validated_data):
+        id_ponencia_magistral = instance.id_ponencia_magistral
+        id_congreso = validated_data.get('id_congreso', instance.id_congreso).id_congreso
+        id_subarea = validated_data.get('id_subarea', instance.id_subarea).id_subareas
+        titulo = validated_data.get('titulo', instance.titulo)
+        resumen = validated_data.get('resumen', instance.resumen)
+        fecha = validated_data.get('fecha', instance.fecha)
+        hora = validated_data.get('hora', instance.hora)
+
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    UPDATE ponencia_magistral 
+                    SET titulo = %s, resumen = %s, fecha = %s, hora = %s, 
+                        id_congreso = %s, id_subarea = %s
+                    WHERE id_ponencia_magistral = %s
+                """, [titulo, resumen, fecha, hora, id_congreso, id_subarea, id_ponencia_magistral])
+
+                cursor.execute("DELETE FROM ponente_has_ponencia_magistral WHERE id_ponencia_magistral = %s", [id_ponencia_magistral])
+                
+                ponentes_data = self.initial_data.get('ponentes', [])
+                for p_data in ponentes_data:
+                    id_persona = p_data.get('id_persona')
+                    if id_persona:
+                        cursor.execute("SELECT id_ponente FROM ponente WHERE id_persona = %s", [id_persona])
+                        row = cursor.fetchone()
+                        if row:
+                            id_ponente = row[0]
+                        else:
+                            cursor.execute("INSERT INTO ponente (id_persona) VALUES (%s) RETURNING id_ponente", [id_persona])
+                            id_ponente = cursor.fetchone()[0]
+
+                        cursor.execute("""
+                            INSERT INTO ponente_has_ponencia_magistral (id_ponente, id_ponencia_magistral)
+                            VALUES (%s, %s)
+                        """, [id_ponente, id_ponencia_magistral])
+
+        instance.refresh_from_db()
+        return instance

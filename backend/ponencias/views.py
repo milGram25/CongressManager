@@ -7,6 +7,11 @@ from django.db import transaction, connection
 from .models import AsistenteEvento, Ponencia, Resumen, Extenso
 from .serializers import PonenciaSerializer, CatalogoEventoSerializer, AsistenteEventoSerializer
 from users.models import Dictaminador, Evaluador, DictaminadorCongreso, EvaluadorCongreso
+from rest_framework import viewsets, status
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from .models import PonenciaMagistral 
+from .serializers import PonenciaMagistralSerializer, PonenciaMagistralCreateSerializer 
 import os
 import json
 import uuid
@@ -299,8 +304,8 @@ class EnviarPonenciaAPIView(APIView):
                         cursor.execute("""
                             SELECT COUNT(*) FROM pagos
                             WHERE id_persona = %s
-                              AND id_costos = %s
-                              AND (concepto = 'inscripcion_ponente_base' OR concepto LIKE 'inscripcion_ponente_extra_%%')
+                            AND id_costos = %s
+                            AND (concepto = 'inscripcion_ponente_base' OR concepto LIKE 'inscripcion_ponente_extra_%%')
                         """, [request.user.id_persona, costos_id_check])
                         paid_slots = int(cursor.fetchone()[0])
                         if paid_slots < required_slots:
@@ -489,8 +494,8 @@ class MiAgendaView(APIView):
         with connection.cursor() as cursor:
             cursor.execute("""
                 SELECT e.id_evento, e.nombre_evento, e.tipo_evento,
-                       e.fecha_hora_inicio, e.fecha_hora_final, e.sinopsis,
-                       c.nombre_congreso, c.id_congreso
+                    e.fecha_hora_inicio, e.fecha_hora_final, e.sinopsis,
+                    c.nombre_congreso, c.id_congreso
                 FROM asistente_evento ae
                 JOIN evento e ON e.id_evento = ae.id_evento
                 JOIN congreso c ON c.id_congreso = e.id_congreso
@@ -546,7 +551,7 @@ class DictaminadoresDisponiblesView(APIView):
         with connection.cursor() as cursor:
             cursor.execute("""
                 SELECT d.id_dictaminador,
-                       TRIM(CONCAT_WS(' ', per.nombre, per.primer_apellido, per.segundo_apellido))
+                TRIM(CONCAT_WS(' ', per.nombre, per.primer_apellido, per.segundo_apellido))
                 FROM dictaminador d
                 JOIN persona per ON per.id_persona = d.id_persona
                 ORDER BY per.primer_apellido, per.nombre
@@ -567,7 +572,7 @@ class EvaluadoresDisponiblesView(APIView):
         with connection.cursor() as cursor:
             cursor.execute("""
                 SELECT e.id_evaluador,
-                       TRIM(CONCAT_WS(' ', per.nombre, per.primer_apellido, per.segundo_apellido))
+                TRIM(CONCAT_WS(' ', per.nombre, per.primer_apellido, per.segundo_apellido))
                 FROM evaluador e
                 JOIN persona per ON per.id_persona = e.id_persona
                 ORDER BY per.primer_apellido, per.nombre
@@ -685,7 +690,6 @@ class ResumenesCongresoView(APIView):
 
         result = []
         for p in ponencias:
-           
             result.append({
                 'id': p['id_ponencia'],
                 'id_resumen': p['id_resumen'],
@@ -762,7 +766,7 @@ class ExtensosCongresoView(APIView):
 
             c.execute("""
                 SELECT php.id_ponencia,
-                       per.nombre || ' ' || per.primer_apellido
+                per.nombre || ' ' || per.primer_apellido
                 FROM ponente_has_ponencia php
                 JOIN ponente po ON php.id_ponente = po.id_ponente
                 JOIN persona per ON po.id_persona = per.id_persona
@@ -783,7 +787,7 @@ class ExtensosCongresoView(APIView):
             for id_ext, id_eval, estatus, retro, id_ev in c.fetchall():
                 if id_ext not in evals_map:
                     evals_map[id_ext] = {'por_eval': {}, 'latest_id_evaluacion': id_ev,
-                                         'latest_estatus': estatus, 'latest_retro': retro}
+                                        'latest_estatus': estatus, 'latest_retro': retro}
                 evals_map[id_ext]['por_eval'][id_eval] = estatus
 
             latest_ev_ids = [v['latest_id_evaluacion'] for v in evals_map.values()]
@@ -858,8 +862,8 @@ class MisResumenesView(APIView):
         with connection.cursor() as c:
             c.execute("""
                 SELECT p.id_ponencia, p.id_resumen,
-                       COALESCE(s.nombre, 'Ponencia ' || p.id_ponencia::text) AS titulo,
-                       r.revisado, r.estatus, cong.nombre_congreso, e.id_congreso
+                COALESCE(s.nombre, 'Ponencia ' || p.id_ponencia::text) AS titulo,
+                r.revisado, r.estatus, cong.nombre_congreso, e.id_congreso
                 FROM ponencia p
                 JOIN evento e ON p.id_evento = e.id_evento
                 JOIN congreso cong ON e.id_congreso = cong.id_congreso
@@ -898,8 +902,8 @@ class MisExtensosView(APIView):
         with connection.cursor() as c:
             c.execute("""
                 SELECT p.id_ponencia, p.id_extenso, ext.titulo, ext.ruta_relativa,
-                       ext.revisado, cong.nombre_congreso, e.id_congreso,
-                       ev.id_evaluacion, ev.estatus AS estatus_evaluacion
+                    ext.revisado, cong.nombre_congreso, e.id_congreso,
+                    ev.id_evaluacion, ev.estatus AS estatus_evaluacion
                 FROM ponencia p
                 JOIN evento e ON p.id_evento = e.id_evento
                 JOIN congreso cong ON e.id_congreso = cong.id_congreso
@@ -1321,3 +1325,35 @@ class SubirExtensoAPIView(APIView):
             return Response({'detail': 'Extenso subido correctamente.', 'id_extenso': id_extenso}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class PonenciaMagistralViewSet(viewsets.ModelViewSet):
+    queryset = PonenciaMagistral.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return PonenciaMagistralCreateSerializer
+        return PonenciaMagistralSerializer
+
+    def get_queryset(self):
+        queryset = PonenciaMagistral.objects.all().select_related('id_subarea', 'id_congreso')
+        id_congreso = self.request.query_params.get('id_congreso')
+        if id_congreso:
+            queryset = queryset.filter(id_congreso_id=id_congreso)
+        return queryset
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        read_serializer = PonenciaMagistralSerializer(instance)
+        return Response(read_serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        updated_instance = serializer.save()
+        read_serializer = PonenciaMagistralSerializer(updated_instance)
+        return Response(read_serializer.data)
