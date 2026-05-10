@@ -112,3 +112,62 @@ class PonenciaMagistralSerializer(serializers.ModelSerializer):
 
     def get_tipo_ponencia(self, obj):
         return 'magistral'
+
+
+class PonenciaMagistralCreateSerializer(serializers.Serializer):
+    """Serializer para CREAR ponencias magistrales (sin evento)."""
+    titulo = serializers.CharField(max_length=255, required=True)
+    tipo_participacion = serializers.CharField(max_length=50, required=True)
+    id_subarea = serializers.IntegerField(required=True)
+    id_congreso = serializers.IntegerField(required=True)
+    fecha_inicio = serializers.DateTimeField(required=False, allow_null=True)
+    fecha_fin = serializers.DateTimeField(required=False, allow_null=True)
+    id_multimedia = serializers.IntegerField(required=False, allow_null=True)
+    ponentes = serializers.ListField(
+        child=serializers.CharField(max_length=100),
+        required=False,
+        allow_empty=True
+    )
+
+    def create(self, validated_data):
+        """Crea ponencia magistral SOLO en ponencia_magistral y ponencia_magistral_has_ponente_magistral."""
+        from django.db import transaction, connection
+        
+        try:
+            with transaction.atomic():
+                # 1. Normalizar tipo_participacion
+                tipo_p = str(validated_data.get('tipo_participacion', 'presencial')).lower()
+                if 'híbrido' in tipo_p or 'hibrido' in tipo_p:
+                    tipo_p = 'hibrida'
+                
+                # 2. Insertar en ponencia_magistral (SIN evento)
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        INSERT INTO ponencia_magistral 
+                        (titulo, tipo_participacion, id_subarea, id_congreso, fecha_inicio, fecha_fin, id_multimedia)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        RETURNING id_ponencia_magistral
+                    """, [
+                        validated_data['titulo'],
+                        tipo_p,
+                        validated_data['id_subarea'],
+                        validated_data['id_congreso'],
+                        validated_data.get('fecha_inicio'),
+                        validated_data.get('fecha_fin'),
+                        validated_data.get('id_multimedia')
+                    ])
+                    id_ponencia_magistral = cursor.fetchone()[0]
+                    
+                    # 3. Insertar ponentes en ponencia_magistral_has_ponente_magistral
+                    ponentes = validated_data.get('ponentes', [])
+                    for nombre_persona in ponentes:
+                        cursor.execute("""
+                            INSERT INTO ponencia_magistral_has_ponente_magistral
+                            (id_ponencia_magistral, nombre_persona)
+                            VALUES (%s, %s)
+                        """, [id_ponencia_magistral, nombre_persona])
+                
+                # Retornar el objeto creado
+                return PonenciaMagistral.objects.get(id_ponencia_magistral=id_ponencia_magistral)
+        except Exception as e:
+            raise serializers.ValidationError(f"Error al crear ponencia magistral: {str(e)}")
