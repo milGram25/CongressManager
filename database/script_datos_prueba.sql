@@ -395,65 +395,65 @@ END;
 SELECT pg_temp.upsert_persona(
                'Administrador', 'Sistema', NULL,
                'admin@congreso.com',
-               'pbkdf2_sha256$1200000$demo$hashdemo',
+               'pbkdf2_sha256$1200000$zeTKPSA0TAyymKCpW7c50d$Ewxmr4iaAO2U/5nlrHFJ509a6coDskJYne3kqhKymgA=',
                'ADMIN0000000000000',
                '2220000000',
                TRUE, TRUE, TRUE
-       ) INTO v_id_persona_admin;
+        ) INTO v_id_persona_admin;
 
 SELECT pg_temp.upsert_persona(
-               'Miguel', 'Ponente', 'Lopez',
-               'ponente1@congreso.com',
-               'pbkdf2_sha256$1200000$demo$hash1',
-               'PONE10000000000000',
+               'Miguel', 'Ponente', NULL,
+               'ponente@congreso.com',
+               'pbkdf2_sha256$1200000$IsfjZjTB8e9d2CRP95ond0$6rBjfz2lsplx1IVbKXfnGZSp4tpGBfQI9ehVq1oJa9k=',
+               'PONE00000000000000',
                '2220000003',
                FALSE, FALSE, TRUE
-       ) INTO v_id_persona_ponente_1;
+        ) INTO v_id_persona_ponente_1;
 
 SELECT pg_temp.upsert_persona(
                'Laura', 'Ponente', 'Garcia',
-               'ponente2@congreso.com',
+               'ponente.garcia@congreso.com',
                'pbkdf2_sha256$1200000$demo$hash2',
                'PONE20000000000000',
                '2220000013',
                FALSE, FALSE, TRUE
-       ) INTO v_id_persona_ponente_2;
+        ) INTO v_id_persona_ponente_2;
 
 SELECT pg_temp.upsert_persona(
-               'Ana', 'Asistente', 'Perez',
-               'asistente1@congreso.com',
-               'pbkdf2_sha256$1200000$demo$hash3',
-               'ASIS10000000000000',
+               'Ana', 'Asistente', NULL,
+               'asistente@congreso.com',
+               'pbkdf2_sha256$1200000$0bpyzsPAUENRgyyAF0L85d$zjpy9GsuE8C4o1wRx3pUo0FYU192UINr6reAE1sICQg=',
+               'ASIS00000000000000',
                '2220000004',
                FALSE, FALSE, TRUE
-       ) INTO v_id_persona_asistente_1;
+        ) INTO v_id_persona_asistente_1;
 
 SELECT pg_temp.upsert_persona(
                'Diego', 'Asistente', 'Ruiz',
-               'asistente2@congreso.com',
+               'asistente.ruiz@congreso.com',
                'pbkdf2_sha256$1200000$demo$hash4',
                'ASIS20000000000000',
                '2220000014',
                FALSE, FALSE, TRUE
-       ) INTO v_id_persona_asistente_2;
+        ) INTO v_id_persona_asistente_2;
 
 SELECT pg_temp.upsert_persona(
-               'Daniela', 'Dictaminadora', 'Soto',
-               'dictaminador1@congreso.com',
-               'pbkdf2_sha256$1200000$demo$hash5',
-               'DICT10000000000000',
+               'Laura', 'Dictaminadora', NULL,
+               'dictaminador@congreso.com',
+               'pbkdf2_sha256$1200000$XB3HCGOBph5Cs2NNpX8GhE$XdwIlti4t7B7HmlFO0fIrHXt7QDH4DrTctjDw1odPDo=',
+               'DICT00000000000000',
                '2220000002',
                FALSE, FALSE, TRUE
-       ) INTO v_id_persona_dict_1;
+        ) INTO v_id_persona_dict_1;
 
 SELECT pg_temp.upsert_persona(
-               'Carlos', 'Evaluador', 'Mena',
-               'evaluador1@congreso.com',
-               'pbkdf2_sha256$1200000$demo$hash6',
-               'EVAL10000000000000',
+               'Carlos', 'Evaluador', NULL,
+               'evaluador@congreso.com',
+               'pbkdf2_sha256$1200000$3gUODcjT4Jqh8i5Zctoqj1$UiRM2X/3TbzArwVJbGjW3eTXsQkB9juQzxak3zqAlsQ=',
+               'EVAL00000000000000',
                '2220000001',
                FALSE, FALSE, TRUE
-       ) INTO v_id_persona_eval_1;
+        ) INTO v_id_persona_eval_1;
 
 INSERT INTO ponente (id_persona)
 SELECT v_id_persona_ponente_1
@@ -871,34 +871,34 @@ SELECT id_subareas INTO v_id_subarea FROM subareas LIMIT 1;
 --    Usando ON CONFLICT sobre correo_electronico para idempotencia.
 ---------------------------------------------------------------------
 INSERT INTO persona (nombre, primer_apellido, segundo_apellido, correo_electronico, contrasena, curp, num_telefono, is_superuser, is_staff, is_active)
-VALUES ('Pablo', 'Ponente', 'Extra', 'ponente_extra1@congreso.com', 'pbkdf2_sha256$1200000$demo$hash', 'PONEX100000000000', '3330000001', FALSE, FALSE, TRUE)
+VALUES ('Pablo', 'Ponente', 'Extra1', 'ponente.extra1@congreso.com', 'pbkdf2_sha256$1200000$demo$hash', 'PONEX100000000000', '3330000001', FALSE, FALSE, TRUE)
     ON CONFLICT (correo_electronico) DO NOTHING;
 
-SELECT id_persona INTO v_persona_pon1 FROM persona WHERE correo_electronico = 'ponente_extra1@congreso.com' LIMIT 1;
+SELECT id_persona INTO v_persona_pon1 FROM persona WHERE correo_electronico = 'ponente.extra1@congreso.com' LIMIT 1;
 
 INSERT INTO persona (nombre, primer_apellido, segundo_apellido, correo_electronico, contrasena, curp, num_telefono, is_superuser, is_staff, is_active)
-VALUES ('María', 'Ponente', 'Extra', 'ponente_extra2@congreso.com', 'pbkdf2_sha256$1200000$demo$hash', 'PONEX200000000000', '3330000002', FALSE, FALSE, TRUE)
+VALUES ('María', 'Ponente', 'Extra2', 'ponente.extra2@congreso.com', 'pbkdf2_sha256$1200000$demo$hash', 'PONEX200000000000', '3330000002', FALSE, FALSE, TRUE)
     ON CONFLICT (correo_electronico) DO NOTHING;
 
-SELECT id_persona INTO v_persona_pon2 FROM persona WHERE correo_electronico = 'ponente_extra2@congreso.com' LIMIT 1;
+SELECT id_persona INTO v_persona_pon2 FROM persona WHERE correo_electronico = 'ponente.extra2@congreso.com' LIMIT 1;
 
 INSERT INTO persona (nombre, primer_apellido, segundo_apellido, correo_electronico, contrasena, curp, num_telefono, is_superuser, is_staff, is_active)
-VALUES ('Luis', 'Asistente', 'Extra', 'asistente_extra1@congreso.com', 'pbkdf2_sha256$1200000$demo$hash', 'ASISX100000000000', '3330000003', FALSE, FALSE, TRUE)
+VALUES ('Luis', 'Asistente', 'Extra', 'asistente.extra1@congreso.com', 'pbkdf2_sha256$1200000$demo$hash', 'ASISX100000000000', '3330000003', FALSE, FALSE, TRUE)
     ON CONFLICT (correo_electronico) DO NOTHING;
 
-SELECT id_persona INTO v_persona_asis1 FROM persona WHERE correo_electronico = 'asistente_extra1@congreso.com' LIMIT 1;
+SELECT id_persona INTO v_persona_asis1 FROM persona WHERE correo_electronico = 'asistente.extra1@congreso.com' LIMIT 1;
 
 INSERT INTO persona (nombre, primer_apellido, segundo_apellido, correo_electronico, contrasena, curp, num_telefono, is_superuser, is_staff, is_active)
-VALUES ('Diana', 'Dictaminador', 'Extra', 'dictaminador_extra1@congreso.com', 'pbkdf2_sha256$1200000$demo$hash', 'DICTEX100000000000', '3330000004', FALSE, FALSE, TRUE)
+VALUES ('Diana', 'Dictaminador', 'Extra', 'dictaminador.extra1@congreso.com', 'pbkdf2_sha256$1200000$demo$hash', 'DICTEX100000000000', '3330000004', FALSE, FALSE, TRUE)
     ON CONFLICT (correo_electronico) DO NOTHING;
 
-SELECT id_persona INTO v_persona_dict1 FROM persona WHERE correo_electronico = 'dictaminador_extra1@congreso.com' LIMIT 1;
+SELECT id_persona INTO v_persona_dict1 FROM persona WHERE correo_electronico = 'dictaminador.extra1@congreso.com' LIMIT 1;
 
 INSERT INTO persona (nombre, primer_apellido, segundo_apellido, correo_electronico, contrasena, curp, num_telefono, is_superuser, is_staff, is_active)
-VALUES ('Eduardo', 'Evaluador', 'Extra', 'evaluador_extra1@congreso.com', 'pbkdf2_sha256$1200000$demo$hash', 'EVALEX100000000000', '3330000005', FALSE, FALSE, TRUE)
+VALUES ('Eduardo', 'Evaluador', 'Extra', 'evaluador.extra1@congreso.com', 'pbkdf2_sha256$1200000$demo$hash', 'EVALEX100000000000', '3330000005', FALSE, FALSE, TRUE)
     ON CONFLICT (correo_electronico) DO NOTHING;
 
-SELECT id_persona INTO v_persona_eval1 FROM persona WHERE correo_electronico = 'evaluador_extra1@congreso.com' LIMIT 1;
+SELECT id_persona INTO v_persona_eval1 FROM persona WHERE correo_electronico = 'evaluador.extra1@congreso.com' LIMIT 1;
 
 -- 3) Insertar roles relacionados si no existen
 IF v_persona_pon1 IS NOT NULL THEN
