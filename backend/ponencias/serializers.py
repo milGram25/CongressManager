@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import AsistenteEvento, Ponencia
+from .models import AsistenteEvento, Ponencia, PonenciaMagistral, PonenciaMagistralHasPonentemagistral
 from congresos.models import Evento
 
 class PonenciaSerializer(serializers.ModelSerializer):
@@ -84,3 +84,31 @@ class CatalogoEventoSerializer(serializers.ModelSerializer):
         if obj.fecha_hora_inicio:
             return obj.fecha_hora_inicio.strftime('%I:%M %p').lower()
         return ""
+
+
+class PonentemagistralSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PonenciaMagistralHasPonentemagistral
+        fields = ['id_ponencia_magistral_has_ponente_magistral', 'nombre_persona']
+
+
+class PonenciaMagistralSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source='id_ponencia_magistral', read_only=True)
+    nombre_subarea = serializers.CharField(source='id_subarea.nombre', read_only=True)
+    nombre_congreso = serializers.CharField(source='id_congreso.nombre_congreso', read_only=True)
+    ponentes = PonentemagistralSerializer(many=True, read_only=True)
+    tipo_ponencia = serializers.SerializerMethodField()
+    
+    
+
+    class Meta:
+        model = PonenciaMagistral
+        fields = [
+            'id', 'id_ponencia_magistral', 'titulo', 'tipo_participacion',
+            'id_subarea', 'nombre_subarea', 'fecha_inicio', 'fecha_fin',
+            'id_congreso', 'nombre_congreso', 'id_multimedia', 'ponentes',
+            'tipo_ponencia'
+        ]
+
+    def get_tipo_ponencia(self, obj):
+        return 'magistral'
