@@ -145,7 +145,7 @@ function AreaRow({ area, onEdit, onDelete, onAddSubArea, onEditSubArea, onDelete
       {showSubs && !editing && (
         <div className="mt-2 ml-2 pl-2 border-l-2 border-[#000000]/30">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[11px] font-semibold text-base-content/40 uppercase tracking-wide">
+            <span className="text-[13px] font-semibold text-base-content/40  tracking-wide">
               Subáreas {area.subAreas.length > 0 && `(${area.subAreas.length})`}
             </span>
             <button onClick={() => setAddingSub(true)} title="Agregar subárea"
