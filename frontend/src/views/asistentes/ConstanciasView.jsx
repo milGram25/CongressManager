@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getMisConstanciasApi } from "../../api/pagosApi";
-import { API_URL } from "../../api/constants";
 import {
   MdReceipt,
   MdFileDownload,
@@ -168,7 +167,7 @@ export default function ConstanciasView() {
                 <div className="flex items-center gap-2 md:border-l md:pl-6 border-base-200 min-w-[150px]">
                   {constancia.estatus === "disponible" ? (
                     <a
-                      href={constancia.pdfUrl ? `${API_URL}${constancia.pdfUrl}` : '#'}
+                      href={constancia.pdfUrl || '#'}
                       target="_blank"
                       rel="noopener noreferrer"
                       download
