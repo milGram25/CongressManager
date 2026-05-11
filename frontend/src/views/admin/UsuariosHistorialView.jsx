@@ -72,7 +72,7 @@ export default function UsuariosHistorialView() {
                 <h3 className="text-lg font-bold text-gray-700">Registro de Facturación</h3>
                 <p className="text-sm text-gray-400">Listado de facturas enviadas y pagos registrados</p>
              </div>
-             <ListaHistorial listaElementos={invoiceHistory}/>
+             <ListaHistorial listaElementos={invoiceHistory} mostrarIndicadores={false} mostrarInfoFecha={true} etiquetaFecha="Fecha de envío" tipo="facturas"/>
           </div>
         ) : (
           <div className="w-full max-w-4xl flex flex-col items-center">
@@ -80,7 +80,7 @@ export default function UsuariosHistorialView() {
                 <h3 className="text-lg font-bold text-gray-700">Registro de Constancias</h3>
                 <p className="text-sm text-gray-400">Listado de certificados y reconocimientos emitidos</p>
              </div>
-            <ListaHistorial listaElementos={constanciaHistory}/>
+            <ListaHistorial listaElementos={constanciaHistory} mostrarIndicadores={false} mostrarRol={true} mostrarInfoFecha={true} etiquetaFecha="Fecha de emisión" tipo="constancias"/>
           </div>
         )}
       </div>

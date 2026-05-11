@@ -282,8 +282,9 @@ export default function UsuariosConstanciasView() {
               />
             </div>
           </div>
+          {/*Mostrar participantes*/}
 
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4 max-h-[480px]">
             {filteredUsers.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-400 py-16">
                 <MdPeople className="text-5xl opacity-30" />

@@ -36,13 +36,17 @@ class UserActionHistoryView(APIView):
         tipo = request.query_params.get('tipo', 'general')
 
         if tipo == 'facturas':
-            items = Factura.objects.filter(estatus='enviada').order_by('-fecha_envio').select_related('id_persona')
+            items = Factura.objects.filter(estatus='enviada').order_by('-fecha_envio').select_related('id_persona', 'id_congreso')
             data = [{
                 'id': f"inv-{f.id_factura}",
                 'nombre': f"{f.id_persona.nombre} {f.id_persona.primer_apellido}",
                 'fecha': f.fecha_envio.strftime("%Y-%m-%d %H:%M:%S") if f.fecha_envio else "",
                 'rol': 'Participante',
-                'accion': 'emisión de factura'
+                'accion': 'emisión de factura',
+                'congreso': f.id_congreso.nombre_congreso if f.id_congreso else '',
+                'rfc': f.rfc or '',
+                'razon_social': f.razon_social or '',
+                'archivo': f.ruta_pdf_xml or '',
             } for f in items]
             return Response(data)
 
@@ -55,6 +59,7 @@ class UserActionHistoryView(APIView):
                 'rol': c.tipo_constancia or 'Participante',
                 'accion': 'emisión de constancia',
                 'congreso': c.id_congreso.nombre_congreso if c.id_congreso else '',
+                'archivo': c.ruta_constancia or '',
             } for c in items]
             return Response(data)
 
