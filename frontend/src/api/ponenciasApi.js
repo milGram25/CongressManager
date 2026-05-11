@@ -28,6 +28,14 @@ export async function getMiAgendaApi(accessToken) {
   return data;
 }
 
+export async function getResumenDetalleApi(token, idResumen) {
+  const res = await fetch(`${API_URL}/api/ponencias/resumenes/${idResumen}/detalle/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Error al obtener detalle del resumen');
+  return res.json();
+}
+
 /**
  * Obtiene el listado de ponencias disponibles para el catálogo.
  */
