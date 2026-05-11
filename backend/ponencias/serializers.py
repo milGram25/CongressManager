@@ -31,17 +31,15 @@ class PonenciaMagistralSerializer(serializers.ModelSerializer):
     def get_ponentes(self, obj):
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT p.id_persona, per.nombre, per.primer_apellido, per.segundo_apellido
-                FROM ponente_has_ponencia_magistral phpm
-                JOIN ponente p ON phpm.id_ponente = p.id_ponente
-                JOIN persona per ON p.id_persona = per.id_persona
-                WHERE phpm.id_ponencia_magistral = %s
+                SELECT id_ponencia_magistral_has_ponente_magistral, nombre_persona
+                FROM ponencia_magistral_has_ponente_magistral
+                WHERE id_ponencia_magistral = %s
             """, [obj.id_ponencia_magistral])
             rows = cursor.fetchall()
             return [
                 {
                     "id_persona": r[0],
-                    "nombre_completo": f"{r[1]} {r[2]} {r[3]}".strip()
+                    "nombre_completo": (r[1] or '').strip()
                 } for r in rows
             ]
 
