@@ -566,3 +566,19 @@ export async function transferPonenciaApi(accessToken, idPonencia, idLibroDestin
   if (!res.ok) throw new Error('Error al transferir ponencia.');
   return res.json();
 }
+
+export async function getPonenciasMagistralesApi(accessToken, idCongreso = null) {
+  let url = `${API_URL}/api/ponencias/magistrales/`;
+  if (idCongreso !== null && idCongreso !== undefined) url += `?id_congreso=${idCongreso}`;
+  const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener ponencias magistrales.');
+  return res.json();
+}
+
+export async function getPonenciaMagistralByIdApi(accessToken, idPonenciaMagistral) {
+  const res = await fetch(`${API_URL}/api/ponencias/magistrales/${idPonenciaMagistral}/`, {
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error al obtener la ponencia magistral.');
+  return res.json();
+}

@@ -11,12 +11,14 @@ from .views import (
     EnviarEvaluacionView, EnviarDictamenView,
     AsignarEvaluadoresView, AsignarEvaluador3View, EstatusPonenteView,
     SubirExtensoAPIView,
+    PonenciaMagistralViewSet,
 )
 
 app_name = 'ponencias'
 
 router = DefaultRouter()
 router.register(r'lista', PonenciaViewSet, basename='ponencia')
+router.register(r'magistrales', PonenciaMagistralViewSet, basename='ponencia-magistral')
 
 urlpatterns = [
     path('', include(router.urls)),

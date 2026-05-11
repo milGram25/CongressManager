@@ -61,8 +61,8 @@ const TarjetaGenerica = ({
 
             {/* Footer / Acciones */}
             <div className="mt-8 pt-6 border-t border-base-200 flex items-center justify-between">
-                <button  
-                    className="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center hover:bg-primary transition-all active:scale-90 shadow-md" 
+                <button
+                    className="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center hover:bg-primary transition-all active:scale-90 shadow-md"
                     onClick={() => {
                         if (definirTipoElemento === 'congreso') {
                             navigate(`/admin/eventos/congresos/detalles/${indexDatosModal}`);
@@ -71,12 +71,16 @@ const TarjetaGenerica = ({
                         } else if (definirTipoElemento === 'taller') {
                             navigate(`/admin/eventos/talleres/detalles/${indexDatosModal}`);
                         } else if (definirTipoElemento === 'ponencia') {
-                            navigate(`/admin/eventos/ponencias/detalles/${indexDatosModal}`);
+                            if (itemData?.tipo_ponencia === 'magistral') {
+                                navigate(`/admin/eventos/ponencias/magistrales/detalles/${indexDatosModal}`);
+                            } else {
+                                navigate(`/admin/eventos/ponencias/detalles/${indexDatosModal}`);
+                            }
                         } else {
                             if (onView) onView();
                             else setOpenModal(true);
                         }
-                    }} 
+                    }}
                     title="Ver detalles"
                 >
                     <FiEye size={16} />
@@ -99,8 +103,8 @@ const TarjetaGenerica = ({
                     >
                         <FiCopy size={16} />
                     </button>
-                    <button  
-                        className="w-9 h-9 rounded-full bg-base-200 text-base-content/60 flex items-center justify-center hover:bg-black hover:text-white transition-all active:scale-90" 
+                    <button
+                        className="w-9 h-9 rounded-full bg-base-200 text-base-content/60 flex items-center justify-center hover:bg-black hover:text-white transition-all active:scale-90"
                         onClick={() => {
                             if (definirTipoElemento === 'congreso') {
                                 navigate(`/admin/eventos/congresos/detalles/${indexDatosModal}?edit=true`);
@@ -109,12 +113,16 @@ const TarjetaGenerica = ({
                             } else if (definirTipoElemento === 'taller') {
                                 navigate(`/admin/eventos/talleres/detalles/${indexDatosModal}?edit=true`);
                             } else if (definirTipoElemento === 'ponencia') {
-                                navigate(`/admin/eventos/ponencias/detalles/${indexDatosModal}?edit=true`);
+                                if (itemData?.tipo_ponencia === 'magistral') {
+                                    navigate(`/admin/eventos/ponencias/magistrales/detalles/${indexDatosModal}?edit=true`);
+                                } else {
+                                    navigate(`/admin/eventos/ponencias/detalles/${indexDatosModal}?edit=true`);
+                                }
                             } else {
                                 if (onEdit) onEdit();
                                 else setOpenModal(true);
                             }
-                        }} 
+                        }}
                         title="Editar"
                     >
                         <FiEdit2 size={16} />
