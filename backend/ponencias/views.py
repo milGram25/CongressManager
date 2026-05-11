@@ -4,8 +4,8 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db import transaction, connection
-from .models import AsistenteEvento, Ponencia, Resumen, Extenso
-from .serializers import PonenciaSerializer, CatalogoEventoSerializer, AsistenteEventoSerializer
+from .models import AsistenteEvento, Ponencia, Resumen, Extenso, PonenciaMagistral, PonenciaMagistralHasPonentemagistral
+from .serializers import PonenciaSerializer, CatalogoEventoSerializer, AsistenteEventoSerializer, PonenciaMagistralSerializer, PonenciaMagistralCreateSerializer
 from users.models import Dictaminador, Evaluador, DictaminadorCongreso, EvaluadorCongreso
 import os
 import json
@@ -112,7 +112,7 @@ class PonenciaViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = Ponencia.objects.all().select_related('id_evento', 'id_subarea', 'id_evento__id_congreso')
+        queryset = Ponencia.objects.all().select_related('id_evento', 'id_subarea', 'id_evento__id_congreso', 'id_evento__id_congreso__id_institucion', 'id_evento__id_tipo_trabajo')
         id_congreso = self.request.query_params.get('id_congreso')
         if id_congreso:
             # Filtramos por el ID del congreso a través del evento usando el campo id_congreso
@@ -1321,3 +1321,98 @@ class SubirExtensoAPIView(APIView):
             return Response({'detail': 'Extenso subido correctamente.', 'id_extenso': id_extenso}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class PonenciaMagistralViewSet(viewsets.ModelViewSet):
+    serializer_class = PonenciaMagistralSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = PonenciaMagistral.objects.all().select_related('id_subarea', 'id_congreso', 'id_congreso__id_institucion').prefetch_related('ponentes')
+        id_congreso = self.request.query_params.get('id_congreso')
+        if id_congreso:
+            queryset = queryset.filter(id_congreso_id=id_congreso)
+        return queryset
+
+    def create(self, request, *args, **kwargs):
+        serializer = PonenciaMagistralCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        return Response(PonenciaMagistralSerializer(instance).data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = request.data
+        try:
+            with transaction.atomic():
+                with connection.cursor() as cursor:
+                    tipo_p = str(data.get('tipo_participacion', instance.tipo_participacion)).lower()
+                    if 'híbrido' in tipo_p or 'hibrido' in tipo_p:
+                        tipo_p = 'hibrida'
+
+                    cursor.execute("""
+                        UPDATE ponencia_magistral SET
+                            titulo = %s, tipo_participacion = %s, id_subarea = %s,
+                            fecha_inicio = %s, fecha_fin = %s
+                        WHERE id_ponencia_magistral = %s
+                    """, [
+                        data.get('titulo', instance.titulo),
+                        tipo_p,
+                        data.get('id_subarea', instance.id_subarea_id),
+                        data.get('fecha_inicio', instance.fecha_inicio),
+                        data.get('fecha_fin', instance.fecha_fin),
+                        instance.id_ponencia_magistral
+                    ])
+
+                    # Rebuild ponentes
+                    cursor.execute("DELETE FROM ponencia_magistral_has_ponente_magistral WHERE id_ponencia_magistral = %s", [instance.id_ponencia_magistral])
+
+                    ponente_principal = data.get('ponente_principal', '').strip()
+                    if ponente_principal:
+                        cursor.execute("""
+                            INSERT INTO ponencia_magistral_has_ponente_magistral
+                            (id_ponencia_magistral, nombre_persona, es_principal)
+                            VALUES (%s, %s, TRUE)
+                        """, [instance.id_ponencia_magistral, ponente_principal])
+
+                    coautores = data.get('coautores', [])
+                    for nombre in coautores:
+                        nombre = nombre.strip() if isinstance(nombre, str) else str(nombre).strip()
+                        if nombre:
+                            cursor.execute("""
+                                INSERT INTO ponencia_magistral_has_ponente_magistral
+                                (id_ponencia_magistral, nombre_persona, es_principal)
+                                VALUES (%s, %s, FALSE)
+                            """, [instance.id_ponencia_magistral, nombre])
+
+                instance.refresh_from_db()
+                return Response(PonenciaMagistralSerializer(instance).data)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            with transaction.atomic():
+                with connection.cursor() as cursor:
+                    cursor.execute("DELETE FROM ponencia_magistral_has_ponente_magistral WHERE id_ponencia_magistral = %s", [instance.id_ponencia_magistral])
+                    cursor.execute("DELETE FROM ponencia_magistral WHERE id_ponencia_magistral = %s", [instance.id_ponencia_magistral])
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PonentesNombresView(APIView):
+    """Retorna lista de nombres de ponentes para autocompletado."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT DISTINCT TRIM(CONCAT_WS(' ', per.nombre, per.primer_apellido, per.segundo_apellido))
+                FROM ponente po
+                JOIN persona per ON per.id_persona = po.id_persona
+                ORDER BY 1
+            """)
+            nombres = [row[0] for row in cursor.fetchall()]
+        return Response(nombres)

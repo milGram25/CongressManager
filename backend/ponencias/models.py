@@ -145,6 +145,7 @@ class PonenciaMagistralHasPonentemagistral(models.Model):
     id_ponencia_magistral_has_ponente_magistral = models.AutoField(primary_key=True)
     nombre_persona = models.CharField(max_length=100)
     id_ponencia_magistral = models.ForeignKey(PonenciaMagistral, models.DO_NOTHING, db_column='id_ponencia_magistral', related_name='ponentes')
+    es_principal = models.BooleanField(default=False)
 
     class Meta:
         managed = False

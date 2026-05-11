@@ -393,5 +393,6 @@ CREATE TABLE ponencia_magistral(
 CREATE TABLE ponencia_magistral_has_ponente_magistral(
     id_ponencia_magistral_has_ponente_magistral SERIAL PRIMARY KEY,
     nombre_persona VARCHAR(100) NOT NULL,
-    id_ponencia_magistral INTEGER NOT NULL REFERENCES ponencia_magistral(id_ponencia_magistral)
+    id_ponencia_magistral INTEGER NOT NULL REFERENCES ponencia_magistral(id_ponencia_magistral),
+    es_principal BOOLEAN DEFAULT FALSE
 );

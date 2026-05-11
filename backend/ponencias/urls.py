@@ -11,12 +11,14 @@ from .views import (
     EnviarEvaluacionView, EnviarDictamenView,
     AsignarEvaluadoresView, AsignarEvaluador3View, EstatusPonenteView,
     SubirExtensoAPIView,
+    PonenciaMagistralViewSet, PonentesNombresView,
 )
 
 app_name = 'ponencias'
 
 router = DefaultRouter()
 router.register(r'lista', PonenciaViewSet, basename='ponencia')
+router.register(r'magistrales', PonenciaMagistralViewSet, basename='ponencia-magistral')
 
 urlpatterns = [
     path('', include(router.urls)),
@@ -40,4 +42,5 @@ urlpatterns = [
     path('resumenes/<int:pk>/dictamen/', EnviarDictamenView.as_view(), name='enviar-dictamen'),
     path('ponente/mis-ponencias/', EstatusPonenteView.as_view(), name='estatus-ponente'),
     path('resumenes/<int:id_resumen>/subir-extenso/', SubirExtensoAPIView.as_view(), name='subir-extenso'),
+    path('ponentes-nombres/', PonentesNombresView.as_view(), name='ponentes-nombres'),
 ]

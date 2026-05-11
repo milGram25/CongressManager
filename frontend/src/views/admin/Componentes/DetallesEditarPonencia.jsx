@@ -1,8 +1,8 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
-import { FiEdit2, FiCopy, FiCalendar, FiClock, FiUsers, FiMapPin, FiUser, FiAward, FiFileText, FiLink, FiSave, FiAlertCircle } from 'react-icons/fi';
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from 'react';
+import { FiEdit2, FiCopy, FiCalendar, FiClock, FiUsers, FiMapPin, FiUser, FiAward, FiFileText, FiLink, FiSave, FiAlertCircle, FiX } from 'react-icons/fi';
 import { IoIosCheckmark } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
-import { getInstitucionesApi, getCongresosApi, getSubareasApi, getMesasApi, createPonenciaApi, getPonenciaByIdApi, getInscritosTallerApi } from '../../../api/adminApi';
+import { getInstitucionesApi, getCongresosApi, getSubareasApi, getMesasApi, createPonenciaApi, getPonenciaByIdApi, getInscritosTallerApi, getPonenciaMagistralByIdApi, createPonenciaMagistralApi, updatePonenciaMagistralApi, getPonentesNombresApi } from '../../../api/adminApi';
 import { API_URL } from '../../../api/constants';
 import { useNavigate } from 'react-router-dom';
 import { LuCrown } from "react-icons/lu";
@@ -40,7 +40,15 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
     const [cuposMax, setCuposMax] = useState(0);
     const [loadingInscritos, setLoadingInscritos] = useState(false);
 
-    const [isMagistral, setIsMagistral] = useState(true);
+    const [isMagistral, setIsMagistral] = useState(false);
+    const [ponentePrincipal, setPonentePrincipal] = useState("");
+    const [coautores, setCoautores] = useState([]);
+    const [coautorInput, setCoautorInput] = useState("");
+    const [ponentesNombres, setPonentesNombres] = useState([]);
+    const [showPrincipalSugg, setShowPrincipalSugg] = useState(false);
+    const [showCoautorSugg, setShowCoautorSugg] = useState(false);
+    const principalRef = useRef(null);
+    const coautorRef = useRef(null);
 
     function retornarAsistentes(isMagistral) {
         if (isMagistral) {
@@ -119,25 +127,40 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
         const fetchAll = async () => {
             setLoading(true);
             try {
-                const [instData, congData, subData] = await Promise.all([
+                const [instData, congData, subData, nombresData] = await Promise.all([
                     getInstitucionesApi(accessToken),
                     getCongresosApi(accessToken),
-                    getSubareasApi(accessToken)
+                    getSubareasApi(accessToken),
+                    getPonentesNombresApi(accessToken).catch(() => [])
                 ]);
                 setInstituciones(instData);
                 setCongresos(congData);
                 setSubareas(subData);
+                setPonentesNombres(nombresData);
 
                 const realId = ponenciaData?.id || ponenciaData?.id_ponencia;
+                const magistralFlag = ponenciaData?.tipo_ponencia === 'magistral';
+                setIsMagistral(magistralFlag);
 
-                if (realId) {
+                if (realId && magistralFlag) {
+                    const realPonencia = await getPonenciaMagistralByIdApi(accessToken, realId);
+                    const formatDate = (dateStr) => dateStr ? dateStr.substring(0, 16) : "";
+                    setFormatData({
+                        ...realPonencia,
+                        id: realId,
+                        id_congreso: realPonencia.id_congreso || "",
+                        id_subarea: realPonencia.id_subarea || "",
+                        nombre_evento: realPonencia.titulo || "",
+                        fecha_hora_inicio: formatDate(realPonencia.fecha_inicio),
+                        fecha_hora_final: formatDate(realPonencia.fecha_fin),
+                        nombre_institucion: realPonencia.nombre_institucion || "",
+                        nombre_tipo_trabajo: realPonencia.nombre_tipo_trabajo || "",
+                    });
+                    setPonentePrincipal(realPonencia.ponente_principal || "");
+                    setCoautores(realPonencia.coautores || []);
+                } else if (realId) {
                     const realPonencia = await getPonenciaByIdApi(accessToken, realId);
-
-                    const formatDate = (dateStr) => {
-                        if (!dateStr) return "";
-                        return dateStr.substring(0, 16);
-                    };
-
+                    const formatDate = (dateStr) => dateStr ? dateStr.substring(0, 16) : "";
                     setFormatData({
                         ...realPonencia,
                         id: realId,
@@ -145,8 +168,13 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                         id_mesas_trabajo: realPonencia.id_mesas_trabajo || "",
                         id_subarea: realPonencia.id_subarea || "",
                         fecha_hora_inicio: formatDate(realPonencia.fecha_hora_inicio),
-                        fecha_hora_final: formatDate(realPonencia.fecha_hora_final)
+                        fecha_hora_final: formatDate(realPonencia.fecha_hora_final),
+                        nombre_institucion: realPonencia.nombre_institucion || "",
+                        nombre_tipo_trabajo: realPonencia.nombre_tipo_trabajo || "",
                     });
+                    setPonentePrincipal(realPonencia.ponente_principal || "");
+                    setCoautores(realPonencia.coautores || []);
+                    setIsMagistral(realPonencia.tipo_ponencia === 'magistral');
                     const idEvento = realPonencia.id_evento;
                     if (idEvento) {
                         setLoadingInscritos(true);
@@ -154,14 +182,11 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                             const inscritosData = await getInscritosTallerApi(accessToken, idEvento);
                             setInscritos(inscritosData.inscritos || []);
                             setCuposMax(inscritosData.cupos_max || 0);
-                        } catch {
-                            // no bloquear la carga principal
-                        } finally {
-                            setLoadingInscritos(false);
-                        }
+                        } catch { } finally { setLoadingInscritos(false); }
                     }
                 } else if (ponenciaData?.id_congreso) {
                     setFormatData(prev => ({ ...prev, id_congreso: parseInt(ponenciaData.id_congreso) }));
+                    setIsMagistral(true);
                 }
             } catch (err) {
                 console.error("Error en DetallesEditarPonencia:", err);
@@ -188,15 +213,32 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
     }
 
     async function handleSave() {
-        if (!formatData.nombre_evento || !formatData.id_congreso) {
-            alert("Por favor completa los campos obligatorios.");
+        if (!formatData.nombre_evento || !formatData.id_congreso || !formatData.id_subarea) {
+            alert("Por favor completa los campos obligatorios (Título, Congreso, Subárea).");
             return;
         }
 
         setSaving(true);
         try {
-            if (ponenciaData?.id) {
-                // Actualizar
+            if (isMagistral) {
+                const magistralData = {
+                    titulo: formatData.nombre_evento,
+                    tipo_participacion: formatData.tipo_participacion || 'presencial',
+                    id_subarea: formatData.id_subarea ? parseInt(formatData.id_subarea) : null,
+                    id_congreso: parseInt(formatData.id_congreso),
+                    fecha_inicio: formatData.fecha_hora_inicio || null,
+                    fecha_fin: formatData.fecha_hora_final || null,
+                    ponente_principal: ponentePrincipal,
+                    coautores: coautores,
+                };
+                if (ponenciaData?.id) {
+                    await updatePonenciaMagistralApi(accessToken, ponenciaData.id, magistralData);
+                    alert("Ponencia magistral actualizada con éxito");
+                } else {
+                    await createPonenciaMagistralApi(accessToken, magistralData);
+                    alert("Ponencia magistral creada con éxito");
+                }
+            } else if (ponenciaData?.id) {
                 const res = await fetch(`${API_URL}/api/ponencias/lista/${ponenciaData.id}/`, {
                     method: 'PUT',
                     headers: {
@@ -208,12 +250,11 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                 if (!res.ok) throw new Error('Error al actualizar la ponencia');
                 alert("Ponencia actualizada con éxito");
             } else {
-                // Crear
                 await createPonenciaApi(accessToken, formatData);
                 alert("Ponencia creada con éxito");
             }
 
-            if (isFullPage) navigate(`/admin/eventos/congresos/lista`);
+            if (isFullPage) navigate(-1);
             else window.location.reload();
         } catch (err) {
             alert(err.message);
@@ -276,12 +317,12 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">
                             <div>
-                                <label className={labelClasses}>Institución</label> {/*Mostrar institución*/}
+                                <label className={labelClasses}>Institución</label>
                                 <input
                                     id="institucion"
                                     type="text"
-                                    className={inputClasses}
-                                    value={""}
+                                    className={`${inputClasses} bg-base-200 cursor-not-allowed opacity-70`}
+                                    value={formatData.nombre_institucion || (() => { const c = congresos.find(c => c.id_congreso == formatData.id_congreso); if (c) { const inst = instituciones.find(i => i.id_institucion === c.id_institucion_id); return inst?.nombre || ""; } return ""; })()}
                                     readOnly
                                     placeholder="Institución organizadora"
                                 />
@@ -306,12 +347,12 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                                 )}
                             </div>
                             <div>
-                                <label className={labelClasses}>Tipo de trabajo</label> {/*Mostrar tipo de trabajo*/}
+                                <label className={labelClasses}>Tipo de trabajo</label>
                                 <input
                                     id="tipo_trabajo"
                                     type="text"
-                                    className={inputClasses}
-                                    value={""}
+                                    className={`${inputClasses} bg-base-200 cursor-not-allowed opacity-70`}
+                                    value={formatData.nombre_tipo_trabajo || ""}
                                     readOnly
                                     placeholder="Tipo de trabajo del congreso"
                                 />
@@ -331,8 +372,69 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                         <div className="md:col-span-2">
-                            <label className={labelClasses}>Título de la ponencia</label>
+                            <label className={labelClasses}>Título de la ponencia {isMagistral && " magistral"}</label>
                             <input id="nombre_evento" type="text" className={`${inputClasses} font-bold text-base`} value={formatData.nombre_evento} onChange={handleChange} readOnly={!modificando} />
+                        </div>
+                        <div>
+                            <label className={labelClasses}>Ponente principal</label>
+                            <div className="relative" ref={principalRef}>
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FiUser /></span>
+                                <input
+                                    type="text"
+                                    className={`${inputClasses} pl-11`}
+                                    value={ponentePrincipal}
+                                    onChange={(e) => { setPonentePrincipal(e.target.value); setShowPrincipalSugg(true); }}
+                                    onFocus={() => setShowPrincipalSugg(true)}
+                                    onBlur={() => setTimeout(() => setShowPrincipalSugg(false), 200)}
+                                    readOnly={!modificando}
+                                    placeholder="Nombre del ponente principal"
+                                />
+                                {showPrincipalSugg && ponentePrincipal && modificando && (
+                                    <ul className="absolute z-50 w-full bg-base-100 border border-base-300 rounded-xl mt-1 max-h-40 overflow-y-auto shadow-lg">
+                                        {ponentesNombres.filter(n => n.toLowerCase().includes(ponentePrincipal.toLowerCase())).slice(0, 8).map((n, i) => (
+                                            <li key={i} className="px-4 py-2 hover:bg-primary/10 cursor-pointer text-sm" onMouseDown={() => { setPonentePrincipal(n); setShowPrincipalSugg(false); }}>{n}</li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+                        </div>
+                        <div>
+                            <label className={labelClasses}>Coautores</label>
+                            <div className="relative" ref={coautorRef}>
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FiUsers /></span>
+                                <input
+                                    type="text"
+                                    className={`${inputClasses} pl-11`}
+                                    value={coautorInput}
+                                    onChange={(e) => { setCoautorInput(e.target.value); setShowCoautorSugg(true); }}
+                                    onFocus={() => setShowCoautorSugg(true)}
+                                    onBlur={() => setTimeout(() => setShowCoautorSugg(false), 200)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter' && coautorInput.trim()) { e.preventDefault(); setCoautores(prev => [...prev, coautorInput.trim()]); setCoautorInput(""); setShowCoautorSugg(false); } }}
+                                    readOnly={!modificando}
+                                    placeholder="Escribe y presiona Enter para agregar"
+                                />
+                                {showCoautorSugg && coautorInput && modificando && (
+                                    <ul className="absolute z-50 w-full bg-base-100 border border-base-300 rounded-xl mt-1 max-h-40 overflow-y-auto shadow-lg">
+                                        {ponentesNombres.filter(n => n.toLowerCase().includes(coautorInput.toLowerCase()) && !coautores.includes(n)).slice(0, 8).map((n, i) => (
+                                            <li key={i} className="px-4 py-2 hover:bg-primary/10 cursor-pointer text-sm" onMouseDown={() => { setCoautores(prev => [...prev, n]); setCoautorInput(""); setShowCoautorSugg(false); }}>{n}</li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
+                            {coautores.length > 0 && (
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    {coautores.map((c, i) => (
+                                        <span key={i} className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-semibold px-3 py-1.5 rounded-full">
+                                            {c}
+                                            {modificando && (
+                                                <button type="button" onClick={() => setCoautores(prev => prev.filter((_, idx) => idx !== i))} className="hover:text-error transition-colors">
+                                                    <FiX size={12} />
+                                                </button>
+                                            )}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                         <div>
@@ -347,9 +449,9 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                         <div>
 
                             <label className={labelClasses}>Tipo de ponencia</label>
-                            <div className='flex items-center '>
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><LuCrown /></span>
-                                <select id="tipo_participacion" value={isMagistral ? "magistral" : "normal"} className={inputClasses + "flex-1 pl-8"} onChange={handleChange} disabled={true} title="Los tipos de ponencia no se pueden modificar">
+                            <div className='flex items-center relative'>
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30 z-10"><LuCrown /></span>
+                                <select id="tipo_participacion" value={isMagistral ? "magistral" : "normal"} className={inputClasses + " flex-1 pl-11"} onChange={handleChange} disabled={true} title="Los tipos de ponencia no se pueden modificar">
                                     <option value="normal">Ponencia normal</option>
                                     <option value="magistral">Ponencia magistral</option>
 
@@ -446,7 +548,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                 </section>
 
                 {/* Sección Inscritos */}
-                <section className="mb-4">
+                <section className="mb-4 max-h-[400px] overflow-y-auto">
                     <h3 className={sectionTitleClasses}>
 
                         <div className="w-1.5 h-6 bg-primary rounded-full"></div>
