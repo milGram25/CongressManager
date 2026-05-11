@@ -111,8 +111,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         try:
             validate_password(password)
         except Exception:
-            # Here you catch "too common", "numeric", or "too short" errors
-            # and return your custom Spanish message.
             raise serializers.ValidationError({
                 "password": "La contraseña es muy común, solo numérica o no cumple con los requisitos de seguridad."
             })
