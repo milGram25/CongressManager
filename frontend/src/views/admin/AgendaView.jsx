@@ -1,3 +1,4 @@
+// Necesitaba hacer un cambio para crear una rama en el repo, xD
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import DetallesAgenda from "./Componentes/detallesagenda";
