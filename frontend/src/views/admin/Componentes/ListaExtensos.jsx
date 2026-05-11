@@ -326,7 +326,7 @@ export default function ListaExtensos({ listaElementos = [], dictaminadores = []
       <div className="space-y-4 px-4 pb-4 pt-3 md:px-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-[280px]">
-            <h3 className="text-[30px] font-black tracking-tight text-slate-900">EXTENSOS</h3>
+            <h3 className="text-[30px] font-black tracking-tight text-slate-900">Extensos</h3>
             <p className="mt-1 text-xs leading-5 text-slate-500">
               Aquí puede encontrar todos los extensos.
               <br />

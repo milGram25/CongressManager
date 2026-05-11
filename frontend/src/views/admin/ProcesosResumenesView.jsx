@@ -50,7 +50,7 @@ function AsignarDictaminadorCard({ resumen, dictaminadores, onAsignado }) {
         )}
 
         <section>
-          <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700 mb-1">Dictaminador actual</h4>
+          <h4 className=" font-semibold  tracking-wide text-slate-700 mb-1">Dictaminador actual</h4>
           <p className="text-sm text-slate-600">
             {resumen.nombre_dictaminador
               ? <span className="font-semibold">{resumen.nombre_dictaminador}</span>
@@ -60,7 +60,7 @@ function AsignarDictaminadorCard({ resumen, dictaminadores, onAsignado }) {
         </section>
 
         <section>
-          <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700 mb-2">
+          <h4 className=" font-semibold  tracking-wide text-slate-700 mb-2">
             {resumen.asignado ? 'Reasignar dictaminador' : 'Asignar dictaminador'}
           </h4>
           {dictaminadores.length === 0 ? (

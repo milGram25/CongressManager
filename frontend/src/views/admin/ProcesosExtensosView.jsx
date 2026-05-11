@@ -101,7 +101,7 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
   return (
     <article className="flex min-h-[760px] flex-col rounded-[28px] border border-black/55 bg-white px-5 py-5 shadow-sm md:px-6 space-y-6">
       <section>
-        <h3 className="text-[14px] font-semibold uppercase tracking-wide text-slate-700">Información de extenso</h3>
+        <h3 className=" font-semibold  tracking-wide text-slate-700">Información de extenso</h3>
         <div className="mt-4 space-y-2 text-[14px] leading-6 text-slate-700">
           <p><span className="font-semibold text-slate-900">Título:</span> {extenso.title}</p>
           <p><span className="font-semibold text-slate-900">Autores:</span> {extenso.autores?.join(' / ') || 'Sin autores'}</p>
@@ -127,7 +127,7 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
 
       {(extenso.nombre_evaluador || extenso.nombre_evaluador_2 || extenso.nombre_evaluador_3) && (
         <section>
-          <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700 mb-1">Revisores asignados</h4>
+          <h4 className="font-semibold  tracking-wide text-slate-700 mb-1">Revisores asignados</h4>
           <div className="space-y-1 text-sm text-slate-600">
             {extenso.nombre_evaluador && <p>R1: {extenso.nombre_evaluador}</p>}
             {extenso.nombre_evaluador_2 && <p>R2: {extenso.nombre_evaluador_2}</p>}
@@ -138,7 +138,7 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
 
       {!yaAsignados && !extenso.revisado && (
         <section>
-          <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700 mb-2">Asignar revisores (ambos obligatorios)</h4>
+          <h4 className="font-semibold tracking-wide text-slate-700 mb-2">Asignar revisores (ambos obligatorios)</h4>
           {evaluadoresDisponibles.length === 0 ? (
             <p className="text-xs text-amber-600 italic">No hay evaluadores asignados a este congreso.</p>
           ) : (
@@ -174,7 +174,7 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
 
       {estado === 'desacuerdo' && !extenso.id_evaluador_3 && (
         <section>
-          <h4 className="text-sm font-semibold uppercase tracking-wide text-orange-600 mb-2">Asignar 3er revisor (desempate)</h4>
+          <h4 className="font-semibold  tracking-wide text-orange-600 mb-2">Asignar 3er revisor (desempate)</h4>
           <div className="flex gap-2">
             <select className="select select-bordered select-sm flex-1 rounded-xl" value={r3Sel} onChange={e => setR3Sel(e.target.value)}>
               <option value="">Selecciona revisor 3</option>
@@ -197,7 +197,7 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
         <section>
           <button
             onClick={handlePublicar}
-            className="w-full btn btn-success rounded-xl uppercase tracking-wider font-bold"
+            className="w-full btn btn-success rounded-xl  tracking-wider font-bold"
           >
             Publicar ponencia
           </button>
@@ -205,7 +205,7 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
       )}
 
       <section>
-        <h3 className="text-[14px] font-semibold uppercase tracking-wide text-slate-700 mb-3">Rúbrica de evaluación (última)</h3>
+        <h3 className="font-semibold  tracking-wide text-slate-700 mb-3">Rúbrica de evaluación (última)</h3>
         <div className="overflow-y-auto max-h-[250px]">
           {!grupos || grupos.length === 0 ? (
             <p className="text-sm text-slate-400 italic">Sin evaluación enviada aún.</p>

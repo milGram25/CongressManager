@@ -14,13 +14,13 @@ import DetallesEditarPonencia from './DetallesEditarPonencia';
 import DetallesEditarInstitucion from './DetallesEditarInstitucion';
 
 const MenuCrearBorrarGenerico = ({
-                                     title = "Crear [insertar sustantivo]",
-                                     onDownload,
-                                     onRemove,
-                                     listaElementos2,
-                                     definirTipoElemento = "ponencia",
-                                     onViewItem
-                                 }) => {
+    title = "Crear [insertar sustantivo]",
+    onDownload,
+    onRemove,
+    listaElementos2,
+    definirTipoElemento = "ponencia",
+    onViewItem
+}) => {
     const navigate = useNavigate();
     const { search } = useLocation();
     const [listaElementos, setListaElementos] = React.useState(listaElementos2);
@@ -32,7 +32,7 @@ const MenuCrearBorrarGenerico = ({
     const mostrarAgregarEliminar = true; // Habilitado para todos los tipos según requerimiento
 
     const renderizarItem = (objeto, index) => {
-        switch(definirTipoElemento){
+        switch (definirTipoElemento) {
             case "ponencia":
                 return <ItemPonencia2 key={objeto.id || index} listaDatos={objeto} onViewItem={onViewItem} />;
             case "taller":
@@ -47,13 +47,13 @@ const MenuCrearBorrarGenerico = ({
     };
 
     const renderizarDetallesItemModal = () => {
-        switch(definirTipoElemento){
+        switch (definirTipoElemento) {
             case "ponencia":
-                return <DetallesEditarPonencia/>;
+                return <DetallesEditarPonencia />;
             case "taller":
-                return <DetallesEditarTaller/>;
+                return <DetallesEditarTaller />;
             case "institucion":
-                return <DetallesEditarInstitucion/>;
+                return <DetallesEditarInstitucion />;
             case "congreso":
                 return <DetallesCrearCongreso modificandoDatos={true} />;
             default:
@@ -63,7 +63,7 @@ const MenuCrearBorrarGenerico = ({
 
     const [openModal, setOpenModal] = useState(false);
 
-    function handleAgregarElemento(){
+    function handleAgregarElemento() {
         if (definirTipoElemento === 'taller') {
             navigate(`/admin/eventos/talleres/crear${search}`);
             return;
@@ -85,41 +85,41 @@ const MenuCrearBorrarGenerico = ({
 
     return (
         <div className="w-full bg-base-100 rounded-3xl border border-base-300 shadow-sm overflow-hidden flex flex-col min-h-[600px]">
-            <Modal abierto={openModal} onClose={()=>setOpenModal(false)}>
+            <Modal abierto={openModal} onClose={() => setOpenModal(false)}>
                 {renderizarDetallesItemModal()}
             </Modal>
 
             {/* Header */}
             <header className="bg-black text-white px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-6 bg-white rounded-full hidden sm:block"></div>
-                    <h2 className="text-xl font-bold uppercase tracking-wider">{title}</h2>
+                    {/*<div className="w-1.5 h-6 bg-white rounded-full hidden sm:block"></div>*/}
+                    <h2 className="text-xl font-bold  tracking-wider">{title}</h2>
                 </div>
 
                 <div className="flex items-center gap-3">
                     {mostrarAgregarEliminar && (
-                        <button 
+                        <button
                             onClick={handleAgregarElemento}
-                            className="bg-white text-black px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest hover:brightness-90 transition-all active:scale-95 flex items-center gap-2 shadow-lg"
+                            className="bg-white text-black px-6 py-2 rounded-full text-sm font-black  tracking-widest hover:brightness-90 transition-all active:scale-95 flex items-center gap-2 shadow-lg"
                         >
                             <IoMdAdd size={18} />
                             Crear {definirTipoElemento}
                         </button>
                     )}
 
-                    <button 
+                    {/*<button 
                         onClick={onDownload} 
                         className="w-10 h-10 rounded-full border-2 border-white/20 flex items-center justify-center hover:bg-white/10 transition-all active:scale-95 ml-2" 
                         title="Descargar"
                     >
                         <FiDownload size={18} />
-                    </button>
+                    </button>*/}
 
                     {mostrarAgregarEliminar && (
                         <div className="bg-white/10 rounded-full p-1 flex gap-1">
-                            <button 
-                                onClick={onRemove} 
-                                className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center hover:bg-white/20 transition-all active:scale-95" 
+                            <button
+                                onClick={onRemove}
+                                className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center hover:bg-white/20 transition-all active:scale-95"
                                 title="Quitar"
                             >
                                 <FiMinus size={16} />
