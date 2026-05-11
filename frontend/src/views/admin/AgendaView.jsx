@@ -29,6 +29,10 @@ function formatFullDate(day, month, year) {
   return `${String(day).padStart(2, "0")} / ${MONTHS[month]} / ${year}`;
 }
 
+function extractCongresoId(congreso) {
+  return congreso?.id_congreso ?? congreso?.id ?? null;
+}
+
 function ClockDisplay({ label, timezone }) {
   const [time, setTime] = useState(new Date());
 
@@ -101,21 +105,21 @@ export default function AdminAgendaView() {
   useEffect(() => {
     if (!accessToken) return;
 
-    getInstitucionesApi(accessToken)
-        .then((data) => setInstituciones(Array.isArray(data) ? data : []))
+    Promise.all([getInstitucionesApi(accessToken), getCongresosApi(accessToken)])
+        .then(([institucionesData, congresosData]) => {
+          setInstituciones(Array.isArray(institucionesData) ? institucionesData : []);
+          setCongresos(Array.isArray(congresosData) ? congresosData : []);
+        })
         .catch((err) => {
           console.error(err);
-          setError("No se pudieron cargar instituciones.");
+          setError("No se pudieron cargar instituciones y congresos.");
         });
   }, [accessToken]);
 
   useEffect(() => {
-    if (!accessToken || !selectedInstitucion) {
-      setCongresos([]);
-      return;
-    }
+    if (!accessToken) return;
 
-    getCongresosApi(accessToken, selectedInstitucion)
+    getCongresosApi(accessToken, selectedInstitucion || null)
         .then((data) => setCongresos(Array.isArray(data) ? data : []))
         .catch((err) => {
           console.error(err);
@@ -125,14 +129,28 @@ export default function AdminAgendaView() {
 
   useEffect(() => {
     async function loadEventos() {
-      if (!accessToken || !selectedCongreso) {
+      if (!accessToken) {
+        setEventosMap({});
+        return;
+      }
+
+      const idsCongresos = selectedCongreso
+          ? [selectedCongreso]
+          : congresos
+              .map((c) => extractCongresoId(c))
+              .filter((id) => id !== null && id !== undefined && id !== "");
+
+      if (idsCongresos.length === 0) {
         setEventosMap({});
         return;
       }
 
       setLoading(true);
       try {
-        const data = await getEventosCongresoApi(accessToken, selectedCongreso);
+        const responses = await Promise.all(
+            idsCongresos.map((idCongreso) => getEventosCongresoApi(accessToken, idCongreso))
+        );
+        const data = responses.flat();
         const map = {};
 
         (data || []).forEach((ev) => {
@@ -173,7 +191,7 @@ export default function AdminAgendaView() {
     }
 
     loadEventos();
-  }, [accessToken, selectedCongreso]);
+  }, [accessToken, selectedCongreso, congresos]);
 
   function prevMonth() {
     if (viewMonth === 0) {
