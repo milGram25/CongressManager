@@ -35,9 +35,10 @@ export default function PonenciasView() {
 
         const magistrales = magistralesData.map(m => ({
           ...m,
-          id: m.id_ponencia_magistral,
+          id: `mag-${m.id_ponencia_magistral}`,
           nombre_evento: m.titulo,
           nombre_ponente: (m.ponentes && m.ponentes.length > 0) ? m.ponentes[0].nombre_completo : null,
+          cupos: '—',
           fecha_hora_inicio: m.fecha_inicio,
           fecha_hora_final: m.fecha_fin,
           tipo_ponencia: 'magistral',

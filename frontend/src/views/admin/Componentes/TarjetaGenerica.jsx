@@ -72,7 +72,7 @@ const TarjetaGenerica = ({
                             navigate(`/admin/eventos/talleres/detalles/${indexDatosModal}`);
                         } else if (definirTipoElemento === 'ponencia') {
                             if (itemData?.tipo_ponencia === 'magistral') {
-                                navigate(`/admin/eventos/ponencias/magistrales/detalles/${indexDatosModal}`);
+                                navigate(`/admin/eventos/ponencias/magistrales/detalles/${itemData.id_ponencia_magistral}`);
                             } else {
                                 navigate(`/admin/eventos/ponencias/detalles/${indexDatosModal}`);
                             }
@@ -114,7 +114,7 @@ const TarjetaGenerica = ({
                                 navigate(`/admin/eventos/talleres/detalles/${indexDatosModal}?edit=true`);
                             } else if (definirTipoElemento === 'ponencia') {
                                 if (itemData?.tipo_ponencia === 'magistral') {
-                                    navigate(`/admin/eventos/ponencias/magistrales/detalles/${indexDatosModal}?edit=true`);
+                                    navigate(`/admin/eventos/ponencias/magistrales/detalles/${itemData.id_ponencia_magistral}?edit=true`);
                                 } else {
                                     navigate(`/admin/eventos/ponencias/detalles/${indexDatosModal}?edit=true`);
                                 }
