@@ -421,18 +421,22 @@ class MisConstanciasView(APIView):
     def get(self, request):
         constancias = Constancia.objects.filter(
             id_persona=request.user
-        ).select_related('id_congreso').order_by('-fecha_emision')
+        ).select_related('id_congreso', 'id_congreso__id_sede').order_by('-fecha_emision')
 
         result = []
         for c in constancias:
             estatus_frontend = 'disponible' if c.estatus == 'enviada' else 'en_proceso'
+            congreso = c.id_congreso
             result.append({
                 'id': f"CONST-{c.id_constancia}",
-                'congreso': c.id_congreso.nombre_congreso if c.id_congreso else '—',
+                'congreso': congreso.nombre_congreso if congreso else '—',
                 'fechaEmision': c.fecha_emision.strftime('%Y-%m-%d') if c.fecha_emision else None,
                 'tipo': c.tipo_constancia or 'Participante',
                 'estatus': estatus_frontend,
                 'pdfUrl': c.ruta_constancia or None,
+                'sede': congreso.id_sede.nombre_sede if congreso and congreso.id_sede else None,
+                'firmaOrganizador': congreso.firma_organizador if congreso else None,
+                'firmaSecretaria': congreso.firma_secretaria if congreso else None,
             })
 
         return Response(result)
