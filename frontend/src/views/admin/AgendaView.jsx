@@ -96,9 +96,13 @@ export default function AdminAgendaView() {
   const daysInMonth = getDaysInMonth(viewYear, viewMonth);
   const firstDay = getFirstDayOfMonth(viewYear, viewMonth);
 
-  const selectedDate = new Date(viewYear, viewMonth, selectedDay);
-  const dayName = formatDayName(selectedDate).charAt(0).toUpperCase() + formatDayName(selectedDate).slice(1);
-  const dateLabel = `${dayName} - ${String(selectedDay).padStart(2, "0")} / ${MONTHS[viewMonth]} / ${viewYear}`;
+  const selectedDate = selectedDay ? new Date(viewYear, viewMonth, selectedDay) : null;
+  const dayName = selectedDate
+      ? formatDayName(selectedDate).charAt(0).toUpperCase() + formatDayName(selectedDate).slice(1)
+      : "";
+  const dateLabel = selectedDate
+      ? `${dayName} - ${String(selectedDay).padStart(2, "0")} / ${MONTHS[viewMonth]} / ${viewYear}`
+      : `${MONTHS[viewMonth]} / ${viewYear}`;
 
   const accessToken = typeof window !== "undefined" ? localStorage.getItem("congress_access") : null;
 
@@ -180,7 +184,6 @@ export default function AdminAgendaView() {
         });
 
         setEventosMap(map);
-        setSelectedDay(1);
         setSelectedEventIdx(0);
       } catch (err) {
         console.error(err);
@@ -193,25 +196,35 @@ export default function AdminAgendaView() {
     loadEventos();
   }, [accessToken, selectedCongreso, congresos]);
 
-  function prevMonth() {
-    if (viewMonth === 0) {
-      setViewMonth(11);
-      setViewYear((y) => y - 1);
-    } else {
-      setViewMonth((m) => m - 1);
+  function resolveSelectedDayForMonth(targetYear, targetMonth) {
+    const maxDay = getDaysInMonth(targetYear, targetMonth);
+    const isCurrentMonth =
+        targetYear === today.getFullYear() && targetMonth === today.getMonth();
+
+    if (isCurrentMonth) {
+      return Math.min(today.getDate(), maxDay);
     }
-    setSelectedDay(1);
+
+    return null;
+  }
+
+  function prevMonth() {
+    const targetMonth = viewMonth === 0 ? 11 : viewMonth - 1;
+    const targetYear = viewMonth === 0 ? viewYear - 1 : viewYear;
+
+    setViewMonth(targetMonth);
+    setViewYear(targetYear);
+    setSelectedDay(resolveSelectedDayForMonth(targetYear, targetMonth));
     setSelectedEventIdx(0);
   }
 
   function nextMonth() {
-    if (viewMonth === 11) {
-      setViewMonth(0);
-      setViewYear((y) => y + 1);
-    } else {
-      setViewMonth((m) => m + 1);
-    }
-    setSelectedDay(1);
+    const targetMonth = viewMonth === 11 ? 0 : viewMonth + 1;
+    const targetYear = viewMonth === 11 ? viewYear + 1 : viewYear;
+
+    setViewMonth(targetMonth);
+    setViewYear(targetYear);
+    setSelectedDay(resolveSelectedDayForMonth(targetYear, targetMonth));
     setSelectedEventIdx(0);
   }
 
@@ -231,7 +244,7 @@ export default function AdminAgendaView() {
       viewMonth === today.getMonth() &&
       viewYear === today.getFullYear();
 
-  const dayEvents = eventosMap[keyForDay(selectedDay)] || [];
+  const dayEvents = selectedDay ? (eventosMap[keyForDay(selectedDay)] || []) : [];
   const selectedEvent = dayEvents[selectedEventIdx] || null;
 
   return (
@@ -362,6 +375,10 @@ export default function AdminAgendaView() {
           {loading ? (
               <div className="rounded-2xl border border-dashed border-base-300 p-6 text-center text-sm text-base-content/40">
                 Cargando eventos...
+              </div>
+          ) : !selectedDay ? (
+              <div className="rounded-2xl border border-dashed border-base-300 p-6 text-center text-sm text-base-content/40">
+                Selecciona un día para ver sus eventos
               </div>
           ) : dayEvents.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-base-300 p-6 text-center text-sm text-base-content/40">
