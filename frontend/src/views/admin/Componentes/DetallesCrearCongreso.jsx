@@ -324,7 +324,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
                     <h3 className={sectionTitleClasses}><div className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center"><FiCreditCard size={20} /></div> Costos y Recaudación</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="bg-gray-50 p-6 rounded-3xl space-y-4">
-                            <div><label className={labelClasses}>Asistente</label><input type="number" id="costo_asistente" value={formData.costo_asistente} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
+                            <div><label className={labelClasses}>Participante</label><input type="number" id="costo_asistente" value={formData.costo_asistente} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
                             <div><label className={labelClasses}>Ponencias extras</label><input type="number" id="costo_ponente" value={formData.costo_ponente} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
                         </div>
                         <div className="bg-gray-50 p-6 rounded-3xl space-y-4">

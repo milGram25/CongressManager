@@ -28,7 +28,7 @@ def _get_rol_persona(persona):
         return 'Ponente'
     except Exception:
         pass
-    return 'Asistente'
+    return 'Participante'
 
 
 class UserActionHistoryView(APIView):

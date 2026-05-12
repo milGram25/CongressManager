@@ -457,7 +457,7 @@ def registrar_ponencia(request):
         user = request.user
         asistente = Asistente.objects.filter(id_persona=user).first()
         if not asistente:
-            return Response({"error": "El usuario no es un asistente."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "El usuario no es un participante."}, status=status.HTTP_400_BAD_REQUEST)
         id_evento = request.data.get('id_evento')
         if not id_evento:
             return Response({"error": "id_evento es requerido."}, status=status.HTTP_400_BAD_REQUEST)

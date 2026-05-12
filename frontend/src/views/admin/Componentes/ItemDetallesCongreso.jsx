@@ -188,7 +188,7 @@ const ItemDetallesCongreso = ({
                 <div>
                     <h4 style={{ margin: '0 0 6px 0', fontSize: '14px', color: '#666666', fontWeight: '600' }}>Personas</h4>
                     {renderDetailItem("Cupos totales", congress.estadisticas.personas.cupos)}
-                    {renderDetailItem("Asistentes", congress.estadisticas.personas.asistentes)}
+                    {renderDetailItem("Participantes", congress.estadisticas.personas.asistentes)}
                 </div>
                 <div>
                     <h4 style={{ margin: '0 0 6px 0', fontSize: '14px', color: '#666666', fontWeight: '600' }}>Eventos</h4>

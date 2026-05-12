@@ -17,7 +17,7 @@ export default function ConstanciasView() {
       id: "CONST-2026-001",
       congreso: "CIENU 2026",
       fechaEmision: "2026-04-01",
-      tipo: "Asistente",
+      tipo: "Participante",
       estatus: "disponible",
       pdfUrl: "#",
     },

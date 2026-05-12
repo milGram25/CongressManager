@@ -142,7 +142,7 @@ export default function AdjuntarComponente({persona, nombreElementoSubir}) {
         <div className="flex w-50 items-center">
             <p className="w-10">Rol</p>
             <select className="flex-1 rounded-full border border-b h-10" value={esRol} onChange={(e)=>setEsRol(e.target.value)}>
-                <option value="asistente">Asistente</option>
+                <option value="asistente">Participante</option>
                 <option value="ponente">Ponente</option>
                 <option value="tallerista">Tallerista</option>
                 <option value="dictaminador">Dictaminador</option>
