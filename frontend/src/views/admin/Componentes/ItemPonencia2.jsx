@@ -52,9 +52,9 @@ const ItemPonencia = ({ listaDatos, onViewItem }) => {
             onEdit={() => onViewItem && onViewItem(listaDatos)}
         >
             <Row icon={FiAward} label="Congreso" value={listaDatos.nombre_congreso} />
-            <Row icon={FiUser} label="Ponente" value={listaDatos.nombre_ponente || "No asignado"} />
+            <Row icon={FiUser} label="Ponente" value={listaDatos.nombre_ponente || listaDatos.ponente_principal || "No asignado"} />
             <Row icon={FiUsers} label="Cupos" value={listaDatos.cupos} />
-            <Row icon={LuCrown} label="Tipo de ponencia" value={listaDatos.tipo_ponencia} styleRow={listaDatos.tipo_ponencia?.toLowerCase() === "magistral" ? "text-red-200" : ""} />
+            <Row icon={LuCrown} label="Tipo de ponencia" value={listaDatos.tipo_ponencia.charAt(0).toUpperCase() + listaDatos.tipo_ponencia.slice(1)} styleRow={listaDatos.tipo_ponencia?.toLowerCase() === "magistral" ? "text-yellow-500" : ""} />
 
             <div className="mt-4 space-y-3">
                 <DateTimeBox label="Inicio" date={fecha_inicio} time={hora_inicio} />

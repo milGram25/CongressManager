@@ -47,6 +47,7 @@ import TallerDetallesView from "./views/admin/TallerDetallesView";
 import PonenciasView from "./views/admin/PonenciasView";
 import PonenciaCrearView from "./views/admin/PonenciaCrearView";
 import PonenciaDetallesView from "./views/admin/PonenciaDetallesView";
+import PonenciaMagistralDetallesView from "./views/admin/PonenciaMagistralDetallesView";
 
 import CongresosView from "./views/admin/CongresosView";
 import CongresoListaView from "./views/admin/CongresoListaView";
@@ -396,6 +397,7 @@ function App() {
                 <Route index element={<PonenciasView />} />
                 <Route path="crear" element={<PonenciaCrearView />} />
                 <Route path="detalles/:id" element={<PonenciaDetallesView />} />
+                <Route path="magistrales/detalles/:id" element={<PonenciaMagistralDetallesView />} />
               </Route>
               <Route path="congresos">
                 <Route index element={<CongresosView />} />

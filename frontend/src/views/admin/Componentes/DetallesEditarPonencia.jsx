@@ -87,9 +87,9 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                     ) : inscritos.length === 0 ? (
                         <p className="text-sm text-base-content/40 text-center py-8">No hay asistentes inscritos aún.</p>
                     ) : (
-                        <div className="overflow-x-auto rounded-xl border border-base-200">
+                        <div className="overflow-x-auto overflow-y-auto max-h-[400px] rounded-xl border border-base-200">
                             <table className="table table-sm w-full">
-                                <thead className="bg-base-200 text-[10px] uppercase tracking-widest text-base-content/50">
+                                <thead className="sticky top-0 bg-base-200 text-[10px] uppercase tracking-widest text-base-content/50 z-10">
                                     <tr>
                                         <th>#</th>
                                         <th>Nombre</th>
@@ -198,6 +198,10 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
         fetchAll();
     }, [ponenciaData?.id, ponenciaData?.id_ponencia, accessToken]);
 
+    const esNumero = (valor) => {//valida que sea un número
+        return valor !== '' && Number.isFinite(Number(valor));
+    };
+
     useEffect(() => {
         if (formatData.id_congreso) {
             getMesasApi(accessToken).then(setMesas).catch(console.error);
@@ -264,7 +268,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
     };
 
     const inputClasses = `w-full bg-base-100 border border-base-300 rounded-xl px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all ${!modificando ? 'bg-base-200 cursor-not-allowed opacity-70' : 'hover:border-primary/50'}`;
-    const labelClasses = "text-[10px] font-bold text-base-content/40 mb-1 block ml-1 uppercase tracking-widest";
+    const labelClasses = "text-[13px] font-bold text-base-content/40 mb-1 block ml-1  ";
     const sectionTitleClasses = "text-lg font-bold text-primary flex items-center gap-2 mb-6 pb-2 border-b border-base-300 mt-8 first:mt-0";
 
     if (loading) return (
@@ -321,7 +325,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                                 <input
                                     id="institucion"
                                     type="text"
-                                    className={`${inputClasses} bg-base-200 cursor-not-allowed opacity-70`}
+                                    className={`${inputClasses}  +  cursor-not-allowed`}
                                     value={formatData.nombre_institucion || (() => { const c = congresos.find(c => c.id_congreso == formatData.id_congreso); if (c) { const inst = instituciones.find(i => i.id_institucion === c.id_institucion_id); return inst?.nombre || ""; } return ""; })()}
                                     readOnly
                                     placeholder="Institución organizadora"
@@ -333,13 +337,13 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                                     <input
                                         id="congreso_input"
                                         type="text"
-                                        className={inputClasses}
+                                        className={inputClasses + " cursor-not-allowed"}
                                         value={congresos.find(c => c.id_congreso === formatData.id_congreso)?.nombre_congreso || "Congreso seleccionado"}
                                         readOnly
                                     />
                                 ) : (
                                     <select id="id_congreso" value={formatData.id_congreso} className={inputClasses} onChange={handleChange} disabled={!modificando}>
-                                        <option value="">Selecciona un congreso</option>
+                                        <option style={{ color: "gray" }} value="">Selecciona un congreso</option>
                                         {congresos.map((item) => (
                                             <option key={item.id_congreso} value={item.id_congreso}>{item.nombre_congreso}</option>
                                         ))}
@@ -351,7 +355,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                                 <input
                                     id="tipo_trabajo"
                                     type="text"
-                                    className={`${inputClasses} bg-base-200 cursor-not-allowed opacity-70`}
+                                    className={`${inputClasses} cursor-not-allowed`}
                                     value={formatData.nombre_tipo_trabajo || ""}
                                     readOnly
                                     placeholder="Tipo de trabajo del congreso"
@@ -438,20 +442,21 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                         </div>
 
                         <div>
-                            <label className={labelClasses}>Subárea Académica</label>
-                            <select id="id_subarea" value={formatData.id_subarea} className={inputClasses} onChange={handleChange} disabled={!modificando}>
-                                <option value="">Selecciona subárea</option>
+                            <label className={labelClasses}>Subárea académica</label>
+                            <select id="id_subarea" value={formatData.id_subarea} className={inputClasses} onChange={handleChange} disabled={!modificando} style={{ color: formatData.id_subarea === "" ? "gray" : "black" }}>
+                                <option style={{ color: "gray" }} value="">Selecciona subárea</option>
+
                                 {subareas.map((item) => (
-                                    <option key={item.id_subareas} value={item.id_subareas}>{item.nombre}</option>
+                                    <option style={{ color: "black" }} key={item.id_subareas} value={item.id_subareas}>{item.nombre}</option>
                                 ))}
                             </select>
                         </div>
                         <div>
 
                             <label className={labelClasses}>Tipo de ponencia</label>
-                            <div className='flex items-center relative'>
+                            <div className='flex items-center relative '>
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30 z-10"><LuCrown /></span>
-                                <select id="tipo_participacion" value={isMagistral ? "magistral" : "normal"} className={inputClasses + " flex-1 pl-11"} onChange={handleChange} disabled={true} title="Los tipos de ponencia no se pueden modificar">
+                                <select id="tipo_participacion" value={isMagistral ? "magistral" : "normal"} className={inputClasses + " flex-1 pl-11  cursor-not-allowed"} onChange={handleChange} disabled={true} title="Los tipos de ponencia no se pueden modificar">
                                     <option value="normal">Ponencia normal</option>
                                     <option value="magistral">Ponencia magistral</option>
 
@@ -460,7 +465,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
 
                         </div>
                         <div>
-                            <label className={labelClasses}>Tipo de Participación</label>
+                            <label className={labelClasses}>Tipo de participación</label>
                             <select id="tipo_participacion" value={formatData.tipo_participacion} className={inputClasses} onChange={handleChange} disabled={!modificando}>
                                 <option value="Presencial">Presencial</option>
                                 <option value="Virtual">Virtual</option>
@@ -472,7 +477,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FiUsers /></span>
                                 {isMagistral ?
-                                    <input id="cupos" type="text" className={`${inputClasses} pl-11 font-mono text-xs text-slate-500`} value={"No se hay límite de cupos en ponencias magistrales"} readOnly />
+                                    <input id="cupos" type="text" className={`${inputClasses} pl-11 font-mono text-xs text-slate-500`} value={"No hay límite de cupos en ponencias magistrales"} readOnly />
 
                                     :
                                     <input id="cupos" type="number" min="0" className={`${inputClasses} pl-11 font-mono`} value={formatData.cupos} onChange={handleChange} readOnly={!modificando} />
@@ -485,14 +490,14 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                             <label className={labelClasses}>Enlace a videollamada</label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FaLink /></span>
-                                <input id="videollamada" type="url" className={`${inputClasses} pl-11 font-mono`} value={formatData.enlace_videollamada} onChange={handleChange} readOnly={!modificando} />
+                                <input id="videollamada" type="url" className={`${inputClasses} pl-11 font-mono`} value={formatData.enlace_videollamada} onChange={handleChange} readOnly={!modificando} placeholder="e.g.: https://meet.google.com/" />
                             </div>
                         </div>
                         <div>
-                            <label className={labelClasses}>Enlace a multimedia</label>
+                            <label className={labelClasses}>Enlace/ruta a multimedia</label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><TbFileSymlink /></span>
-                                <input id="multimedia" type="text" className={`${inputClasses} pl-11 font-mono`} value={formatData.enlace_multimedia} onChange={handleChange} readOnly={!modificando} />
+                                <input id="multimedia" type="text" className={`${inputClasses} pl-11 font-mono`} value={formatData.enlace_multimedia} onChange={handleChange} readOnly={!modificando} placeholder="e.g.: https://drive.google.com/drive/home" />
                             </div>
                         </div>
                         <div className="md:col-span-2">
@@ -514,16 +519,16 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="md:col-span-2">
-                            <label className={labelClasses}>Mesa Asignada</label>
-                            <select id="id_mesas_trabajo" value={formatData.id_mesas_trabajo} className={inputClasses + (isMagistral ? " font-mono text-slate-500" : "")} onChange={handleChange} disabled={isMagistral || !modificando}>
+                            <label className={labelClasses}>Mesa física asignada</label>
+                            <select id="id_mesas_trabajo" value={formatData.id_mesas_trabajo} className={inputClasses + (isMagistral ? " font-mono text-slate-500" : "") + (formatData.id_mesas_trabajo === "" ? "text-gray-500" : "text-black")} onChange={handleChange} disabled={isMagistral || !modificando}>
                                 {
                                     isMagistral ? (
                                         <option value="">No hay mesas en ponencias magistrales</option>
                                     ) : (
                                         <>
-                                            <option value="">Sin mesa asignada</option>
+                                            <option value="" style={{ color: "gray" }}>Sin mesa asignada</option>
                                             {mesas.map((item) => (
-                                                <option key={item.id_mesas_trabajo} value={item.id_mesas_trabajo}>{item.nombre}</option>
+                                                <option style={{ color: "black" }} key={item.id_mesas_trabajo} value={item.id_mesas_trabajo}>{item.nombre}</option>
                                             ))}
                                         </>
                                     )
@@ -548,12 +553,12 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                 </section>
 
                 {/* Sección Inscritos */}
-                <section className="mb-4 max-h-[400px] overflow-y-auto">
+                <section className="mb-4">
                     <h3 className={sectionTitleClasses}>
 
                         <div className="w-1.5 h-6 bg-primary rounded-full"></div>
                         <FiUsers className="text-primary" />
-                        Asistentes Inscritos
+                        Asistentes inscritos
                         {cuposMax > 0 && (
                             <span className="ml-auto text-sm font-normal text-base-content/60">
                                 {inscritos.length} / {cuposMax} cupos

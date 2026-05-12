@@ -159,6 +159,20 @@ class PonenciaMagistralSerializer(serializers.ModelSerializer):
 
     def get_tipo_ponencia(self, obj):
         return 'magistral'
+    def get_ponentes(self, obj):
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT id_ponencia_magistral_has_ponente_magistral, nombre_persona
+                FROM ponencia_magistral_has_ponente_magistral
+                WHERE id_ponencia_magistral = %s
+            """, [obj.id_ponencia_magistral])
+            rows = cursor.fetchall()
+            return [
+                {
+                    "id_persona": r[0],
+                    "nombre_completo": (r[1] or '').strip()
+                } for r in rows
+            ]
 
     def get_ponente_principal(self, obj):
         p = obj.ponentes.filter(es_principal=True).first()

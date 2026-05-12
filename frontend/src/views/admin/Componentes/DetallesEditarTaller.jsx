@@ -469,9 +469,9 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
                     ) : inscritos.length === 0 ? (
                         <p className="text-sm text-base-content/40 text-center py-8">No hay asistentes inscritos aún.</p>
                     ) : (
-                        <div className="overflow-x-auto rounded-xl border border-base-200">
+                        <div className="overflow-x-auto overflow-y-auto max-h-[400px] rounded-xl border border-base-200">
                             <table className="table table-sm w-full">
-                                <thead className="bg-base-200 text-[10px] uppercase tracking-widest text-base-content/50">
+                                <thead className="sticky top-0 bg-base-200 text-[10px] uppercase tracking-widest text-base-content/50 z-10">
                                     <tr>
                                         <th>#</th>
                                         <th>Nombre</th>
