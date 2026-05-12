@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { HiSearch, HiSparkles, HiMail, HiFilter } from "react-icons/hi";
+import { HiSearch, HiMail, HiFilter, HiExclamationCircle } from "react-icons/hi";
 import { MdPeople } from "react-icons/md";
 import ConstanciaUpload from "./Componentes/ConstanciaUpload";
 import UserConstanciaList from "./Componentes/UserConstanciaList";
@@ -12,12 +12,12 @@ export default function UsuariosConstanciasView() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
-  const [bulkActionType, setBulkActionType] = useState(null);
   const [processedCount, setProcessedCount] = useState(0);
   const [signatures, setSignatures] = useState({ organizador: null, secretaria: null });
   const [areSignaturesValid, setAreSignaturesValid] = useState(false);
   const [congresos, setCongresos] = useState([]);
   const [filters, setFilters] = useState({ idCongreso: null, rol: null, institucion: null });
+  const [showConfirmSend, setShowConfirmSend] = useState(false);
 
   const accessToken = localStorage.getItem('congress_access');
 
@@ -59,7 +59,8 @@ export default function UsuariosConstanciasView() {
         institucion: currentFilters.institucion,
       });
       const mappedData = data.map(u => ({
-        id: u.id_persona,
+        id: `${u.id_persona}_${u.rol}`,
+        id_persona: u.id_persona,
         nombre: u.nombre_completo,
         email: u.correo_electronico,
         rol: u.rol,
@@ -100,7 +101,10 @@ export default function UsuariosConstanciasView() {
     );
   }, [allUsers, searchTerm]);
 
-  const handleBulkAction = async (type) => {
+  const pendingUsers = useMemo(() => filteredUsers.filter(u => u.status === 'red'), [filteredUsers]);
+
+  const handleBulkSend = async () => {
+    setShowConfirmSend(false);
     if (!areSignaturesValid) {
       alert("Debe confirmar y bloquear las firmas institucionales antes de realizar acciones masivas.");
       return;
@@ -109,32 +113,27 @@ export default function UsuariosConstanciasView() {
       alert("Seleccione un congreso en el filtro para ejecutar acciones masivas.");
       return;
     }
-    setBulkActionType(type);
     setIsBulkProcessing(true);
     setProcessedCount(0);
 
     try {
-      const targetIds = filteredUsers.map(u => u.id);
-      await bulkConstanciaActionApi(accessToken, type, filters.idCongreso, targetIds);
+      const targetIds = [...new Set(pendingUsers.map(u => u.id_persona))];
+      const total = pendingUsers.length;
+      await bulkConstanciaActionApi(accessToken, 'send', filters.idCongreso, targetIds);
       await fetchParticipants();
 
       let count = 0;
-      const total = filteredUsers.length;
       const interval = setInterval(() => {
         count = Math.min(count + Math.ceil(total / 10), total);
         setProcessedCount(count);
         if (count >= total) {
           clearInterval(interval);
-          setTimeout(() => {
-            setIsBulkProcessing(false);
-            setBulkActionType(null);
-          }, 800);
+          setTimeout(() => setIsBulkProcessing(false), 800);
         }
       }, 120);
     } catch (error) {
-      alert("Error en acción masiva: " + error.message);
+      alert("Error en envío masivo: " + error.message);
       setIsBulkProcessing(false);
-      setBulkActionType(null);
     }
   };
 
@@ -156,28 +155,16 @@ export default function UsuariosConstanciasView() {
             </div>
           </div>
 
-          <div className="flex gap-2 w-full md:w-auto">
-            <button
-              onClick={() => handleBulkAction('generate')}
-              disabled={isBulkProcessing || !areSignaturesValid || !filters.idCongreso}
-              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all disabled:opacity-40
-                ${(areSignaturesValid && filters.idCongreso) ? 'bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100' : 'bg-gray-50 text-gray-300 border border-gray-100 cursor-not-allowed'}`}
-              title={!filters.idCongreso ? "Seleccione un congreso" : !areSignaturesValid ? "Se requieren firmas confirmadas" : ""}
-            >
-              {bulkActionType === 'generate' ? <span className="loading loading-spinner loading-xs"></span> : <HiSparkles />}
-              Generar {filters.rol || filteredUsers.length > 0 ? `(${filteredUsers.length})` : 'Todas'}
-            </button>
-            <button
-              onClick={() => handleBulkAction('send')}
-              disabled={isBulkProcessing || !areSignaturesValid || !filters.idCongreso}
-              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm shadow-lg transition-all disabled:opacity-40
-                ${(areSignaturesValid && filters.idCongreso) ? 'bg-[#005a6a] text-white hover:bg-[#004a5a] shadow-blue-900/20' : 'bg-gray-400 text-gray-200 shadow-none cursor-not-allowed'}`}
-              title={!filters.idCongreso ? "Seleccione un congreso" : !areSignaturesValid ? "Se requieren firmas confirmadas" : ""}
-            >
-              {bulkActionType === 'send' ? <span className="loading loading-spinner loading-xs"></span> : <HiMail />}
-              Enviar a Todos {filters.rol || filteredUsers.length > 0 ? `(${filteredUsers.length})` : ''}
-            </button>
-          </div>
+          <button
+            onClick={() => setShowConfirmSend(true)}
+            disabled={isBulkProcessing || !areSignaturesValid || !filters.idCongreso || pendingCount === 0}
+            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm shadow-lg transition-all disabled:opacity-40
+              ${(areSignaturesValid && filters.idCongreso && pendingCount > 0) ? 'bg-[#005a6a] text-white hover:bg-[#004a5a] shadow-blue-900/20' : 'bg-gray-400 text-gray-200 shadow-none cursor-not-allowed'}`}
+            title={!filters.idCongreso ? "Seleccione un congreso" : !areSignaturesValid ? "Se requieren firmas confirmadas" : pendingCount === 0 ? "No hay pendientes" : ""}
+          >
+            <HiMail />
+            Enviar a Todos {pendingCount > 0 ? `(${pendingCount})` : ''}
+          </button>
         </div>
 
         <FilterHeader
@@ -185,7 +172,6 @@ export default function UsuariosConstanciasView() {
           congresos={congresos}
         />
 
-        {/* Stats rápidos */}
         {allUsers.length > 0 && (
           <div className="flex gap-3 pt-1">
             <span className="flex items-center gap-1.5 text-xs font-bold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
@@ -214,7 +200,7 @@ export default function UsuariosConstanciasView() {
 
       {filters.idCongreso && !areSignaturesValid && !isBulkProcessing && (
         <div className="bg-yellow-50 border-2 border-yellow-200 p-4 rounded-2xl flex items-center gap-4 animate-in slide-in-from-top duration-500">
-          <div className="bg-yellow-400 p-2 rounded-xl text-white"><HiSparkles className="text-xl" /></div>
+          <div className="bg-yellow-400 p-2 rounded-xl text-white"><HiExclamationCircle className="text-xl" /></div>
           <div>
             <p className="text-yellow-800 font-bold text-sm uppercase tracking-tight">Firmas requeridas</p>
             <p className="text-yellow-700 text-xs">Sube y <strong>confirma</strong> las firmas institucionales para habilitar la generación y envío.</p>
@@ -227,18 +213,16 @@ export default function UsuariosConstanciasView() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="loading loading-spinner loading-md"></span>
-              <p className="font-black text-xs uppercase tracking-[0.2em]">
-                {bulkActionType === 'generate' ? "Generando documentos..." : "Enviando constancias..."}
-              </p>
+              <p className="font-black text-xs uppercase tracking-[0.2em]">Enviando constancias...</p>
             </div>
             <p className="text-xs font-mono font-bold bg-white/10 px-3 py-1 rounded-lg">
-              {processedCount} / {filteredUsers.length}
+              {processedCount} / {pendingCount}
             </p>
           </div>
           <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
             <div
               className="bg-yellow-400 h-full transition-all duration-300 ease-out"
-              style={{ width: `${filteredUsers.length ? (processedCount / filteredUsers.length) * 100 : 0}%` }}
+              style={{ width: `${pendingCount ? (processedCount / pendingCount) * 100 : 0}%` }}
             ></div>
           </div>
         </div>
@@ -268,8 +252,8 @@ export default function UsuariosConstanciasView() {
         <div className="lg:col-span-7 xl:col-span-8 bg-gray-50/50 rounded-3xl shadow-inner border border-gray-100 flex flex-col overflow-hidden h-full">
           <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white/50 border-b border-gray-100">
             <h3 className="font-bold text-gray-700 flex items-center gap-2">
-              Participantes
-              <span className="bg-[#005a6a] text-white text-[10px] px-2 py-0.5 rounded-full">{filteredUsers.length}</span>
+              Pendientes
+              <span className="bg-[#005a6a] text-white text-[10px] px-2 py-0.5 rounded-full">{pendingUsers.length}</span>
             </h3>
             <div className="relative w-full sm:w-64">
               <HiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -282,18 +266,19 @@ export default function UsuariosConstanciasView() {
               />
             </div>
           </div>
-          {/*Mostrar participantes*/}
 
           <div className="flex-1 overflow-y-auto p-4 max-h-[480px]">
-            {filteredUsers.length === 0 ? (
+            {pendingUsers.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-400 py-16">
                 <MdPeople className="text-5xl opacity-30" />
-                <p className="text-sm font-semibold">Sin participantes con los filtros actuales</p>
+                <p className="text-sm font-semibold">
+                  {filteredUsers.length > 0 ? 'Todas las constancias han sido enviadas' : 'Sin participantes con los filtros actuales'}
+                </p>
                 <p className="text-xs">Ajusta los filtros o limpia la búsqueda</p>
               </div>
             ) : (
               <UserConstanciaList
-                users={filteredUsers}
+                users={pendingUsers}
                 selectedUserId={selectedUser?.id}
                 onSelectUser={setSelectedUser}
               />
@@ -301,6 +286,38 @@ export default function UsuariosConstanciasView() {
           </div>
         </div>
       </div>
+
+      {/* Modal confirmación envío masivo */}
+      {showConfirmSend && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowConfirmSend(false)}></div>
+          <div className="relative bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-[#005a6a]/10 rounded-xl flex items-center justify-center">
+                <HiMail className="text-xl text-[#005a6a]" />
+              </div>
+              <h3 className="font-black text-gray-800">Confirmar envío masivo</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-6">
+              Se generarán y enviarán constancias para <strong>{pendingCount}</strong> participante{pendingCount !== 1 ? 's' : ''} pendiente{pendingCount !== 1 ? 's' : ''}. Esta acción no se puede deshacer.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirmSend(false)}
+                className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-50 transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleBulkSend}
+                className="flex-1 py-2.5 bg-[#005a6a] text-white rounded-xl text-sm font-bold hover:bg-[#004a5a] transition-all"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

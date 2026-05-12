@@ -39,6 +39,15 @@ export async function solicitarFacturaApi(accessToken, datos) {
   return data;
 }
 
+export async function getMisConstanciasApi(accessToken) {
+  const res = await fetch(`${API_URL}/api/users/constancias/mis/`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'No se pudieron cargar las constancias.');
+  return data;
+}
+
 export async function getMisFacturasApi(accessToken) {
   const res = await fetch(`${API_URL}/api/users/facturas/mis/`, {
     headers: { Authorization: `Bearer ${accessToken}` },
