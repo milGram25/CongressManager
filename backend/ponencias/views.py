@@ -1303,14 +1303,14 @@ class SubirExtensoAPIView(APIView):
                     if id_extenso_existente:
                         cursor.execute("""
                             UPDATE extenso
-                            SET titulo = %s, ruta_archivo = %s, fecha_subida = NOW(),
+                            SET titulo = %s, ruta_relativa = %s, fecha_subida = NOW(),
                                 revisado = FALSE, version_numero = version_numero + 1
                             WHERE id_extenso = %s
                         """, [titulo, ruta_relativa, id_extenso_existente])
                         id_extenso = id_extenso_existente
                     else:
                         cursor.execute("""
-                            INSERT INTO extenso (titulo, ruta_archivo, revisado, version_numero)
+                            INSERT INTO extenso (titulo, ruta_relativa, revisado, version_numero)
                             VALUES (%s, %s, FALSE, 1) RETURNING id_extenso
                         """, [titulo, ruta_relativa])
                         id_extenso = cursor.fetchone()[0]
