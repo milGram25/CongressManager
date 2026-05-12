@@ -490,14 +490,14 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                             <label className={labelClasses}>Enlace a videollamada</label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FaLink /></span>
-                                <input id="videollamada" type="url" className={`${inputClasses} pl-11 font-mono`} value={formatData.enlace_videollamada} onChange={handleChange} readOnly={!modificando} placeholder="e.g.: https://meet.google.com/" />
+                                <input id="enlace" type="url" className={`${inputClasses} pl-11 font-mono`} value={formatData.enlace || ''} onChange={handleChange} readOnly={!modificando} placeholder="e.g.: https://meet.google.com/" />
                             </div>
                         </div>
                         <div>
                             <label className={labelClasses}>Enlace/ruta a multimedia</label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><TbFileSymlink /></span>
-                                <input id="multimedia" type="text" className={`${inputClasses} pl-11 font-mono`} value={formatData.enlace_multimedia} onChange={handleChange} readOnly={!modificando} placeholder="e.g.: https://drive.google.com/drive/home" />
+                                <input id="enlace_multimedia" type="text" className={`${inputClasses} pl-11 font-mono`} value={formatData.enlace_multimedia || ''} onChange={handleChange} readOnly={!modificando} placeholder="e.g.: https://drive.google.com/drive/home" />
                             </div>
                         </div>
                         <div className="md:col-span-2">
