@@ -243,18 +243,28 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                     alert("Ponencia magistral creada con éxito");
                 }
             } else if (ponenciaData?.id) {
+                const payload = {
+                    ...formatData,
+                    ponente_principal: ponentePrincipal,
+                    coautores: coautores,
+                };
                 const res = await fetch(`${API_URL}/api/ponencias/lista/${ponenciaData.id}/`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(formatData)
+                    body: JSON.stringify(payload)
                 });
                 if (!res.ok) throw new Error('Error al actualizar la ponencia');
                 alert("Ponencia actualizada con éxito");
             } else {
-                await createPonenciaApi(accessToken, formatData);
+                const payload = {
+                    ...formatData,
+                    ponente_principal: ponentePrincipal,
+                    coautores: coautores,
+                };
+                await createPonenciaApi(accessToken, payload);
                 alert("Ponencia creada con éxito");
             }
 

@@ -187,21 +187,36 @@ class PonenciaViewSet(viewsets.ModelViewSet):
         data = request.data
         try:
             with transaction.atomic():
+                # Manejo seguro de cupos (puede venir vacio o ""), evita crash de int("")
+                try:
+                    cupos_val = int(data.get('cupos')) if data.get('cupos') not in (None, '') else instance.id_evento.cupos
+                except (ValueError, TypeError):
+                    cupos_val = instance.id_evento.cupos
+
+                # id_congreso: permitir cambiarlo si viene en el payload
+                id_congreso_raw = data.get('id_congreso')
+                try:
+                    id_congreso_nuevo = int(id_congreso_raw) if id_congreso_raw not in (None, '') else instance.id_evento.id_congreso_id
+                except (ValueError, TypeError):
+                    id_congreso_nuevo = instance.id_evento.id_congreso_id
+
                 with connection.cursor() as cursor:
-                    # 1. Actualizar Evento
+                    # 1. Actualizar Evento (incluye id_congreso)
                     cursor.execute("""
-                        UPDATE evento SET 
-                            nombre_evento = %s, id_mesas_trabajo = %s, 
-                            fecha_hora_inicio = %s, fecha_hora_final = %s, 
+                        UPDATE evento SET
+                            id_congreso = %s,
+                            nombre_evento = %s, id_mesas_trabajo = %s,
+                            fecha_hora_inicio = %s, fecha_hora_final = %s,
                             sinopsis = %s, cupos = %s, enlace = %s
                         WHERE id_evento = %s
                     """, [
+                        id_congreso_nuevo,
                         data.get('nombre_evento', instance.id_evento.nombre_evento),
                         clean_date(data.get('id_mesas_trabajo'), instance.id_evento.id_mesas_trabajo_id),
                         clean_date(data.get('fecha_hora_inicio'), instance.id_evento.fecha_hora_inicio),
                         clean_date(data.get('fecha_hora_final'), instance.id_evento.fecha_hora_final),
                         data.get('sinopsis', instance.id_evento.sinopsis),
-                        int(data.get('cupos', instance.id_evento.cupos)),
+                        cupos_val,
                         data.get('enlace', instance.id_evento.enlace),
                         instance.id_evento_id
                     ])
@@ -212,14 +227,64 @@ class PonenciaViewSet(viewsets.ModelViewSet):
 
                     # 3. Actualizar Ponencia
                     cursor.execute("""
-                        UPDATE ponencia SET 
+                        UPDATE ponencia SET
                             tipo_participacion = %s, id_subarea = %s
                         WHERE id_ponencia = %s
                     """, [
                         tipo_p, clean_date(data.get('id_subarea'), instance.id_subarea_id),
                         instance.id_ponencia
                     ])
-                
+
+                    # 4. Actualizar ponente principal y coautores (solo si vienen en el payload)
+                    if 'ponente_principal' in data or 'coautores' in data:
+                        # Borrar relaciones existentes para rehacerlas en el orden correcto
+                        cursor.execute("DELETE FROM ponente_has_ponencia WHERE id_ponencia = %s", [instance.id_ponencia])
+
+                        def _find_ponente_by_nombre(nombre_completo):
+                            """Busca id_ponente por nombre completo. Si la persona existe pero no es ponente, lo registra como ponente. Si la persona no existe, retorna None (se ignora)."""
+                            nombre_clean = (nombre_completo or '').strip()
+                            if not nombre_clean:
+                                return None
+                            cursor.execute("""
+                                SELECT id_persona FROM persona
+                                WHERE TRIM(CONCAT_WS(' ', nombre, primer_apellido, COALESCE(segundo_apellido, ''))) ILIKE %s
+                                LIMIT 1
+                            """, [nombre_clean])
+                            persona_row = cursor.fetchone()
+                            if not persona_row:
+                                return None
+                            id_persona = persona_row[0]
+                            cursor.execute("SELECT id_ponente FROM ponente WHERE id_persona = %s", [id_persona])
+                            ponente_row = cursor.fetchone()
+                            if ponente_row:
+                                return ponente_row[0]
+                            cursor.execute("INSERT INTO ponente (id_persona) VALUES (%s) RETURNING id_ponente", [id_persona])
+                            return cursor.fetchone()[0]
+
+                        # Insertar primero al ponente principal (queda como el "first" en queries del serializer)
+                        ponente_principal_nombre = (data.get('ponente_principal') or '').strip() if isinstance(data.get('ponente_principal'), str) else ''
+                        if ponente_principal_nombre:
+                            id_ponente = _find_ponente_by_nombre(ponente_principal_nombre)
+                            if id_ponente:
+                                cursor.execute("""
+                                    INSERT INTO ponente_has_ponencia (id_ponente, id_ponencia, asistio)
+                                    VALUES (%s, %s, FALSE)
+                                    ON CONFLICT (id_ponente, id_ponencia) DO NOTHING
+                                """, [id_ponente, instance.id_ponencia])
+
+                        # Insertar coautores
+                        coautores_list = data.get('coautores') or []
+                        if isinstance(coautores_list, list):
+                            for nombre in coautores_list:
+                                if isinstance(nombre, str):
+                                    id_ponente = _find_ponente_by_nombre(nombre)
+                                    if id_ponente:
+                                        cursor.execute("""
+                                            INSERT INTO ponente_has_ponencia (id_ponente, id_ponencia, asistio)
+                                            VALUES (%s, %s, FALSE)
+                                            ON CONFLICT (id_ponente, id_ponencia) DO NOTHING
+                                        """, [id_ponente, instance.id_ponencia])
+
                 instance.refresh_from_db()
                 res_data = self.get_serializer(instance).data
                 res_data['id'] = instance.id_ponencia
