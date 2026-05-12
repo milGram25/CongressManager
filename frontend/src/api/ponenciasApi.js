@@ -193,3 +193,85 @@ export async function subirExtensoApi(accessToken, idResumen, archivo) {
   if (!res.ok) throw new Error(data.detail || 'Error al subir el extenso');
   return data;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  NUEVAS — Detalle completo de resúmenes y extensos
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Lista enriquecida de resúmenes de un congreso.
+ * Devuelve: título, autores, dictaminador, estatus, fecha_entrega, calificación parcial.
+ * Úsala en ProcesosResumenesView en lugar de getResumenesCongreso si quieres los campos extras.
+ */
+export async function getResumenesPorCongresoApi(accessToken, idCongreso) {
+  const res = await fetch(`${API_URL}/api/ponencias/congresos/${idCongreso}/resumenes/`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error cargando resúmenes del congreso');
+  return res.json();
+}
+
+/**
+ * Detalle completo de un resumen.
+ * Devuelve: preguntas del dictamen, si cada una fue aprobada, comentario específico,
+ * retroalimentación general, fecha de entrega, fecha de revisión y calificación final
+ * (preguntas aprobadas / preguntas totales).
+ */
+export async function getResumenDetalleApi(accessToken, idResumen) {
+  const res = await fetch(`${API_URL}/api/ponencias/resumenes/${idResumen}/detalle/`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error cargando detalle del resumen');
+  return res.json();
+}
+
+/**
+ * Lista enriquecida de extensos de un congreso.
+ * Devuelve: título, autores, evaluadores (1-3), versión, fechas, calificación parcial.
+ * Úsala en ProcesosExtensosView en lugar de getExtensosCongreso si quieres los campos extras.
+ */
+export async function getExtensosPorCongresoApi(accessToken, idCongreso) {
+  const res = await fetch(`${API_URL}/api/ponencias/congresos/${idCongreso}/extensos/`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error cargando extensos del congreso');
+  return res.json();
+}
+
+/**
+ * Detalle completo de un extenso.
+ * Devuelve: grupos de rúbrica, criterios con puntaje y comentario específico,
+ * retroalimentación general, fecha de subida, fecha de revisión, número de versión
+ * y calificación final (puntos obtenidos / puntos totales por peso).
+ */
+export async function getExtensoDetalleApi(accessToken, idExtenso) {
+  const res = await fetch(`${API_URL}/api/ponencias/extensos/${idExtenso}/detalle/`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error cargando detalle del extenso');
+  return res.json();
+}
+
+/**
+ * Asigna un evaluador a un slot específico (1, 2 o 3) de un extenso.
+ * @param {number} slot - 1, 2 o 3
+ */
+export async function asignarEvaluadorSlotApi(accessToken, idExtenso, idEvaluador, slot) {
+  const res = await fetch(`${API_URL}/api/ponencias/extensos/${idExtenso}/asignar-evaluador/`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id_evaluador: idEvaluador, slot }),
+  });
+  if (!res.ok) throw new Error('Error asignando evaluador');
+  return res.json();
+}
+
+/**
+ * Devuelve la URL para descargar el PDF de un extenso.
+ * Úsala como href en un <a> o pásala a window.open().
+ * Ejemplo:
+ *   <a href={getExtensoDownloadUrl(id)} download>Descargar extenso</a>
+ */
+export function getExtensoDownloadUrl(idExtenso) {
+  return `${API_URL}/api/ponencias/extensos/${idExtenso}/descargar/`;
+}
