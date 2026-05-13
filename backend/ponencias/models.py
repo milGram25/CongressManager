@@ -1,6 +1,6 @@
 from django.db import models
 from users.models import Asistente, Ponente, Dictaminador, Evaluador
-from congresos.models import Evento, Subarea, RubricaCriterio
+from congresos.models import Evento, Subarea, RubricaCriterio, Congreso
 
 class Ponencia(models.Model):
     id_ponencia = models.AutoField(primary_key=True)
@@ -124,3 +124,29 @@ class EvaluacionCriterio(models.Model):
     class Meta:
         managed = False
         db_table = 'evaluacion_criterio'
+
+
+class PonenciaMagistral(models.Model):
+    id_ponencia_magistral = models.AutoField(primary_key=True)
+    titulo = models.CharField(max_length=255)
+    tipo_participacion = models.CharField(max_length=50)  # 'presencial', 'virtual', 'hibrida'
+    id_subarea = models.ForeignKey(Subarea, models.DO_NOTHING, db_column='id_subarea')
+    fecha_inicio = models.DateTimeField(blank=True, null=True)
+    fecha_fin = models.DateTimeField(blank=True, null=True)
+    id_congreso = models.ForeignKey(Congreso, models.DO_NOTHING, db_column='id_congreso', related_name='ponencias_magistrales')
+    id_multimedia = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'ponencia_magistral'
+
+
+class PonenciaMagistralHasPonentemagistral(models.Model):
+    id_ponencia_magistral_has_ponente_magistral = models.AutoField(primary_key=True)
+    nombre_persona = models.CharField(max_length=100)
+    id_ponencia_magistral = models.ForeignKey(PonenciaMagistral, models.DO_NOTHING, db_column='id_ponencia_magistral', related_name='ponentes')
+    es_principal = models.BooleanField(default=False)
+
+    class Meta:
+        managed = False
+        db_table = 'ponencia_magistral_has_ponente_magistral'

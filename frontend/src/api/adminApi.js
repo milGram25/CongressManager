@@ -228,7 +228,7 @@ export async function getTalleresApi(accessToken, idCongreso = null) {
 
 export async function getPonenciasApi(accessToken, idCongreso = null) {
   let url = `${API_URL}/api/ponencias/lista/`;
-  if (idCongreso!==null && idCongreso !==undefined) url += `?id_congreso=${idCongreso}`;
+  if (idCongreso !== null && idCongreso !== undefined) url += `?id_congreso=${idCongreso}`;
   const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
   if (!res.ok) throw new Error('Error al obtener ponencias.');
   return res.json();
@@ -564,5 +564,49 @@ export async function transferPonenciaApi(accessToken, idPonencia, idLibroDestin
     body: JSON.stringify({ id_libro: idLibroDestino }),
   });
   if (!res.ok) throw new Error('Error al transferir ponencia.');
+  return res.json();
+}
+
+// Ponencias Magistrales
+export async function getPonenciasMagistralesApi(accessToken, idCongreso = null) {
+  let url = `${API_URL}/api/ponencias/magistrales/`;
+  if (idCongreso) url += `?id_congreso=${idCongreso}`;
+  const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener ponencias magistrales.');
+  return res.json();
+}
+
+export async function getPonenciaMagistralByIdApi(accessToken, id) {
+  const res = await fetch(`${API_URL}/api/ponencias/magistrales/${id}/`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener ponencia magistral.');
+  return res.json();
+}
+
+export async function createPonenciaMagistralApi(accessToken, data) {
+  const res = await fetch(`${API_URL}/api/ponencias/magistrales/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  const resData = await res.json();
+  if (!res.ok) throw new Error(resData.detail || 'Error al crear ponencia magistral.');
+  return resData;
+}
+
+export async function updatePonenciaMagistralApi(accessToken, id, data) {
+  const res = await fetch(`${API_URL}/api/ponencias/magistrales/${id}/`, {
+    method: 'PUT',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  const resData = await res.json();
+  if (!res.ok) throw new Error(resData.detail || 'Error al actualizar ponencia magistral.');
+  return resData;
+}
+
+// Nombres de ponentes para autocompletado
+export async function getPonentesNombresApi(accessToken) {
+  const res = await fetch(`${API_URL}/api/ponencias/ponentes-nombres/`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener nombres de ponentes.');
   return res.json();
 }

@@ -71,7 +71,11 @@ const TarjetaGenerica = ({
                         } else if (definirTipoElemento === 'taller') {
                             navigate(`/admin/eventos/talleres/detalles/${indexDatosModal}`);
                         } else if (definirTipoElemento === 'ponencia') {
-                            navigate(`/admin/eventos/ponencias/detalles/${indexDatosModal}`);
+                            if (itemData?.tipo_ponencia === 'magistral') {
+                                navigate(`/admin/eventos/ponencias/detalles/${itemData.id_ponencia_magistral}?tipo=magistral`);
+                            } else {
+                                navigate(`/admin/eventos/ponencias/detalles/${indexDatosModal}`);
+                            }
                         } else {
                             if (onView) onView();
                             else setOpenModal(true);
@@ -82,14 +86,16 @@ const TarjetaGenerica = ({
                     <FiEye size={16} />
                 </button>
 
-                {botonPublicarTexto && (
+                {/* eliminé el botón de publicar porque se supone que si se crea, ya está publicado (por lo menos no hay campo en la base de datos que gestione si ya está o no publicado)
+                
+                botonPublicarTexto && (
                     <button
                         onClick={onPublish}
                         className="bg-primary text-primary-content text-[10px] font-black  tracking-widest px-4 py-2 rounded-full hover:brightness-110 transition-all active:scale-95 shadow-lg shadow-primary/20"
                     >
                         {botonPublicarTexto}
                     </button>
-                )}
+                )*/}
 
                 <div className="flex items-center gap-2">
                     {/*<button 
@@ -109,7 +115,11 @@ const TarjetaGenerica = ({
                             } else if (definirTipoElemento === 'taller') {
                                 navigate(`/admin/eventos/talleres/detalles/${indexDatosModal}?edit=true`);
                             } else if (definirTipoElemento === 'ponencia') {
-                                navigate(`/admin/eventos/ponencias/detalles/${indexDatosModal}?edit=true`);
+                                if (itemData?.tipo_ponencia === 'magistral') {
+                                    navigate(`/admin/eventos/ponencias/detalles/${itemData.id_ponencia_magistral}?tipo=magistral&edit=true`);
+                                } else {
+                                    navigate(`/admin/eventos/ponencias/detalles/${indexDatosModal}?edit=true`);
+                                }
                             } else {
                                 if (onEdit) onEdit();
                                 else setOpenModal(true);

@@ -1,5 +1,6 @@
 import React from 'react';
 import { FiAward, FiUser, FiCalendar, FiClock, FiUsers } from 'react-icons/fi';
+import { LuCrown } from "react-icons/lu";
 import TarjetaGenerica from './TarjetaGenerica';
 
 const ItemPonencia = ({ listaDatos, onViewItem }) => {
@@ -10,7 +11,7 @@ const ItemPonencia = ({ listaDatos, onViewItem }) => {
     const fecha_fin = listaDatos.fecha_hora_final ? listaDatos.fecha_hora_final.split("T")[0] : "N/A";
     const hora_fin = listaDatos.fecha_hora_final ? listaDatos.fecha_hora_final.split("T")[1].substring(0, 5) : "N/A";
 
-    const Row = ({ icon: Icon, label, value }) => (
+    const Row = ({ icon: Icon, label, value, styleRow = "" }) => (
         <div className="flex items-center justify-between gap-6 mb-3">
             <div className="flex items-center gap-3 text-base-content/60 min-w-[120px]">
                 <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center shrink-0 shadow-md">
@@ -18,8 +19,8 @@ const ItemPonencia = ({ listaDatos, onViewItem }) => {
                 </div>
                 <span className="text-[11px] font-black uppercase tracking-[0.1em]">{label}</span>
             </div>
-            <div className="bg-base-200/50 border border-base-300 rounded-xl px-4 py-2 text-sm font-bold text-base-content text-center flex-1 break-words leading-tight">
-                {value}
+            <div className={`h-9 bg-base-200/50 border border-base-300 rounded-xl px-4 py-2 text-sm font-bold text-base-content text-center flex-1 break-words leading-tight ${styleRow}`}>
+                {(value !== null && value !== undefined) ? value : "No hay datos"}
             </div>
         </div>
     );
@@ -41,8 +42,8 @@ const ItemPonencia = ({ listaDatos, onViewItem }) => {
     );
 
     return (
-        <TarjetaGenerica 
-            titulo={listaDatos.nombre_evento || "Sin título"} 
+        <TarjetaGenerica
+            titulo={listaDatos.nombre_evento || "Sin título"}
             botonPublicarTexto="Publicar"
             definirTipoElemento="ponencia"
             indexDatosModal={listaDatos.id}
@@ -51,8 +52,9 @@ const ItemPonencia = ({ listaDatos, onViewItem }) => {
             onEdit={() => onViewItem && onViewItem(listaDatos)}
         >
             <Row icon={FiAward} label="Congreso" value={listaDatos.nombre_congreso} />
-            <Row icon={FiUser} label="Ponente" value={listaDatos.nombre_ponente || "No asignado"} />
+            <Row icon={FiUser} label="Ponente" value={listaDatos.nombre_ponente || listaDatos.ponente_principal || "No asignado"} />
             <Row icon={FiUsers} label="Cupos" value={listaDatos.cupos} />
+            <Row icon={LuCrown} label="Tipo de ponencia" value={listaDatos.tipo_ponencia.charAt(0).toUpperCase() + listaDatos.tipo_ponencia.slice(1)} styleRow={listaDatos.tipo_ponencia?.toLowerCase() === "magistral" ? "text-yellow-500" : ""} />
 
             <div className="mt-4 space-y-3">
                 <DateTimeBox label="Inicio" date={fecha_inicio} time={hora_inicio} />
