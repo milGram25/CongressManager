@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMisPonenciasPonenteApi } from '../../api/ponenciasApi';
+import { getMisPonenciasPonenteApi, buildMediaUrl } from '../../api/ponenciasApi';
 
 const ESTADO_CONFIG = {
   pendiente_dictaminacion: { label: 'En espera de dictamen', border: 'border-l-gray-400', dot: 'bg-gray-400', text: 'text-gray-500' },
@@ -26,11 +26,22 @@ function PonenciaCard({ ponencia }) {
           <h3 className="text-lg font-semibold text-slate-700 leading-tight mb-1 truncate">{ponencia.titulo}</h3>
           <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter">ID: {ponencia.id_ponencia}</p>
         </div>
-        <div className="flex-shrink-0 flex gap-2">
+        <div className="flex-shrink-0 flex flex-wrap gap-2">
           {ponencia.estado === 'pendiente_extenso' && (
-            <button className="btn btn-primary btn-sm rounded-lg" onClick={() => navigate(`/asistente/subir-extenso/${ponencia.id_resumen}`)}>
-              Subir Extenso
-            </button>
+            <>
+              {ponencia.ruta_formato && (
+                <a
+                  href={buildMediaUrl(ponencia.ruta_formato)}
+                  download
+                  className="btn btn-outline btn-sm rounded-lg gap-1"
+                >
+                  Descargar formato
+                </a>
+              )}
+              <button className="btn btn-primary btn-sm rounded-lg" onClick={() => navigate(`/asistente/subir-extenso/${ponencia.id_resumen}`)}>
+                Subir Extenso
+              </button>
+            </>
           )}
           {ponencia.estado === 'con_modificaciones' && (
             <>

@@ -1262,7 +1262,8 @@ class EstatusPonenteView(APIView):
                     e.enlace,
                     cong.nombre_congreso,
                     p.tipo_participacion,
-                    m.nombre AS lugar
+                    m.nombre AS lugar,
+                    ttf.ruta_formato
                 FROM ponente_has_ponencia php
                 JOIN ponencia p ON php.id_ponencia = p.id_ponencia
                 LEFT JOIN evento e ON p.id_evento = e.id_evento
@@ -1272,13 +1273,14 @@ class EstatusPonenteView(APIView):
                 LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
                 LEFT JOIN resumen r ON p.id_resumen = r.id_resumen
                 LEFT JOIN extenso ext ON p.id_extenso = ext.id_extenso
+                LEFT JOIN tipo_trabajo_formato ttf ON e.id_tipo_trabajo = ttf.id_tipo_trabajo
                 WHERE php.id_ponente = %s
                 ORDER BY p.id_ponencia
             """, [id_ponente])
             cols = ['id_ponencia','titulo','tipo_ponencia','id_resumen','resumen_revisado',
                     'resumen_estatus','resumen_retroalimentacion','id_extenso','extenso_revisado',
                     'id_evaluador','id_evaluador_2','id_evaluador_3',
-                    'nombre_evento','fecha_hora_inicio','fecha_hora_final','sinopsis','cupos','enlace','nombre_congreso','tipo_participacion','lugar']
+                    'nombre_evento','fecha_hora_inicio','fecha_hora_final','sinopsis','cupos','enlace','nombre_congreso','tipo_participacion','lugar','ruta_formato']
             ponencias = [dict(zip(cols, row)) for row in c.fetchall()]
 
             if not ponencias:
@@ -1360,6 +1362,7 @@ class EstatusPonenteView(APIView):
                 'id_resumen': p['id_resumen'],
                 'id_extenso': p['id_extenso'],
                 'tipo_participacion': p['tipo_participacion'],
+                'ruta_formato': p['ruta_formato'],
                 'evento': {
                     'nombre': p['nombre_evento'],
                     'fecha_inicio': fecha_inicio.isoformat() if fecha_inicio else None,
