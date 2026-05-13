@@ -53,7 +53,7 @@ import CongresoListaView from "./views/admin/CongresoListaView";
 import CongresoDetallesView from "./views/admin/CongresoDetallesView";
 import CongresoCrearView from "./views/admin/CongresoCrearView";
 import CongresoSedeView from "./views/admin/CongresoSedeView";
-import CongresoFechasView from "./views/admin/CongresoFechasView";
+
 import CongresoTiposTrabajoView from "./views/admin/CongresoTiposTrabajoView";
 
 import LibrosView from "./views/admin/LibrosView";
@@ -102,7 +102,7 @@ const AsistenteLayoutWrapper = () => {
         type: 'role-icons',
         roles: [
           ...(user?.rol === 'administrador' ? [
-            { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
+            { to: '/admin/agenda', label: 'Admin', icon: MdAdminPanelSettings },
             { to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview },
             { to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel },
           ] : [
@@ -138,7 +138,7 @@ const PonenteLayoutWrapper = () => {
         type: 'role-icons',
         roles: [
           ...(user?.rol === 'administrador' ? [
-            { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
+            { to: '/admin/agenda', label: 'Admin', icon: MdAdminPanelSettings },
             { to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview },
             { to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel },
           ] : [
@@ -177,7 +177,7 @@ const AdminLayoutWrapper = () => {
       ]
     },
 
-    { to: '/admin/dashboard', label: 'Dashboard', icon: MdDashboard },
+
     { to: '/admin/agenda', label: 'Agenda', icon: MdCalendarMonth },
 
     // Procesos con sub-menú dinámico
@@ -228,7 +228,7 @@ const RevisorLayoutWrapper = () => {
       type: 'role-icons',
       roles: [
         ...(user?.rol === 'administrador' ? [
-          { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
+          { to: '/admin/agenda', label: 'Admin', icon: MdAdminPanelSettings },
           { to: '/asistente/congresos', label: 'Asistente', icon: MdPerson },
           { to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel },
         ] : [
@@ -252,7 +252,7 @@ const DictaminadorLayoutWrapper = () => {
       type: 'role-icons',
       roles: [
         ...(user?.rol === 'administrador' ? [
-          { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
+          { to: '/admin/agenda', label: 'Admin', icon: MdAdminPanelSettings },
           { to: '/asistente/congresos', label: 'Asistente', icon: MdPerson },
           { to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview },
         ] : [
@@ -376,8 +376,9 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<DashboardView />} />
+            {/*<Route index element={<Navigate to="dashboard" replace />} />*/}
+            <Route index element={<Navigate to="agenda" replace />} />
+            {/*<Route path="dashboard" element={<DashboardView />} />*/}
             <Route path="agenda" element={<AdminAgendaView />} />
             <Route path="procesos">
               <Route index element={<ProcesosView />} />
@@ -403,7 +404,7 @@ function App() {
                 <Route path="crear" element={<CongresoCrearView />} />
                 <Route path="detalles/:id" element={<CongresoDetallesView />} />
                 <Route path="sede" element={<CongresoSedeView />} />
-                <Route path="fechas" element={<CongresoFechasView />} />
+
                 <Route path="tipos-trabajo/:id" element={<CongresoTiposTrabajoView />} />
                 <Route path="libros" element={<LibrosView title="Gestión de Libros" />} />
               </Route>

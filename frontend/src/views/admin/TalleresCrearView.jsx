@@ -50,7 +50,7 @@ const TalleresCrearView = () => {
             {/* Botones de acción adicionales al final */}
             <div className="flex justify-end gap-4">
                 <button
-                    onClick={() => navigate('/admin/eventos/congresos/lista')}
+                    onClick={() => navigate(-1)}
                     className="px-8 py-3 rounded-xl border border-base-300 text-base-content/60 font-bold hover:bg-base-200 transition-all active:scale-95 uppercase tracking-wider text-xs"
                 >
                     Cancelar

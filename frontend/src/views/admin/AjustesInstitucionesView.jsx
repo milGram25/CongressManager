@@ -34,10 +34,10 @@ export default function AjustesInstitucionesView() {
 
   return (
     <div className="bg-base-100 p-8 rounded-3xl border border-base-300 shadow-sm min-h-[400px]">
-      <MenuCrearBorrar 
-        title="Gestión de Instituciones" 
-        listaElementos2={instituciones} 
-        definirTipoElemento="institucion" 
+      <MenuCrearBorrar
+        title="Gestión de instituciones"
+        listaElementos2={instituciones}
+        definirTipoElemento="institucion"
       />
     </div>
   );

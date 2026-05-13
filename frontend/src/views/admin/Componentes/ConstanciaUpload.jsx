@@ -75,7 +75,7 @@ export default function ConstanciaUpload({ selectedUser, signatures = {}, isSign
           { type: "application/pdf" }
         );
       }
-      await uploadConstanciaApi(accessToken, selectedUser.id, idCongreso, fileToUpload, selectedUser.rol);
+      await uploadConstanciaApi(accessToken, selectedUser.id_persona, idCongreso, fileToUpload, selectedUser.rol);
       setIsProcessing(false);
       setShowModal(false);
       setFile(null);

@@ -1,25 +1,41 @@
 import os
+import sys
 import django
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth.hashers import make_password
 from django.db import connection
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+# 1. Get the absolute path to the 'backend' directory
+# Since you are in /database/datos.py, the backend is likely at ../backend
+base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend"))
+
+# 2. Add the backend directory to sys.path so 'core' can be found
+if base_dir not in sys.path:
+    sys.path.append(base_dir)
+
+# 3. Point to your settings (replace 'core.settings' if your folder name is different)
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
+
+# 4. Initialize Django
 django.setup()
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
+django.setup()
+
 
 def populate():
     print("Iniciando población de la base de datos mediante SQL crudo...")
-    
-    password_hash_admin = make_password('admin123')
-    password_hash_evaluador = make_password('evaluador123')
-    password_hash_dictaminador = make_password('dictaminador123')
-    password_hash_ponente = make_password('ponente123')
-    password_hash_asistente = make_password('asistente123')
-    
+
+    password_hash_admin = make_password("admin123")
+    password_hash_evaluador = make_password("evaluador123")
+    password_hash_dictaminador = make_password("dictaminador123")
+    password_hash_ponente = make_password("ponente123")
+    password_hash_asistente = make_password("asistente123")
+
     now = timezone.now()
-    now_str = now.strftime('%Y-%m-%d %H:%M:%S')
-    
+    now_str = now.strftime("%Y-%m-%d %H:%M:%S")
+
     with connection.cursor() as cursor:
         # 1. Institucion
         cursor.execute("""
@@ -38,13 +54,19 @@ def populate():
         id_sede = cursor.fetchone()[0]
 
         # 3. Areas Generales y Subareas
-        cursor.execute("INSERT INTO areas_generales (nombre) VALUES ('Ciencias de la Computación') RETURNING id_areas_generales;")
+        cursor.execute(
+            "INSERT INTO areas_generales (nombre) VALUES ('Ciencias de la Computación') RETURNING id_areas_generales;"
+        )
         id_area_cs = cursor.fetchone()[0]
-        
-        cursor.execute("INSERT INTO areas_generales (nombre) VALUES ('Ingeniería') RETURNING id_areas_generales;")
+
+        cursor.execute(
+            "INSERT INTO areas_generales (nombre) VALUES ('Ingeniería') RETURNING id_areas_generales;"
+        )
         id_area_ing = cursor.fetchone()[0]
-        
-        cursor.execute(f"INSERT INTO subareas (nombre, id_area_general) VALUES ('Inteligencia Artificial', {id_area_cs}) RETURNING id_subareas;")
+
+        cursor.execute(
+            f"INSERT INTO subareas (nombre, id_area_general) VALUES ('Inteligencia Artificial', {id_area_cs}) RETURNING id_subareas;"
+        )
         id_subarea_ia = cursor.fetchone()[0]
 
         # 4. Costos
@@ -56,9 +78,9 @@ def populate():
         id_costos = cursor.fetchone()[0]
 
         # 5. Fechas
-        f_inicio_evento = (now + timedelta(days=60)).strftime('%Y-%m-%d %H:%M:%S')
-        f_final_evento = (now + timedelta(days=65)).strftime('%Y-%m-%d %H:%M:%S')
-        
+        f_inicio_evento = (now + timedelta(days=60)).strftime("%Y-%m-%d %H:%M:%S")
+        f_final_evento = (now + timedelta(days=65)).strftime("%Y-%m-%d %H:%M:%S")
+
         cursor.execute(f"""
             INSERT INTO fechas_congreso (
                 fecha_inicio_evento, fecha_final_evento, 
@@ -91,7 +113,9 @@ def populate():
         id_congreso = cursor.fetchone()[0]
 
         # 7. Tipo de Trabajo
-        cursor.execute(f"INSERT INTO tipo_trabajo (id_congreso, tipo_trabajo) VALUES ({id_congreso}, 'Ponencia') RETURNING id_tipo_trabajo;")
+        cursor.execute(
+            f"INSERT INTO tipo_trabajo (id_congreso, tipo_trabajo) VALUES ({id_congreso}, 'Ponencia') RETURNING id_tipo_trabajo;"
+        )
         id_tipo_ponencia = cursor.fetchone()[0]
 
         # 8. Mesas de Trabajo
@@ -108,7 +132,7 @@ def populate():
             VALUES ({id_congreso}, 'Sesión de Ponencias: Machine Learning', 'ponencia', {id_tipo_ponencia}, {id_mesas_trabajo}, '{f_inicio_evento}', '{f_final_evento}', 'Presentación de trabajos recientes en ML.', 50)
             RETURNING id_evento;
         """)
-        
+
         # 10. Personas y Roles
         # Admin
         cursor.execute(f"""
@@ -125,7 +149,9 @@ def populate():
         res = cursor.fetchone()
         if res:
             cursor.execute(f"INSERT INTO evaluador (id_persona) VALUES ({res[0]});")
-            cursor.execute(f"INSERT INTO evaluador_congreso (id_persona, id_congreso) VALUES ({res[0]}, {id_congreso});")
+            cursor.execute(
+                f"INSERT INTO evaluador_congreso (id_persona, id_congreso) VALUES ({res[0]}, {id_congreso});"
+            )
 
         # Dictaminador
         cursor.execute(f"""
@@ -136,7 +162,9 @@ def populate():
         res = cursor.fetchone()
         if res:
             cursor.execute(f"INSERT INTO dictaminador (id_persona) VALUES ({res[0]});")
-            cursor.execute(f"INSERT INTO dictaminador_congreso (id_persona, id_congreso) VALUES ({res[0]}, {id_congreso});")
+            cursor.execute(
+                f"INSERT INTO dictaminador_congreso (id_persona, id_congreso) VALUES ({res[0]}, {id_congreso});"
+            )
 
         # Ponente
         cursor.execute(f"""
@@ -156,7 +184,9 @@ def populate():
         """)
         res = cursor.fetchone()
         if res:
-            cursor.execute(f"INSERT INTO asistente (id_persona, institucion_procedencia) VALUES ({res[0]}, 'UNAM');")
+            cursor.execute(
+                f"INSERT INTO asistente (id_persona, institucion_procedencia) VALUES ({res[0]}, 'UNAM');"
+            )
 
     print("¡Base de datos poblada exitosamente con datos de prueba!")
     print("Usuarios creados:")
@@ -166,5 +196,6 @@ def populate():
     print("- ponente@congreso.com / ponente123")
     print("- asistente@congreso.com / asistente123")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     populate()

@@ -154,7 +154,7 @@ export default function UsuariosFacturasView() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-4 max-h-[480px]">
               {loading ? (
                 <div className="flex justify-center py-16">
                   <span className="loading loading-spinner loading-lg text-[#005a6a]" />

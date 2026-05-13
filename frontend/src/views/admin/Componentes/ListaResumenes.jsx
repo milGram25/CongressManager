@@ -339,7 +339,7 @@ export default function ListaResumenes({ listaElementos = [], dictaminadores = [
       <div className="space-y-4 px-4 pb-4 pt-3 md:px-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-[280px]">
-            <h3 className="text-[30px] font-black tracking-tight text-slate-900">RESÚMENES</h3>
+            <h3 className="text-[30px] font-black tracking-tight text-slate-900">Resúmenes</h3>
             <p className="mt-1 text-xs leading-5 text-slate-500">
               Aquí puede encontrar todos los resúmenes.
               <br />
@@ -393,7 +393,7 @@ export default function ListaResumenes({ listaElementos = [], dictaminadores = [
         </div>
 
         <div className="flex items-center justify-between border-t border-slate-200 pt-3">
-          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Lista disponible</span>
+          <span className="text-xs  tracking-[0.18em] text-slate-400">Lista disponible</span>
           <span className="text-xs font-medium text-slate-400">{listaFiltrada.length} resultado(s)</span>
         </div>
 

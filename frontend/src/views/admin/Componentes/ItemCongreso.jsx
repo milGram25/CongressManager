@@ -72,26 +72,26 @@ const ItemCongreso = ({ listaDatos }) => {
             <div className="mt-6 pt-4 border-t border-base-300 space-y-3">
                 {/* Botón de Eventos con Dropdown */}
                 <div className="dropdown dropdown-top w-full">
-                    <div 
-                        tabIndex={0} 
-                        role="button" 
-                        className="w-full flex items-center justify-center gap-3 py-3 bg-base-200 text-base-content hover:bg-base-300 rounded-2xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer shadow-sm active:scale-95"
+                    <div
+                        tabIndex={0}
+                        role="button"
+                        className="w-full flex items-center justify-center gap-3 py-3 bg-base-200 text-base-content hover:bg-base-300 rounded-2xl text-sm font-black  tracking-widest transition-all cursor-pointer shadow-sm active:scale-95"
                     >
                         <FiFileText size={16} /> Eventos <FiChevronDown />
                     </div>
                     <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow-xl bg-base-100 rounded-2xl w-full mb-2 border border-base-300">
                         <li>
-                            <button 
+                            <button
                                 onClick={() => navigate(`/admin/eventos/talleres?id_congreso=${listaDatos.id_congreso}`)}
-                                className="flex items-center gap-2 py-3 font-bold text-xs uppercase"
+                                className="flex items-center gap-2 py-3 font-bold text-sm"
                             >
                                 Talleres
                             </button>
                         </li>
                         <li>
-                            <button 
+                            <button
                                 onClick={() => navigate(`/admin/eventos/ponencias?id_congreso=${listaDatos.id_congreso}`)}
-                                className="flex items-center gap-2 py-3 font-bold text-xs uppercase"
+                                className="flex items-center gap-2 py-3 font-bold text-sm"
                             >
                                 Ponencias
                             </button>
@@ -100,12 +100,12 @@ const ItemCongreso = ({ listaDatos }) => {
                 </div>
 
                 {/* Acceso a Configuración Académica */}
-                <button 
+                <button
                     onClick={(e) => {
                         e.stopPropagation();
                         navigate(`/admin/eventos/congresos/tipos-trabajo/${listaDatos.id_congreso}`);
                     }}
-                    className="w-full flex items-center justify-center gap-3 py-3 bg-black text-white hover:bg-[#005a6a] rounded-2xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer shadow-lg active:scale-95"
+                    className="w-full flex items-center justify-center gap-3 py-3 bg-black text-white hover:bg-[#005a6a] rounded-2xl text-sm font-black  tracking-widest transition-all cursor-pointer shadow-lg active:scale-95"
                 >
                     <FiSettings size={16} /> Configuración Académica
                 </button>

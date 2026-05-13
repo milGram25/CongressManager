@@ -1,17 +1,102 @@
 import { useEffect, useState } from "react";
 import ListaResumenes from "./Componentes/ListaResumenes";
 import { getCongresosApi, getDictaminadoresDisponiblesApi } from "../../api/adminApi";
-import { getResumenesCongreso, asignarDictaminadorApi } from "../../api/ponenciasApi";
+import { getResumenesCongreso, asignarDictaminadorApi, getResumenDetalleApi } from "../../api/ponenciasApi";
 import BuscadorPersonal from "./Componentes/BuscadorPersonal";
+
+function PreguntasDictamen({ dictamen }) {
+  if (!dictamen)
+    return <p className="text-xs italic text-slate-400">Sin dictamen registrado aún.</p>;
+
+  return (
+    <div className="space-y-3">
+      {dictamen.calificacion_final && (
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Calificación final:
+          </span>
+          <span className="badge badge-primary badge-sm font-bold">
+            {dictamen.calificacion_final}
+          </span>
+        </div>
+      )}
+
+      {dictamen.retroalimentacion_general && (
+        <div className="bg-base-200 rounded-xl px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">
+            Retroalimentación general
+          </p>
+          <p className="text-sm text-slate-700">{dictamen.retroalimentacion_general}</p>
+        </div>
+      )}
+
+      {dictamen.fecha_revision && (
+        <p className="text-xs text-slate-400">
+          Revisado el{" "}
+          <span className="font-medium text-slate-600">
+            {new Date(dictamen.fecha_revision).toLocaleDateString("es-MX", {
+              year: "numeric", month: "long", day: "numeric",
+            })}
+          </span>
+        </p>
+      )}
+
+      {dictamen.preguntas?.length > 0 && (
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+            Preguntas evaluadas
+          </p>
+          <ul className="space-y-2">
+            {dictamen.preguntas.map((p) => (
+              <li
+                key={p.id_pregunta}
+                className={`rounded-xl px-4 py-2.5 border text-sm ${
+                  p.aprobada ? "bg-success/5 border-success/30" : "bg-error/5 border-error/30"
+                }`}
+              >
+                <div className="flex items-start gap-2">
+                  <span
+                    className={`mt-0.5 shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold ${
+                      p.aprobada ? "bg-success" : "bg-error"
+                    }`}
+                  >
+                    {p.aprobada ? "✓" : "✗"}
+                  </span>
+                  <div className="flex-1">
+                    <p className="font-medium text-slate-700 leading-snug">{p.pregunta}</p>
+                    {p.comentario && (
+                      <p className="text-xs text-slate-500 mt-0.5 italic">{p.comentario}</p>
+                    )}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function AsignarDictaminadorCard({ resumen, dictaminadores, onAsignado }) {
   const [sel, setSel] = useState('');
   const [assigning, setAssigning] = useState(false);
   const [msg, setMsg] = useState(null);
+  const [detalle, setDetalle] = useState(null);
+  const [loadingDetalle, setLoadingDetalle] = useState(false);
 
   useEffect(() => {
     setSel(resumen?.id_dictaminador ? String(resumen.id_dictaminador) : '');
     setMsg(null);
+    setDetalle(null);
+
+    if (!resumen?.id_resumen) return;
+
+    setLoadingDetalle(true);
+    getResumenDetalleApi(localStorage.getItem('congress_access'), resumen.id_resumen)
+      .then(setDetalle)
+      .catch(console.error)
+      .finally(() => setLoadingDetalle(false));
   }, [resumen?.id_resumen]);
 
   if (!resumen) return (
@@ -36,6 +121,9 @@ function AsignarDictaminadorCard({ resumen, dictaminadores, onAsignado }) {
     }
   };
 
+  const fmtDate = (iso) =>
+    iso ? new Date(iso).toLocaleDateString("es-MX", { year: "numeric", month: "long", day: "numeric" }) : null;
+
   return (
     <article className="rounded-[26px] border border-black/55 bg-white shadow-sm">
       <header className="bg-black px-6 py-4 rounded-t-[25px]">
@@ -50,8 +138,23 @@ function AsignarDictaminadorCard({ resumen, dictaminadores, onAsignado }) {
           </div>
         )}
 
+        <section className="grid grid-cols-2 gap-4">
+          <div>
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-0.5">Fecha de entrega</h4>
+            <p className="text-sm text-slate-700">
+              {fmtDate(detalle?.fecha_entrega) ?? <span className="italic text-slate-400">—</span>}
+            </p>
+          </div>
+          <div>
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-0.5">Fecha de revisión</h4>
+            <p className="text-sm text-slate-700">
+              {fmtDate(detalle?.fecha_revision) ?? <span className="italic text-slate-400">Pendiente</span>}
+            </p>
+          </div>
+        </section>
+
         <section>
-          <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700 mb-1">Dictaminador actual</h4>
+          <h4 className=" font-semibold  tracking-wide text-slate-700 mb-1">Dictaminador actual</h4>
           <p className="text-sm text-slate-600">
             {resumen.nombre_dictaminador
               ? <span className="font-semibold">{resumen.nombre_dictaminador}</span>
@@ -61,7 +164,7 @@ function AsignarDictaminadorCard({ resumen, dictaminadores, onAsignado }) {
         </section>
 
         <section>
-          <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700 mb-2">
+          <h4 className=" font-semibold  tracking-wide text-slate-700 mb-2">
             {resumen.asignado ? 'Reasignar dictaminador' : 'Asignar dictaminador'}
           </h4>
           {dictaminadores.length === 0 ? (
@@ -82,6 +185,17 @@ function AsignarDictaminadorCard({ resumen, dictaminadores, onAsignado }) {
                 {assigning ? <span className="loading loading-spinner loading-xs" /> : 'Confirmar asignación'}
               </button>
             </div>
+          )}
+        </section>
+
+        <section>
+          <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700 mb-3">Dictamen</h4>
+          {loadingDetalle ? (
+            <div className="flex justify-center py-4">
+              <span className="loading loading-spinner loading-md text-primary" />
+            </div>
+          ) : (
+            <PreguntasDictamen dictamen={detalle?.dictamen ?? null} />
           )}
         </section>
       </div>
@@ -159,11 +273,11 @@ export default function ProcesosResumenesView() {
         <p className="text-center py-10 text-base-content/40 italic">No hay ponencias con resumen en este congreso.</p>
       ) : (
         <section className="grid items-start gap-6 xl:grid-cols-2">
-          <ListaResumenes
-            listaElementos={items}
-            dictaminadores={dictaminadores}
-            selectedId={viewItem?.id ?? null}
-            onView={setViewItem}
+           <ListaResumenes
+             listaElementos={items}
+             dictaminadores={dictaminadores}
+             selectedId={viewItem?.id_resumen ?? null} 
+             onView={setViewItem}
           />
           <AsignarDictaminadorCard
             resumen={viewItem}

@@ -12,6 +12,7 @@ from .views import (
     CongresoSignaturesView,
     SedeViewSet,
     SubareaViewSet,
+    AreaGeneralViewSet,
     EventoViewSet,
     TallerViewSet,
     InstitucionViewSet,
@@ -31,6 +32,7 @@ app_name = 'congresos'
 
 router = DefaultRouter()
 router.register(r'sedes', SedeViewSet, basename='sede')
+router.register(r'areas', AreaGeneralViewSet, basename='area')
 router.register(r'subareas', SubareaViewSet, basename='subarea')
 router.register(r'eventos', EventoViewSet, basename='evento')
 router.register(r'talleres', TallerViewSet, basename='taller')

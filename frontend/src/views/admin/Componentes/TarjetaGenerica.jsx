@@ -9,23 +9,23 @@ import DetallesEditarPonencia from './DetallesEditarPonencia';
 import DetallesEditarInstitucion from './DetallesEditarInstitucion';
 
 const TarjetaGenerica = ({
-                             titulo,
-                             botonPublicarTexto,
-                             onView,
-                             onCopy,
-                             onEdit,
-                             onPublish,
-                             children,
-                             definirTipoElemento,
-                             indexDatosModal,
-                             itemData
-                         }) => {
+    titulo,
+    botonPublicarTexto,
+    onView,
+    onCopy,
+    onEdit,
+    onPublish,
+    children,
+    definirTipoElemento,
+    indexDatosModal,
+    itemData
+}) => {
 
     const navigate = useNavigate();
     const [openModal, setOpenModal] = useState(false);
 
     const renderModalContent = () => {
-        switch(definirTipoElemento){
+        switch (definirTipoElemento) {
             case "ponencia":
                 return <DetallesEditarPonencia ponenciaData={itemData || {}} />;
             case "taller":
@@ -33,13 +33,13 @@ const TarjetaGenerica = ({
             case "institucion":
                 return <DetallesEditarInstitucion institucionData={itemData || {}} />;
             case "congreso":
-                return <DetallesCrearCongreso indexDatosModal={indexDatosModal}/>;
+                return <DetallesCrearCongreso indexDatosModal={indexDatosModal} />;
             default:
                 return null;
         }
     };
 
-    function cerrarModal(){
+    function cerrarModal() {
         setOpenModal(false);
     }
 
@@ -50,7 +50,7 @@ const TarjetaGenerica = ({
             </Modal>
 
             {/* Header / Titulo */}
-            <div className="bg-black text-white rounded-2xl px-6 py-5 text-center font-bold text-base min-h-[72px] flex items-center justify-center mb-8 uppercase tracking-[0.15em] leading-tight shadow-md">
+            <div className="bg-black text-white rounded-2xl px-6 py-5 text-center font-bold text-base min-h-[72px] flex items-center justify-center mb-8  tracking-[0.15em] leading-tight shadow-md">
                 {titulo}
             </div>
 
@@ -86,23 +86,25 @@ const TarjetaGenerica = ({
                     <FiEye size={16} />
                 </button>
 
-                {botonPublicarTexto && (
-                    <button 
+                {/* eliminé el botón de publicar porque se supone que si se crea, ya está publicado (por lo menos no hay campo en la base de datos que gestione si ya está o no publicado)
+                
+                botonPublicarTexto && (
+                    <button
                         onClick={onPublish}
-                        className="bg-primary text-primary-content text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full hover:brightness-110 transition-all active:scale-95 shadow-lg shadow-primary/20"
+                        className="bg-primary text-primary-content text-[10px] font-black  tracking-widest px-4 py-2 rounded-full hover:brightness-110 transition-all active:scale-95 shadow-lg shadow-primary/20"
                     >
                         {botonPublicarTexto}
                     </button>
-                )}
+                )*/}
 
                 <div className="flex items-center gap-2">
-                    <button 
+                    {/*<button 
                         className="w-9 h-9 rounded-full bg-base-200 text-base-content/60 flex items-center justify-center hover:bg-black hover:text-white transition-all active:scale-90" 
                         onClick={onCopy} 
                         title="Duplicar"
                     >
                         <FiCopy size={16} />
-                    </button>
+                    </button>*/}
                     <button
                         className="w-9 h-9 rounded-full bg-base-200 text-base-content/60 flex items-center justify-center hover:bg-black hover:text-white transition-all active:scale-90"
                         onClick={() => {

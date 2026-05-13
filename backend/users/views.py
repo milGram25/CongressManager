@@ -29,6 +29,32 @@ def _get_rol_persona(persona):
     return 'Asistente'
 
 
+def _get_all_roles_persona(persona, id_congreso=None):
+    roles = []
+    dc_filter = {'id_persona': persona}
+    ec_filter = {'id_persona': persona}
+    if id_congreso:
+        dc_filter['id_congreso_id'] = id_congreso
+        ec_filter['id_congreso_id'] = id_congreso
+    if DictaminadorCongreso.objects.filter(**dc_filter).exists():
+        roles.append('Dictaminador')
+    if EvaluadorCongreso.objects.filter(**ec_filter).exists():
+        roles.append('Evaluador')
+    try:
+        persona.ponente
+        roles.append('Ponente')
+    except Exception:
+        pass
+    try:
+        persona.asistente
+        roles.append('Asistente')
+    except Exception:
+        pass
+    if not roles:
+        roles.append('Asistente')
+    return roles
+
+
 class UserActionHistoryView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -36,13 +62,17 @@ class UserActionHistoryView(APIView):
         tipo = request.query_params.get('tipo', 'general')
 
         if tipo == 'facturas':
-            items = Factura.objects.filter(estatus='enviada').order_by('-fecha_envio').select_related('id_persona')
+            items = Factura.objects.filter(estatus='enviada').order_by('-fecha_envio').select_related('id_persona', 'id_congreso')
             data = [{
                 'id': f"inv-{f.id_factura}",
                 'nombre': f"{f.id_persona.nombre} {f.id_persona.primer_apellido}",
                 'fecha': f.fecha_envio.strftime("%Y-%m-%d %H:%M:%S") if f.fecha_envio else "",
                 'rol': 'Participante',
-                'accion': 'emisión de factura'
+                'accion': 'emisión de factura',
+                'congreso': f.id_congreso.nombre_congreso if f.id_congreso else '',
+                'rfc': f.rfc or '',
+                'razon_social': f.razon_social or '',
+                'archivo': f.ruta_pdf_xml or '',
             } for f in items]
             return Response(data)
 
@@ -55,6 +85,7 @@ class UserActionHistoryView(APIView):
                 'rol': c.tipo_constancia or 'Participante',
                 'accion': 'emisión de constancia',
                 'congreso': c.id_congreso.nombre_congreso if c.id_congreso else '',
+                'archivo': c.ruta_constancia or '',
             } for c in items]
             return Response(data)
 
@@ -104,9 +135,11 @@ def _get_congress_participant_ids(id_congreso):
         """, [id_congreso])
         enrolled |= {r[0] for r in cursor.fetchall()}
 
-    # Dictaminadores and evaluadores are committee members — always included
+    # Committee members (global + congress-specific)
     enrolled |= set(Dictaminador.objects.values_list('id_persona_id', flat=True))
     enrolled |= set(Evaluador.objects.values_list('id_persona_id', flat=True))
+    enrolled |= set(DictaminadorCongreso.objects.filter(id_congreso_id=id_congreso).values_list('id_persona_id', flat=True))
+    enrolled |= set(EvaluadorCongreso.objects.filter(id_congreso_id=id_congreso).values_list('id_persona_id', flat=True))
 
     return enrolled
 
@@ -116,7 +149,7 @@ class ParticipantsListView(APIView):
 
     def get(self, request):
         id_congreso = request.query_params.get('id_congreso')
-        rol = request.query_params.get('rol', '').lower()
+        rol_filter = request.query_params.get('rol', '').lower()
         institucion = request.query_params.get('institucion', '').strip()
 
         users = Persona.objects.filter(is_staff=False, is_superuser=False)
@@ -127,28 +160,79 @@ class ParticipantsListView(APIView):
                 return Response([])
             users = users.filter(pk__in=enrolled_ids)
 
-        dict_ids = set(Dictaminador.objects.values_list('id_persona_id', flat=True))
-        eval_ids = set(Evaluador.objects.values_list('id_persona_id', flat=True))
-        pon_ids  = set(Ponente.objects.values_list('id_persona_id', flat=True))
-        asi_ids  = set(Asistente.objects.values_list('id_persona_id', flat=True))
-
-        if rol == 'dictaminador':
-            users = users.filter(pk__in=dict_ids)
-        elif rol in ('evaluador', 'revisor'):
-            users = users.filter(pk__in=eval_ids).exclude(pk__in=dict_ids)
-        elif rol == 'ponente':
-            users = users.filter(pk__in=pon_ids).exclude(pk__in=dict_ids).exclude(pk__in=eval_ids)
-        elif rol == 'asistente':
-            users = users.filter(pk__in=asi_ids).exclude(pk__in=dict_ids).exclude(pk__in=eval_ids).exclude(pk__in=pon_ids)
-
         if institucion:
             ids = Asistente.objects.filter(
                 institucion_procedencia__icontains=institucion
             ).values_list('id_persona_id', flat=True)
             users = users.filter(pk__in=ids)
 
-        serializer = ParticipantSerializer(users, many=True, context={'id_congreso': id_congreso})
-        return Response(serializer.data)
+        if id_congreso:
+            dc_ids = set(DictaminadorCongreso.objects.filter(id_congreso_id=id_congreso).values_list('id_persona_id', flat=True))
+            ec_ids = set(EvaluadorCongreso.objects.filter(id_congreso_id=id_congreso).values_list('id_persona_id', flat=True))
+        else:
+            dc_ids = set(DictaminadorCongreso.objects.values_list('id_persona_id', flat=True))
+            ec_ids = set(EvaluadorCongreso.objects.values_list('id_persona_id', flat=True))
+        pon_ids = set(Ponente.objects.values_list('id_persona_id', flat=True))
+        asi_ids = set(Asistente.objects.values_list('id_persona_id', flat=True))
+
+        constancias_map = {}
+        constancia_qs = Constancia.objects.filter(id_congreso_id=id_congreso) if id_congreso else Constancia.objects.filter(id_congreso__isnull=True)
+        for c in constancia_qs:
+            constancias_map[(c.id_persona_id, c.tipo_constancia)] = c
+
+        result = []
+        for user in users:
+            all_roles = []
+            if user.pk in dc_ids:
+                all_roles.append('Dictaminador')
+            if user.pk in ec_ids:
+                all_roles.append('Evaluador')
+            if user.pk in pon_ids:
+                all_roles.append('Ponente')
+            if user.pk in asi_ids:
+                all_roles.append('Asistente')
+            if not all_roles:
+                all_roles.append('Participante')
+
+            if rol_filter:
+                filtered = []
+                for r in all_roles:
+                    if rol_filter == r.lower() or (rol_filter in ('evaluador', 'revisor') and r.lower() == 'evaluador'):
+                        filtered.append(r)
+                if not filtered:
+                    continue
+                all_roles = filtered
+
+            institucion_nombre = 'N/A'
+            try:
+                inst = user.asistente.institucion_procedencia
+                institucion_nombre = inst if inst else 'N/A'
+            except Exception:
+                pass
+
+            nombre = ' '.join(x for x in [user.nombre, user.primer_apellido, user.segundo_apellido] if x).strip()
+
+            for rol in all_roles:
+                constancia = constancias_map.get((user.pk, rol))
+                constancia_data = None
+                if constancia:
+                    constancia_data = {
+                        'id_constancia': constancia.id_constancia,
+                        'estatus': constancia.estatus,
+                        'ruta_constancia': constancia.ruta_constancia,
+                        'tipo_constancia': constancia.tipo_constancia,
+                        'fecha_emision': constancia.fecha_emision.isoformat() if constancia.fecha_emision else None,
+                    }
+                result.append({
+                    'id_persona': user.id_persona,
+                    'nombre_completo': nombre,
+                    'correo_electronico': user.correo_electronico,
+                    'rol': rol,
+                    'institucion': institucion_nombre,
+                    'constancia': constancia_data,
+                })
+
+        return Response(result)
 
 
 class ConstanciaUploadView(APIView):
@@ -169,12 +253,12 @@ class ConstanciaUploadView(APIView):
         constancia, created = Constancia.objects.get_or_create(
             id_persona_id=id_persona,
             id_congreso_id=id_congreso if id_congreso else None,
-            defaults={'ruta_constancia': file_url, 'tipo_constancia': tipo, 'estatus': 'enviada'}
+            tipo_constancia=tipo,
+            defaults={'ruta_constancia': file_url, 'estatus': 'enviada'}
         )
 
         if not created:
             constancia.ruta_constancia = file_url
-            constancia.tipo_constancia = tipo
             constancia.estatus = 'enviada'
             constancia.save()
 
@@ -182,7 +266,7 @@ class ConstanciaUploadView(APIView):
             persona = Persona.objects.get(pk=id_persona)
             HistorialAcciones.objects.create(
                 id_persona=persona,
-                rol=tipo,
+                rol=tipo.lower(),
                 accion='emisión de constancia'
             )
         except Exception:
@@ -225,10 +309,9 @@ class FacturaUploadView(APIView):
 
         try:
             persona = Persona.objects.get(pk=id_persona)
-            rol = _get_rol_persona(persona)
             HistorialAcciones.objects.create(
                 id_persona=persona,
-                rol=rol,
+                rol=_get_rol_persona(persona).lower(),
                 accion='emisión de factura'
             )
         except Exception:
@@ -255,11 +338,14 @@ class BulkFacturaActionView(APIView):
 
         personas = Persona.objects.filter(pk__in=user_ids)
         for persona in personas:
-            HistorialAcciones.objects.create(
-                id_persona=persona,
-                rol=_get_rol_persona(persona),
-                accion='emisión de factura'
-            )
+            try:
+                HistorialAcciones.objects.create(
+                    id_persona=persona,
+                    rol=_get_rol_persona(persona).lower(),
+                    accion='emisión de factura'
+                )
+            except Exception:
+                pass
 
         return Response({'detail': f'{len(user_ids)} facturas procesadas.'})
 
@@ -324,6 +410,33 @@ class MisFacturasView(APIView):
                 'fecha_envio': f.fecha_envio.isoformat() if f.fecha_envio else None,
                 'nombre_congreso': f.id_congreso.nombre_congreso if f.id_congreso else None,
                 'id_congreso': f.id_congreso.id_congreso if f.id_congreso else None,
+            })
+
+        return Response(result)
+
+
+class MisConstanciasView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        constancias = Constancia.objects.filter(
+            id_persona=request.user
+        ).select_related('id_congreso', 'id_congreso__id_sede').order_by('-fecha_emision')
+
+        result = []
+        for c in constancias:
+            estatus_frontend = 'disponible' if c.estatus == 'enviada' else 'en_proceso'
+            congreso = c.id_congreso
+            result.append({
+                'id': f"CONST-{c.id_constancia}",
+                'congreso': congreso.nombre_congreso if congreso else '—',
+                'fechaEmision': c.fecha_emision.strftime('%Y-%m-%d') if c.fecha_emision else None,
+                'tipo': c.tipo_constancia or 'Participante',
+                'estatus': estatus_frontend,
+                'pdfUrl': c.ruta_constancia or None,
+                'sede': congreso.id_sede.nombre_sede if congreso and congreso.id_sede else None,
+                'firmaOrganizador': congreso.firma_organizador if congreso else None,
+                'firmaSecretaria': congreso.firma_secretaria if congreso else None,
             })
 
         return Response(result)
@@ -397,37 +510,36 @@ class BulkConstanciaActionView(APIView):
         if not user_ids:
             return Response({'detail': 'No se especificaron usuarios.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        personas = Persona.objects.filter(pk__in=user_ids)
+        if action != 'send':
+            return Response({'detail': 'Acción no reconocida.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if action == 'generate':
-            created_count = 0
-            for persona in personas:
-                rol = _get_rol_persona(persona)
-                _, created = Constancia.objects.get_or_create(
+        personas = Persona.objects.filter(pk__in=user_ids)
+        sent_count = 0
+
+        for persona in personas:
+            roles = _get_all_roles_persona(persona, id_congreso)
+            for rol in roles:
+                constancia, created = Constancia.objects.get_or_create(
                     id_persona=persona,
                     id_congreso_id=id_congreso if id_congreso else None,
-                    defaults={'tipo_constancia': rol, 'estatus': 'generada'}
+                    tipo_constancia=rol,
+                    defaults={'estatus': 'enviada'}
                 )
-                if created:
-                    created_count += 1
-            return Response({'detail': f'{created_count} constancias generadas.'})
+                if not created and constancia.estatus != 'enviada':
+                    constancia.estatus = 'enviada'
+                    constancia.save()
+                sent_count += 1
 
-        if action == 'send':
-            Constancia.objects.filter(
-                id_persona_id__in=user_ids,
-                id_congreso_id=id_congreso if id_congreso else None
-            ).update(estatus='enviada')
-
-            for persona in personas:
-                rol = _get_rol_persona(persona)
+            try:
                 HistorialAcciones.objects.create(
                     id_persona=persona,
-                    rol=rol,
+                    rol=_get_rol_persona(persona).lower(),
                     accion='emisión de constancia'
                 )
-            return Response({'detail': f'{len(user_ids)} constancias enviadas.'})
+            except Exception:
+                pass
 
-        return Response({'detail': 'Acción no reconocida.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'detail': f'{sent_count} constancias enviadas.'})
 
 
 def get_tokens_for_user(user):
