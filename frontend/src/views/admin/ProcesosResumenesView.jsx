@@ -280,7 +280,7 @@ export default function ProcesosResumenesView() {
            <ListaResumenes
              listaElementos={items}
              dictaminadores={dictaminadores}
-             selectedId={viewItem?.id_resumen ?? null} 
+             selectedId={viewItem?.id ?? null}
              onView={setViewItem}
           />
           <AsignarDictaminadorCard
