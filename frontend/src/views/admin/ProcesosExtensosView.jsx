@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import ListaExtensos from "./Componentes/ListaExtensos";
 import { getCongresosApi, getEvaluadoresDisponiblesApi } from "../../api/adminApi";
-import { getExtensosCongreso, asignarEvaluadoresApi, asignarEvaluador3Api, buildMediaUrl } from "../../api/ponenciasApi";
+import { getExtensosCongreso, asignarEvaluadoresApi, asignarEvaluador3Api, buildMediaUrl, publicarPonenciaApi } from "../../api/ponenciasApi";
 import BuscadorPersonal from "./Componentes/BuscadorPersonal";
 
 function LedStatus({ label, active, neutral = false, color = null, title=""}) {
@@ -43,12 +42,13 @@ function RubricaGrupoStatusRow({ grupo }) {
   );
 }
 
-function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsignarDos, onAsignarTres, toast }) {
-  const navigate = useNavigate();
+function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsignarDos, onAsignarTres, toast, onPublicado }) {
   const [r1Sel, setR1Sel] = useState('');
   const [r2Sel, setR2Sel] = useState('');
   const [r3Sel, setR3Sel] = useState('');
   const [assigning, setAssigning] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const accessToken = localStorage.getItem('congress_access');
 
   useEffect(() => {
     setR1Sel(extenso?.id_evaluador ? String(extenso.id_evaluador) : '');
@@ -95,11 +95,17 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
     }
   };
 
-  const handlePublicar = () => {
-    const tipo = extenso.tipo_ponencia === 'taller' ? 'talleres' : 'ponencias';
-    const nombre = encodeURIComponent(extenso.title ?? '');
-    const subarea = extenso.id_subarea ?? '';
-    navigate(`/admin/eventos/${tipo}/crear?id_congreso=${idCongreso}&nombre_evento=${nombre}&id_subarea=${subarea}`);
+  const handlePublicar = async () => {
+    setPublishing(true);
+    try {
+      await publicarPonenciaApi(accessToken, extenso.id_extenso);
+      toast('Ponencia publicada correctamente.');
+      if (onPublicado) onPublicado(extenso.id_extenso);
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setPublishing(false);
+    }
   };
 
   const grupos = extenso.evaluacion?.grupos ?? null;
@@ -204,14 +210,23 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
         </section>
       )}
 
-      {estado === 'extenso_aceptado' && (
+      {estado === 'extenso_aceptado' && !extenso.publicado && (
         <section>
           <button
             onClick={handlePublicar}
-            className="w-full btn btn-success rounded-xl  tracking-wider font-bold"
+            disabled={publishing}
+            className="w-full btn btn-success rounded-xl tracking-wider font-bold disabled:opacity-60"
           >
-            Publicar ponencia
+            {publishing ? 'Publicando...' : 'Publicar ponencia'}
           </button>
+        </section>
+      )}
+
+      {extenso.publicado && (
+        <section>
+          <div className="w-full rounded-xl bg-success/10 border border-success/40 px-4 py-3 text-center text-sm font-semibold text-success">
+            Ponencia publicada
+          </div>
         </section>
       )}
 
@@ -305,6 +320,10 @@ export default function ProcesosExtensosView() {
     });
   };
 
+  const handlePublicado = (idExtenso) => {
+    refreshExtenso(idExtenso, { publicado: true });
+  };
+
   return (
     <div className="w-full space-y-7">
       {toastMsg && (
@@ -355,6 +374,7 @@ export default function ProcesosExtensosView() {
             idCongreso={selectedCongreso.id_congreso}
             onAsignarDos={handleAsignarDos}
             onAsignarTres={handleAsignarTres}
+            onPublicado={handlePublicado}
             toast={showToast}
           />
         </section>

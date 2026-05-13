@@ -349,8 +349,8 @@ class EnviarPonenciaAPIView(APIView):
                         cursor.execute("""
                             SELECT COUNT(*) FROM ponente_has_ponencia php
                             JOIN ponencia pon ON pon.id_ponencia = php.id_ponencia
-                            JOIN evento e ON e.id_evento = pon.id_evento
-                            WHERE php.id_ponente = %s AND e.id_congreso = %s
+                            JOIN ponencia_meta pm ON pm.id_ponencia = pon.id_ponencia
+                            WHERE php.id_ponente = %s AND pm.id_congreso = %s
                         """, [id_ponente_check, id_congreso])
                         current_count = int(cursor.fetchone()[0])
                         # Las primeras 3 ponencias están incluidas; solo se cobran extras a partir de la 4a
@@ -394,26 +394,6 @@ class EnviarPonenciaAPIView(APIView):
                     cursor.execute("SELECT tipo_trabajo FROM tipo_trabajo WHERE id_tipo_trabajo = %s", [id_tipo_trabajo])
                     tt_row = cursor.fetchone()
                     tipo_trabajo_str = tt_row[0] if tt_row else str(id_tipo_trabajo_raw)
-
-                    # Crear un evento de tipo 'ponencia' por cada ponencia enviada (siempre)
-                    cursor.execute("""
-                        SELECT fc.fecha_inicio_evento, fc.fecha_final_evento
-                        FROM congreso c
-                        JOIN fechas_congreso fc ON fc.id_fechas_congreso = c.id_fechas_congreso
-                        WHERE c.id_congreso = %s
-                    """, [id_congreso])
-                    fechas_row = cursor.fetchone()
-                    if fechas_row:
-                        fecha_inicio, fecha_final = fechas_row
-                    else:
-                        fecha_inicio = datetime.now()
-                        fecha_final = datetime.now() + timedelta(days=365)
-                    cursor.execute("""
-                        INSERT INTO evento (id_congreso, nombre_evento, tipo_evento, id_tipo_trabajo, fecha_hora_inicio, fecha_hora_final, cupos, sinopsis)
-                        VALUES (%s, %s, 'ponencia', %s, %s, %s, 0, %s)
-                        RETURNING id_evento
-                    """, [id_congreso, titulo, id_tipo_trabajo, fecha_inicio, fecha_final, resumen_texto])
-                    id_evento = cursor.fetchone()[0]
 
                     # Resolver id_subarea
                     cursor.execute("SELECT id_subareas FROM subareas WHERE nombre ILIKE %s LIMIT 1", [f"%{eje_tematico_nombre}%"])
@@ -460,13 +440,18 @@ class EnviarPonenciaAPIView(APIView):
                     """)
                     id_resumen = cursor.fetchone()[0]
 
-                    # Crear ponencia (siempre tiene id_evento garantizado)
+                    # Crear ponencia sin evento (se publicará cuando sea aceptada)
                     cursor.execute("""
-                        INSERT INTO ponencia (tipo_participacion, id_subarea, id_resumen, id_multimedia, id_evento)
-                        VALUES (%s, %s, %s, %s, %s)
+                        INSERT INTO ponencia (tipo_participacion, id_subarea, id_resumen, id_multimedia)
+                        VALUES (%s, %s, %s, %s)
                         RETURNING id_ponencia
-                    """, [tipo_participacion, id_subarea, id_resumen, id_material, id_evento])
+                    """, [tipo_participacion, id_subarea, id_resumen, id_material])
                     id_ponencia = cursor.fetchone()[0]
+
+                    cursor.execute("""
+                        INSERT INTO ponencia_meta (id_ponencia, id_congreso, id_tipo_trabajo)
+                        VALUES (%s, %s, %s)
+                    """, [id_ponencia, id_congreso, id_tipo_trabajo])
 
                     # Asegurar que el usuario sea ponente
                     id_persona = request.user.id_persona
@@ -713,13 +698,14 @@ class ResumenesCongresoView(APIView):
                         ELSE NULL
                     END AS nombre_dictaminador
                 FROM ponencia p
-                JOIN evento e ON p.id_evento = e.id_evento
+                JOIN ponencia_meta pm ON pm.id_ponencia = p.id_ponencia
+                LEFT JOIN evento e ON p.id_evento = e.id_evento
                 JOIN resumen r ON p.id_resumen = r.id_resumen
                 LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
                 LEFT JOIN multimedia mult ON p.id_multimedia = mult.id_material
                 LEFT JOIN dictaminador d ON r.id_dictaminador = d.id_dictaminador
                 LEFT JOIN persona d_per ON d.id_persona = d_per.id_persona
-                WHERE e.id_congreso = %s
+                WHERE pm.id_congreso = %s
                 ORDER BY p.id_ponencia
             """, [id_congreso])
             rows = c.fetchall()
@@ -819,9 +805,11 @@ class ExtensosCongresoView(APIView):
                     END AS nombre_evaluador_2,
                     CASE WHEN e3_per.id_persona IS NOT NULL
                         THEN e3_per.nombre || ' ' || e3_per.primer_apellido ELSE NULL
-                    END AS nombre_evaluador_3
+                    END AS nombre_evaluador_3,
+                    (p.id_evento IS NOT NULL) AS publicado
                 FROM ponencia p
-                JOIN evento e ON p.id_evento = e.id_evento
+                JOIN ponencia_meta pm ON pm.id_ponencia = p.id_ponencia
+                LEFT JOIN evento e ON p.id_evento = e.id_evento
                 JOIN extenso ext ON p.id_extenso = ext.id_extenso
                 LEFT JOIN multimedia mult ON p.id_multimedia = mult.id_material
                 LEFT JOIN evaluador ev1 ON ext.id_evaluador = ev1.id_evaluador
@@ -830,13 +818,14 @@ class ExtensosCongresoView(APIView):
                 LEFT JOIN persona e2_per ON ev2.id_persona = e2_per.id_persona
                 LEFT JOIN evaluador ev3 ON ext.id_evaluador_3 = ev3.id_evaluador
                 LEFT JOIN persona e3_per ON ev3.id_persona = e3_per.id_persona
-                WHERE e.id_congreso = %s
+                WHERE pm.id_congreso = %s
                 ORDER BY p.id_ponencia
             """, [id_congreso])
             cols = ['id_ponencia','id_extenso','id_subarea','titulo','ruta_relativa',
                     'id_evaluador','id_evaluador_2','id_evaluador_3','revisado',
                     'tipo_ponencia','id_congreso',
-                    'nombre_evaluador','nombre_evaluador_2','nombre_evaluador_3']
+                    'nombre_evaluador','nombre_evaluador_2','nombre_evaluador_3',
+                    'publicado']
             ponencias = [dict(zip(cols, row)) for row in c.fetchall()]
 
             if not ponencias:
@@ -925,6 +914,7 @@ class ExtensosCongresoView(APIView):
                 'revisado': p['revisado'] or False,
                 'aceptado': estado_derivado == 'extenso_aceptado',
                 'estado_derivado': estado_derivado,
+                'publicado': p['publicado'] or False,
                 'id_evaluador': p['id_evaluador'],
                 'id_evaluador_2': p['id_evaluador_2'],
                 'id_evaluador_3': p['id_evaluador_3'],
@@ -948,10 +938,12 @@ class MisResumenesView(APIView):
             c.execute("""
                 SELECT p.id_ponencia, p.id_resumen,
                        COALESCE(mult.nombre, e.nombre_evento, s.nombre, 'Ponencia ' || p.id_ponencia::text) AS titulo,
-                       r.revisado, r.estatus, cong.nombre_congreso, e.id_congreso
+                       r.revisado, r.estatus, cong.nombre_congreso,
+                       COALESCE(e.id_congreso, pm.id_congreso) AS id_congreso
                 FROM ponencia p
-                JOIN evento e ON p.id_evento = e.id_evento
-                JOIN congreso cong ON e.id_congreso = cong.id_congreso
+                JOIN ponencia_meta pm ON pm.id_ponencia = p.id_ponencia
+                LEFT JOIN evento e ON p.id_evento = e.id_evento
+                JOIN congreso cong ON cong.id_congreso = COALESCE(e.id_congreso, pm.id_congreso)
                 JOIN resumen r ON p.id_resumen = r.id_resumen
                 LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
                 LEFT JOIN multimedia mult ON p.id_multimedia = mult.id_material
@@ -990,11 +982,13 @@ class MisExtensosView(APIView):
                 SELECT p.id_ponencia, p.id_extenso,
                        COALESCE(mult.nombre, e.nombre_evento, ext.titulo, 'Ponencia ' || p.id_ponencia::text) AS titulo,
                        ext.ruta_relativa,
-                       ext.revisado, cong.nombre_congreso, e.id_congreso,
+                       ext.revisado, cong.nombre_congreso,
+                       COALESCE(e.id_congreso, pm.id_congreso) AS id_congreso,
                        ev.id_evaluacion, ev.estatus AS estatus_evaluacion
                 FROM ponencia p
-                JOIN evento e ON p.id_evento = e.id_evento
-                JOIN congreso cong ON e.id_congreso = cong.id_congreso
+                JOIN ponencia_meta pm ON pm.id_ponencia = p.id_ponencia
+                LEFT JOIN evento e ON p.id_evento = e.id_evento
+                JOIN congreso cong ON cong.id_congreso = COALESCE(e.id_congreso, pm.id_congreso)
                 JOIN extenso ext ON p.id_extenso = ext.id_extenso
                 LEFT JOIN multimedia mult ON p.id_multimedia = mult.id_material
                 LEFT JOIN evaluacion ev ON ev.id_extenso = ext.id_extenso AND ev.id_evaluador = %s
@@ -1035,8 +1029,10 @@ class RubricaExtensoView(APIView):
             c.execute("""
                 SELECT rg.id_grupo, rg.nombre_grupo, rc.id_criterio, rc.descripcion, rc.peso
                 FROM ponencia p
-                JOIN evento e ON p.id_evento = e.id_evento
-                JOIN rubrica r ON r.tipo_trabajo = e.id_tipo_trabajo AND r.id_congreso = e.id_congreso
+                JOIN ponencia_meta pm ON pm.id_ponencia = p.id_ponencia
+                LEFT JOIN evento e ON p.id_evento = e.id_evento
+                JOIN rubrica r ON r.tipo_trabajo = COALESCE(e.id_tipo_trabajo, pm.id_tipo_trabajo)
+                             AND r.id_congreso   = COALESCE(e.id_congreso,    pm.id_congreso)
                 JOIN rubrica_grupo rg ON rg.id_rubrica = r.id_rubrica
                 JOIN rubrica_criterio rc ON rc.id_grupo = rg.id_grupo
                 WHERE p.id_extenso = %s
@@ -1067,8 +1063,9 @@ class PreguntasResumenView(APIView):
             c.execute("""
                 SELECT dp.id_pregunta, dp.descripcion
                 FROM ponencia p
-                JOIN evento e ON p.id_evento = e.id_evento
-                JOIN dictamen d ON d.tipo_trabajo = e.id_tipo_trabajo
+                JOIN ponencia_meta pm ON pm.id_ponencia = p.id_ponencia
+                LEFT JOIN evento e ON p.id_evento = e.id_evento
+                JOIN dictamen d ON d.tipo_trabajo = COALESCE(e.id_tipo_trabajo, pm.id_tipo_trabajo)
                 JOIN dictamen_pregunta dp ON dp.id_dictamen = d.id_dictamen
                 WHERE p.id_resumen = %s
                 ORDER BY dp.id_pregunta
@@ -1266,14 +1263,15 @@ class EstatusPonenteView(APIView):
                     ttf.ruta_formato
                 FROM ponente_has_ponencia php
                 JOIN ponencia p ON php.id_ponencia = p.id_ponencia
+                LEFT JOIN ponencia_meta pm ON pm.id_ponencia = p.id_ponencia
                 LEFT JOIN evento e ON p.id_evento = e.id_evento
                 LEFT JOIN mesas_trabajo m ON e.id_mesas_trabajo = m.id_mesas_trabajo
                 LEFT JOIN multimedia mult ON p.id_multimedia = mult.id_material
-                LEFT JOIN congreso cong ON e.id_congreso = cong.id_congreso
+                LEFT JOIN congreso cong ON COALESCE(e.id_congreso, pm.id_congreso) = cong.id_congreso
                 LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
                 LEFT JOIN resumen r ON p.id_resumen = r.id_resumen
                 LEFT JOIN extenso ext ON p.id_extenso = ext.id_extenso
-                LEFT JOIN tipo_trabajo_formato ttf ON e.id_tipo_trabajo = ttf.id_tipo_trabajo
+                LEFT JOIN tipo_trabajo_formato ttf ON COALESCE(e.id_tipo_trabajo, pm.id_tipo_trabajo) = ttf.id_tipo_trabajo
                 WHERE php.id_ponente = %s
                 ORDER BY p.id_ponencia
             """, [id_ponente])
@@ -1534,3 +1532,59 @@ class PonentesNombresView(APIView):
             """)
             nombres = [row[0] for row in cursor.fetchall() if row[0]]
         return Response(nombres)
+
+
+class PublicarPonenciaView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        if not request.user.is_staff:
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT p.id_ponencia, p.id_extenso, p.id_evento,
+                       pm.id_congreso, pm.id_tipo_trabajo,
+                       COALESCE(mult.nombre, ext.titulo, 'Ponencia ' || p.id_ponencia::text) AS titulo,
+                       ext.revisado
+                FROM ponencia p
+                JOIN ponencia_meta pm ON pm.id_ponencia = p.id_ponencia
+                JOIN extenso ext ON p.id_extenso = ext.id_extenso
+                LEFT JOIN multimedia mult ON p.id_multimedia = mult.id_material
+                WHERE p.id_extenso = %s
+            """, [pk])
+            row = cursor.fetchone()
+            if not row:
+                return Response({'detail': 'Extenso no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+            id_ponencia, id_extenso, id_evento_existente, id_congreso, id_tipo_trabajo, titulo, revisado = row
+
+            if id_evento_existente:
+                return Response({'detail': 'Esta ponencia ya fue publicada.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if not revisado:
+                return Response({'detail': 'El extenso aún no ha sido marcado como revisado.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            cursor.execute("""
+                SELECT fc.fecha_inicio_evento, fc.fecha_final_evento
+                FROM congreso c
+                JOIN fechas_congreso fc ON c.id_fechas_congreso = fc.id_fechas_congreso
+                WHERE c.id_congreso = %s
+            """, [id_congreso])
+            dates_row = cursor.fetchone()
+            fecha_inicio = dates_row[0] if dates_row else None
+            fecha_fin = dates_row[1] if dates_row else None
+
+            with transaction.atomic():
+                cursor.execute("""
+                    INSERT INTO evento (id_congreso, nombre_evento, tipo_evento, id_tipo_trabajo,
+                                        id_mesas_trabajo, fecha_hora_inicio, fecha_hora_final,
+                                        sinopsis, cupos, enlace)
+                    VALUES (%s, %s, 'ponencia', %s, NULL, %s, %s, '', 0, '')
+                    RETURNING id_evento
+                """, [id_congreso, titulo, id_tipo_trabajo, fecha_inicio, fecha_fin])
+                id_evento = cursor.fetchone()[0]
+
+                cursor.execute("UPDATE ponencia SET id_evento = %s WHERE id_ponencia = %s", [id_evento, id_ponencia])
+
+        return Response({'detail': 'Ponencia publicada correctamente.', 'id_evento': id_evento}, status=status.HTTP_201_CREATED)
