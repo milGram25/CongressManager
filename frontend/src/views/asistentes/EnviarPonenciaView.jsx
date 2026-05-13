@@ -4,10 +4,12 @@ import { MdLock, MdLibraryBooks } from "react-icons/md";
 import { useNavigate } from 'react-router-dom';
 import { getMisInscripcionesApi } from '../../api/agendaApi';
 import { API_URL } from '../../api/constants';
+import { useAuth } from '../../context/AuthContext';
 
 export default function EnviarPonenciaView() {
   const accessToken = localStorage.getItem('congress_access');
   const navigate = useNavigate();
+  const { refreshSession } = useAuth();
 
   const [congresosInscritos, setCongresosInscritos] = useState([]);
   const [loadingCongresos, setLoadingCongresos] = useState(true);
@@ -109,6 +111,7 @@ export default function EnviarPonenciaView() {
       const data = await response.json();
       if (response.ok) {
         setMensaje({ texto: 'Ponencia enviada exitosamente', tipo: 'success' });
+        await refreshSession();
         setTitulo('');
         setAutor('');
         setCoautores([]);
@@ -118,6 +121,7 @@ export default function EnviarPonenciaView() {
         setTipoTrabajo('');
         setPalabrasClaves('');
         setResumen('');
+        navigate('/ponente/estatus-ponencia');
       } else if (response.status === 402) {
         const congreso = congresosInscritos.find(c => String(c.id_congreso) === String(selectedCongreso));
         const nombre = congreso?.nombre_congreso || '';

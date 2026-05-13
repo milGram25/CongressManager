@@ -120,8 +120,6 @@ const AsistenteLayoutWrapper = () => {
     { to: '/asistente/constancias', label: 'Mis Constancias', icon: MdBadge },
     { type: 'header', label: 'Ponente' },
     { to: '/asistente/enviar-ponencia', label: 'Enviar Ponencia', icon: MdUploadFile },
-    { to: '/asistente/estatus-ponencia', label: 'Estatus Ponencia', icon: GrStatusGood },
-    { to: '/asistente/mis-ponencias', label: 'Mis Ponencias', icon: MdCoPresent },
   ];
 
   return <SidebarLayout roleTitle="Asistente" drawerId="asistente-drawer" menuItems={menuItems} MainIcon={MdSchool} />;
