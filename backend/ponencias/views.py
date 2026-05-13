@@ -124,8 +124,18 @@ class PonenciaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance)
         data = serializer.data
         data['id'] = instance.id_ponencia
-        data['id_congreso'] = instance.id_evento.id_congreso_id
+        if instance.id_evento_id:
+            data['id_congreso'] = instance.id_evento.id_congreso_id
+        else:
+            data['id_congreso'] = None
         data['id_subarea'] = instance.id_subarea_id
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT enlace_multimedia FROM ponencia_meta WHERE id_ponencia = %s",
+                [instance.id_ponencia]
+            )
+            row = cursor.fetchone()
+            data['enlace_multimedia'] = row[0] if row else None
         return Response(data)
 
 
@@ -1261,7 +1271,8 @@ class EstatusPonenteView(APIView):
                     cong.nombre_congreso,
                     p.tipo_participacion,
                     m.nombre AS lugar,
-                    ttf.ruta_formato
+                    ttf.ruta_formato,
+                    pm.enlace_multimedia
                 FROM ponente_has_ponencia php
                 JOIN ponencia p ON php.id_ponencia = p.id_ponencia
                 LEFT JOIN ponencia_meta pm ON pm.id_ponencia = p.id_ponencia
@@ -1279,7 +1290,7 @@ class EstatusPonenteView(APIView):
             cols = ['id_ponencia','titulo','tipo_ponencia','id_resumen','resumen_revisado',
                     'resumen_estatus','resumen_retroalimentacion','id_extenso','id_evento','extenso_revisado',
                     'id_evaluador','id_evaluador_2','id_evaluador_3',
-                    'nombre_evento','fecha_hora_inicio','fecha_hora_final','sinopsis','cupos','enlace','nombre_congreso','tipo_participacion','lugar','ruta_formato']
+                    'nombre_evento','fecha_hora_inicio','fecha_hora_final','sinopsis','cupos','enlace','nombre_congreso','tipo_participacion','lugar','ruta_formato','enlace_multimedia']
             ponencias = [dict(zip(cols, row)) for row in c.fetchall()]
 
             if not ponencias:
@@ -1364,6 +1375,7 @@ class EstatusPonenteView(APIView):
                 'id_extenso': p['id_extenso'],
                 'tipo_participacion': p['tipo_participacion'],
                 'ruta_formato': p['ruta_formato'],
+                'enlace_multimedia': p['enlace_multimedia'],
                 'evento': {
                     'nombre': p['nombre_evento'],
                     'fecha_inicio': fecha_inicio.isoformat() if fecha_inicio else None,
@@ -1613,5 +1625,8 @@ class ActualizarEnlacePonenciaView(APIView):
             id_evento = row[0]
             if not id_evento:
                 return Response({'detail': 'La ponencia aún no ha sido publicada.'}, status=status.HTTP_400_BAD_REQUEST)
-            cursor.execute("UPDATE evento SET enlace = %s WHERE id_evento = %s", [enlace, id_evento])
+            cursor.execute(
+                "UPDATE ponencia_meta SET enlace_multimedia = %s WHERE id_ponencia = %s",
+                [enlace, pk]
+            )
         return Response({'detail': 'Enlace actualizado.', 'enlace': enlace})

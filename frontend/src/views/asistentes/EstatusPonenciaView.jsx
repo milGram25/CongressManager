@@ -14,7 +14,8 @@ const ESTADO_CONFIG = {
 
 function EnlaceMultimediaForm({ ponencia }) {
   const accessToken = localStorage.getItem('congress_access');
-  const [enlace, setEnlace] = useState(ponencia.evento?.enlace ?? '');
+  const [enlace, setEnlace] = useState(ponencia.enlace_multimedia ?? '');
+  const [saved, setSaved] = useState(!!ponencia.enlace_multimedia);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
 
@@ -23,7 +24,9 @@ function EnlaceMultimediaForm({ ponencia }) {
     setMsg(null);
     try {
       await actualizarEnlacePonenciaApi(accessToken, ponencia.id_ponencia, enlace);
+      setSaved(true);
       setMsg({ ok: true, text: 'Enlace guardado correctamente.' });
+      setTimeout(() => setMsg(null), 3000);
     } catch (err) {
       setMsg({ ok: false, text: err.message });
     } finally {
@@ -34,21 +37,23 @@ function EnlaceMultimediaForm({ ponencia }) {
   return (
     <div className="mt-4 border-t border-success/20 pt-4">
       <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Enlace / ruta a multimedia</p>
-      <p className="text-xs text-slate-400 mb-3">Agrega el enlace a tu presentación, video u otro recurso multimedia que se mostrará en el evento.</p>
+      {!saved && (
+        <p className="text-xs text-slate-400 mb-3">Agrega el enlace a tu presentación, video u otro recurso multimedia que se mostrará en el evento.</p>
+      )}
       <div className="flex gap-2 items-center flex-wrap">
         <input
           type="url"
           className="input input-bordered input-sm flex-1 rounded-lg min-w-0"
           placeholder="https://..."
           value={enlace}
-          onChange={e => setEnlace(e.target.value)}
+          onChange={e => { setEnlace(e.target.value); setSaved(false); }}
         />
         <button
           className="btn btn-sm btn-success rounded-lg"
           disabled={saving}
           onClick={handleGuardar}
         >
-          {saving ? 'Guardando...' : 'Guardar'}
+          {saving ? 'Guardando...' : saved ? 'Modificar' : 'Guardar'}
         </button>
       </div>
       {msg && (

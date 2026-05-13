@@ -581,10 +581,17 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                             </div>
                         </div>
                         <div>
-                            <label className={labelClasses}>Enlace/ruta a multimedia</label>
+                            <label className={labelClasses}>Enlace/ruta a multimedia <span className="text-base-content/30 font-normal normal-case tracking-normal">(enviado por el ponente)</span></label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><TbFileSymlink /></span>
-                                <input id="enlace_multimedia" type="text" className={`${inputClasses} pl-11 font-mono`} value={formatData.enlace_multimedia || ''} onChange={handleChange} readOnly={!modificando} placeholder="e.g.: https://drive.google.com/drive/home" />
+                                <input
+                                    id="enlace_multimedia"
+                                    type="text"
+                                    className={`${inputClasses} pl-11 font-mono cursor-not-allowed`}
+                                    value={formatData.enlace_multimedia || ''}
+                                    readOnly
+                                    placeholder="El ponente aún no ha enviado su enlace"
+                                />
                             </div>
                         </div>
                         <div className="md:col-span-2">
