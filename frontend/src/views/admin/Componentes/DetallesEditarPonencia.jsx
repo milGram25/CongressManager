@@ -391,57 +391,134 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                         </div>
                         <div>
                             <label className={labelClasses}>Ponente principal</label>
-                            <div className="relative" ref={principalRef}>
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FiUser /></span>
-                                <input
-                                    type="text"
-                                    className={`${inputClasses} pl-11`}
-                                    value={ponentePrincipal}
-                                    onChange={(e) => { setPonentePrincipal(e.target.value); setShowPrincipalSugg(true); }}
-                                    onFocus={() => setShowPrincipalSugg(true)}
-                                    onBlur={() => setTimeout(() => setShowPrincipalSugg(false), 200)}
-                                    readOnly={!modificando}
-                                    placeholder="Nombre del ponente principal"
-                                />
-                                {showPrincipalSugg && ponentePrincipal && modificando && (
-                                    <ul className="absolute z-50 w-full bg-base-100 border border-base-300 rounded-xl mt-1 max-h-40 overflow-y-auto shadow-lg">
-                                        {ponentesNombres.filter(n => n.toLowerCase().includes(ponentePrincipal.toLowerCase())).slice(0, 8).map((n, i) => (
-                                            <li key={i} className="px-4 py-2 hover:bg-primary/10 cursor-pointer text-sm" onMouseDown={() => { setPonentePrincipal(n); setShowPrincipalSugg(false); }}>{n}</li>
+                            {isMagistral ? (
+                                <div className="relative" ref={principalRef}>
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FiUser /></span>
+                                    <input
+                                        type="text"
+                                        className={`${inputClasses} pl-11`}
+                                        value={ponentePrincipal}
+                                        onChange={(e) => { setPonentePrincipal(e.target.value); setShowPrincipalSugg(true); }}
+                                        onFocus={() => setShowPrincipalSugg(true)}
+                                        onBlur={() => setTimeout(() => setShowPrincipalSugg(false), 200)}
+                                        readOnly={!modificando}
+                                        placeholder="Nombre del ponente principal"
+                                    />
+                                    {showPrincipalSugg && modificando && (
+                                        <ul className="absolute z-50 w-full bg-base-100 border border-base-300 rounded-xl mt-1 max-h-40 overflow-y-auto shadow-lg">
+                                            {(() => {
+                                                const search = ponentePrincipal.toLowerCase();
+                                                const filtered = ponentesNombres.filter(n => !coautores.includes(n));
+                                                const exact = filtered.filter(n => n.toLowerCase() === search);
+                                                const starts = filtered.filter(n => n.toLowerCase().startsWith(search) && n.toLowerCase() !== search);
+                                                const includes = filtered.filter(n => n.toLowerCase().includes(search) && !n.toLowerCase().startsWith(search));
+                                                const rest = filtered.filter(n => !n.toLowerCase().includes(search));
+                                                const combined = search ? [...exact, ...starts, ...includes, ...rest] : filtered;
+                                                return combined.slice(0, 15).map((n, i) => (
+                                                    <li key={i} className="px-4 py-2 hover:bg-primary/10 cursor-pointer text-sm" onMouseDown={() => { setPonentePrincipal(n); setShowPrincipalSugg(false); }}>{n}</li>
+                                                ));
+                                            })()}
+                                        </ul>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30 z-10"><FiUser /></span>
+                                    <select
+                                        className={`${inputClasses} pl-11`}
+                                        value={ponentePrincipal}
+                                        onChange={(e) => {
+                                            if (!modificando) return;
+                                            setPonentePrincipal(e.target.value);
+                                        }}
+                                        disabled={!modificando || !!(ponenciaData?.id || ponenciaData?.id_ponencia)}
+                                        title={`${!modificando || !!(ponenciaData?.id || ponenciaData?.id_ponencia) ? "No se puede modificar al ponente principal una vez asignado" : "Se modifica"}`}
+                                    >
+                                        <option value="" style={{ color: "gray" }}>Seleccione un ponente</option>
+                                        {ponentesNombres.map((n, i) => (
+                                            <option key={i} value={n} style={{ color: "black" }}>{n}</option>
                                         ))}
-                                    </ul>
-                                )}
-                            </div>
+                                    </select>
+                                </div>
+                            )}
                         </div>
                         <div>
                             <label className={labelClasses}>Coautores</label>
-                            <div className="relative" ref={coautorRef}>
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FiUsers /></span>
-                                <input
-                                    type="text"
-                                    className={`${inputClasses} pl-11`}
-                                    value={coautorInput}
-                                    onChange={(e) => { setCoautorInput(e.target.value); setShowCoautorSugg(true); }}
-                                    onFocus={() => setShowCoautorSugg(true)}
-                                    onBlur={() => setTimeout(() => setShowCoautorSugg(false), 200)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter' && coautorInput.trim()) { e.preventDefault(); setCoautores(prev => [...prev, coautorInput.trim()]); setCoautorInput(""); setShowCoautorSugg(false); } }}
-                                    readOnly={!modificando}
-                                    placeholder="Escribe y presiona Enter para agregar"
-                                />
-                                {showCoautorSugg && coautorInput && modificando && (
-                                    <ul className="absolute z-50 w-full bg-base-100 border border-base-300 rounded-xl mt-1 max-h-40 overflow-y-auto shadow-lg">
-                                        {ponentesNombres.filter(n => n.toLowerCase().includes(coautorInput.toLowerCase()) && !coautores.includes(n)).slice(0, 8).map((n, i) => (
-                                            <li key={i} className="px-4 py-2 hover:bg-primary/10 cursor-pointer text-sm" onMouseDown={() => { setCoautores(prev => [...prev, n]); setCoautorInput(""); setShowCoautorSugg(false); }}>{n}</li>
+                            {isMagistral ? (
+                                <div className="relative" ref={coautorRef}>
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FiUsers /></span>
+                                    <input
+                                        type="text"
+                                        className={`${inputClasses} pl-11`}
+                                        value={coautorInput}
+                                        onChange={(e) => { setCoautorInput(e.target.value); setShowCoautorSugg(true); }}
+                                        onFocus={() => setShowCoautorSugg(true)}
+                                        onBlur={() => setTimeout(() => setShowCoautorSugg(false), 200)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && coautorInput.trim()) {
+                                                e.preventDefault();
+                                                const newVal = coautorInput.trim();
+                                                setCoautores(prev => [...prev, newVal]);
+                                                setCoautorInput("");
+                                                setShowCoautorSugg(false);
+                                            }
+                                        }}
+                                        readOnly={!modificando}
+                                        placeholder="Escribe y presiona Enter para agregar"
+                                    />
+                                    {showCoautorSugg && modificando && (
+                                        <ul className="absolute z-50 w-full bg-base-100 border border-base-300 rounded-xl mt-1 max-h-40 overflow-y-auto shadow-lg">
+                                            {(() => {
+                                                const search = coautorInput.toLowerCase();
+                                                const filtered = ponentesNombres.filter(n => n !== ponentePrincipal && !coautores.includes(n));
+                                                const exact = filtered.filter(n => n.toLowerCase() === search);
+                                                const starts = filtered.filter(n => n.toLowerCase().startsWith(search) && n.toLowerCase() !== search);
+                                                const includes = filtered.filter(n => n.toLowerCase().includes(search) && !n.toLowerCase().startsWith(search));
+                                                const rest = filtered.filter(n => !n.toLowerCase().includes(search));
+                                                const combined = search ? [...exact, ...starts, ...includes, ...rest] : filtered;
+                                                return combined.slice(0, 15).map((n, i) => (
+                                                    <li key={i} className="px-4 py-2 hover:bg-primary/10 cursor-pointer text-sm" onMouseDown={() => {
+                                                        setCoautores(prev => [...prev, n]);
+                                                        setCoautorInput("");
+                                                        setShowCoautorSugg(false);
+                                                    }}>{n}</li>
+                                                ));
+                                            })()}
+                                        </ul>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30 z-10"><FiUsers /></span>
+                                    <select
+                                        className={`${inputClasses} pl-11`}
+                                        value=""
+                                        onChange={(e) => {
+                                            if (!modificando) return;
+                                            const newVal = e.target.value;
+                                            if (newVal && !coautores.includes(newVal)) {
+                                                setCoautores(prev => [...prev, newVal]);
+                                                e.target.value = "";
+                                            }
+                                        }}
+                                        disabled={!modificando}
+                                    >
+                                        <option value="" style={{ color: "gray" }}>Seleccione para agregar coautor</option>
+                                        {ponentesNombres.filter(n => n !== ponentePrincipal && !coautores.includes(n)).map((n, i) => (
+                                            <option key={i} value={n} style={{ color: "black" }}>{n}</option>
                                         ))}
-                                    </ul>
-                                )}
-                            </div>
+                                    </select>
+                                </div>
+                            )}
                             {coautores.length > 0 && (
                                 <div className="flex flex-wrap gap-2 mt-2">
                                     {coautores.map((c, i) => (
                                         <span key={i} className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-semibold px-3 py-1.5 rounded-full">
                                             {c}
                                             {modificando && (
-                                                <button type="button" onClick={() => setCoautores(prev => prev.filter((_, idx) => idx !== i))} className="hover:text-error transition-colors">
+                                                <button type="button" onClick={() => {
+                                                    setCoautores(prev => prev.filter((_, idx) => idx !== i))
+                                                }} className="hover:text-error transition-colors">
                                                     <FiX size={12} />
                                                 </button>
                                             )}
@@ -530,7 +607,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="md:col-span-2">
                             <label className={labelClasses}>Mesa física asignada</label>
-                            <select id="id_mesas_trabajo" value={formatData.id_mesas_trabajo} className={inputClasses + (isMagistral ? " font-mono text-slate-500" : "") + (formatData.id_mesas_trabajo === "" ? "text-gray-500" : "text-black")} onChange={handleChange} disabled={isMagistral || !modificando}>
+                            <select id="id_mesas_trabajo" value={formatData.id_mesas_trabajo} className={inputClasses + (isMagistral ? " font-mono text-slate-500 text-gray-500" : "") + (formatData.id_mesas_trabajo === "" ? "text-gray-500" : "text-black")} onChange={handleChange} disabled={isMagistral || !modificando}>
                                 {
                                     isMagistral ? (
                                         <option value="">No hay mesas en ponencias magistrales</option>
@@ -581,7 +658,8 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                 </section>
 
                 {isFullPage && modificando && (
-                    <div className='flex justify-center mt-12'>
+                    <div cla
+                        ssName='flex justify-center mt-12'>
                         <button onClick={handleSave} disabled={saving} className="px-12 py-4 rounded-2xl bg-black text-white font-black shadow-xl hover:bg-[#005a6a] transition-all active:scale-95 uppercase tracking-widest text-sm flex items-center gap-3 disabled:opacity-50">
                             {saving ? <span className="loading loading-spinner"></span> : <FiSave size={20} />}
                             Guardar Cambios
@@ -589,6 +667,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                     </div>
                 )}
             </div>
+
         </div>
     );
 });

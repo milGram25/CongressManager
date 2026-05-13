@@ -1468,16 +1468,16 @@ class PonenciaMagistralViewSet(viewsets.ModelViewSet):
 
 
 class PonentesNombresView(APIView):
-    """Retorna lista de nombres de ponentes para autocompletado."""
+    """Retorna lista de nombres de personas para autocompletado y sin repetidos (útil para el administrador)"""
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT DISTINCT TRIM(CONCAT_WS(' ', per.nombre, per.primer_apellido, per.segundo_apellido))
-                FROM ponente po
-                JOIN persona per ON per.id_persona = po.id_persona
+                SELECT DISTINCT TRIM(CONCAT_WS(' ', nombre, primer_apellido, segundo_apellido))
+                FROM persona
+                WHERE nombre IS NOT NULL
                 ORDER BY 1
             """)
-            nombres = [row[0] for row in cursor.fetchall()]
+            nombres = [row[0] for row in cursor.fetchall() if row[0]]
         return Response(nombres)
