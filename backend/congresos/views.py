@@ -93,10 +93,23 @@ class TipoTrabajoViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['post'], url_path='formato')
-    def upload_formato(self, request, pk=None):
+    @action(detail=True, methods=['post', 'delete'], url_path='formato')
+    def formato(self, request, pk=None):
         if not request.user.is_staff:
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+
+        if request.method == 'DELETE':
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT ruta_formato FROM tipo_trabajo_formato WHERE id_tipo_trabajo = %s", [pk])
+                row = cursor.fetchone()
+                if not row:
+                    return Response({'detail': 'No hay formato para este tipo de trabajo.'}, status=status.HTTP_404_NOT_FOUND)
+                old_path = os.path.join(settings.MEDIA_ROOT, row[0])
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+                cursor.execute("DELETE FROM tipo_trabajo_formato WHERE id_tipo_trabajo = %s", [pk])
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
         archivo = request.FILES.get('archivo')
         if not archivo:
             return Response({'detail': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -135,21 +148,6 @@ class TipoTrabajoViewSet(viewsets.ModelViewSet):
             """, [pk, ruta_relativa])
 
         return Response({'ruta_formato': ruta_relativa})
-
-    @action(detail=True, methods=['delete'], url_path='formato')
-    def delete_formato(self, request, pk=None):
-        if not request.user.is_staff:
-            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT ruta_formato FROM tipo_trabajo_formato WHERE id_tipo_trabajo = %s", [pk])
-            row = cursor.fetchone()
-            if not row:
-                return Response({'detail': 'No hay formato para este tipo de trabajo.'}, status=status.HTTP_404_NOT_FOUND)
-            old_path = os.path.join(settings.MEDIA_ROOT, row[0])
-            if os.path.exists(old_path):
-                os.remove(old_path)
-            cursor.execute("DELETE FROM tipo_trabajo_formato WHERE id_tipo_trabajo = %s", [pk])
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class DictamenViewSet(viewsets.ModelViewSet):
