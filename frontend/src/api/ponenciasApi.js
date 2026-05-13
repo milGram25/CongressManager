@@ -203,3 +203,14 @@ export async function publicarPonenciaApi(accessToken, idExtenso) {
   if (!res.ok) throw new Error(data.detail || 'Error al publicar la ponencia');
   return data;
 }
+
+export async function actualizarEnlacePonenciaApi(accessToken, idPonencia, enlace) {
+  const res = await fetch(`${API_URL}/api/ponencias/ponencia/${idPonencia}/enlace/`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ enlace }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Error al guardar el enlace');
+  return data;
+}

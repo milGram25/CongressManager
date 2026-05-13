@@ -1247,6 +1247,7 @@ class EstatusPonenteView(APIView):
                     r.estatus AS resumen_estatus,
                     r.retroalimentacion AS resumen_retroalimentacion,
                     p.id_extenso,
+                    p.id_evento,
                     ext.revisado AS extenso_revisado,
                     ext.id_evaluador,
                     ext.id_evaluador_2,
@@ -1276,7 +1277,7 @@ class EstatusPonenteView(APIView):
                 ORDER BY p.id_ponencia
             """, [id_ponente])
             cols = ['id_ponencia','titulo','tipo_ponencia','id_resumen','resumen_revisado',
-                    'resumen_estatus','resumen_retroalimentacion','id_extenso','extenso_revisado',
+                    'resumen_estatus','resumen_retroalimentacion','id_extenso','id_evento','extenso_revisado',
                     'id_evaluador','id_evaluador_2','id_evaluador_3',
                     'nombre_evento','fecha_hora_inicio','fecha_hora_final','sinopsis','cupos','enlace','nombre_congreso','tipo_participacion','lugar','ruta_formato']
             ponencias = [dict(zip(cols, row)) for row in c.fetchall()]
@@ -1352,9 +1353,11 @@ class EstatusPonenteView(APIView):
             fecha_fin = p['fecha_hora_final']
             result.append({
                 'id_ponencia': p['id_ponencia'],
+                'id_evento': p['id_evento'],
                 'titulo': p['titulo'],
                 'tipo_ponencia': p['tipo_ponencia'],
                 'estado': estado,
+                'publicado': p['id_evento'] is not None,
                 'retroalimentacion': retroalimentacion,
                 'criterio_comentarios': criterios_mods_map.get(p['id_extenso'], []) if estado == 'con_modificaciones' else [],
                 'id_resumen': p['id_resumen'],
@@ -1588,3 +1591,27 @@ class PublicarPonenciaView(APIView):
                 cursor.execute("UPDATE ponencia SET id_evento = %s WHERE id_ponencia = %s", [id_evento, id_ponencia])
 
         return Response({'detail': 'Ponencia publicada correctamente.', 'id_evento': id_evento}, status=status.HTTP_201_CREATED)
+
+
+class ActualizarEnlacePonenciaView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        enlace = request.data.get('enlace', '').strip()
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT p.id_evento
+                FROM ponencia p
+                JOIN ponente_has_ponencia php ON php.id_ponencia = p.id_ponencia
+                JOIN ponente po ON po.id_ponente = php.id_ponente
+                WHERE p.id_ponencia = %s AND po.id_persona = %s
+                LIMIT 1
+            """, [pk, request.user.pk])
+            row = cursor.fetchone()
+            if not row:
+                return Response({'detail': 'Ponencia no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+            id_evento = row[0]
+            if not id_evento:
+                return Response({'detail': 'La ponencia aún no ha sido publicada.'}, status=status.HTTP_400_BAD_REQUEST)
+            cursor.execute("UPDATE evento SET enlace = %s WHERE id_evento = %s", [enlace, id_evento])
+        return Response({'detail': 'Enlace actualizado.', 'enlace': enlace})

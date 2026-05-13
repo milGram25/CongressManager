@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ListaExtensos from "./Componentes/ListaExtensos";
 import { getCongresosApi, getEvaluadoresDisponiblesApi } from "../../api/adminApi";
 import { getExtensosCongreso, asignarEvaluadoresApi, asignarEvaluador3Api, buildMediaUrl, publicarPonenciaApi } from "../../api/ponenciasApi";
@@ -43,6 +44,7 @@ function RubricaGrupoStatusRow({ grupo }) {
 }
 
 function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsignarDos, onAsignarTres, toast, onPublicado }) {
+  const navigate = useNavigate();
   const [r1Sel, setR1Sel] = useState('');
   const [r2Sel, setR2Sel] = useState('');
   const [r3Sel, setR3Sel] = useState('');
@@ -98,12 +100,11 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
   const handlePublicar = async () => {
     setPublishing(true);
     try {
-      await publicarPonenciaApi(accessToken, extenso.id_extenso);
-      toast('Ponencia publicada correctamente.');
+      const { id_evento } = await publicarPonenciaApi(accessToken, extenso.id_extenso);
       if (onPublicado) onPublicado(extenso.id_extenso);
+      navigate(`/admin/eventos/ponencias/detalles/${id_evento}?edit=true`);
     } catch (err) {
       toast(err.message);
-    } finally {
       setPublishing(false);
     }
   };

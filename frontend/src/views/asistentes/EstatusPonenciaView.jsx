@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMisPonenciasPonenteApi, buildMediaUrl } from '../../api/ponenciasApi';
+import { getMisPonenciasPonenteApi, buildMediaUrl, actualizarEnlacePonenciaApi } from '../../api/ponenciasApi';
 
 const ESTADO_CONFIG = {
   pendiente_dictaminacion: { label: 'En espera de dictamen', border: 'border-l-gray-400', dot: 'bg-gray-400', text: 'text-gray-500' },
@@ -11,6 +11,52 @@ const ESTADO_CONFIG = {
   extenso_aceptado:        { label: '¡Ponencia aceptada!',  border: 'border-l-success', dot: 'bg-success', text: 'text-success' },
   extenso_rechazado:       { label: 'Ponencia rechazada',   border: 'border-l-error',   dot: 'bg-error',   text: 'text-error' },
 };
+
+function EnlaceMultimediaForm({ ponencia }) {
+  const accessToken = localStorage.getItem('congress_access');
+  const [enlace, setEnlace] = useState(ponencia.evento?.enlace ?? '');
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState(null);
+
+  const handleGuardar = async () => {
+    setSaving(true);
+    setMsg(null);
+    try {
+      await actualizarEnlacePonenciaApi(accessToken, ponencia.id_ponencia, enlace);
+      setMsg({ ok: true, text: 'Enlace guardado correctamente.' });
+    } catch (err) {
+      setMsg({ ok: false, text: err.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="mt-4 border-t border-success/20 pt-4">
+      <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Enlace / ruta a multimedia</p>
+      <p className="text-xs text-slate-400 mb-3">Agrega el enlace a tu presentación, video u otro recurso multimedia que se mostrará en el evento.</p>
+      <div className="flex gap-2 items-center flex-wrap">
+        <input
+          type="url"
+          className="input input-bordered input-sm flex-1 rounded-lg min-w-0"
+          placeholder="https://..."
+          value={enlace}
+          onChange={e => setEnlace(e.target.value)}
+        />
+        <button
+          className="btn btn-sm btn-success rounded-lg"
+          disabled={saving}
+          onClick={handleGuardar}
+        >
+          {saving ? 'Guardando...' : 'Guardar'}
+        </button>
+      </div>
+      {msg && (
+        <p className={`text-xs mt-2 font-medium ${msg.ok ? 'text-success' : 'text-error'}`}>{msg.text}</p>
+      )}
+    </div>
+  );
+}
 
 function PonenciaCard({ ponencia }) {
   const navigate = useNavigate();
@@ -62,6 +108,10 @@ function PonenciaCard({ ponencia }) {
           )}
         </div>
       </div>
+
+      {ponencia.estado === 'extenso_aceptado' && ponencia.publicado && (
+        <EnlaceMultimediaForm ponencia={ponencia} />
+      )}
 
       {showModal && (
         <div className="modal modal-open">
