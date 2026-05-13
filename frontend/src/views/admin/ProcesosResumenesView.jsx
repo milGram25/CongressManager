@@ -128,7 +128,6 @@ function AsignarDictaminadorCard({ resumen, dictaminadores, onAsignado }) {
     <article className="rounded-[26px] border border-black/55 bg-white shadow-sm">
       <header className="bg-black px-6 py-4 rounded-t-[25px]">
         <h3 className="text-white font-bold text-lg leading-tight">{resumen.title}</h3>
-        <p className="text-gray-400 text-sm mt-0.5">{resumen.autores?.join(', ') || 'Sin autores'}</p>
       </header>
 
       <div className="p-6 space-y-5">

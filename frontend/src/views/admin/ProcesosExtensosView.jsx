@@ -105,7 +105,6 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
         <h3 className=" font-semibold  tracking-wide text-slate-700">Información de extenso</h3>
         <div className="mt-4 space-y-2 text-[14px] leading-6 text-slate-700">
           <p><span className="font-semibold text-slate-900">Título:</span> {extenso.title}</p>
-          <p><span className="font-semibold text-slate-900">Autores:</span> {extenso.autores?.join(' / ') || 'Sin autores'}</p>
           {extenso.ruta_extenso && (
             <a
               href={buildMediaUrl(extenso.ruta_extenso)}

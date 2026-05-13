@@ -605,8 +605,9 @@ class DictaminadoresDisponiblesView(APIView):
                        TRIM(CONCAT_WS(' ', per.nombre, per.primer_apellido, per.segundo_apellido))
                 FROM dictaminador d
                 JOIN persona per ON per.id_persona = d.id_persona
+                JOIN dictaminador_congreso dc ON dc.id_persona = d.id_persona AND dc.id_congreso = %s
                 ORDER BY per.primer_apellido, per.nombre
-            """)
+            """, [id_congreso])
             data = [{'id_dictaminador': r[0], 'nombre_completo': r[1]} for r in cursor.fetchall()]
         return Response(data)
 
@@ -626,8 +627,9 @@ class EvaluadoresDisponiblesView(APIView):
                        TRIM(CONCAT_WS(' ', per.nombre, per.primer_apellido, per.segundo_apellido))
                 FROM evaluador e
                 JOIN persona per ON per.id_persona = e.id_persona
+                JOIN evaluador_congreso ec ON ec.id_persona = e.id_persona AND ec.id_congreso = %s
                 ORDER BY per.primer_apellido, per.nombre
-            """)
+            """, [id_congreso])
             data = [{'id_evaluador': r[0], 'nombre_completo': r[1]} for r in cursor.fetchall()]
         return Response(data)
 
@@ -679,7 +681,7 @@ class ResumenesCongresoView(APIView):
                 SELECT
                     p.id_ponencia,
                     p.id_resumen,
-                    COALESCE(s.nombre, 'Ponencia ' || p.id_ponencia::text) AS titulo,
+                    COALESCE(mult.nombre, e.nombre_evento, s.nombre, 'Ponencia ' || p.id_ponencia::text) AS titulo,
                     r.id_dictaminador,
                     r.revisado,
                     r.estatus,
@@ -692,6 +694,7 @@ class ResumenesCongresoView(APIView):
                 JOIN evento e ON p.id_evento = e.id_evento
                 JOIN resumen r ON p.id_resumen = r.id_resumen
                 LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
+                LEFT JOIN multimedia mult ON p.id_multimedia = mult.id_material
                 LEFT JOIN dictaminador d ON r.id_dictaminador = d.id_dictaminador
                 LEFT JOIN persona d_per ON d.id_persona = d_per.id_persona
                 WHERE e.id_congreso = %s
@@ -775,7 +778,7 @@ class ExtensosCongresoView(APIView):
                     p.id_ponencia,
                     p.id_extenso,
                     p.id_subarea,
-                    ext.titulo,
+                    COALESCE(mult.nombre, e.nombre_evento, ext.titulo, 'Ponencia ' || p.id_ponencia::text) AS titulo,
                     ext.ruta_relativa,
                     ext.id_evaluador,
                     ext.id_evaluador_2,
@@ -795,6 +798,7 @@ class ExtensosCongresoView(APIView):
                 FROM ponencia p
                 JOIN evento e ON p.id_evento = e.id_evento
                 JOIN extenso ext ON p.id_extenso = ext.id_extenso
+                LEFT JOIN multimedia mult ON p.id_multimedia = mult.id_material
                 LEFT JOIN evaluador ev1 ON ext.id_evaluador = ev1.id_evaluador
                 LEFT JOIN persona e1_per ON ev1.id_persona = e1_per.id_persona
                 LEFT JOIN evaluador ev2 ON ext.id_evaluador_2 = ev2.id_evaluador
@@ -914,13 +918,14 @@ class MisResumenesView(APIView):
         with connection.cursor() as c:
             c.execute("""
                 SELECT p.id_ponencia, p.id_resumen,
-                       COALESCE(s.nombre, 'Ponencia ' || p.id_ponencia::text) AS titulo,
+                       COALESCE(mult.nombre, e.nombre_evento, s.nombre, 'Ponencia ' || p.id_ponencia::text) AS titulo,
                        r.revisado, r.estatus, cong.nombre_congreso, e.id_congreso
                 FROM ponencia p
                 JOIN evento e ON p.id_evento = e.id_evento
                 JOIN congreso cong ON e.id_congreso = cong.id_congreso
                 JOIN resumen r ON p.id_resumen = r.id_resumen
                 LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
+                LEFT JOIN multimedia mult ON p.id_multimedia = mult.id_material
                 WHERE r.id_dictaminador = %s
                 ORDER BY r.revisado, p.id_ponencia
             """, [dictaminador.id_dictaminador])
@@ -953,13 +958,16 @@ class MisExtensosView(APIView):
         eid = evaluador.id_evaluador
         with connection.cursor() as c:
             c.execute("""
-                SELECT p.id_ponencia, p.id_extenso, ext.titulo, ext.ruta_relativa,
+                SELECT p.id_ponencia, p.id_extenso,
+                       COALESCE(mult.nombre, e.nombre_evento, ext.titulo, 'Ponencia ' || p.id_ponencia::text) AS titulo,
+                       ext.ruta_relativa,
                        ext.revisado, cong.nombre_congreso, e.id_congreso,
                        ev.id_evaluacion, ev.estatus AS estatus_evaluacion
                 FROM ponencia p
                 JOIN evento e ON p.id_evento = e.id_evento
                 JOIN congreso cong ON e.id_congreso = cong.id_congreso
                 JOIN extenso ext ON p.id_extenso = ext.id_extenso
+                LEFT JOIN multimedia mult ON p.id_multimedia = mult.id_material
                 LEFT JOIN evaluacion ev ON ev.id_extenso = ext.id_extenso AND ev.id_evaluador = %s
                 WHERE ext.id_evaluador = %s OR ext.id_evaluador_2 = %s OR ext.id_evaluador_3 = %s
                 ORDER BY ev.id_evaluacion NULLS FIRST, p.id_ponencia
@@ -1185,7 +1193,7 @@ class EstatusPonenteView(APIView):
             c.execute("""
                 SELECT DISTINCT
                     p.id_ponencia,
-                    COALESCE(s.nombre, 'Ponencia ' || p.id_ponencia::text) AS titulo,
+                    COALESCE(mult.nombre, e.nombre_evento, s.nombre, 'Ponencia ' || p.id_ponencia::text) AS titulo,
                     e.tipo_evento AS tipo_ponencia,
                     p.id_resumen,
                     r.revisado AS resumen_revisado,
@@ -1209,6 +1217,7 @@ class EstatusPonenteView(APIView):
                 JOIN ponencia p ON php.id_ponencia = p.id_ponencia
                 LEFT JOIN evento e ON p.id_evento = e.id_evento
                 LEFT JOIN mesas_trabajo m ON e.id_mesas_trabajo = m.id_mesas_trabajo
+                LEFT JOIN multimedia mult ON p.id_multimedia = mult.id_material
                 LEFT JOIN congreso cong ON e.id_congreso = cong.id_congreso
                 LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
                 LEFT JOIN resumen r ON p.id_resumen = r.id_resumen
