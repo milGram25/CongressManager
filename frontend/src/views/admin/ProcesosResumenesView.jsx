@@ -111,11 +111,12 @@ function AsignarDictaminadorCard({ resumen, dictaminadores, onAsignado }) {
     setMsg(null);
     try {
       await asignarDictaminadorApi(localStorage.getItem('congress_access'), resumen.id_resumen, Number(sel));
-      const d = dictaminadores.find(d => String(d.id_dictaminador) === sel);
+      const d = dictaminadores.find(d => String(d.id_dictaminador) === String(sel));
       setMsg({ ok: true, text: 'Dictaminador asignado correctamente.' });
       onAsignado(resumen.id_resumen, Number(sel), d?.nombre_completo ?? '');
-    } catch {
-      setMsg({ ok: false, text: 'Error al asignar dictaminador.' });
+    } catch (err) {
+      const detail = err?.response?.data?.detail ?? 'Error al asignar dictaminador.';
+      setMsg({ ok: false, text: detail });
     } finally {
       setAssigning(false);
     }
@@ -166,25 +167,29 @@ function AsignarDictaminadorCard({ resumen, dictaminadores, onAsignado }) {
           <h4 className=" font-semibold  tracking-wide text-slate-700 mb-2">
             {resumen.asignado ? 'Reasignar dictaminador' : 'Asignar dictaminador'}
           </h4>
-          {dictaminadores.length === 0 ? (
-            <p className="text-xs text-amber-600 italic">No hay dictaminadores registrados en este congreso.</p>
-          ) : (
-            <div className="flex flex-col gap-3">
-              <BuscadorPersonal
-                options={dictaminadores}
-                value={sel}
-                onChange={setSel}
-                placeholder="Busca un dictaminador..."
-              />
-              <button
-                onClick={handleAsignar}
-                disabled={!sel || assigning}
-                className="btn btn-black w-full rounded-xl disabled:opacity-50"
-              >
-                {assigning ? <span className="loading loading-spinner loading-xs" /> : 'Confirmar asignación'}
-              </button>
-            </div>
-          )}
+          {(() => {
+            const autoresIds = new Set((resumen.ponentes_personas_ids ?? []).map(Number));
+            const dictaminadoresSinAutor = dictaminadores.filter(d => !autoresIds.has(Number(d.id_persona)));
+            return dictaminadoresSinAutor.length === 0 ? (
+              <p className="text-xs text-amber-600 italic">No hay dictaminadores registrados en este congreso.</p>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <BuscadorPersonal
+                  options={dictaminadoresSinAutor}
+                  value={sel}
+                  onChange={v => setSel(String(v))}
+                  placeholder="Busca un dictaminador..."
+                />
+                <button
+                  onClick={handleAsignar}
+                  disabled={!sel || assigning}
+                  className="btn btn-black w-full rounded-xl disabled:opacity-50"
+                >
+                  {assigning ? <span className="loading loading-spinner loading-xs" /> : 'Confirmar asignación'}
+                </button>
+              </div>
+            );
+          })()}
         </section>
 
         <section>

@@ -602,13 +602,14 @@ class DictaminadoresDisponiblesView(APIView):
         with connection.cursor() as cursor:
             cursor.execute("""
                 SELECT d.id_dictaminador,
-                       TRIM(CONCAT_WS(' ', per.nombre, per.primer_apellido, per.segundo_apellido))
+                       TRIM(CONCAT_WS(' ', per.nombre, per.primer_apellido, per.segundo_apellido)),
+                       d.id_persona
                 FROM dictaminador d
                 JOIN persona per ON per.id_persona = d.id_persona
                 JOIN dictaminador_congreso dc ON dc.id_persona = d.id_persona AND dc.id_congreso = %s
                 ORDER BY per.primer_apellido, per.nombre
             """, [id_congreso])
-            data = [{'id_dictaminador': r[0], 'nombre_completo': r[1]} for r in cursor.fetchall()]
+            data = [{'id_dictaminador': r[0], 'nombre_completo': r[1], 'id_persona': r[2]} for r in cursor.fetchall()]
         return Response(data)
 
 
@@ -646,6 +647,26 @@ class AsignarDictaminadorView(APIView):
         except Resumen.DoesNotExist:
             return Response({'detail': 'Resumen no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
         id_dictaminador = request.data.get('id_dictaminador')
+        if not id_dictaminador:
+            return Response({'detail': 'id_dictaminador es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT po.id_persona
+                FROM ponencia p
+                JOIN ponente_has_ponencia php ON php.id_ponencia = p.id_ponencia
+                JOIN ponente po ON po.id_ponente = php.id_ponente
+                WHERE p.id_resumen = %s
+            """, [pk])
+            ponentes_personas = {row[0] for row in cursor.fetchall()}
+            cursor.execute("""
+                SELECT id_persona FROM dictaminador WHERE id_dictaminador = %s
+            """, [int(id_dictaminador)])
+            row = cursor.fetchone()
+            if row and row[0] in ponentes_personas:
+                return Response(
+                    {'detail': 'Un dictaminador no puede revisar su propia ponencia.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         resumen.id_dictaminador_id = id_dictaminador
         resumen.save(update_fields=['id_dictaminador'])
         return Response({'id_resumen': resumen.pk, 'id_dictaminador': id_dictaminador})
@@ -715,16 +736,18 @@ class ResumenesCongresoView(APIView):
 
             c.execute(f"""
                 SELECT php.id_ponencia,
-                    per.nombre || ' ' || per.primer_apellido
+                    per.nombre || ' ' || per.primer_apellido,
+                    po.id_persona
                 FROM ponente_has_ponencia php
                 LEFT JOIN ponente po ON php.id_ponente = po.id_ponente
                 LEFT JOIN persona per ON po.id_persona = per.id_persona
                 WHERE php.id_ponencia IN ({format_strings})
             """, ponencia_ids)
             autores_map = {}
-            
-            for id_pon, nombre in c.fetchall():
+            ponentes_personas_map = {}
+            for id_pon, nombre, id_persona in c.fetchall():
                 autores_map.setdefault(id_pon, []).append(nombre)
+                ponentes_personas_map.setdefault(id_pon, []).append(id_persona)
 
             c.execute("""
                 SELECT dr.id_resumen, dp.descripcion, ep.cumplio, ep.comentario_especifico
@@ -751,6 +774,7 @@ class ResumenesCongresoView(APIView):
                 'id_resumen': p['id_resumen'],
                 'title': p['titulo'],
                 'autores': autores_map.get(p['id_ponencia'], []),
+                'ponentes_personas_ids': ponentes_personas_map.get(p['id_ponencia'], []),
                 'asignado': p['id_dictaminador'] is not None,
                 'revisado': p['revisado'] or False,
                 'aceptado': p['estatus'] == 'aceptado',
