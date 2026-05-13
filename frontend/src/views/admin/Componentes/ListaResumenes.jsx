@@ -102,7 +102,12 @@ function IconBtn({ active, title, popoverContent, children }) {
 }
 
 function PopoverAsignado({ item, dictaminadores }) {
-  const asignados = dictaminadores.filter((dictaminador) => item.revisores.includes(dictaminador.id));
+  // Para resúmenes, usamos id_dictaminador. Para extensos, puede ser una lista.
+  const idsAsignados = item.revisores || (item.id_dictaminador ? [item.id_dictaminador] : []);
+  const asignados = dictaminadores.filter((d) => {
+    const dId = d.id || d.id_dictaminador || d.id_evaluador;
+    return idsAsignados.map(id => String(id)).includes(String(dId));
+  });
 
   return (
     <div>
@@ -170,8 +175,8 @@ function PopoverRevisado({ item }) {
 function PopoverAceptado({ item }) {
   return (
     <div>
-      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-base-content/50">Estado de aceptacion</p>
-      {item.aceptado ? (
+      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-base-content/50">Estado de aceptación</p>
+      {item.aceptado ==="aceptado"? (
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100">
             <MdCheck size={14} className="text-green-600" />
@@ -183,14 +188,14 @@ function PopoverAceptado({ item }) {
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100">
             <MdPanTool size={13} className="text-amber-600" />
           </div>
-          <span className="text-xs font-semibold text-amber-700">En espera de aceptacion</span>
+          <span className="text-xs font-semibold text-amber-700">Rechazado</span>
         </div>
       ) : (
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-base-200">
             <MdClose size={13} className="text-base-content/40" />
           </div>
-          <span className="text-xs text-base-content/55">Aun no revisado</span>
+          <span className="text-xs text-base-content/55">Aún no revisado</span>
         </div>
       )}
     </div>
@@ -211,12 +216,24 @@ function ResumenRow({ item, dictaminadores, selected, onView }) {
       </button>
 
       <button type="button" onClick={() => onView(item)} className="min-w-0 flex-1 text-left">
-        <p className="truncate text-sm font-semibold text-slate-800">{item.title}</p>
+        <p
+          className="truncate text-sm font-semibold text-slate-800"
+          title={
+            item.title
+              ? `Subárea: ${item.title}` //Se está mostrando la subárea aquí
+              : "No se hay subárea"
+          }
+        >
+          {item.autores?.length > 0
+            ? `Ponentes: ${item.autores.join(', ')}`
+            : `Subárea: ${item.title}`
+          }
+        </p>
       </button>
 
       <div className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-[#f0f2f4] px-3 py-1.5">
         <StatusDot active={item.asignado} />
-        <IconBtn active={item.asignado} title="Ver revisores asignados" popoverContent={<PopoverAsignado item={item} dictaminadores={dictaminadores} />}>
+        <IconBtn active={item.asignado} title="Revisores asignados" >
           <MdPerson size={15} />
         </IconBtn>
 
@@ -225,8 +242,8 @@ function ResumenRow({ item, dictaminadores, selected, onView }) {
           <MdPanTool size={15} />
         </IconBtn>
 
-        <StatusDot active={item.aceptado} />
-        <IconBtn active={item.aceptado} title="Ver estado de aceptacion" popoverContent={<PopoverAceptado item={item} />}>
+        <StatusDot active={item.aceptado==="aceptado"} />
+        <IconBtn active={item.aceptado==="aceptado"} title="Ver estado de aceptacion" popoverContent={<PopoverAceptado item={item} />}>
           <MdCheck size={16} />
         </IconBtn>
       </div>
@@ -245,23 +262,21 @@ export default function ListaResumenes({ listaElementos = [], dictaminadores = [
     let resultado = listaElementos;
 
     if (normalizedSearch) {
-      resultado = resultado.filter((item) => item.title.toLowerCase().includes(normalizedSearch));
+      resultado = resultado.filter((item) => 
+        (item.title || "").toLowerCase().includes(normalizedSearch)
+      );
     }
 
-    switch (ordenarItem) {
-      case "asignados":
-        return resultado.filter((item) => item.asignado);
-      case "no_asignados":
-        return resultado.filter((item) => !item.asignado);
-      case "revisados":
-        return resultado.filter((item) => item.revisado);
-      case "aceptados":
-        return resultado.filter((item) => item.aceptado);
-      case "pendientes":
-        return resultado.filter((item) => !item.aceptado);
-      default:
-        return resultado;
-    }
+    if (ordenarItem === "todos") return resultado;
+    
+    return resultado.filter((item) => {
+      if (ordenarItem === "asignados") return item.asignado;
+      if (ordenarItem === "no_asignados") return !item.asignado;
+      if (ordenarItem === "revisados") return item.revisado;
+      if (ordenarItem === "aceptados") return item.aceptado;
+      if (ordenarItem === "pendientes") return !item.revisado;
+      return true;
+    });
   }, [listaElementos, ordenarItem, valorInput]);
 
   useEffect(() => {
@@ -324,7 +339,7 @@ export default function ListaResumenes({ listaElementos = [], dictaminadores = [
       <div className="space-y-4 px-4 pb-4 pt-3 md:px-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-[280px]">
-            <h3 className="text-[30px] font-black tracking-tight text-slate-900">RESÚMENES</h3>
+            <h3 className="text-[30px] font-black tracking-tight text-slate-900">Resúmenes</h3>
             <p className="mt-1 text-xs leading-5 text-slate-500">
               Aquí puede encontrar todos los resúmenes.
               <br />
@@ -378,7 +393,7 @@ export default function ListaResumenes({ listaElementos = [], dictaminadores = [
         </div>
 
         <div className="flex items-center justify-between border-t border-slate-200 pt-3">
-          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">Lista disponible</span>
+          <span className="text-xs  tracking-[0.18em] text-slate-400">Lista disponible</span>
           <span className="text-xs font-medium text-slate-400">{listaFiltrada.length} resultado(s)</span>
         </div>
 

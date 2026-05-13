@@ -23,8 +23,8 @@ function Campo({ label, value }) {
   return (
     <div className="flex items-center gap-3">
       <span className="text-xs text-base-content/50 w-36 flex-shrink-0">{label}</span>
-      <span className="flex-1 border border-base-300 rounded-full px-3 py-1 text-sm text-base-content bg-base-100 truncate">
-        {value}
+      <span className={`flex-1 border border-base-300 rounded-full px-3 py-1 text-sm text-base-content bg-base-100 truncate h-8 ${!value&&"text-gray-500"}`} >
+        {value||"Sin datos"}
       </span>
     </div>
   );

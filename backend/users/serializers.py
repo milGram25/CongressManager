@@ -42,16 +42,11 @@ class ParticipantSerializer(serializers.ModelSerializer):
         return " ".join([n for n in partes if n]).strip()
 
     def get_rol(self, obj):
-        try:
-            obj.dictaminador
+        from .models import DictaminadorCongreso, EvaluadorCongreso
+        if DictaminadorCongreso.objects.filter(id_persona=obj).exists():
             return 'Dictaminador'
-        except Exception:
-            pass
-        try:
-            obj.evaluador
+        if EvaluadorCongreso.objects.filter(id_persona=obj).exists():
             return 'Evaluador'
-        except Exception:
-            pass
         try:
             obj.ponente
             return 'Ponente'
@@ -139,26 +134,38 @@ class UserSerializer(serializers.ModelSerializer):
     nombre_completo = serializers.SerializerMethodField()
     es_dictaminador = serializers.SerializerMethodField()
     es_evaluador = serializers.SerializerMethodField()
+    es_estudiante_validado = serializers.SerializerMethodField()
+    email_institucional = serializers.SerializerMethodField()
 
     class Meta:
         model = Persona
         fields = (
             'id_persona', 'correo_electronico', 'nombre', 'primer_apellido',
             'segundo_apellido', 'rol', 'nombre_completo',
-            'es_dictaminador', 'es_evaluador',
+            'es_dictaminador', 'es_evaluador', 'es_estudiante_validado',
+            'email_institucional'
         )
+
+    def get_es_estudiante_validado(self, obj):
+        try:
+            return obj.asistente.es_estudiante_validado
+        except Exception:
+            return False
+
+    def get_email_institucional(self, obj):
+        try:
+            return obj.asistente.email_institucional
+        except Exception:
+            return None
 
     def get_rol(self, obj):
         if obj.is_superuser or obj.is_staff:
             return 'administrador'
-        try:
-            obj.dictaminador; return 'dictaminador'
-        except Exception:
-            pass
-        try:
-            obj.evaluador; return 'revisor'
-        except Exception:
-            pass
+        from .models import DictaminadorCongreso, EvaluadorCongreso
+        if DictaminadorCongreso.objects.filter(id_persona=obj).exists():
+            return 'dictaminador'
+        if EvaluadorCongreso.objects.filter(id_persona=obj).exists():
+            return 'revisor'
         try:
             obj.ponente; return 'ponente'
         except Exception:
@@ -169,15 +176,9 @@ class UserSerializer(serializers.ModelSerializer):
         return ' '.join(x for x in [obj.nombre, obj.primer_apellido, obj.segundo_apellido] if x).strip()
 
     def get_es_dictaminador(self, obj):
-        from .models import Dictaminador, DictaminadorCongreso
-        return (
-            Dictaminador.objects.filter(id_persona=obj).exists() or
-            DictaminadorCongreso.objects.filter(id_persona=obj).exists()
-        )
+        from .models import DictaminadorCongreso
+        return DictaminadorCongreso.objects.filter(id_persona=obj).exists()
 
     def get_es_evaluador(self, obj):
-        from .models import Evaluador, EvaluadorCongreso
-        return (
-            Evaluador.objects.filter(id_persona=obj).exists() or
-            EvaluadorCongreso.objects.filter(id_persona=obj).exists()
-        )
+        from .models import EvaluadorCongreso
+        return EvaluadorCongreso.objects.filter(id_persona=obj).exists()

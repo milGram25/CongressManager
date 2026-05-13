@@ -5,10 +5,11 @@ from .views import (
     ParticipantsListView,
     ConstanciaUploadView, BulkConstanciaActionView,
     FacturaUploadView, BulkFacturaActionView,
-    SolicitarFacturaView, MisFacturasView,
+    SolicitarFacturaView, MisFacturasView, MisConstanciasView,
     FacturasPendientesAdminView,
     UserActionHistoryView,
     AllUsersView, RoleAssignView, RoleRemoveView,
+    EnviarCodigoVerificacionView, VerificarCodigoView,
 )
 
 app_name = 'users'
@@ -25,9 +26,12 @@ urlpatterns = [
     path('factura/bulk-action/', BulkFacturaActionView.as_view(), name='factura-bulk'),
     path('facturas/solicitar/', SolicitarFacturaView.as_view(), name='factura-solicitar'),
     path('facturas/mis/', MisFacturasView.as_view(), name='facturas-mis'),
+    path('constancias/mis/', MisConstanciasView.as_view(), name='constancias-mis'),
     path('facturas/pendientes/', FacturasPendientesAdminView.as_view(), name='facturas-pendientes-admin'),
     path('history/', UserActionHistoryView.as_view(), name='user-history'),
     path('all/', AllUsersView.as_view(), name='all-users'),
     path('<int:id_persona>/role/assign/', RoleAssignView.as_view(), name='role-assign'),
     path('<int:id_persona>/role/remove/', RoleRemoveView.as_view(), name='role-remove'),
+    path('estudiante/validar/enviar-codigo/', EnviarCodigoVerificacionView.as_view(), name='enviar-codigo'),
+    path('estudiante/validar/verificar-codigo/', VerificarCodigoView.as_view(), name='verificar-codigo'),
 ]

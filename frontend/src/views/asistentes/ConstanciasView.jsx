@@ -1,35 +1,40 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { 
-  MdReceipt, 
-  MdFileDownload, 
-  MdAccessTime, 
+import { getMisConstanciasApi } from "../../api/pagosApi";
+import CertificateTemplate from "../admin/Componentes/CertificateTemplate";
+import {
+  MdReceipt,
+  MdFileDownload,
+  MdAccessTime,
   MdErrorOutline,
   MdBusiness,
-  MdFilterList
+  MdFilterList,
+  MdClose,
+  MdPrint,
 } from "react-icons/md";
 
 export default function ConstanciasView() {
   const { user } = useAuth();
+  const accessToken = localStorage.getItem('congress_access');
 
-  const [misConstancias, setMisConstancias] = useState([
-    {
-      id: "CONST-2026-001",
-      congreso: "CIENU 2026",
-      fechaEmision: "2026-04-01",
-      tipo: "Participante",
-      estatus: "disponible",
-      pdfUrl: "#",
-    },
-    {
-      id: "CONST-2025-002",
-      congreso: "CIENU 2025",
-      fechaEmision: "2025-04-05",
-      tipo: "Ponente",
-      estatus: "en_proceso",
-      pdfUrl: null,
-    }
-  ]);
+  const [misConstancias, setMisConstancias] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [modalConstancia, setModalConstancia] = useState(null);
+
+  useEffect(() => {
+    const fetchConstancias = async () => {
+      try {
+        const data = await getMisConstanciasApi(accessToken);
+        setMisConstancias(data);
+      } catch (err) {
+        setError('No se pudieron cargar tus constancias.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchConstancias();
+  }, []);
 
   const [configFiltro, setConfigFiltro] = useState("todas_desc");
 
@@ -52,9 +57,45 @@ export default function ConstanciasView() {
 
   const enProcesoCount = misConstancias.filter(c => c.estatus === "en_proceso").length;
 
+  const handlePrintCertificate = () => {
+    const el = document.getElementById('user-certificate-print');
+    if (!el) return;
+    const nombre = user?.nombre_completo?.replace(/\s/g, '_') || 'constancia';
+    const printWindow = window.open('', '', 'width=1200,height=800');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Constancia_${nombre}</title>
+          <script src="https://cdn.tailwindcss.com"><\/script>
+          <style>
+            @page { size: landscape; margin: 0; }
+            body { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: sans-serif; }
+          </style>
+        </head>
+        <body>
+          ${el.innerHTML}
+          <script>window.onload = () => { setTimeout(() => { window.print(); window.close(); }, 800); };<\/script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <span className="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+  );
+
+  if (error) return (
+    <div className="max-w-5xl mx-auto p-6">
+      <div className="bg-error/10 border border-error/30 text-error p-4 rounded-xl text-sm font-medium">{error}</div>
+    </div>
+  );
+
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6 bg-base-100 min-h-screen">
-      
+
       {/* ENCABEZADO */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl border border-base-300 shadow-sm">
         <div>
@@ -71,18 +112,17 @@ export default function ConstanciasView() {
       <div className="bg-accent/20 border border-accent/50 p-4 rounded-xl flex items-start gap-3">
         <MdErrorOutline className="text-alt mt-1 size-3 shrink-0" />
         <p className="text-xs text-neutral leading-relaxed">
-          <span className="font-bold text-primary">Nota:</span> Las constancias pueden tardar 
+          <span className="font-bold text-primary">Nota:</span> Las constancias pueden tardar
           <b> hasta 72 horas</b> después del evento en estar disponibles.
         </p>
       </div>
 
       {/* FILTRO + RESUMEN */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-2 rounded-xl border border-base-300 shadow-sm">
-        
         <div className="w-full md:w-72 border border-base-300 rounded-lg overflow-hidden bg-base-100/50">
           <div className="flex items-center gap-2 px-3 py-2 w-full">
             <MdFilterList className="text-alt shrink-0" />
-            <select 
+            <select
               className="bg-transparent text-xs font-bold text-primary focus:outline-none cursor-pointer w-full"
               value={configFiltro}
               onChange={(e) => setConfigFiltro(e.target.value)}
@@ -115,12 +155,11 @@ export default function ConstanciasView() {
       <div className="grid grid-cols-1 gap-4">
         {constanciasFiltradas.length > 0 ? (
           constanciasFiltradas.map((constancia) => (
-            <div 
-              key={constancia.id} 
+            <div
+              key={constancia.id}
               className="bg-white border border-base-300 rounded-2xl p-6 hover:border-alt/40 transition-all shadow-sm"
             >
               <div className="flex flex-col md:flex-row justify-between gap-6">
-                
                 <div className="space-y-3 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-black bg-primary text-white px-2 py-0.5 rounded uppercase">
@@ -153,12 +192,12 @@ export default function ConstanciasView() {
 
                 <div className="flex items-center gap-2 md:border-l md:pl-6 border-base-200 min-w-[150px]">
                   {constancia.estatus === "disponible" ? (
-                    <a 
-                      href={constancia.pdfUrl} 
+                    <button
+                      onClick={() => setModalConstancia(constancia)}
                       className="btn btn-xs btn-ghost border-base-300 hover:bg-primary hover:text-white normal-case gap-2 w-full h-9"
                     >
                       <MdFileDownload className="text-lg" /> Descargar PDF
-                    </a>
+                    </button>
                   ) : (
                     <div className="flex flex-col items-center justify-center p-3 bg-accent/40 rounded-xl w-full border-2 border-warning/30 border-dashed">
                       <MdAccessTime className="text-xl text-primary mb-1 animate-spin-slow" />
@@ -168,7 +207,6 @@ export default function ConstanciasView() {
                     </div>
                   )}
                 </div>
-
               </div>
             </div>
           ))
@@ -181,6 +219,70 @@ export default function ConstanciasView() {
           </div>
         )}
       </div>
+
+      {/* MODAL CONSTANCIA */}
+      {modalConstancia && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => setModalConstancia(null)}
+          />
+          <div className="relative bg-white w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+              <div>
+                <p className="font-black text-gray-800 text-sm uppercase tracking-tight">
+                  Constancia de Participación
+                </p>
+                <p className="text-xs text-gray-400">
+                  {modalConstancia.congreso} — {modalConstancia.tipo}
+                </p>
+              </div>
+              <button
+                onClick={() => setModalConstancia(null)}
+                className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+              >
+                <MdClose className="text-xl text-gray-400" />
+              </button>
+            </div>
+
+            {/* Vista previa */}
+            <div className="flex-1 bg-neutral-200 overflow-auto p-6 flex items-start justify-center">
+              <div id="user-certificate-print" className="w-full max-w-4xl shadow-2xl rounded-lg overflow-hidden">
+                <CertificateTemplate
+                  user={{
+                    nombre: user?.nombre_completo,
+                    rol: modalConstancia.tipo,
+                    id: modalConstancia.id,
+                  }}
+                  signatures={{
+                    organizador: modalConstancia.firmaOrganizador,
+                    secretaria: modalConstancia.firmaSecretaria,
+                  }}
+                  congressName={modalConstancia.congreso}
+                  sede={modalConstancia.sede}
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-white border-t border-gray-100 flex justify-end gap-3 shrink-0">
+              <button
+                onClick={() => setModalConstancia(null)}
+                className="px-5 py-2.5 border border-gray-200 rounded-xl font-bold text-gray-500 text-xs hover:bg-gray-50 transition-all uppercase tracking-wide"
+              >
+                Cerrar
+              </button>
+              <button
+                onClick={handlePrintCertificate}
+                className="px-6 py-2.5 bg-primary text-white rounded-xl font-black text-xs flex items-center gap-2 hover:opacity-90 transition-all shadow-lg uppercase tracking-wide"
+              >
+                <MdPrint className="text-base" /> Guardar como PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

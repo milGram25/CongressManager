@@ -1,4 +1,5 @@
 from django.db import models
+#from ponencias.models import Ponencia
 
 class Institucion(models.Model):
     id_institucion = models.AutoField(primary_key=True)
@@ -217,3 +218,26 @@ class Taller(models.Model):
     class Meta:
         managed = False
         db_table = 'taller'
+
+class Libros(models.Model):
+    id_libro = models.AutoField(primary_key=True)
+    titulo = models.CharField(max_length=255, blank=False, null=False)
+    fecha_publicacion = models.DateField(null=False, blank=False)
+    descripcion = models.TextField(null=False, blank=False)
+    id_congreso = models.ForeignKey(Congreso,models.DO_NOTHING,db_column='id_congreso')
+
+    class Meta:
+        managed = False
+        db_table = 'libros'
+
+class LibroHasPonencia(models.Model):
+    id_libro_has_ponencia = models.AutoField(primary_key=True)
+    id_libro = models.ForeignKey(Libros, models.DO_NOTHING,db_column='id_libro')
+    id_ponencia = models.ForeignKey("ponencias.Ponencia", models.DO_NOTHING,unique=True, db_column='id_ponencia')
+    
+    class Meta:
+        managed=False
+        db_table = "libro_has_ponencia"
+
+
+

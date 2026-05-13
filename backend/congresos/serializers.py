@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Congreso, Institucion, Sede, MesasTrabajo, Evento, FechasCongreso, CostosCongreso, Rubrica, RubricaGrupo, RubricaCriterio, TipoTrabajo, Dictamen, DictamenPregunta, AreaGeneral, Subarea, Taller
+from .models import Congreso, Institucion, Sede, MesasTrabajo, Evento, FechasCongreso, CostosCongreso, Rubrica, RubricaGrupo, RubricaCriterio, TipoTrabajo, Dictamen, DictamenPregunta, AreaGeneral, Subarea, Taller,Libros,LibroHasPonencia
 
 class InstitucionSerializer(serializers.ModelSerializer):
     congresos_totales = serializers.SerializerMethodField()
@@ -154,3 +154,34 @@ class EventoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Evento
         fields = '__all__'
+
+class AreaGeneralSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source='id_areas_generales', read_only=True)
+    subAreas = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AreaGeneral
+        fields = ['id', 'nombre', 'subAreas']
+
+    def get_subAreas(self, obj):
+        return [
+            {'id': s.id_subareas, 'nombre': s.nombre}
+            for s in obj.subarea_set.all()
+        ]
+
+class LibrosSerializer(serializers.ModelSerializer):
+    id_libro = serializers.IntegerField(read_only=True)
+    ponencias = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Libros
+        fields = ['id_libro', 'titulo', 'fecha_publicacion', 'descripcion', 'id_congreso', 'ponencias']
+
+    def get_ponencias(self, obj):
+        # Retorna solo los IDs de las ponencias asignadas a este libro
+        return list(LibroHasPonencia.objects.filter(id_libro=obj).values_list('id_ponencia_id', flat=True))
+
+class LibroHasPonenciaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LibroHasPonencia
+        fields='__all__'

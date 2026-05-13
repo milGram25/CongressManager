@@ -195,7 +195,11 @@ CREATE TABLE ponente (
 CREATE TABLE asistente (
     id_asistente SERIAL PRIMARY KEY,
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona) ON DELETE CASCADE,
-    institucion_procedencia VARCHAR(255)
+    institucion_procedencia VARCHAR(255),
+    es_estudiante_validado BOOLEAN DEFAULT FALSE,
+    email_institucional VARCHAR(255),
+    codigo_verificacion VARCHAR(6),
+    fecha_envio_codigo TIMESTAMP
 );
 
 CREATE TABLE mesas_trabajo (
@@ -389,5 +393,6 @@ CREATE TABLE ponencia_magistral(
 CREATE TABLE ponencia_magistral_has_ponente_magistral(
     id_ponencia_magistral_has_ponente_magistral SERIAL PRIMARY KEY,
     nombre_persona VARCHAR(100) NOT NULL,
-    id_ponencia_magistral INTEGER NOT NULL REFERENCES ponencia_magistral(id_ponencia_magistral)
+    id_ponencia_magistral INTEGER NOT NULL REFERENCES ponencia_magistral(id_ponencia_magistral),
+    es_principal BOOLEAN DEFAULT FALSE
 );

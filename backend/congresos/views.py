@@ -1,4 +1,5 @@
 from rest_framework import status, viewsets, generics
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,8 +11,8 @@ from datetime import datetime, timedelta
 from calendar import monthrange
 import os
 
-from .models import Sede, Institucion, Congreso, Evento, MesasTrabajo, FechasCongreso, CostosCongreso, Rubrica, RubricaGrupo, RubricaCriterio, TipoTrabajo, Dictamen, DictamenPregunta, Subarea, Taller
-from .serializers import SedeSerializer, InstitucionSerializer, CongresoSerializer, EventoSerializer, MesasTrabajoSerializer, RubricaSerializer, RubricaGrupoSerializer, RubricaCriterioSerializer, TipoTrabajoSerializer, DictamenSerializer, DictamenPreguntaSerializer, SubareaSerializer, TallerSerializer
+from .models import Sede, Institucion, Congreso, Evento, MesasTrabajo, FechasCongreso, CostosCongreso, Rubrica, RubricaGrupo, RubricaCriterio, TipoTrabajo, Dictamen, DictamenPregunta, Subarea, AreaGeneral, Taller, Libros, LibroHasPonencia
+from .serializers import SedeSerializer, InstitucionSerializer, CongresoSerializer, EventoSerializer, MesasTrabajoSerializer, RubricaSerializer, RubricaGrupoSerializer, RubricaCriterioSerializer, TipoTrabajoSerializer, DictamenSerializer, DictamenPreguntaSerializer, SubareaSerializer, AreaGeneralSerializer, TallerSerializer, LibrosSerializer, LibroHasPonenciaSerializer
 
 def clean_date(val, default=None):
     if val is None or (isinstance(val, str) and val.strip() == ""):
@@ -121,6 +122,134 @@ class SubareaViewSet(viewsets.ModelViewSet):
     queryset = Subarea.objects.all()
     serializer_class = SubareaSerializer
     permission_classes = [IsAuthenticated]
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        nombre = request.data.get('nombre', '').strip()
+        if not nombre:
+            return Response({'detail': 'El nombre es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "UPDATE subareas SET nombre = %s WHERE id_subareas = %s",
+                [nombre, instance.id_subareas],
+            )
+        return Response({'id': instance.id_subareas, 'nombre': nombre})
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        pk = instance.id_subareas
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT (
+                    EXISTS (SELECT 1 FROM mesas_trabajo WHERE id_subarea = %s)
+                    OR EXISTS (SELECT 1 FROM ponencia WHERE id_subarea = %s)
+                    OR EXISTS (SELECT 1 FROM taller WHERE id_subarea = %s)
+                    OR EXISTS (SELECT 1 FROM ponencia_magistral WHERE id_subarea = %s)
+                )
+                """,
+                [pk, pk, pk, pk],
+            )
+            referenced = cursor.fetchone()[0]
+        if referenced:
+            return Response(
+                {'detail': 'No se puede eliminar: la subárea está asignada a mesas, ponencias o talleres.'},
+                status=status.HTTP_409_CONFLICT,
+            )
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM subareas WHERE id_subareas = %s", [pk])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AreaGeneralViewSet(viewsets.ModelViewSet):
+    serializer_class = AreaGeneralSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return AreaGeneral.objects.prefetch_related('subarea_set').all()
+
+    def list(self, request, *args, **kwargs):
+        areas = self.get_queryset()
+        data = [
+            {
+                'id': a.id_areas_generales,
+                'nombre': a.nombre,
+                'subAreas': [
+                    {'id': s.id_subareas, 'nombre': s.nombre}
+                    for s in a.subarea_set.all()
+                ],
+            }
+            for a in areas
+        ]
+        return Response(data)
+
+    def create(self, request, *args, **kwargs):
+        nombre = request.data.get('nombre', '').strip()
+        if not nombre:
+            return Response({'detail': 'El nombre es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO areas_generales (nombre) VALUES (%s) RETURNING id_areas_generales",
+                [nombre],
+            )
+            new_id = cursor.fetchone()[0]
+        return Response({'id': new_id, 'nombre': nombre, 'subAreas': []}, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        nombre = request.data.get('nombre', '').strip()
+        if not nombre:
+            return Response({'detail': 'El nombre es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "UPDATE areas_generales SET nombre = %s WHERE id_areas_generales = %s",
+                [nombre, instance.id_areas_generales],
+            )
+        return Response({'id': instance.id_areas_generales, 'nombre': nombre})
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        pk = instance.id_areas_generales
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT COUNT(*) FROM subareas s
+                WHERE s.id_area_general = %s
+                  AND (
+                    EXISTS (SELECT 1 FROM mesas_trabajo mt WHERE mt.id_subarea = s.id_subareas)
+                    OR EXISTS (SELECT 1 FROM ponencia po WHERE po.id_subarea = s.id_subareas)
+                    OR EXISTS (SELECT 1 FROM taller ta WHERE ta.id_subarea = s.id_subareas)
+                    OR EXISTS (SELECT 1 FROM ponencia_magistral pm WHERE pm.id_subarea = s.id_subareas)
+                  )
+                """,
+                [pk],
+            )
+            ref_count = cursor.fetchone()[0]
+        if ref_count > 0:
+            return Response(
+                {'detail': 'No se puede eliminar: existen subáreas con ponencias, talleres o mesas asignadas.'},
+                status=status.HTTP_409_CONFLICT,
+            )
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute("DELETE FROM subareas WHERE id_area_general = %s", [pk])
+                cursor.execute("DELETE FROM areas_generales WHERE id_areas_generales = %s", [pk])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['post'], url_path='subareas')
+    def crear_subarea(self, request, pk=None):
+        area = self.get_object()
+        nombre = request.data.get('nombre', '').strip()
+        if not nombre:
+            return Response({'detail': 'El nombre es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO subareas (nombre, id_area_general) VALUES (%s, %s) RETURNING id_subareas",
+                [nombre, area.id_areas_generales],
+            )
+            new_id = cursor.fetchone()[0]
+        return Response({'id': new_id, 'nombre': nombre}, status=status.HTTP_201_CREATED)
+
 
 class EventoViewSet(viewsets.ModelViewSet):
     queryset = Evento.objects.all()
@@ -849,6 +978,100 @@ class ListaPagosAdminView(APIView):
                 'estatus': 'Pagado',
             })
         return Response(result)
+    
+class LibrosView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, id_congreso):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        libros = Libros.objects.filter(id_congreso_id=id_congreso)
+        serializer = LibrosSerializer(libros, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, id_congreso):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        data = request.data.copy()
+        data['id_congreso'] = id_congreso
+        serializer = LibrosSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, id_libro):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            libro = Libros.objects.get(pk=id_libro)
+        except Libros.DoesNotExist:
+            return Response({'detail': 'Libro no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = LibrosSerializer(libro, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id_libro):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            libro = Libros.objects.get(pk=id_libro)
+            # Borrar asociaciones manualmente para evitar errores de restricción
+            LibroHasPonencia.objects.filter(id_libro=libro).delete()
+            libro.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Libros.DoesNotExist:
+            return Response({'detail': 'Libro no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+class LibroHasPonenciaView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, id_libro):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        librohasponencia = LibroHasPonencia.objects.filter(id_libro=id_libro)
+        serializer = LibroHasPonenciaSerializer(librohasponencia, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        serializer = LibroHasPonenciaSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id_ponencia):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            # Dado que id_ponencia es único en LibroHasPonencia, podemos borrar por él
+            lhp = LibroHasPonencia.objects.get(id_ponencia=id_ponencia)
+            lhp.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except LibroHasPonencia.DoesNotExist:
+            return Response({'detail': 'Asociación no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+
+    def patch(self, request, id_ponencia):
+        """Para transferir una ponencia de un libro a otro"""
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            lhp = LibroHasPonencia.objects.get(id_ponencia=id_ponencia)
+            target_libro_id = request.data.get('id_libro')
+            if not target_libro_id:
+                return Response({'detail': 'id_libro destino requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            lhp.id_libro_id = target_libro_id
+            lhp.save()
+            return Response(LibroHasPonenciaSerializer(lhp).data)
+        except LibroHasPonencia.DoesNotExist:
+            return Response({'detail': 'Asociación no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+
 
 def _fetch_events_between(start, end, user=None):
     from users.models import Asistente, Ponente
@@ -976,16 +1199,17 @@ def _parse_month(val):
         return d.year, d.month
     except: return None, None
 
-PONENTE_INCLUDED_PONENCIAS = 3
+PONENTE_INCLUDED_PONENCIAS = 2
 PONENTE_MAX_PONENCIAS = 5
 
 
 def _get_user_role(user):
+    from users.models import DictaminadorCongreso, EvaluadorCongreso
     if user.is_superuser or user.is_staff:
         return 'administrador'
-    if hasattr(user, 'dictaminador'):
+    if DictaminadorCongreso.objects.filter(id_persona=user).exists():
         return 'dictaminador'
-    if hasattr(user, 'evaluador'):
+    if EvaluadorCongreso.objects.filter(id_persona=user).exists():
         return 'revisor'
     if hasattr(user, 'ponente'):
         return 'ponente'
@@ -1190,3 +1414,4 @@ def _concept_for_slot(slot):
 
 def _is_close(value_a, value_b):
     return abs(float(value_a) - float(value_b)) < 0.01
+

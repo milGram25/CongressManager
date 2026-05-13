@@ -4,8 +4,8 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db import transaction, connection
-from .models import AsistenteEvento, Ponencia, Resumen, Extenso
-from .serializers import PonenciaSerializer, CatalogoEventoSerializer, AsistenteEventoSerializer
+from .models import AsistenteEvento, Ponencia, Resumen, Extenso, PonenciaMagistral, PonenciaMagistralHasPonentemagistral
+from .serializers import PonenciaSerializer, CatalogoEventoSerializer, AsistenteEventoSerializer, PonenciaMagistralSerializer, PonenciaMagistralCreateSerializer
 from users.models import Dictaminador, Evaluador, DictaminadorCongreso, EvaluadorCongreso
 import os
 import json
@@ -112,7 +112,12 @@ class PonenciaViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Ponencia.objects.all().select_related('id_evento', 'id_subarea', 'id_evento__id_congreso')
+        queryset = Ponencia.objects.all().select_related('id_evento', 'id_subarea', 'id_evento__id_congreso', 'id_evento__id_congreso__id_institucion', 'id_evento__id_tipo_trabajo')
+        id_congreso = self.request.query_params.get('id_congreso')
+        if id_congreso:
+            # Filtramos por el ID del congreso a través del evento usando el campo id_congreso
+            queryset = queryset.filter(id_evento__id_congreso_id=id_congreso)
+        return queryset
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -182,21 +187,36 @@ class PonenciaViewSet(viewsets.ModelViewSet):
         data = request.data
         try:
             with transaction.atomic():
+                # Manejo seguro de cupos (puede venir vacio o ""), evita crash de int("")
+                try:
+                    cupos_val = int(data.get('cupos')) if data.get('cupos') not in (None, '') else instance.id_evento.cupos
+                except (ValueError, TypeError):
+                    cupos_val = instance.id_evento.cupos
+
+                # id_congreso: permitir cambiarlo si viene en el payload
+                id_congreso_raw = data.get('id_congreso')
+                try:
+                    id_congreso_nuevo = int(id_congreso_raw) if id_congreso_raw not in (None, '') else instance.id_evento.id_congreso_id
+                except (ValueError, TypeError):
+                    id_congreso_nuevo = instance.id_evento.id_congreso_id
+
                 with connection.cursor() as cursor:
-                    # 1. Actualizar Evento
+                    # 1. Actualizar Evento (incluye id_congreso)
                     cursor.execute("""
-                        UPDATE evento SET 
-                            nombre_evento = %s, id_mesas_trabajo = %s, 
-                            fecha_hora_inicio = %s, fecha_hora_final = %s, 
+                        UPDATE evento SET
+                            id_congreso = %s,
+                            nombre_evento = %s, id_mesas_trabajo = %s,
+                            fecha_hora_inicio = %s, fecha_hora_final = %s,
                             sinopsis = %s, cupos = %s, enlace = %s
                         WHERE id_evento = %s
                     """, [
+                        id_congreso_nuevo,
                         data.get('nombre_evento', instance.id_evento.nombre_evento),
                         clean_date(data.get('id_mesas_trabajo'), instance.id_evento.id_mesas_trabajo_id),
                         clean_date(data.get('fecha_hora_inicio'), instance.id_evento.fecha_hora_inicio),
                         clean_date(data.get('fecha_hora_final'), instance.id_evento.fecha_hora_final),
                         data.get('sinopsis', instance.id_evento.sinopsis),
-                        int(data.get('cupos', instance.id_evento.cupos)),
+                        cupos_val,
                         data.get('enlace', instance.id_evento.enlace),
                         instance.id_evento_id
                     ])
@@ -207,14 +227,64 @@ class PonenciaViewSet(viewsets.ModelViewSet):
 
                     # 3. Actualizar Ponencia
                     cursor.execute("""
-                        UPDATE ponencia SET 
+                        UPDATE ponencia SET
                             tipo_participacion = %s, id_subarea = %s
                         WHERE id_ponencia = %s
                     """, [
                         tipo_p, clean_date(data.get('id_subarea'), instance.id_subarea_id),
                         instance.id_ponencia
                     ])
-                
+
+                    # 4. Actualizar ponente principal y coautores (solo si vienen en el payload)
+                    if 'ponente_principal' in data or 'coautores' in data:
+                        # Borrar relaciones existentes para rehacerlas en el orden correcto
+                        cursor.execute("DELETE FROM ponente_has_ponencia WHERE id_ponencia = %s", [instance.id_ponencia])
+
+                        def _find_ponente_by_nombre(nombre_completo):
+                            """Busca id_ponente por nombre completo. Si la persona existe pero no es ponente, lo registra como ponente. Si la persona no existe, retorna None (se ignora)."""
+                            nombre_clean = (nombre_completo or '').strip()
+                            if not nombre_clean:
+                                return None
+                            cursor.execute("""
+                                SELECT id_persona FROM persona
+                                WHERE TRIM(CONCAT_WS(' ', nombre, primer_apellido, COALESCE(segundo_apellido, ''))) ILIKE %s
+                                LIMIT 1
+                            """, [nombre_clean])
+                            persona_row = cursor.fetchone()
+                            if not persona_row:
+                                return None
+                            id_persona = persona_row[0]
+                            cursor.execute("SELECT id_ponente FROM ponente WHERE id_persona = %s", [id_persona])
+                            ponente_row = cursor.fetchone()
+                            if ponente_row:
+                                return ponente_row[0]
+                            cursor.execute("INSERT INTO ponente (id_persona) VALUES (%s) RETURNING id_ponente", [id_persona])
+                            return cursor.fetchone()[0]
+
+                        # Insertar primero al ponente principal (queda como el "first" en queries del serializer)
+                        ponente_principal_nombre = (data.get('ponente_principal') or '').strip() if isinstance(data.get('ponente_principal'), str) else ''
+                        if ponente_principal_nombre:
+                            id_ponente = _find_ponente_by_nombre(ponente_principal_nombre)
+                            if id_ponente:
+                                cursor.execute("""
+                                    INSERT INTO ponente_has_ponencia (id_ponente, id_ponencia, asistio)
+                                    VALUES (%s, %s, FALSE)
+                                    ON CONFLICT (id_ponente, id_ponencia) DO NOTHING
+                                """, [id_ponente, instance.id_ponencia])
+
+                        # Insertar coautores
+                        coautores_list = data.get('coautores') or []
+                        if isinstance(coautores_list, list):
+                            for nombre in coautores_list:
+                                if isinstance(nombre, str):
+                                    id_ponente = _find_ponente_by_nombre(nombre)
+                                    if id_ponente:
+                                        cursor.execute("""
+                                            INSERT INTO ponente_has_ponencia (id_ponente, id_ponencia, asistio)
+                                            VALUES (%s, %s, FALSE)
+                                            ON CONFLICT (id_ponente, id_ponencia) DO NOTHING
+                                        """, [id_ponente, instance.id_ponencia])
+
                 instance.refresh_from_db()
                 res_data = self.get_serializer(instance).data
                 res_data['id'] = instance.id_ponencia
@@ -533,31 +603,19 @@ class DictaminadoresDisponiblesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not request.user.is_staff:
+        if not (request.user.is_staff):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_congreso = request.query_params.get('id_congreso')
         if not id_congreso:
             return Response({'detail': 'id_congreso requerido.'}, status=status.HTTP_400_BAD_REQUEST)
         with connection.cursor() as cursor:
-            # Garantizar registros dictaminador para personas del congreso
-            cursor.execute("""
-                INSERT INTO dictaminador (id_persona)
-                SELECT DISTINCT dc.id_persona
-                FROM dictaminador_congreso dc
-                WHERE dc.id_congreso = %s
-                  AND NOT EXISTS (
-                    SELECT 1 FROM dictaminador d WHERE d.id_persona = dc.id_persona
-                  )
-            """, [id_congreso])
             cursor.execute("""
                 SELECT d.id_dictaminador,
                        TRIM(CONCAT_WS(' ', per.nombre, per.primer_apellido, per.segundo_apellido))
-                FROM dictaminador_congreso dc
-                JOIN dictaminador d ON d.id_persona = dc.id_persona
-                JOIN persona per ON per.id_persona = dc.id_persona
-                WHERE dc.id_congreso = %s
+                FROM dictaminador d
+                JOIN persona per ON per.id_persona = d.id_persona
                 ORDER BY per.primer_apellido, per.nombre
-            """, [id_congreso])
+            """)
             data = [{'id_dictaminador': r[0], 'nombre_completo': r[1]} for r in cursor.fetchall()]
         return Response(data)
 
@@ -566,31 +624,19 @@ class EvaluadoresDisponiblesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not request.user.is_staff:
+        if not (request.user.is_staff):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_congreso = request.query_params.get('id_congreso')
         if not id_congreso:
             return Response({'detail': 'id_congreso requerido.'}, status=status.HTTP_400_BAD_REQUEST)
         with connection.cursor() as cursor:
-            # Garantizar registros evaluador para personas del congreso
-            cursor.execute("""
-                INSERT INTO evaluador (id_persona)
-                SELECT DISTINCT ec.id_persona
-                FROM evaluador_congreso ec
-                WHERE ec.id_congreso = %s
-                  AND NOT EXISTS (
-                    SELECT 1 FROM evaluador e WHERE e.id_persona = ec.id_persona
-                  )
-            """, [id_congreso])
             cursor.execute("""
                 SELECT e.id_evaluador,
                        TRIM(CONCAT_WS(' ', per.nombre, per.primer_apellido, per.segundo_apellido))
-                FROM evaluador_congreso ec
-                JOIN evaluador e ON e.id_persona = ec.id_persona
-                JOIN persona per ON per.id_persona = ec.id_persona
-                WHERE ec.id_congreso = %s
+                FROM evaluador e
+                JOIN persona per ON per.id_persona = e.id_persona
                 ORDER BY per.primer_apellido, per.nombre
-            """, [id_congreso])
+            """)
             data = [{'id_evaluador': r[0], 'nombre_completo': r[1]} for r in cursor.fetchall()]
         return Response(data)
 
@@ -599,7 +645,7 @@ class AsignarDictaminadorView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-        if not request.user.is_staff:
+        if not (request.user.is_staff):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         try:
             resumen = Resumen.objects.get(pk=pk)
@@ -615,7 +661,7 @@ class AsignarEvaluadorView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-        if not request.user.is_staff:
+        if not (request.user.is_staff):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         try:
             extenso = Extenso.objects.get(pk=pk)
@@ -631,7 +677,7 @@ class ResumenesCongresoView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not request.user.is_staff:
+        if not (request.user.is_staff):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_congreso = request.query_params.get('id_congreso')
         if not id_congreso:
@@ -670,15 +716,18 @@ class ResumenesCongresoView(APIView):
             ponencia_ids = [p['id_ponencia'] for p in ponencias]
             resumen_ids = [p['id_resumen'] for p in ponencias]
 
-            c.execute("""
+            format_strings = ','.join(['%s'] * len(ponencia_ids))
+
+            c.execute(f"""
                 SELECT php.id_ponencia,
-                       per.nombre || ' ' || per.primer_apellido
+                    per.nombre || ' ' || per.primer_apellido
                 FROM ponente_has_ponencia php
-                JOIN ponente po ON php.id_ponente = po.id_ponente
-                JOIN persona per ON po.id_persona = per.id_persona
-                WHERE php.id_ponencia = ANY(%s)
-            """, [ponencia_ids])
+                LEFT JOIN ponente po ON php.id_ponente = po.id_ponente
+                LEFT JOIN persona per ON po.id_persona = per.id_persona
+                WHERE php.id_ponencia IN ({format_strings})
+            """, ponencia_ids)
             autores_map = {}
+            
             for id_pon, nombre in c.fetchall():
                 autores_map.setdefault(id_pon, []).append(nombre)
 
@@ -690,6 +739,8 @@ class ResumenesCongresoView(APIView):
                 WHERE dr.id_resumen = ANY(%s)
             """, [resumen_ids])
             dictamen_map = {}
+            
+            
             for id_res, pregunta, cumplio, comentario in c.fetchall():
                 dictamen_map.setdefault(id_res, []).append({
                     'pregunta': pregunta,
@@ -699,6 +750,7 @@ class ResumenesCongresoView(APIView):
 
         result = []
         for p in ponencias:
+           
             result.append({
                 'id': p['id_ponencia'],
                 'id_resumen': p['id_resumen'],
@@ -720,7 +772,7 @@ class ExtensosCongresoView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not request.user.is_staff:
+        if not (request.user.is_staff):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_congreso = request.query_params.get('id_congreso')
         if not id_congreso:
@@ -1074,7 +1126,7 @@ class AsignarEvaluadoresView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-        if not request.user.is_staff:
+        if not (request.user.is_staff):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_evaluador = request.data.get('id_evaluador')
         id_evaluador_2 = request.data.get('id_evaluador_2')
@@ -1096,7 +1148,7 @@ class AsignarEvaluador3View(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-        if not request.user.is_staff:
+        if not (request.user.is_staff):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_evaluador_3 = request.data.get('id_evaluador_3')
         if not id_evaluador_3:
@@ -1159,10 +1211,13 @@ class EstatusPonenteView(APIView):
                     e.sinopsis,
                     e.cupos,
                     e.enlace,
-                    cong.nombre_congreso
+                    cong.nombre_congreso,
+                    p.tipo_participacion,
+                    m.nombre AS lugar
                 FROM ponente_has_ponencia php
                 JOIN ponencia p ON php.id_ponencia = p.id_ponencia
                 LEFT JOIN evento e ON p.id_evento = e.id_evento
+                LEFT JOIN mesas_trabajo m ON e.id_mesas_trabajo = m.id_mesas_trabajo
                 LEFT JOIN congreso cong ON e.id_congreso = cong.id_congreso
                 LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
                 LEFT JOIN resumen r ON p.id_resumen = r.id_resumen
@@ -1173,7 +1228,7 @@ class EstatusPonenteView(APIView):
             cols = ['id_ponencia','titulo','tipo_ponencia','id_resumen','resumen_revisado',
                     'resumen_estatus','resumen_retroalimentacion','id_extenso','extenso_revisado',
                     'id_evaluador','id_evaluador_2','id_evaluador_3',
-                    'nombre_evento','fecha_hora_inicio','fecha_hora_final','sinopsis','cupos','enlace','nombre_congreso']
+                    'nombre_evento','fecha_hora_inicio','fecha_hora_final','sinopsis','cupos','enlace','nombre_congreso','tipo_participacion','lugar']
             ponencias = [dict(zip(cols, row)) for row in c.fetchall()]
 
             if not ponencias:
@@ -1254,6 +1309,7 @@ class EstatusPonenteView(APIView):
                 'criterio_comentarios': criterios_mods_map.get(p['id_extenso'], []) if estado == 'con_modificaciones' else [],
                 'id_resumen': p['id_resumen'],
                 'id_extenso': p['id_extenso'],
+                'tipo_participacion': p['tipo_participacion'],
                 'evento': {
                     'nombre': p['nombre_evento'],
                     'fecha_inicio': fecha_inicio.isoformat() if fecha_inicio else None,
@@ -1262,6 +1318,7 @@ class EstatusPonenteView(APIView):
                     'cupos': p['cupos'],
                     'enlace': p['enlace'],
                     'congreso': p['nombre_congreso'],
+                    'lugar': p['lugar'],
                 },
             })
         return Response(result)
@@ -1273,27 +1330,27 @@ class SubirExtensoAPIView(APIView):
 
     def post(self, request, id_resumen):
         archivo = request.FILES.get('archivo')
-        titulo = request.data.get('titulo', '').strip()
         if not archivo:
             return Response({'detail': 'Se requiere un archivo.'}, status=status.HTTP_400_BAD_REQUEST)
-        if not titulo:
-            return Response({'detail': 'El título es obligatorio.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             with transaction.atomic():
                 with connection.cursor() as cursor:
                     cursor.execute("""
-                        SELECT p.id_ponencia, p.id_extenso
+                        SELECT p.id_ponencia, p.id_extenso, s.nombre
                         FROM ponencia p
                         JOIN ponente_has_ponencia php ON php.id_ponencia = p.id_ponencia
                         JOIN ponente po ON po.id_ponente = php.id_ponente
+                        LEFT JOIN subareas s ON p.id_subarea = s.id_subareas
                         WHERE p.id_resumen = %s AND po.id_persona = %s
                         LIMIT 1
                     """, [id_resumen, request.user.id_persona])
                     row = cursor.fetchone()
                     if not row:
                         return Response({'detail': 'No autorizado o resumen no encontrado.'}, status=status.HTTP_403_FORBIDDEN)
-                    id_ponencia, id_extenso_existente = row
+                    id_ponencia, id_extenso_existente, subarea_nombre = row
+                    
+                    titulo = subarea_nombre if subarea_nombre else f"Extenso de Ponencia {id_ponencia}"
 
                     media_dir = os.path.join(settings.MEDIA_ROOT, 'extensos')
                     os.makedirs(media_dir, exist_ok=True)
@@ -1329,3 +1386,98 @@ class SubirExtensoAPIView(APIView):
             return Response({'detail': 'Extenso subido correctamente.', 'id_extenso': id_extenso}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class PonenciaMagistralViewSet(viewsets.ModelViewSet):
+    serializer_class = PonenciaMagistralSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = PonenciaMagistral.objects.all().select_related('id_subarea', 'id_congreso', 'id_congreso__id_institucion').prefetch_related('ponentes')
+        id_congreso = self.request.query_params.get('id_congreso')
+        if id_congreso:
+            queryset = queryset.filter(id_congreso_id=id_congreso)
+        return queryset
+
+    def create(self, request, *args, **kwargs):
+        serializer = PonenciaMagistralCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        return Response(PonenciaMagistralSerializer(instance).data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = request.data
+        try:
+            with transaction.atomic():
+                with connection.cursor() as cursor:
+                    tipo_p = str(data.get('tipo_participacion', instance.tipo_participacion)).lower()
+                    if 'híbrido' in tipo_p or 'hibrido' in tipo_p:
+                        tipo_p = 'hibrida'
+
+                    cursor.execute("""
+                        UPDATE ponencia_magistral SET
+                            titulo = %s, tipo_participacion = %s, id_subarea = %s,
+                            fecha_inicio = %s, fecha_fin = %s
+                        WHERE id_ponencia_magistral = %s
+                    """, [
+                        data.get('titulo', instance.titulo),
+                        tipo_p,
+                        data.get('id_subarea', instance.id_subarea_id),
+                        data.get('fecha_inicio', instance.fecha_inicio),
+                        data.get('fecha_fin', instance.fecha_fin),
+                        instance.id_ponencia_magistral
+                    ])
+
+                    # Rebuild ponentes
+                    cursor.execute("DELETE FROM ponencia_magistral_has_ponente_magistral WHERE id_ponencia_magistral = %s", [instance.id_ponencia_magistral])
+
+                    ponente_principal = data.get('ponente_principal', '').strip()
+                    if ponente_principal:
+                        cursor.execute("""
+                            INSERT INTO ponencia_magistral_has_ponente_magistral
+                            (id_ponencia_magistral, nombre_persona, es_principal)
+                            VALUES (%s, %s, TRUE)
+                        """, [instance.id_ponencia_magistral, ponente_principal])
+
+                    coautores = data.get('coautores', [])
+                    for nombre in coautores:
+                        nombre = nombre.strip() if isinstance(nombre, str) else str(nombre).strip()
+                        if nombre:
+                            cursor.execute("""
+                                INSERT INTO ponencia_magistral_has_ponente_magistral
+                                (id_ponencia_magistral, nombre_persona, es_principal)
+                                VALUES (%s, %s, FALSE)
+                            """, [instance.id_ponencia_magistral, nombre])
+
+                instance.refresh_from_db()
+                return Response(PonenciaMagistralSerializer(instance).data)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        try:
+            with transaction.atomic():
+                with connection.cursor() as cursor:
+                    cursor.execute("DELETE FROM ponencia_magistral_has_ponente_magistral WHERE id_ponencia_magistral = %s", [instance.id_ponencia_magistral])
+                    cursor.execute("DELETE FROM ponencia_magistral WHERE id_ponencia_magistral = %s", [instance.id_ponencia_magistral])
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PonentesNombresView(APIView):
+    """Retorna lista de nombres de personas para autocompletado y sin repetidos (útil para el administrador)"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT DISTINCT TRIM(CONCAT_WS(' ', nombre, primer_apellido, segundo_apellido))
+                FROM persona
+                WHERE nombre IS NOT NULL
+                ORDER BY 1
+            """)
+            nombres = [row[0] for row in cursor.fetchall() if row[0]]
+        return Response(nombres)

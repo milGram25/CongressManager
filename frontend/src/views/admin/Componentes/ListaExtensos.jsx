@@ -96,14 +96,19 @@ function IconBtn({ active, title, popoverContent, children }) {
       >
         {children}
       </button>
-      {open ? <Popover onClose={() => setOpen(false)}>{popoverContent}</Popover> : null}
+      {/*open ? <Popover onClose={() => setOpen(false)}>{popoverContent}</Popover> : null*/}
     </div>
   );
 }
 
 // Extensos el listado lateral
 function PopoverAsignado({ item, dictaminadores }) {
-  const asignados = dictaminadores.filter((dictaminador) => item.revisores.includes(dictaminador.id));
+  // Para extensos, combinamos revisor 1, 2 y 3 si existen
+  const idsAsignados = item.revisores || [item.id_evaluador, item.id_evaluador_2, item.id_evaluador_3].filter(id => id);
+  const asignados = dictaminadores.filter((d) => {
+    const dId = d.id || d.id_dictaminador || d.id_evaluador;
+    return idsAsignados.map(id => String(id)).includes(String(dId));
+  });
 
   return (
     <div>
@@ -206,18 +211,18 @@ function ExtensoRow({ item, dictaminadores, selected, onView }) {
         type="button"
         onClick={() => onView(item)}
         className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#000000] text-white transition-colors hover:bg-gray-500"
-        title={`Ver informacion de ${item.title}`}
+        title={`Ver informacion de "${item.title}"`}
       >
         <MdVisibility size={18} />
       </button>
 
       <button type="button" onClick={() => onView(item)} className="min-w-0 flex-1 text-left">
-        <p className="truncate text-sm font-semibold text-slate-800">{item.title}</p>
+        <p className="truncate text-sm font-semibold text-slate-800" title={`${item.title}`}>{item.title} </p>
       </button>
 
       <div className="flex flex-shrink-0 items-center gap-1.5 rounded-full bg-[#f0f2f4] px-3 py-1.5">
         <StatusDot active={item.asignado} />
-        <IconBtn active={item.asignado} title="Ver evaluadores asignados" popoverContent={<PopoverAsignado item={item} dictaminadores={dictaminadores} />}>
+        <IconBtn active={item.asignado} title="Evaluadores asignados" popoverContent={<PopoverAsignado item={item} dictaminadores={dictaminadores} />}>
           <MdPerson size={15} />
         </IconBtn>
 
@@ -326,7 +331,7 @@ export default function ListaExtensos({ listaElementos = [], dictaminadores = []
       <div className="space-y-4 px-4 pb-4 pt-3 md:px-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-[280px]">
-            <h3 className="text-[30px] font-black tracking-tight text-slate-900">EXTENSOS</h3>
+            <h3 className="text-[30px] font-black tracking-tight text-slate-900">Extensos</h3>
             <p className="mt-1 text-xs leading-5 text-slate-500">
               Aquí puede encontrar todos los extensos.
               <br />

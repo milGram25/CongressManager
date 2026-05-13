@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { MdArrowBack } from "react-icons/md";
 import MenuCrearBorrar from "./Componentes/MenuCrearBorrarGenerico";
 import ListaDesplegableElementosGenerica from "./Componentes/ListaDesplegableElementosGenerica";
-import { getPonenciasApi, getCongresosApi, getInstitucionesApi } from "../../api/adminApi";
+import { getPonenciasApi, getCongresosApi, getInstitucionesApi, getPonenciasMagistralesApi } from "../../api/adminApi";
 
 export default function PonenciasView() {
   const navigate = useNavigate();
@@ -20,13 +20,32 @@ export default function PonenciasView() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [ponenciasData, congresosData, instData] = await Promise.all([
+        const [ponenciasData, magistralesData, congresosData, instData] = await Promise.all([
           getPonenciasApi(accessToken, idCongreso),
+          getPonenciasMagistralesApi(accessToken, idCongreso).catch(() => []),
           getCongresosApi(accessToken),
           getInstitucionesApi(accessToken)
         ]);
 
-        setListaEventos(ponenciasData.map(p => ({ ...p, id: p.id_ponencia })));
+        const normales = ponenciasData.map(p => ({
+          ...p,
+          id: p.id_ponencia,
+          tipo_ponencia: 'normal',
+          nombre_ponente: p.ponente_principal,
+        }));
+
+        const magistrales = magistralesData.map(m => ({
+          ...m,
+          id: `mag-${m.id_ponencia_magistral}`,
+          nombre_evento: m.titulo,
+          nombre_ponente: m.ponente_principal || null,
+          cupos: '—',
+          fecha_hora_inicio: m.fecha_inicio,
+          fecha_hora_final: m.fecha_fin,
+          tipo_ponencia: 'magistral',
+        }));
+
+        setListaEventos([...normales, ...magistrales]);
         setCongresos(congresosData.map(c => ({ id: c.id_congreso, nombre: c.nombre_congreso })));
         setInstituciones(instData.map(i => ({ id: i.id_institucion, nombre: i.nombre })));
       } catch (error) {

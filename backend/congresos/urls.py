@@ -12,6 +12,7 @@ from .views import (
     CongresoSignaturesView,
     SedeViewSet,
     SubareaViewSet,
+    AreaGeneralViewSet,
     EventoViewSet,
     TallerViewSet,
     InstitucionViewSet,
@@ -23,12 +24,15 @@ from .views import (
     DictamenViewSet,
     DictamenPreguntaViewSet,
     MesasTrabajoViewSet,
+    LibrosView,
+    LibroHasPonenciaView,
 )
 
 app_name = 'congresos'
 
 router = DefaultRouter()
 router.register(r'sedes', SedeViewSet, basename='sede')
+router.register(r'areas', AreaGeneralViewSet, basename='area')
 router.register(r'subareas', SubareaViewSet, basename='subarea')
 router.register(r'eventos', EventoViewSet, basename='evento')
 router.register(r'talleres', TallerViewSet, basename='taller')
@@ -41,6 +45,7 @@ router.register(r'tipos-trabajo', TipoTrabajoViewSet, basename='tipo-trabajo')
 router.register(r'dictamenes', DictamenViewSet, basename='dictamen')
 router.register(r'preguntas', DictamenPreguntaViewSet, basename='pregunta')
 router.register(r'mesas', MesasTrabajoViewSet, basename='mesa')
+#router.register(r'libros',LibrosView,basename='libros')
 
 urlpatterns = [
     path('', include(router.urls)),
@@ -53,4 +58,9 @@ urlpatterns = [
     path('<int:id_congreso>/eventos/', CongresoEventosView.as_view(), name='congreso_eventos'),
     path('eventos/<int:id_evento>/inscritos/', InscritesTallerView.as_view(), name='evento_inscritos'),
     path('<int:id_congreso>/signatures/', CongresoSignaturesView.as_view(), name='congreso_signatures'),
+    path('libros/<int:id_congreso>/', LibrosView.as_view(), name='libros'),
+    path('libro/<int:id_libro>/', LibrosView.as_view(), name='libro_detail'),
+    path('librohasponencia/', LibroHasPonenciaView.as_view(), name='libros_has_ponencia_base'),
+    path('librohasponencia/<int:id_libro>/', LibroHasPonenciaView.as_view(), name='libros_has_ponencia'),
+    path('librohasponencia/ponencia/<int:id_ponencia>/', LibroHasPonenciaView.as_view(), name='libros_has_ponencia_ponencia'),
 ]

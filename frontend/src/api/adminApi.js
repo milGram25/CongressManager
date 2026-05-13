@@ -228,7 +228,7 @@ export async function getTalleresApi(accessToken, idCongreso = null) {
 
 export async function getPonenciasApi(accessToken, idCongreso = null) {
   let url = `${API_URL}/api/ponencias/lista/`;
-  if (idCongreso) url += `?id_congreso=${idCongreso}`;
+  if (idCongreso !== null && idCongreso !== undefined) url += `?id_congreso=${idCongreso}`;
   const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
   if (!res.ok) throw new Error('Error al obtener ponencias.');
   return res.json();
@@ -492,5 +492,121 @@ export async function getEvaluadoresDisponiblesApi(accessToken, idCongreso) {
     headers: { 'Authorization': `Bearer ${accessToken}` },
   });
   if (!res.ok) throw new Error('Error cargando evaluadores');
+  return res.json();
+}
+
+export async function getLibrosApi(accessToken, idCongreso) {
+  let url = `${API_URL}/api/congresos/libros/${idCongreso}/`;
+  const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener libros.');
+  return res.json();
+}
+
+export async function createLibroApi(accessToken, idCongreso, data) {
+  const res = await fetch(`${API_URL}/api/congresos/libros/${idCongreso}/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error al crear libro.');
+  return res.json();
+}
+
+export async function updateLibroApi(accessToken, idLibro, data) {
+  const res = await fetch(`${API_URL}/api/congresos/libro/${idLibro}/`, {
+    method: 'PUT',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error al actualizar libro.');
+  return res.json();
+}
+
+export async function deleteLibroApi(accessToken, idLibro) {
+  const res = await fetch(`${API_URL}/api/congresos/libro/${idLibro}/`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error al eliminar libro.');
+  return true;
+}
+
+export async function getLibroHasPonenciaApi(accessToken, idLibro) {
+  let url = `${API_URL}/api/congresos/librohasponencia/${idLibro}/`;
+  const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener ponencias del libro.');
+  return res.json();
+}
+
+export async function addPonenciaToLibroApi(accessToken, data) {
+  const res = await fetch(`${API_URL}/api/congresos/librohasponencia/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Error al asignar ponencia.');
+  return res.json();
+}
+
+export async function removePonenciaFromLibroApi(accessToken, idPonencia) {
+  const res = await fetch(`${API_URL}/api/congresos/librohasponencia/ponencia/${idPonencia}/`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error al quitar ponencia.');
+  return true;
+}
+
+export async function transferPonenciaApi(accessToken, idPonencia, idLibroDestino) {
+  const res = await fetch(`${API_URL}/api/congresos/librohasponencia/ponencia/${idPonencia}/`, {
+    method: 'PATCH',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id_libro: idLibroDestino }),
+  });
+  if (!res.ok) throw new Error('Error al transferir ponencia.');
+  return res.json();
+}
+
+// Ponencias Magistrales
+export async function getPonenciasMagistralesApi(accessToken, idCongreso = null) {
+  let url = `${API_URL}/api/ponencias/magistrales/`;
+  if (idCongreso) url += `?id_congreso=${idCongreso}`;
+  const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener ponencias magistrales.');
+  return res.json();
+}
+
+export async function getPonenciaMagistralByIdApi(accessToken, id) {
+  const res = await fetch(`${API_URL}/api/ponencias/magistrales/${id}/`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener ponencia magistral.');
+  return res.json();
+}
+
+export async function createPonenciaMagistralApi(accessToken, data) {
+  const res = await fetch(`${API_URL}/api/ponencias/magistrales/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  const resData = await res.json();
+  if (!res.ok) throw new Error(resData.detail || 'Error al crear ponencia magistral.');
+  return resData;
+}
+
+export async function updatePonenciaMagistralApi(accessToken, id, data) {
+  const res = await fetch(`${API_URL}/api/ponencias/magistrales/${id}/`, {
+    method: 'PUT',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  const resData = await res.json();
+  if (!res.ok) throw new Error(resData.detail || 'Error al actualizar ponencia magistral.');
+  return resData;
+}
+
+// Nombres de ponentes para autocompletado
+export async function getPonentesNombresApi(accessToken) {
+  const res = await fetch(`${API_URL}/api/ponencias/ponentes-nombres/`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+  if (!res.ok) throw new Error('Error al obtener nombres de ponentes.');
   return res.json();
 }
