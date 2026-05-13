@@ -582,16 +582,28 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                         </div>
                         <div>
                             <label className={labelClasses}>Enlace/ruta a multimedia <span className="text-base-content/30 font-normal normal-case tracking-normal">(enviado por el ponente)</span></label>
-                            <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><TbFileSymlink /></span>
-                                <input
-                                    id="enlace_multimedia"
-                                    type="text"
-                                    className={`${inputClasses} pl-11 font-mono cursor-not-allowed`}
-                                    value={formatData.enlace_multimedia || ''}
-                                    readOnly
-                                    placeholder="El ponente aún no ha enviado su enlace"
-                                />
+                            <div className="flex gap-2 items-center">
+                                <div className="relative flex-1">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><TbFileSymlink /></span>
+                                    <input
+                                        id="enlace_multimedia"
+                                        type="text"
+                                        className={`${inputClasses} pl-11 font-mono cursor-not-allowed`}
+                                        value={formatData.enlace_multimedia || ''}
+                                        readOnly
+                                        placeholder="El ponente aún no ha enviado su enlace"
+                                    />
+                                </div>
+                                {formatData.enlace_multimedia && (
+                                    <button
+                                        type="button"
+                                        title="Copiar al campo Enlace a videollamada"
+                                        onClick={() => setFormatData(prev => ({ ...prev, enlace: formatData.enlace_multimedia }))}
+                                        className="btn btn-xs rounded-lg bg-base-200 border border-base-300 text-base-content/60 hover:bg-primary hover:text-white hover:border-primary transition-all gap-1 whitespace-nowrap"
+                                    >
+                                        <FiCopy size={12} /> Copiar a videollamada
+                                    </button>
+                                )}
                             </div>
                         </div>
                         <div className="md:col-span-2">
