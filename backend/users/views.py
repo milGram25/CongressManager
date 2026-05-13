@@ -684,6 +684,7 @@ class RoleAssignView(APIView):
             else:
                 try:
                     EvaluadorCongreso.objects.get_or_create(id_persona=persona, id_congreso_id=id_congreso)
+                    Evaluador.objects.get_or_create(id_persona=persona)
                 except IntegrityError:
                     return Response({'detail': 'Congreso no válido.'}, status=status.HTTP_400_BAD_REQUEST)
 
