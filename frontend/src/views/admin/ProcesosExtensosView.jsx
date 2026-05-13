@@ -64,9 +64,14 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
 
   const estado = extenso.estado_derivado ?? 'en_revision';
   const yaAsignados = extenso.id_evaluador && extenso.id_evaluador_2;
-  const evaluadoresParaR3 = evaluadoresDisponibles.filter(
-    e => e.id_evaluador !== extenso.id_evaluador && e.id_evaluador !== extenso.id_evaluador_2
+  const autoresIds = new Set((extenso.ponentes_personas_ids ?? []).map(Number));
+  const evaluadoresSinAutor = evaluadoresDisponibles.filter(e => !autoresIds.has(Number(e.id_persona)));
+  const evaluadoresParaR3 = evaluadoresSinAutor.filter(
+    e => String(e.id_evaluador) !== String(extenso.id_evaluador) && String(e.id_evaluador) !== String(extenso.id_evaluador_2)
   );
+  const r1StrSel = String(r1Sel);
+  const r2StrSel = String(r2Sel);
+  const mismosRevisores = r1StrSel && r2StrSel && r1StrSel === r2StrSel;
 
   const handleAsignarDos = async () => {
     if (!r1Sel || !r2Sel) return;
@@ -139,7 +144,7 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
       {!extenso.revisado && (
         <section>
           <h4 className="font-semibold tracking-wide text-slate-700 mb-2">Asignar revisores (ambos obligatorios)</h4>
-          {evaluadoresDisponibles.length === 0 ? (
+          {evaluadoresSinAutor.length === 0 ? (
             <p className="text-xs text-amber-600 italic">No hay evaluadores asignados a este congreso.</p>
           ) : (
             <div className="space-y-4">
@@ -147,28 +152,28 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold uppercase text-slate-400 ml-1">Revisor 1</p>
                   <BuscadorPersonal
-                    options={evaluadoresDisponibles}
+                    options={evaluadoresSinAutor}
                     value={r1Sel}
-                    onChange={setR1Sel}
+                    onChange={v => setR1Sel(String(v))}
                     placeholder="Busca Revisor 1..."
                   />
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold uppercase text-slate-400 ml-1">Revisor 2</p>
                   <BuscadorPersonal
-                    options={evaluadoresDisponibles}
+                    options={evaluadoresSinAutor}
                     value={r2Sel}
-                    onChange={setR2Sel}
+                    onChange={v => setR2Sel(String(v))}
                     placeholder="Busca Revisor 2..."
                   />
                 </div>
               </div>
-              {r1Sel && r2Sel && r1Sel === r2Sel && (
+              {mismosRevisores && (
                 <p className="text-xs text-error font-medium">El Revisor 1 y el Revisor 2 no pueden ser la misma persona.</p>
               )}
               <button
                 onClick={handleAsignarDos}
-                disabled={!r1Sel || !r2Sel || r1Sel === r2Sel || assigning}
+                disabled={!r1StrSel || !r2StrSel || mismosRevisores || assigning}
                 className="w-full btn btn-primary btn-sm rounded-xl disabled:opacity-50"
               >
                 {assigning ? 'Asignando...' : 'Asignar revisores'}

@@ -624,13 +624,14 @@ class EvaluadoresDisponiblesView(APIView):
         with connection.cursor() as cursor:
             cursor.execute("""
                 SELECT e.id_evaluador,
-                       TRIM(CONCAT_WS(' ', per.nombre, per.primer_apellido, per.segundo_apellido))
+                       TRIM(CONCAT_WS(' ', per.nombre, per.primer_apellido, per.segundo_apellido)),
+                       e.id_persona
                 FROM evaluador e
                 JOIN persona per ON per.id_persona = e.id_persona
                 JOIN evaluador_congreso ec ON ec.id_persona = e.id_persona AND ec.id_congreso = %s
                 ORDER BY per.primer_apellido, per.nombre
             """, [id_congreso])
-            data = [{'id_evaluador': r[0], 'nombre_completo': r[1]} for r in cursor.fetchall()]
+            data = [{'id_evaluador': r[0], 'nombre_completo': r[1], 'id_persona': r[2]} for r in cursor.fetchall()]
         return Response(data)
 
 
@@ -822,15 +823,18 @@ class ExtensosCongresoView(APIView):
 
             c.execute("""
                 SELECT php.id_ponencia,
-                       per.nombre || ' ' || per.primer_apellido
+                       per.nombre || ' ' || per.primer_apellido,
+                       po.id_persona
                 FROM ponente_has_ponencia php
                 JOIN ponente po ON php.id_ponente = po.id_ponente
                 JOIN persona per ON po.id_persona = per.id_persona
                 WHERE php.id_ponencia = ANY(%s)
             """, [ponencia_ids])
             autores_map = {}
-            for id_pon, nombre in c.fetchall():
+            ponentes_personas_map = {}
+            for id_pon, nombre, id_persona in c.fetchall():
                 autores_map.setdefault(id_pon, []).append(nombre)
+                ponentes_personas_map.setdefault(id_pon, []).append(id_persona)
 
             c.execute("""
                 SELECT DISTINCT ON (id_extenso, id_evaluador)
@@ -892,6 +896,7 @@ class ExtensosCongresoView(APIView):
                 'title': p['titulo'],
                 'ruta_extenso': p['ruta_relativa'],
                 'autores': autores_map.get(p['id_ponencia'], []),
+                'ponentes_personas_ids': ponentes_personas_map.get(p['id_ponencia'], []),
                 'asignado': p['id_evaluador'] is not None and p['id_evaluador_2'] is not None,
                 'revisado': p['revisado'] or False,
                 'aceptado': estado_derivado == 'extenso_aceptado',
@@ -1131,12 +1136,33 @@ class AsignarEvaluadoresView(APIView):
         id_evaluador_2 = request.data.get('id_evaluador_2')
         if not id_evaluador or not id_evaluador_2:
             return Response({'detail': 'id_evaluador e id_evaluador_2 son requeridos.'}, status=status.HTTP_400_BAD_REQUEST)
+        if int(id_evaluador) == int(id_evaluador_2):
+            return Response({'detail': 'El Revisor 1 y el Revisor 2 no pueden ser la misma persona.'}, status=status.HTTP_400_BAD_REQUEST)
         try:
             extenso = Extenso.objects.get(pk=pk)
         except Extenso.DoesNotExist:
             return Response({'detail': 'Extenso no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
         if extenso.revisado:
             return Response({'detail': 'El extenso ya fue revisado.'}, status=status.HTTP_400_BAD_REQUEST)
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT po.id_persona
+                FROM ponencia p
+                JOIN ponente_has_ponencia php ON php.id_ponencia = p.id_ponencia
+                JOIN ponente po ON po.id_ponente = php.id_ponente
+                WHERE p.id_extenso = %s
+            """, [pk])
+            ponentes_personas = {row[0] for row in cursor.fetchall()}
+            cursor.execute("""
+                SELECT id_evaluador, id_persona FROM evaluador
+                WHERE id_evaluador = ANY(%s)
+            """, [[int(id_evaluador), int(id_evaluador_2)]])
+            for eval_id, id_persona in cursor.fetchall():
+                if id_persona in ponentes_personas:
+                    return Response(
+                        {'detail': 'Un evaluador no puede revisar su propia ponencia.'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
         extenso.id_evaluador_id = id_evaluador
         extenso.id_evaluador_2_id = id_evaluador_2
         extenso.save(update_fields=['id_evaluador', 'id_evaluador_2'])
