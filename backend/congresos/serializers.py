@@ -51,9 +51,21 @@ class RubricaSerializer(serializers.ModelSerializer):
         fields = ['id_rubrica', 'id_congreso', 'tipo_trabajo', 'nombre', 'esta_activo', 'fecha_creacion', 'grupos']
 
 class TipoTrabajoSerializer(serializers.ModelSerializer):
+    ruta_formato = serializers.SerializerMethodField()
+
+    def get_ruta_formato(self, obj):
+        from django.db import connection
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT ruta_formato FROM tipo_trabajo_formato WHERE id_tipo_trabajo = %s",
+                [obj.id_tipo_trabajo]
+            )
+            row = cursor.fetchone()
+        return row[0] if row else None
+
     class Meta:
         model = TipoTrabajo
-        fields = ['id_tipo_trabajo', 'id_congreso', 'tipo_trabajo']
+        fields = ['id_tipo_trabajo', 'id_congreso', 'tipo_trabajo', 'ruta_formato']
 
 class DictamenPreguntaSerializer(serializers.ModelSerializer):
     class Meta:

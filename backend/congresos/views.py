@@ -10,6 +10,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from calendar import monthrange
 import os
+import uuid
 
 from .models import Sede, Institucion, Congreso, Evento, MesasTrabajo, FechasCongreso, CostosCongreso, Rubrica, RubricaGrupo, RubricaCriterio, TipoTrabajo, Dictamen, DictamenPregunta, Subarea, AreaGeneral, Taller, Libros, LibroHasPonencia
 from .serializers import SedeSerializer, InstitucionSerializer, CongresoSerializer, EventoSerializer, MesasTrabajoSerializer, RubricaSerializer, RubricaGrupoSerializer, RubricaCriterioSerializer, TipoTrabajoSerializer, DictamenSerializer, DictamenPreguntaSerializer, SubareaSerializer, AreaGeneralSerializer, TallerSerializer, LibrosSerializer, LibroHasPonenciaSerializer
@@ -91,6 +92,65 @@ class TipoTrabajoViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
             return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'], url_path='formato')
+    def upload_formato(self, request, pk=None):
+        if not request.user.is_staff:
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        archivo = request.FILES.get('archivo')
+        if not archivo:
+            return Response({'detail': 'Archivo requerido.'}, status=status.HTTP_400_BAD_REQUEST)
+        ext = os.path.splitext(archivo.name)[1].lower()
+        if ext not in ('.docx', '.doc'):
+            return Response({'detail': 'Solo se permiten archivos .docx o .doc'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            tipo = self.get_object()
+        except Exception:
+            return Response({'detail': 'Tipo de trabajo no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+        media_dir = os.path.join(settings.MEDIA_ROOT, 'formatos_extenso')
+        os.makedirs(media_dir, exist_ok=True)
+
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT ruta_formato FROM tipo_trabajo_formato WHERE id_tipo_trabajo = %s", [pk])
+            row = cursor.fetchone()
+            if row and row[0]:
+                old_path = os.path.join(settings.MEDIA_ROOT, row[0])
+                if os.path.exists(old_path):
+                    os.remove(old_path)
+
+        safe = "".join(c if c.isalnum() else "_" for c in tipo.tipo_trabajo)[:30]
+        filename = f"formato_{safe}_{uuid.uuid4().hex[:6]}{ext}"
+        filepath = os.path.join(media_dir, filename)
+        with open(filepath, 'wb+') as f:
+            for chunk in archivo.chunks():
+                f.write(chunk)
+        ruta_relativa = os.path.join('formatos_extenso', filename)
+
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO tipo_trabajo_formato (id_tipo_trabajo, ruta_formato, fecha_subida)
+                VALUES (%s, %s, NOW())
+                ON CONFLICT (id_tipo_trabajo) DO UPDATE SET ruta_formato = EXCLUDED.ruta_formato, fecha_subida = NOW()
+            """, [pk, ruta_relativa])
+
+        return Response({'ruta_formato': ruta_relativa})
+
+    @action(detail=True, methods=['delete'], url_path='formato')
+    def delete_formato(self, request, pk=None):
+        if not request.user.is_staff:
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT ruta_formato FROM tipo_trabajo_formato WHERE id_tipo_trabajo = %s", [pk])
+            row = cursor.fetchone()
+            if not row:
+                return Response({'detail': 'No hay formato para este tipo de trabajo.'}, status=status.HTTP_404_NOT_FOUND)
+            old_path = os.path.join(settings.MEDIA_ROOT, row[0])
+            if os.path.exists(old_path):
+                os.remove(old_path)
+            cursor.execute("DELETE FROM tipo_trabajo_formato WHERE id_tipo_trabajo = %s", [pk])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class DictamenViewSet(viewsets.ModelViewSet):
     serializer_class = DictamenSerializer
