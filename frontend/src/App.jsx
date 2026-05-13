@@ -124,7 +124,7 @@ const AsistenteLayoutWrapper = () => {
     { to: '/asistente/mis-ponencias', label: 'Mis Ponencias', icon: MdCoPresent },
   ];
 
-  return <SidebarLayout roleTitle="Asistente" drawerId="asistente-drawer" menuItems={menuItems} MainIcon={MdSchool} />;
+  return <SidebarLayout roleTitle="Participante" drawerId="asistente-drawer" menuItems={menuItems} MainIcon={MdSchool} />;
 };
 
 const PonenteLayoutWrapper = () => {
@@ -171,7 +171,7 @@ const AdminLayoutWrapper = () => {
     {
       type: 'role-icons',
       roles: [
-        { to: '/asistente/congresos', label: 'Asistente', icon: MdPerson },
+        { to: '/asistente/congresos', label: 'Participante', icon: MdPerson },
         { to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview },
         { to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel },
       ]
@@ -228,11 +228,11 @@ const RevisorLayoutWrapper = () => {
       type: 'role-icons',
       roles: [
         ...(user?.rol === 'administrador' ? [
-          { to: '/admin/agenda', label: 'Admin', icon: MdAdminPanelSettings },
-          { to: '/asistente/congresos', label: 'Asistente', icon: MdPerson },
+          { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
+          { to: '/asistente/congresos', label: 'Participante', icon: MdPerson },
           { to: '/dictaminador/dictamenes', label: 'Dictaminador', icon: MdGavel },
         ] : [
-          { to: '/asistente/congresos', label: 'Asistente', icon: MdPerson },
+          { to: '/asistente/congresos', label: 'Participante', icon: MdPerson },
         ]),
       ]
     },
@@ -252,11 +252,11 @@ const DictaminadorLayoutWrapper = () => {
       type: 'role-icons',
       roles: [
         ...(user?.rol === 'administrador' ? [
-          { to: '/admin/agenda', label: 'Admin', icon: MdAdminPanelSettings },
-          { to: '/asistente/congresos', label: 'Asistente', icon: MdPerson },
+          { to: '/admin/dashboard', label: 'Admin', icon: MdAdminPanelSettings },
+          { to: '/asistente/congresos', label: 'Participante', icon: MdPerson },
           { to: '/revisor/revisiones', label: 'Revisor', icon: MdRateReview },
         ] : [
-          { to: '/asistente/congresos', label: 'Asistente', icon: MdPerson },
+          { to: '/asistente/congresos', label: 'Participante', icon: MdPerson },
         ]),
       ]
     },

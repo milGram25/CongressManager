@@ -17,7 +17,7 @@ import {
 
 function roleLabel(role) {
   if (role === "ponente") return "Ponente";
-  if (role === "asistente") return "Asistente";
+  if (role === "asistente") return "Participante";
   if (role === "dictaminador") return "Dictaminador";
   if (role === "revisor") return "Revisor";
   if (role === "administrador") return "Administrador";

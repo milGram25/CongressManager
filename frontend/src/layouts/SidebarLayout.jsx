@@ -92,7 +92,7 @@ export default function SidebarLayout({
     pathname.includes('subir-multimedia') ||
     pathname.includes('subir-extenso');
 
-  const displayTitle = (roleTitle === "Asistente" && isPonenteSection) ? "Ponente" : roleTitle;
+  const displayTitle = (roleTitle === "Participante" && isPonenteSection) ? "Ponente" : roleTitle;
 
   const closeDrawer = () => {
     const drawerCheckbox = document.getElementById(drawerId);

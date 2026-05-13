@@ -58,7 +58,7 @@ export default function PagosComponente({ listaPagos }) {
           <select className="rounded-full" onChange={(e) => setCriterioOrden({ criterio: "rol", valor: e.target.value })}>
             <option value="todos">Todos</option>
             <option value="comité académico">Comité académico</option>
-            <option value="asistente">Asistentes</option>
+            <option value="asistente">Participantes</option>
             <option value="tallerista">Talleristas</option>
             <option value="ponente">Ponentes</option>
             <option value="dictaminador">Dictaminadores</option>

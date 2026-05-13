@@ -1,3 +1,4 @@
+
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
@@ -169,7 +170,7 @@ class UserSerializer(serializers.ModelSerializer):
             obj.ponente; return 'ponente'
         except Exception:
             pass
-        return 'asistente'
+        return 'Participante'
 
     def get_nombre_completo(self, obj):
         return ' '.join(x for x in [obj.nombre, obj.primer_apellido, obj.segundo_apellido] if x).strip()

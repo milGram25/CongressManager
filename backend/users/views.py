@@ -26,7 +26,7 @@ def _get_rol_persona(persona):
         return 'Ponente'
     except Exception:
         pass
-    return 'Asistente'
+    return 'Participante'
 
 
 def _get_all_roles_persona(persona, id_congreso=None):

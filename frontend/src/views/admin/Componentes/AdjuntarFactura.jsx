@@ -98,7 +98,7 @@ export default function AdjuntarFactura({persona}) {
 
 
         <div className="flex flex-1">
-            <div className="flex w-15 items-center gap-3" title="Asistente">
+            <div className="flex w-15 items-center gap-3" title="Participante">
                 <div className={`rounded-full h-2 w-2 border border-b ${rolAsistente.color}`} title={`${rolAsistente.title}`}></div>
                 <div className="bg-white flex flex-1 rounded-full h-10 w-10 border border-b items-center justify-center"><BsFillPersonFill/></div>
             </div>
@@ -125,7 +125,7 @@ export default function AdjuntarFactura({persona}) {
         <div className="flex w-50 items-center">
             <p className="w-10 text-white">Rol</p>
             <select className="bg-white flex-1 rounded-full border border-b h-10 pl-4" value={esRol} onChange={(e)=>setEsRol(e.target.value)}>
-                <option value="asistente">Asistente</option>
+                <option value="asistente">Participante</option>
                 <option value="ponente">Ponente</option>
                 <option value="tallerista">Tallerista</option>
                 <option value="dictaminador">Dictaminador</option>
