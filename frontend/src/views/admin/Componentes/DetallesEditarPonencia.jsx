@@ -40,6 +40,8 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
     const [cuposMax, setCuposMax] = useState(0);
     const [loadingInscritos, setLoadingInscritos] = useState(false);
 
+    const [copiedField, setCopiedField] = useState(null);
+
     const [isMagistral, setIsMagistral] = useState(false);
     const [ponentePrincipal, setPonentePrincipal] = useState("");
     const [coautores, setCoautores] = useState([]);
@@ -275,6 +277,14 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
         } finally {
             setSaving(false);
         }
+    };
+
+    const handleCopy = (text, field) => {
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(() => {
+            setCopiedField(field);
+            setTimeout(() => setCopiedField(null), 2000);
+        });
     };
 
     const inputClasses = `w-full bg-base-100 border border-base-300 rounded-xl px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all ${!modificando ? 'bg-base-200 cursor-not-allowed opacity-70' : 'hover:border-primary/50'}`;
@@ -573,35 +583,45 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
 
                             </div>
                         </div>
+                        {(formatData.tipo_participacion === 'Virtual' || formatData.tipo_participacion === 'Híbrido') && (
                         <div>
                             <label className={labelClasses}>Enlace a videollamada</label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FaLink /></span>
-                                <input id="enlace" type="url" className={`${inputClasses} pl-11 font-mono`} value={formatData.enlace || ''} onChange={handleChange} readOnly={!modificando} placeholder="e.g.: https://meet.google.com/" />
+                                <input id="enlace" type="url" className={`${inputClasses} pl-11 pr-11 font-mono`} value={formatData.enlace || ''} onChange={handleChange} readOnly={!modificando} placeholder="e.g.: https://meet.google.com/" />
+                                {formatData.enlace && (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleCopy(formatData.enlace, 'enlace')}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-base-content/40 hover:text-primary hover:bg-primary/10 transition-all"
+                                        title="Copiar enlace"
+                                    >
+                                        {copiedField === 'enlace' ? <IoIosCheckmark size={18} className="text-success" /> : <FiCopy size={14} />}
+                                    </button>
+                                )}
                             </div>
                         </div>
+                        )}
                         <div>
                             <label className={labelClasses}>Enlace/ruta a multimedia <span className="text-base-content/30 font-normal normal-case tracking-normal">(enviado por el ponente)</span></label>
-                            <div className="flex gap-2 items-center">
-                                <div className="relative flex-1">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><TbFileSymlink /></span>
-                                    <input
-                                        id="enlace_multimedia"
-                                        type="text"
-                                        className={`${inputClasses} pl-11 font-mono cursor-not-allowed`}
-                                        value={formatData.enlace_multimedia || ''}
-                                        readOnly
-                                        placeholder="El ponente aún no ha enviado su enlace"
-                                    />
-                                </div>
+                            <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><TbFileSymlink /></span>
+                                <input
+                                    id="enlace_multimedia"
+                                    type="text"
+                                    className={`${inputClasses} pl-11 pr-11 font-mono cursor-not-allowed`}
+                                    value={formatData.enlace_multimedia || ''}
+                                    readOnly
+                                    placeholder="El ponente aún no ha enviado su enlace"
+                                />
                                 {formatData.enlace_multimedia && (
                                     <button
                                         type="button"
-                                        title="Copiar al campo Enlace a videollamada"
-                                        onClick={() => setFormatData(prev => ({ ...prev, enlace: formatData.enlace_multimedia }))}
-                                        className="btn btn-xs rounded-lg bg-base-200 border border-base-300 text-base-content/60 hover:bg-primary hover:text-white hover:border-primary transition-all gap-1 whitespace-nowrap"
+                                        onClick={() => handleCopy(formatData.enlace_multimedia, 'enlace_multimedia')}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-base-content/40 hover:text-primary hover:bg-primary/10 transition-all"
+                                        title="Copiar enlace multimedia"
                                     >
-                                        <FiCopy size={12} /> Copiar a videollamada
+                                        {copiedField === 'enlace_multimedia' ? <IoIosCheckmark size={18} className="text-success" /> : <FiCopy size={14} />}
                                     </button>
                                 )}
                             </div>
