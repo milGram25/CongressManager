@@ -353,26 +353,26 @@ class EnviarPonenciaAPIView(APIView):
                             WHERE php.id_ponente = %s AND e.id_congreso = %s
                         """, [id_ponente_check, id_congreso])
                         current_count = int(cursor.fetchone()[0])
-                        new_extra = max((current_count + 1) - PONENTE_INCLUDED, 0)
-                        required_slots = 1 + new_extra
-                        # Contar slots pagados solo para este congreso
-                        cursor.execute("""
-                            SELECT id_costos_congreso FROM congreso WHERE id_congreso = %s LIMIT 1
-                        """, [id_congreso])
-                        costos_row = cursor.fetchone()
-                        costos_id_check = costos_row[0] if costos_row else None
-                        cursor.execute("""
-                            SELECT COUNT(*) FROM pagos
-                            WHERE id_persona = %s
-                              AND id_costos = %s
-                              AND (concepto = 'inscripcion_ponente_base' OR concepto LIKE 'inscripcion_ponente_extra_%%')
-                        """, [request.user.id_persona, costos_id_check])
-                        paid_slots = int(cursor.fetchone()[0])
-                        if paid_slots < required_slots:
-                            return Response(
-                                {'detail': 'Para enviar una ponencia adicional debes pagar la cuota de ponencias extras.', 'redirect': 'pagos'},
-                                status=status.HTTP_402_PAYMENT_REQUIRED
-                            )
+                        # Las primeras 3 ponencias están incluidas; solo se cobran extras a partir de la 4a
+                        extra_slots_needed = max((current_count + 1) - PONENTE_INCLUDED, 0)
+                        if extra_slots_needed > 0:
+                            cursor.execute("""
+                                SELECT id_costos_congreso FROM congreso WHERE id_congreso = %s LIMIT 1
+                            """, [id_congreso])
+                            costos_row = cursor.fetchone()
+                            costos_id_check = costos_row[0] if costos_row else None
+                            cursor.execute("""
+                                SELECT COUNT(*) FROM pagos
+                                WHERE id_persona = %s
+                                  AND id_costos = %s
+                                  AND concepto LIKE 'inscripcion_ponente_extra_%%'
+                            """, [request.user.id_persona, costos_id_check])
+                            paid_extras = int(cursor.fetchone()[0])
+                            if paid_extras < extra_slots_needed:
+                                return Response(
+                                    {'detail': 'Para enviar una ponencia adicional debes pagar la cuota de ponencias extras.', 'redirect': 'pagos'},
+                                    status=status.HTTP_402_PAYMENT_REQUIRED
+                                )
 
                     # Resolver id_tipo_trabajo — acepta ID directo o nombre legacy
                     try:
@@ -395,34 +395,25 @@ class EnviarPonenciaAPIView(APIView):
                     tt_row = cursor.fetchone()
                     tipo_trabajo_str = tt_row[0] if tt_row else str(id_tipo_trabajo_raw)
 
-                    # Buscar o crear evento de tipo ponencia para este congreso y tipo de trabajo
+                    # Crear un evento de tipo 'ponencia' por cada ponencia enviada (siempre)
                     cursor.execute("""
-                        SELECT id_evento FROM evento
-                        WHERE id_congreso = %s AND tipo_evento = 'ponencia' AND id_tipo_trabajo = %s
-                        ORDER BY id_evento LIMIT 1
-                    """, [id_congreso, id_tipo_trabajo])
-                    evento_row = cursor.fetchone()
-                    if evento_row:
-                        id_evento = evento_row[0]
+                        SELECT fc.fecha_inicio_evento, fc.fecha_final_evento
+                        FROM congreso c
+                        JOIN fechas_congreso fc ON fc.id_fechas_congreso = c.id_fechas_congreso
+                        WHERE c.id_congreso = %s
+                    """, [id_congreso])
+                    fechas_row = cursor.fetchone()
+                    if fechas_row:
+                        fecha_inicio, fecha_final = fechas_row
                     else:
-                        cursor.execute("""
-                            SELECT fc.fecha_inicio_evento, fc.fecha_final_evento
-                            FROM congreso c
-                            JOIN fechas_congreso fc ON fc.id_fechas_congreso = c.id_fechas_congreso
-                            WHERE c.id_congreso = %s
-                        """, [id_congreso])
-                        fechas_row = cursor.fetchone()
-                        if fechas_row:
-                            fecha_inicio, fecha_final = fechas_row
-                        else:
-                            fecha_inicio = datetime.now()
-                            fecha_final = datetime.now() + timedelta(days=365)
-                        cursor.execute("""
-                            INSERT INTO evento (id_congreso, nombre_evento, tipo_evento, id_tipo_trabajo, fecha_hora_inicio, fecha_hora_final, cupos, sinopsis)
-                            VALUES (%s, %s, 'ponencia', %s, %s, %s, 0, %s)
-                            RETURNING id_evento
-                        """, [id_congreso, tipo_trabajo_str, id_tipo_trabajo, fecha_inicio, fecha_final, resumen_texto])
-                        id_evento = cursor.fetchone()[0]
+                        fecha_inicio = datetime.now()
+                        fecha_final = datetime.now() + timedelta(days=365)
+                    cursor.execute("""
+                        INSERT INTO evento (id_congreso, nombre_evento, tipo_evento, id_tipo_trabajo, fecha_hora_inicio, fecha_hora_final, cupos, sinopsis)
+                        VALUES (%s, %s, 'ponencia', %s, %s, %s, 0, %s)
+                        RETURNING id_evento
+                    """, [id_congreso, titulo, id_tipo_trabajo, fecha_inicio, fecha_final, resumen_texto])
+                    id_evento = cursor.fetchone()[0]
 
                     # Resolver id_subarea
                     cursor.execute("SELECT id_subareas FROM subareas WHERE nombre ILIKE %s LIMIT 1", [f"%{eje_tematico_nombre}%"])
