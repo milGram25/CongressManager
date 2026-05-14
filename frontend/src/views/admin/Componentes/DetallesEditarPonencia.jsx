@@ -220,11 +220,6 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
     }
 
     async function handleSave() {
-        if (!formatData.nombre_evento || !formatData.id_congreso || !formatData.id_subarea) {
-            alert("Por favor completa los campos obligatorios (Título, Congreso, Subárea).");
-            return;
-        }
-
         setSaving(true);
         try {
             // Publish-existing-ponencia mode (from extenso flow)
@@ -242,6 +237,12 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                 navigate(`/admin/eventos/ponencias/detalles/${id_evento}?edit=true`);
                 return;
             }
+
+            if (!formatData.nombre_evento || !formatData.id_congreso || !formatData.id_subarea) {
+                alert("Por favor completa los campos obligatorios (Título, Congreso, Subárea).");
+                return;
+            }
+
             if (isMagistral) {
                 const magistralData = {
                     titulo: formatData.nombre_evento,
