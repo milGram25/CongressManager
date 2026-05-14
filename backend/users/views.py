@@ -359,6 +359,13 @@ class SolicitarFacturaView(APIView):
         razon_social = request.data.get('razon_social', '')
         codigo_postal = request.data.get('codigo_postal', '')
         regimen_fiscal = request.data.get('regimen_fiscal', '')
+        constancia_file = request.FILES.get('constancia_fiscal')
+
+        file_url = None
+        if constancia_file:
+            fs = FileSystemStorage(location='media/constancias_fiscales/')
+            filename = fs.save(f"csf_{request.user.id_persona}_{id_congreso}_{constancia_file.name}", constancia_file)
+            file_url = f"/media/constancias_fiscales/{filename}"
 
         factura = Factura.objects.filter(
             id_persona=request.user,
@@ -373,6 +380,8 @@ class SolicitarFacturaView(APIView):
             factura.razon_social = razon_social
             factura.codigo_postal = codigo_postal
             factura.regimen_fiscal = regimen_fiscal
+            if file_url:
+                factura.ruta_constancia_fiscal = file_url
             factura.save()
         else:
             factura = Factura.objects.create(
@@ -382,6 +391,7 @@ class SolicitarFacturaView(APIView):
                 razon_social=razon_social,
                 codigo_postal=codigo_postal,
                 regimen_fiscal=regimen_fiscal,
+                ruta_constancia_fiscal=file_url,
                 estatus='pendiente',
             )
 
@@ -405,6 +415,7 @@ class MisFacturasView(APIView):
                 'codigo_postal': f.codigo_postal,
                 'regimen_fiscal': f.regimen_fiscal,
                 'ruta_pdf_xml': f.ruta_pdf_xml,
+                'ruta_constancia_fiscal': f.ruta_constancia_fiscal,
                 'estatus': f.estatus,
                 'fecha_solicitud': f.fecha_solicitud.isoformat() if f.fecha_solicitud else None,
                 'fecha_envio': f.fecha_envio.isoformat() if f.fecha_envio else None,
@@ -490,6 +501,7 @@ class FacturasPendientesAdminView(APIView):
                     'razon_social': f.razon_social,
                     'regimen_fiscal': f.regimen_fiscal,
                     'codigo_postal': f.codigo_postal,
+                    'ruta_constancia_fiscal': f.ruta_constancia_fiscal,
                     'nombre_congreso': f.id_congreso.nombre_congreso if f.id_congreso else None,
                     'id_congreso': f.id_congreso_id,
                     'fecha_solicitud': f.fecha_solicitud,

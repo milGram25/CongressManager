@@ -14,6 +14,8 @@ import {
   MdArrowBack,
   MdDateRange,
   MdClose,
+  MdVisibility,
+  MdDeleteOutline,
 } from "react-icons/md";
 
 function roleLabel(role) {
@@ -56,6 +58,8 @@ export default function PagosView() {
   const [usarCorreoAlternativo, setUsarCorreoAlternativo] = useState(false);
   const [correoFacturacion, setCorreoFacturacion] = useState("");
   const [confirmandoSalida, setConfirmandoSalida] = useState(false);
+  const [constanciaFiscalFile, setConstanciaFiscalFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [datosFacturacion, setDatosFacturacion] = useState({
     rfc: "",
     razonSocial: "",
@@ -164,6 +168,15 @@ export default function PagosView() {
     init();
   }, []); // Solo al montar
 
+  useEffect(() => {
+    if (constanciaFiscalFile) {
+      const url = URL.createObjectURL(constanciaFiscalFile);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+    setPreviewUrl(null);
+  }, [constanciaFiscalFile]);
+
   // 2. Cargar resumen cuando cambie idCongreso
   useEffect(() => {
     const loadResumen = async () => {
@@ -195,14 +208,15 @@ export default function PagosView() {
       rfcRegex.test(datosFacturacion.rfc) &&
       datosFacturacion.razonSocial.length >= 3 &&
       cpRegex.test(datosFacturacion.cp) &&
-      datosFacturacion.regimenFiscal !== "";
+      datosFacturacion.regimenFiscal !== "" &&
+      constanciaFiscalFile !== null;
 
     const correoValido = usarCorreoAlternativo
       ? emailRegex.test(correoFacturacion)
       : true;
 
     return camposFiscalesValidos && correoValido;
-  }, [datosFacturacion, usarCorreoAlternativo, correoFacturacion]);
+  }, [datosFacturacion, usarCorreoAlternativo, correoFacturacion, constanciaFiscalFile]);
 
   const userPayment = resumen?.user_payment;
   const role = userPayment?.role || user?.rol || "asistente";
@@ -304,13 +318,17 @@ export default function PagosView() {
     setErrorFactura("");
     try {
       const token = localStorage.getItem("congress_access");
-      await solicitarFacturaApi(token, {
-        id_congreso: idCongreso ? Number(idCongreso) : null,
-        rfc: datosFacturacion.rfc,
-        razon_social: datosFacturacion.razonSocial,
-        codigo_postal: datosFacturacion.cp,
-        regimen_fiscal: datosFacturacion.regimenFiscal,
-      });
+      const formData = new FormData();
+      if (idCongreso) formData.append("id_congreso", idCongreso);
+      formData.append("rfc", datosFacturacion.rfc);
+      formData.append("razon_social", datosFacturacion.razonSocial);
+      formData.append("codigo_postal", datosFacturacion.cp);
+      formData.append("regimen_fiscal", datosFacturacion.regimenFiscal);
+      if (constanciaFiscalFile) {
+        formData.append("constancia_fiscal", constanciaFiscalFile);
+      }
+
+      await solicitarFacturaApi(token, formData);
       setSolicitudEnviada(true);
       setQuiereFactura(false);
     } catch (err) {
@@ -726,6 +744,47 @@ export default function PagosView() {
                     >
                       {USOS.map((u) => <option key={u.code} value={u.code}>{u.code} - {u.label}</option>)}
                     </select>
+                  </div>
+
+                  <div className="form-control col-span-full">
+                    <label className="color primary text-[12px] font-bold  opacity-90">CONSTANCIA DE SITUACIÓN FISCAL (PDF)</label>
+                    {constanciaFiscalFile ? (
+                      <div className="flex flex-col gap-2 mt-2">
+                        <div className="flex items-center justify-between bg-base-200 p-3 rounded-xl border border-base-300">
+                          <span className="text-sm font-semibold text-primary truncate max-w-[200px] sm:max-w-[300px]">
+                            {constanciaFiscalFile.name}
+                          </span>
+                          <div className="flex gap-2">
+                            {previewUrl && (
+                              <a
+                                href={previewUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-xs btn-primary btn-outline"
+                                title="Ver archivo"
+                              >
+                                <MdVisibility className="text-base" />
+                              </a>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setConstanciaFiscalFile(null)}
+                              className="btn btn-xs btn-error btn-outline"
+                              title="Eliminar archivo"
+                            >
+                              <MdDeleteOutline className="text-base" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        className="file-input file-input-sm file-input-bordered w-full bg-base-100"
+                        onChange={(e) => setConstanciaFiscalFile(e.target.files[0])}
+                      />
+                    )}
                   </div>
                 </div>
 

@@ -330,6 +330,7 @@ CREATE TABLE factura (
     codigo_postal VARCHAR(10),
     regimen_fiscal VARCHAR(255),
     ruta_pdf_xml VARCHAR(255),
+    ruta_constancia_fiscal VARCHAR(255),
     estatus VARCHAR(20) DEFAULT 'pendiente', -- 'pendiente', 'enviada'
     fecha_solicitud TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_envio TIMESTAMP
