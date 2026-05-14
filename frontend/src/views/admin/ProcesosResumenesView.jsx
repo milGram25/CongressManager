@@ -167,7 +167,11 @@ function AsignarDictaminadorCard({ resumen, dictaminadores, onAsignado }) {
           <h4 className=" font-semibold  tracking-wide text-slate-700 mb-2">
             {resumen.asignado ? 'Reasignar dictaminador' : 'Asignar dictaminador'}
           </h4>
-          {(() => {
+          {resumen.revisado ? (
+            <div className="text-sm px-4 py-3 rounded-xl bg-warning/10 text-warning font-medium">
+              No es posible cambiar al dictaminador porque ya realizó la revisión.
+            </div>
+          ) : (() => {
             const autoresIds = new Set((resumen.ponentes_personas_ids ?? []).map(Number));
             const dictaminadoresSinAutor = dictaminadores.filter(d => !autoresIds.has(Number(d.id_persona)));
             return dictaminadoresSinAutor.length === 0 ? (

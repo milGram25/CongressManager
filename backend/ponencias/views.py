@@ -641,6 +641,8 @@ class AsignarDictaminadorView(APIView):
             resumen = Resumen.objects.get(pk=pk)
         except Resumen.DoesNotExist:
             return Response({'detail': 'Resumen no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+        if resumen.revisado:
+            return Response({'detail': 'No es posible cambiar al dictaminador porque ya realizó la revisión.'}, status=status.HTTP_400_BAD_REQUEST)
         id_dictaminador = request.data.get('id_dictaminador')
         if not id_dictaminador:
             return Response({'detail': 'id_dictaminador es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
