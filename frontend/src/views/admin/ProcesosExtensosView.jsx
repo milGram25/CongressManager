@@ -148,10 +148,13 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
         </section>
       )}
 
-      {!extenso.revisado && (
-        <section>
+      <section>
           <h4 className="font-semibold tracking-wide text-slate-700 mb-2">Asignar revisores (ambos obligatorios)</h4>
-          {evaluadoresSinAutor.length === 0 ? (
+          {extenso.revisado ? (
+            <div className="text-sm px-4 py-3 rounded-xl bg-warning/10 text-warning font-medium">
+              No es posible cambiar a los revisores porque ya realizaron la revisión.
+            </div>
+          ) : evaluadoresSinAutor.length === 0 ? (
             <p className="text-xs text-amber-600 italic">No hay evaluadores asignados a este congreso.</p>
           ) : (
             <div className="space-y-4">
@@ -188,7 +191,6 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
             </div>
           )}
         </section>
-      )}
 
       {estado === 'desacuerdo' && (
         <section>
