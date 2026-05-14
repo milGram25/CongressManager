@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ListaExtensos from "./Componentes/ListaExtensos";
 import { getCongresosApi, getEvaluadoresDisponiblesApi } from "../../api/adminApi";
-import { getExtensosCongreso, asignarEvaluadoresApi, asignarEvaluador3Api, buildMediaUrl, publicarPonenciaApi } from "../../api/ponenciasApi";
+import { getExtensosCongreso, asignarEvaluadoresApi, asignarEvaluador3Api, buildMediaUrl } from "../../api/ponenciasApi";
 import BuscadorPersonal from "./Componentes/BuscadorPersonal";
 
 function LedStatus({ label, active, neutral = false, color = null, title=""}) {
@@ -49,7 +49,6 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
   const [r2Sel, setR2Sel] = useState('');
   const [r3Sel, setR3Sel] = useState('');
   const [assigning, setAssigning] = useState(false);
-  const [publishing, setPublishing] = useState(false);
   const accessToken = localStorage.getItem('congress_access');
 
   useEffect(() => {
@@ -97,16 +96,14 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
     }
   };
 
-  const handlePublicar = async () => {
-    setPublishing(true);
-    try {
-      const { id_evento } = await publicarPonenciaApi(accessToken, extenso.id_extenso);
-      if (onPublicado) onPublicado(extenso.id_extenso);
-      navigate(`/admin/eventos/ponencias/detalles/${id_evento}?edit=true`);
-    } catch (err) {
-      toast(err.message);
-      setPublishing(false);
-    }
+  const handlePublicar = () => {
+    const params = new URLSearchParams({
+        id_congreso: String(extenso.id_congreso),
+        nombre_evento: extenso.title,
+        id_subarea: String(extenso.id_subarea || ''),
+        id_extenso: String(extenso.id_extenso),
+    });
+    navigate(`/admin/eventos/ponencias/crear?${params.toString()}`);
   };
 
   const grupos = extenso.evaluacion?.grupos ?? null;
@@ -221,10 +218,9 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
         <section>
           <button
             onClick={handlePublicar}
-            disabled={publishing}
-            className="w-full btn btn-success rounded-xl tracking-wider font-bold disabled:opacity-60"
+            className="w-full btn btn-success rounded-xl tracking-wider font-bold"
           >
-            {publishing ? 'Publicando...' : 'Publicar ponencia'}
+            Publicar ponencia
           </button>
         </section>
       )}
