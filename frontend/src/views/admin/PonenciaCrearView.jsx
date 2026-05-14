@@ -11,6 +11,7 @@ const PonenciaCrearView = () => {
     const nombreEventoParam = queryParams.get('nombre_evento') || "";
     const idSubareaParam = queryParams.get('id_subarea') || "";
     const esMagistral = queryParams.get('tipo') === 'magistral';
+    const idExtensoParam = queryParams.get('id_extenso') || null;
     const ponenciaRef = useRef();
 
     // Datos iniciales — pre-llenados desde query params si vienen del flujo "Publicar ponencia"
@@ -26,8 +27,19 @@ const PonenciaCrearView = () => {
         sinopsis: "",
         id_mesas_trabajo: "",
         fecha_hora_inicio: "",
-        fecha_hora_final: ""
+        fecha_hora_final: "",
+        enlace_multimedia: ""
     };
+
+    const pageTitle = idExtensoParam
+        ? 'Publicar Ponencia'
+        : esMagistral
+            ? 'Crear Ponencia Magistral'
+            : 'Crear Ponencia';
+
+    const pageSubtitle = idExtensoParam
+        ? 'Completa los detalles para publicar la ponencia en el programa del congreso'
+        : `Completa la información para registrar una nueva ${esMagistral ? 'ponencia magistral' : 'ponencia'}`;
 
     return (
         <div className="w-full space-y-8 pb-10 p-4 md:p-8 animate-in fade-in duration-500">
@@ -41,19 +53,20 @@ const PonenciaCrearView = () => {
                 </button>
                 <div>
                     <h1 className="text-3xl font-bold text-base-content uppercase tracking-tight">
-                        {esMagistral ? 'Crear Ponencia Magistral' : 'Crear Ponencia'}
+                        {pageTitle}
                     </h1>
-                    <p className="text-sm text-base-content/50">Completa la información para registrar una nueva {esMagistral ? 'ponencia magistral' : 'ponencia'}</p>
+                    <p className="text-sm text-base-content/50">{pageSubtitle}</p>
                 </div>
             </div>
 
             {/* Formulario */}
             <div className="bg-base-100 rounded-3xl border border-base-300 shadow-sm overflow-hidden">
-                <DetallesEditarPonencia 
+                <DetallesEditarPonencia
                     ref={ponenciaRef}
-                    ponenciaData={emptyPonenciaData} 
+                    ponenciaData={emptyPonenciaData}
                     initialModificando={true}
                     isFullPage={true}
+                    idExtenso={idExtensoParam}
                 />
             </div>
             
@@ -65,11 +78,11 @@ const PonenciaCrearView = () => {
                 >
                     Cancelar
                 </button>
-                <button 
+                <button
                     onClick={() => ponenciaRef.current?.handleSave()}
                     className="px-10 py-4 rounded-2xl bg-black text-white font-black shadow-xl hover:bg-[#005a6a] transition-all active:scale-95 uppercase tracking-widest text-xs"
                 >
-                    {esMagistral ? 'Guardar Ponencia Magistral' : 'Guardar Ponencia'}
+                    {idExtensoParam ? 'Publicar Ponencia' : esMagistral ? 'Guardar Ponencia Magistral' : 'Guardar Ponencia'}
                 </button>
             </div>
         </div>
