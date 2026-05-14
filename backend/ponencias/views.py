@@ -1502,7 +1502,7 @@ class PonenciaMagistralViewSet(viewsets.ModelViewSet):
                     cursor.execute("""
                         UPDATE ponencia_magistral SET
                             titulo = %s, tipo_participacion = %s, id_subarea = %s,
-                            fecha_inicio = %s, fecha_fin = %s
+                            fecha_inicio = %s, fecha_fin = %s, enlace_multimedia = %s
                         WHERE id_ponencia_magistral = %s
                     """, [
                         data.get('titulo', instance.titulo),
@@ -1510,6 +1510,7 @@ class PonenciaMagistralViewSet(viewsets.ModelViewSet):
                         data.get('id_subarea', instance.id_subarea_id),
                         data.get('fecha_inicio', instance.fecha_inicio),
                         data.get('fecha_fin', instance.fecha_fin),
+                        data.get('enlace_multimedia', instance.enlace_multimedia or ''),
                         instance.id_ponencia_magistral
                     ])
 
