@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { HiDocumentText, HiCheckCircle, HiX, HiMail } from "react-icons/hi";
 import { MdReceipt, MdAccessTime } from "react-icons/md";
 import { uploadFacturaApi } from "../../../api/adminApi";
+import { API_URL } from "../../../api/constants";
 
 const formatFecha = (iso) => {
   if (!iso) return '—';
@@ -131,6 +132,19 @@ export default function InvoiceUpload({ selectedFactura, onUploadSuccess }) {
               <span className="text-white/50 font-bold uppercase tracking-wider w-20">Pagado</span>
               <span className="text-yellow-300 font-black">{formatMonto(selectedFactura.monto_pagado)}</span>
             </div>
+            {selectedFactura.ruta_constancia_fiscal && (
+              <div className="flex items-center gap-2 text-xs pt-1 mt-1">
+                <span className="text-white/50 font-bold uppercase tracking-wider w-20">CFDI</span>
+                <a
+                  href={`${API_URL}${selectedFactura.ruta_constancia_fiscal}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white/20 px-2 py-1 rounded text-white hover:bg-white/30 transition-colors"
+                >
+                  Descargar CFDI
+                </a>
+              </div>
+            )}
           </div>
 
           {successMsg && (
