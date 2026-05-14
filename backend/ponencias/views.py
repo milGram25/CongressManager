@@ -1607,11 +1607,14 @@ class PublicarPonenciaView(APIView):
                 if not fecha_fin:
                     fecha_fin = dates_row[1] if dates_row else None
 
-            cupos = int(request.data.get('cupos', 0) or 0)
+            try:
+                cupos = int(request.data.get('cupos', 0) or 0)
+            except (ValueError, TypeError):
+                cupos = 0
             sinopsis = request.data.get('sinopsis', '') or ''
             enlace = request.data.get('enlace', '') or ''
             id_mesas_trabajo = request.data.get('id_mesas_trabajo') or None
-            tipo_participacion = request.data.get('tipo_participacion', 'Presencial') or 'Presencial'
+            tipo_participacion = str(request.data.get('tipo_participacion', 'presencial') or 'presencial').lower()
 
             with transaction.atomic():
                 cursor.execute("""
