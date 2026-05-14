@@ -25,7 +25,8 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
         sinopsis: "",
         id_mesas_trabajo: "",
         fecha_hora_inicio: "",
-        fecha_hora_final: ""
+        fecha_hora_final: "",
+        enlace_multimedia: "",
     });
 
     const [modificando, setModificando] = useState(initialModificando);
@@ -187,9 +188,18 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                             setCuposMax(inscritosData.cupos_max || 0);
                         } catch { } finally { setLoadingInscritos(false); }
                     }
-                } else if (ponenciaData?.id_congreso) {
-                    setFormatData(prev => ({ ...prev, id_congreso: parseInt(ponenciaData.id_congreso) }));
-                    setIsMagistral(true);
+                } else if (ponenciaData) {
+                    // New ponencia: pre-fill from ponenciaData (which may contain query-param pre-fills)
+                    setFormatData(prev => ({
+                        ...prev,
+                        ...ponenciaData,
+                        id_congreso: ponenciaData.id_congreso || prev.id_congreso,
+                        id_subarea: ponenciaData.id_subarea || prev.id_subarea,
+                        nombre_evento: ponenciaData.nombre_evento || prev.nombre_evento,
+                        tipo_participacion: ponenciaData.tipo_participacion || prev.tipo_participacion,
+                        cupos: ponenciaData.cupos ?? prev.cupos,
+                        enlace_multimedia: ponenciaData.enlace_multimedia || prev.enlace_multimedia || '',
+                    }));
                 }
             } catch (err) {
                 console.error("Error en DetallesEditarPonencia:", err);
