@@ -3,13 +3,14 @@ import { FiEdit2, FiCopy, FiCalendar, FiClock, FiUsers, FiMapPin, FiUser, FiAwar
 import { IoIosCheckmark } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
 import { getInstitucionesApi, getCongresosApi, getSubareasApi, getMesasApi, createPonenciaApi, getPonenciaByIdApi, getInscritosTallerApi, getPonenciaMagistralByIdApi, createPonenciaMagistralApi, updatePonenciaMagistralApi, getPonentesNombresApi } from '../../../api/adminApi';
+import { publicarPonenciaApi } from '../../../api/ponenciasApi';
 import { API_URL } from '../../../api/constants';
 import { useNavigate } from 'react-router-dom';
 import { LuCrown } from "react-icons/lu";
 import { FaLink } from "react-icons/fa6";
 import { TbFileSymlink } from "react-icons/tb";
 
-const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = false, isFullPage = false }, ref) => {
+const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = false, isFullPage = false, idExtenso = null }, ref) => {
     const navigate = useNavigate();
     const accessToken = localStorage.getItem('congress_access');
 
@@ -226,6 +227,21 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
 
         setSaving(true);
         try {
+            // Publish-existing-ponencia mode (from extenso flow)
+            if (idExtenso) {
+                const formData = {
+                    fecha_hora_inicio: formatData.fecha_hora_inicio || null,
+                    fecha_hora_final: formatData.fecha_hora_final || null,
+                    cupos: Number(formatData.cupos) || 0,
+                    sinopsis: formatData.sinopsis || '',
+                    enlace: formatData.enlace || '',
+                    id_mesas_trabajo: formatData.id_mesas_trabajo || null,
+                    tipo_participacion: formatData.tipo_participacion || 'Presencial',
+                };
+                const { id_evento } = await publicarPonenciaApi(accessToken, idExtenso, formData);
+                navigate(`/admin/eventos/ponencias/detalles/${id_evento}?edit=true`);
+                return;
+            }
             if (isMagistral) {
                 const magistralData = {
                     titulo: formatData.nombre_evento,
@@ -236,6 +252,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                     fecha_fin: formatData.fecha_hora_final || null,
                     ponente_principal: ponentePrincipal,
                     coautores: coautores,
+                    enlace_multimedia: formatData.enlace_multimedia || '',
                 };
                 if (ponenciaData?.id) {
                     await updatePonenciaMagistralApi(accessToken, ponenciaData.id, magistralData);
@@ -603,16 +620,26 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                         </div>
                         )}
                         <div>
-                            <label className={labelClasses}>Enlace/ruta a multimedia <span className="text-base-content/30 font-normal normal-case tracking-normal">(enviado por el ponente)</span></label>
+                            <label className={labelClasses}>
+                                Enlace/ruta a multimedia
+                                {!isMagistral && (
+                                    <span className="text-base-content/30 font-normal normal-case tracking-normal"> (enviado por el ponente)</span>
+                                )}
+                            </label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><TbFileSymlink /></span>
                                 <input
                                     id="enlace_multimedia"
                                     type="text"
-                                    className={`${inputClasses} pl-11 pr-11 font-mono cursor-not-allowed`}
+                                    className={`${inputClasses} pl-11 pr-11 font-mono ${(!isMagistral || !modificando) ? 'cursor-not-allowed' : ''}`}
                                     value={formatData.enlace_multimedia || ''}
-                                    readOnly
-                                    placeholder="El ponente aún no ha enviado su enlace"
+                                    onChange={isMagistral && modificando ? handleChange : undefined}
+                                    readOnly={!isMagistral || !modificando}
+                                    placeholder={
+                                        isMagistral
+                                            ? "Enlace al material multimedia (video, presentación, etc.)"
+                                            : "El ponente aún no ha enviado su enlace"
+                                    }
                                 />
                                 {formatData.enlace_multimedia && (
                                     <button
