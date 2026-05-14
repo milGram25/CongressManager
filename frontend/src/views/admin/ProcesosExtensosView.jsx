@@ -106,8 +106,6 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
     navigate(`/admin/eventos/ponencias/crear?${params.toString()}`);
   };
 
-  const grupos = extenso.evaluacion?.grupos ?? null;
-
   return (
     <article className="flex min-h-[760px] flex-col rounded-[28px] border border-black/55 bg-white px-5 py-5 shadow-sm md:px-6 space-y-6">
       <section>
@@ -234,24 +232,46 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
       )}
 
       <section>
-        <h3 className="font-semibold  tracking-wide text-slate-700 mb-3">Rúbrica de evaluación (última)</h3>
-        <div className="overflow-y-auto max-h-[250px]">
-          {!grupos || grupos.length === 0 ? (
+        <h3 className="font-semibold tracking-wide text-slate-700 mb-3">
+          Rúbrica — Revisor 1
+          {extenso.nombre_evaluador && (
+            <span className="text-slate-400 font-normal text-sm"> ({extenso.nombre_evaluador})</span>
+          )}
+        </h3>
+        <div className="overflow-y-auto max-h-[220px]">
+          {!extenso.evaluacion_1?.grupos?.length ? (
             <p className="text-sm text-slate-400 italic">Sin evaluación enviada aún.</p>
           ) : (
-            grupos.map((grupo, i) => <RubricaGrupoStatusRow key={i} grupo={grupo} />)
+            extenso.evaluacion_1.grupos.map((grupo, i) => <RubricaGrupoStatusRow key={i} grupo={grupo} />)
           )}
         </div>
+        {extenso.evaluacion_1?.estatus && (
+          <div className="mt-2 rounded-[18px] border border-black/60 bg-[#f4f4f4] p-4 text-sm leading-6 text-slate-700">
+            {extenso.evaluacion_1.estatus}
+          </div>
+        )}
       </section>
 
-      {extenso.evaluacion?.estatus && (
-        <section>
-          <h3 className="text-[14px] font-semibold uppercase tracking-wide text-slate-700">Estatus de evaluación</h3>
+      <section>
+        <h3 className="font-semibold tracking-wide text-slate-700 mb-3">
+          Rúbrica — Revisor 2
+          {extenso.nombre_evaluador_2 && (
+            <span className="text-slate-400 font-normal text-sm"> ({extenso.nombre_evaluador_2})</span>
+          )}
+        </h3>
+        <div className="overflow-y-auto max-h-[220px]">
+          {!extenso.evaluacion_2?.grupos?.length ? (
+            <p className="text-sm text-slate-400 italic">Sin evaluación enviada aún.</p>
+          ) : (
+            extenso.evaluacion_2.grupos.map((grupo, i) => <RubricaGrupoStatusRow key={i} grupo={grupo} />)
+          )}
+        </div>
+        {extenso.evaluacion_2?.estatus && (
           <div className="mt-2 rounded-[18px] border border-black/60 bg-[#f4f4f4] p-4 text-sm leading-6 text-slate-700">
-            {extenso.evaluacion.estatus}
+            {extenso.evaluacion_2.estatus}
           </div>
-        </section>
-      )}
+        )}
+      </section>
     </article>
   );
 }
