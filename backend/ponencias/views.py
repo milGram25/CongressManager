@@ -933,6 +933,8 @@ class ExtensosCongresoView(APIView):
                 'nombre_evaluador': p['nombre_evaluador'],
                 'nombre_evaluador_2': p['nombre_evaluador_2'],
                 'nombre_evaluador_3': p['nombre_evaluador_3'],
+                'evaluador_1_revisado': p['id_evaluador'] in ev_por_eval if p['id_evaluador'] else False,
+                'evaluador_2_revisado': p['id_evaluador_2'] in ev_por_eval if p['id_evaluador_2'] else False,
                 'evaluacion': evaluacion,
             })
         return Response(result)
@@ -1176,7 +1178,13 @@ class AsignarEvaluadoresView(APIView):
         except Extenso.DoesNotExist:
             return Response({'detail': 'Extenso no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
         if extenso.revisado:
-            return Response({'detail': 'El extenso ya fue revisado.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'No es posible cambiar a los revisores porque ya realizaron su revisión.'}, status=status.HTTP_400_BAD_REQUEST)
+        existing = [e for e in [extenso.id_evaluador_id, extenso.id_evaluador_2_id] if e]
+        if existing:
+            with connection.cursor() as c:
+                c.execute("SELECT 1 FROM evaluacion WHERE id_extenso = %s AND id_evaluador = ANY(%s) LIMIT 1", [pk, existing])
+                if c.fetchone():
+                    return Response({'detail': 'No es posible cambiar a los revisores porque ya realizaron su revisión.'}, status=status.HTTP_400_BAD_REQUEST)
         with connection.cursor() as cursor:
             cursor.execute("""
                 SELECT po.id_persona
