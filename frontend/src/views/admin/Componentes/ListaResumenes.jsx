@@ -218,16 +218,9 @@ function ResumenRow({ item, dictaminadores, selected, onView }) {
       <button type="button" onClick={() => onView(item)} className="min-w-0 flex-1 text-left">
         <p
           className="truncate text-sm font-semibold text-slate-800"
-          title={
-            item.title
-              ? `Subárea: ${item.title}` //Se está mostrando la subárea aquí
-              : "No se hay subárea"
-          }
+          title={item.title ?? ''}
         >
-          {item.autores?.length > 0
-            ? `Ponentes: ${item.autores.join(', ')}`
-            : `Subárea: ${item.title}`
-          }
+          {item.title ?? '—'}
         </p>
       </button>
 

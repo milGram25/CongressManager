@@ -135,6 +135,7 @@ class PonenciaMagistral(models.Model):
     fecha_fin = models.DateTimeField(blank=True, null=True)
     id_congreso = models.ForeignKey(Congreso, models.DO_NOTHING, db_column='id_congreso', related_name='ponencias_magistrales')
     id_multimedia = models.IntegerField(blank=True, null=True)
+    enlace_multimedia = models.CharField(max_length=500, blank=True, default='')
 
     class Meta:
         managed = False

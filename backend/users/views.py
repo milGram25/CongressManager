@@ -690,11 +690,13 @@ class RoleAssignView(APIView):
             if rol == 'dictaminador':
                 try:
                     DictaminadorCongreso.objects.get_or_create(id_persona=persona, id_congreso_id=id_congreso)
+                    Dictaminador.objects.get_or_create(id_persona=persona)
                 except IntegrityError:
                     return Response({'detail': 'Congreso no válido.'}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 try:
                     EvaluadorCongreso.objects.get_or_create(id_persona=persona, id_congreso_id=id_congreso)
+                    Evaluador.objects.get_or_create(id_persona=persona)
                 except IntegrityError:
                     return Response({'detail': 'Congreso no válido.'}, status=status.HTTP_400_BAD_REQUEST)
 

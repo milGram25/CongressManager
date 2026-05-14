@@ -154,7 +154,7 @@ class PonenciaMagistralSerializer(serializers.ModelSerializer):
             'id_subarea', 'nombre_subarea', 'fecha_inicio', 'fecha_fin',
             'id_congreso', 'nombre_congreso', 'id_multimedia', 'ponentes',
             'tipo_ponencia', 'ponente_principal', 'coautores',
-            'nombre_institucion', 'nombre_tipo_trabajo'
+            'nombre_institucion', 'nombre_tipo_trabajo', 'enlace_multimedia',
         ]
 
     def get_tipo_ponencia(self, obj):
@@ -201,6 +201,7 @@ class PonenciaMagistralCreateSerializer(serializers.Serializer):
     fecha_inicio = serializers.CharField(required=False, allow_blank=True, allow_null=True, default=None)
     fecha_fin = serializers.CharField(required=False, allow_blank=True, allow_null=True, default=None)
     id_multimedia = serializers.IntegerField(required=False, allow_null=True)
+    enlace_multimedia = serializers.CharField(max_length=500, required=False, allow_blank=True, default='')
     ponente_principal = serializers.CharField(max_length=100, required=False, allow_blank=True)
     coautores = serializers.ListField(
         child=serializers.CharField(max_length=100),
@@ -237,18 +238,19 @@ class PonenciaMagistralCreateSerializer(serializers.Serializer):
                 # 2. Insertar en ponencia_magistral (SIN evento)
                 with connection.cursor() as cursor:
                     cursor.execute("""
-                        INSERT INTO ponencia_magistral 
-                        (titulo, tipo_participacion, id_subarea, id_congreso, fecha_inicio, fecha_fin, id_multimedia)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        INSERT INTO ponencia_magistral
+                        (titulo, tipo_participacion, id_subarea, id_congreso, fecha_inicio, fecha_fin, id_multimedia, enlace_multimedia)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                         RETURNING id_ponencia_magistral
                     """, [
                         validated_data['titulo'],
                         tipo_p,
-                        validated_data['id_subarea'],
+                        validated_data.get('id_subarea'),
                         validated_data['id_congreso'],
                         validated_data.get('fecha_inicio'),
                         validated_data.get('fecha_fin'),
-                        validated_data.get('id_multimedia')
+                        validated_data.get('id_multimedia'),
+                        validated_data.get('enlace_multimedia', ''),
                     ])
                     id_ponencia_magistral = cursor.fetchone()[0]
                     

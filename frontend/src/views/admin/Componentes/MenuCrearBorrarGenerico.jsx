@@ -73,7 +73,9 @@ const MenuCrearBorrarGenerico = ({
             return;
         }
         if (definirTipoElemento === 'ponencia') {
-            navigate(`/admin/eventos/ponencias/crear${search}`);
+            const params = new URLSearchParams(search);
+            params.set('tipo', 'magistral');
+            navigate(`/admin/eventos/ponencias/crear?${params.toString()}`);
             return;
         }
         if (definirTipoElemento === 'institucion') {
@@ -103,7 +105,7 @@ const MenuCrearBorrarGenerico = ({
                             className="bg-white text-black px-6 py-2 rounded-full text-sm font-black  tracking-widest hover:brightness-90 transition-all active:scale-95 flex items-center gap-2 shadow-lg"
                         >
                             <IoMdAdd size={18} />
-                            Crear {definirTipoElemento}
+                            Crear {definirTipoElemento === 'ponencia' ? 'ponencia magistral' : definirTipoElemento}
                         </button>
                     )}
 

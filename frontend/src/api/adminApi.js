@@ -321,6 +321,30 @@ export async function deleteTipoTrabajoApi(accessToken, idTipo) {
   return true;
 }
 
+export async function uploadFormatoTipoTrabajoApi(accessToken, idTipo, archivo) {
+  const formData = new FormData();
+  formData.append('archivo', archivo);
+  const res = await fetch(`${API_URL}/api/congresos/tipos-trabajo/${idTipo}/formato/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail ?? 'Error al subir el formato.');
+  }
+  return res.json();
+}
+
+export async function deleteFormatoTipoTrabajoApi(accessToken, idTipo) {
+  const res = await fetch(`${API_URL}/api/congresos/tipos-trabajo/${idTipo}/formato/`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error al eliminar el formato.');
+  return true;
+}
+
 // Dictámenes (Preguntas)
 export async function getDictamenesApi(accessToken) {
   const res = await fetch(`${API_URL}/api/congresos/dictamenes/`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
