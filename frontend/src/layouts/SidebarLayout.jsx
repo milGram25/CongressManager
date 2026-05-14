@@ -28,7 +28,7 @@ export default function SidebarLayout({
     // Formatear el nombre del segmento (ej: "eventos-especiales" -> "Eventos Especiales")
     const label = segment
       .replace(/-/g, ' ')
-      .replace(/\b\w/g, l => l.toUpperCase());
+      .replace(/^./, l => l.toUpperCase());
 
     return { label, to, isLast };
   });

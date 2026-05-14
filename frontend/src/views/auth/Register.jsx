@@ -109,7 +109,7 @@ const Register = () => {
           
           {/* Header */}
           <div className="p-8 pb-4">
-            <h1 className="text-3xl font-bold text-base-content">Registro de Usuario</h1>
+            <h1 className="text-3xl font-bold text-base-content">Registro de usuario</h1>
             <p className="text-base-content/60 mt-2 text-sm italic">* Campos obligatorios</p>
           </div>
 
@@ -326,7 +326,7 @@ const Register = () => {
                 disabled={loading}
                 className="w-full py-3.5 bg-primary hover:bg-primary/90 disabled:opacity-60 text-primary-content rounded-full font-bold tracking-wide transition-all shadow-md shadow-primary/20 active:scale-95"
               >
-                {loading ? 'REGISTRANDO...' : 'CONFIRMAR REGISTRO'}
+                {loading ? 'Registrando...' : 'Confirmar registro'}
               </button>
               
               <div className="text-center">
