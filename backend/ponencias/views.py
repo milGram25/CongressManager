@@ -1590,27 +1590,44 @@ class PublicarPonenciaView(APIView):
             if not revisado:
                 return Response({'detail': 'El extenso aún no ha sido marcado como revisado.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            cursor.execute("""
-                SELECT fc.fecha_inicio_evento, fc.fecha_final_evento
-                FROM congreso c
-                JOIN fechas_congreso fc ON c.id_fechas_congreso = fc.id_fechas_congreso
-                WHERE c.id_congreso = %s
-            """, [id_congreso])
-            dates_row = cursor.fetchone()
-            fecha_inicio = dates_row[0] if dates_row else None
-            fecha_fin = dates_row[1] if dates_row else None
+            # Read event fields from form data; fall back to congress dates if missing
+            fecha_inicio = request.data.get('fecha_hora_inicio') or None
+            fecha_fin = request.data.get('fecha_hora_final') or None
+
+            if not fecha_inicio or not fecha_fin:
+                cursor.execute("""
+                    SELECT fc.fecha_inicio_evento, fc.fecha_final_evento
+                    FROM congreso c
+                    JOIN fechas_congreso fc ON c.id_fechas_congreso = fc.id_fechas_congreso
+                    WHERE c.id_congreso = %s
+                """, [id_congreso])
+                dates_row = cursor.fetchone()
+                if not fecha_inicio:
+                    fecha_inicio = dates_row[0] if dates_row else None
+                if not fecha_fin:
+                    fecha_fin = dates_row[1] if dates_row else None
+
+            cupos = int(request.data.get('cupos', 0) or 0)
+            sinopsis = request.data.get('sinopsis', '') or ''
+            enlace = request.data.get('enlace', '') or ''
+            id_mesas_trabajo = request.data.get('id_mesas_trabajo') or None
+            tipo_participacion = request.data.get('tipo_participacion', 'Presencial') or 'Presencial'
 
             with transaction.atomic():
                 cursor.execute("""
                     INSERT INTO evento (id_congreso, nombre_evento, tipo_evento, id_tipo_trabajo,
                                         id_mesas_trabajo, fecha_hora_inicio, fecha_hora_final,
                                         sinopsis, cupos, enlace)
-                    VALUES (%s, %s, 'ponencia', %s, NULL, %s, %s, '', 0, '')
+                    VALUES (%s, %s, 'ponencia', %s, %s, %s, %s, %s, %s, %s)
                     RETURNING id_evento
-                """, [id_congreso, titulo, id_tipo_trabajo, fecha_inicio, fecha_fin])
+                """, [id_congreso, titulo, id_tipo_trabajo, id_mesas_trabajo,
+                      fecha_inicio, fecha_fin, sinopsis, cupos, enlace])
                 id_evento = cursor.fetchone()[0]
 
-                cursor.execute("UPDATE ponencia SET id_evento = %s WHERE id_ponencia = %s", [id_evento, id_ponencia])
+                cursor.execute(
+                    "UPDATE ponencia SET id_evento = %s, tipo_participacion = %s WHERE id_ponencia = %s",
+                    [id_evento, tipo_participacion, id_ponencia]
+                )
 
         return Response({'detail': 'Ponencia publicada correctamente.', 'id_evento': id_evento}, status=status.HTTP_201_CREATED)
 
