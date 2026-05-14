@@ -13,6 +13,7 @@ import {
   MdInfoOutline,
   MdArrowBack,
   MdDateRange,
+  MdClose,
 } from "react-icons/md";
 
 function roleLabel(role) {
@@ -54,6 +55,7 @@ export default function PagosView() {
   const [errorFactura, setErrorFactura] = useState("");
   const [usarCorreoAlternativo, setUsarCorreoAlternativo] = useState(false);
   const [correoFacturacion, setCorreoFacturacion] = useState("");
+  const [confirmandoSalida, setConfirmandoSalida] = useState(false);
   const [datosFacturacion, setDatosFacturacion] = useState({
     rfc: "",
     razonSocial: "",
@@ -598,7 +600,39 @@ export default function PagosView() {
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
           <div className="relative bg-base-100 p-8 rounded-2xl shadow-2xl max-w-md w-full text-neutral">
-            {!quiereFactura ? (
+            {!confirmandoSalida && (
+              <button
+                onClick={() => setConfirmandoSalida(true)}
+                className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                aria-label="Cerrar"
+              >
+                <MdClose className="text-xl" />
+              </button>
+            )}
+
+            {confirmandoSalida ? (
+              <div className="text-center space-y-4">
+                <h2 className="text-2xl font-bold text-error">¿Seguro que deseas salir?</h2>
+                <p className="text-sm opacity-70">Si sales ahora, ya no será posible facturar este pago más adelante.</p>
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => {
+                      setConfirmandoSalida(false);
+                      setPagoExitoso(false);
+                    }}
+                    className="btn bg-error hover:bg-error/80 border-none text-white flex-1"
+                  >
+                    Sí, salir
+                  </button>
+                  <button
+                    onClick={() => setConfirmandoSalida(false)}
+                    className="btn btn-ghost flex-1 text-neutral"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : !quiereFactura ? (
               <div className="text-center space-y-4">
                 <div className="w-16 h-16 bg-success/20 text-success rounded-full flex items-center justify-center text-3xl mx-auto">
                   ✓
@@ -613,7 +647,7 @@ export default function PagosView() {
                     Sí, facturar
                   </button>
                   <button
-                    onClick={() => setPagoExitoso(false)}
+                    onClick={() => setConfirmandoSalida(true)}
                     className="btn btn-ghost flex-1 text-neutral"
                   >
                     Omitir
