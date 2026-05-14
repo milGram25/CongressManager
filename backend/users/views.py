@@ -810,7 +810,9 @@ class EnviarCodigoVerificacionView(APIView):
             return Response({'detail': 'Email institucional es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Validar dominio simple
-        if not (email_institucional.endswith('.edu') or email_institucional.endswith('.edu.mx') or 'alumnos.udg.mx' in email_institucional):
+        allowed_domains = [".edu", ".edu.mx", "alumnos.udg.mx", "alumno.udg.mx"]
+        email_institucional = email_institucional.strip().lower()
+        if not any(email_institucional.endswith(domain) for domain in allowed_domains):
             return Response({'detail': 'El dominio del correo no es válido para descuento de estudiante.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:

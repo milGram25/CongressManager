@@ -483,7 +483,7 @@ export default function PagosView() {
                             <input
                               type="email"
                               required
-                              placeholder="Tu correo institucional (.edu, alumnos.udg.mx)"
+                              placeholder="Tu correo institucional"
                               className="w-full pl-12 pr-4 py-3 rounded-xl bg-base-200 border-none outline-none focus:ring-2 focus:ring-secondary text-sm"
                               value={studentEmail}
                               onChange={(e) => setStudentEmail(e.target.value)}
