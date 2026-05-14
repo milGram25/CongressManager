@@ -193,7 +193,7 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
       {estado === 'desacuerdo' && !extenso.id_evaluador_3 && (
         <section>
           <h4 className="font-semibold  tracking-wide text-orange-600 mb-2">Asignar 3er revisor (desempate)</h4>
-          <div className="flex gap-2">
+          <div className="space-y-4">
             <BuscadorPersonal
               options={evaluadoresParaR3}
               value={r3Sel}
@@ -203,7 +203,7 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
             <button
               onClick={handleAsignarTres}
               disabled={!r3Sel || assigning}
-              className="btn btn-black w-full rounded-xl disabled:opacity-50 mt-2"
+              className="w-full btn btn-primary btn-sm rounded-xl disabled:opacity-50"
             >
               {assigning ? 'Asignando...' : 'Confirmar tercer revisor'}
             </button>
