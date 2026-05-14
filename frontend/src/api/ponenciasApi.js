@@ -194,10 +194,14 @@ export async function subirExtensoApi(accessToken, idResumen, archivo) {
   return data;
 }
 
-export async function publicarPonenciaApi(accessToken, idExtenso) {
+export async function publicarPonenciaApi(accessToken, idExtenso, formData = {}) {
   const res = await fetch(`${API_URL}/api/ponencias/extensos/${idExtenso}/publicar/`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${accessToken}` },
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(formData),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.detail || 'Error al publicar la ponencia');
