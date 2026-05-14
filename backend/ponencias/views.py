@@ -869,15 +869,17 @@ class ExtensosCongresoView(APIView):
                 ORDER BY id_extenso, id_evaluador, fecha_de_revision DESC
             """, [extenso_ids])
             evals_map = {}
+            all_ev_ids = []
             for id_ext, id_eval, estatus, retro, id_ev in c.fetchall():
-                if id_ext not in evals_map:
-                    evals_map[id_ext] = {'por_eval': {}, 'latest_id_evaluacion': id_ev,
-                                         'latest_estatus': estatus, 'latest_retro': retro}
-                evals_map[id_ext]['por_eval'][id_eval] = estatus
+                evals_map.setdefault(id_ext, {})[id_eval] = {
+                    'id_evaluacion': id_ev,
+                    'estatus': estatus,
+                    'retro': retro,
+                }
+                all_ev_ids.append(id_ev)
 
-            latest_ev_ids = [v['latest_id_evaluacion'] for v in evals_map.values()]
             criterios_map = {}
-            if latest_ev_ids:
+            if all_ev_ids:
                 c.execute("""
                     SELECT ec.id_evaluacion, rg.nombre_grupo, rc.descripcion, rc.peso, ec.puntaje, ec.comentario_especifico
                     FROM evaluacion_criterio ec
@@ -885,7 +887,7 @@ class ExtensosCongresoView(APIView):
                     JOIN rubrica_grupo rg ON rc.id_grupo = rg.id_grupo
                     WHERE ec.id_evaluacion = ANY(%s)
                     ORDER BY rg.id_grupo, rc.id_criterio
-                """, [latest_ev_ids])
+                """, [all_ev_ids])
                 for row in c.fetchall():
                     id_ev, nombre_grupo, nombre_criterio, peso, puntaje, comentario = row
                     grupos = criterios_map.setdefault(id_ev, {})
@@ -896,21 +898,26 @@ class ExtensosCongresoView(APIView):
                         'comentario_especifico': comentario,
                     })
 
+        def _build_evaluacion(id_evaluador, id_extenso, evals_map, criterios_map):
+            if not id_evaluador:
+                return None
+            reviewer_data = evals_map.get(id_extenso, {}).get(id_evaluador)
+            if not reviewer_data:
+                return None
+            id_ev = reviewer_data['id_evaluacion']
+            grupos_dict = criterios_map.get(id_ev, {})
+            if not grupos_dict:
+                return None
+            return {
+                'estatus': reviewer_data['estatus'],
+                'retroalimentacion_general': reviewer_data['retro'],
+                'grupos': [{'nombre_grupo': ng, 'criterios': crs} for ng, crs in grupos_dict.items()],
+            }
+
         result = []
         for p in ponencias:
-            ext_info = evals_map.get(p['id_extenso'], {})
-            ev_por_eval = ext_info.get('por_eval', {})
+            ev_por_eval = {id_eval: d['estatus'] for id_eval, d in evals_map.get(p['id_extenso'], {}).items()}
             estado_derivado = calcular_estado_extenso(p, ev_por_eval)
-
-            evaluacion = None
-            id_ev_latest = ext_info.get('latest_id_evaluacion')
-            if id_ev_latest and id_ev_latest in criterios_map:
-                grupos_dict = criterios_map[id_ev_latest]
-                evaluacion = {
-                    'estatus': ext_info.get('latest_estatus'),
-                    'retroalimentacion_general': ext_info.get('latest_retro'),
-                    'grupos': [{'nombre_grupo': ng, 'criterios': crs} for ng, crs in grupos_dict.items()],
-                }
 
             result.append({
                 'id': p['id_ponencia'],
@@ -935,7 +942,8 @@ class ExtensosCongresoView(APIView):
                 'nombre_evaluador_3': p['nombre_evaluador_3'],
                 'evaluador_1_revisado': p['id_evaluador'] in ev_por_eval if p['id_evaluador'] else False,
                 'evaluador_2_revisado': p['id_evaluador_2'] in ev_por_eval if p['id_evaluador_2'] else False,
-                'evaluacion': evaluacion,
+                'evaluacion_1': _build_evaluacion(p['id_evaluador'], p['id_extenso'], evals_map, criterios_map),
+                'evaluacion_2': _build_evaluacion(p['id_evaluador_2'], p['id_extenso'], evals_map, criterios_map),
             })
         return Response(result)
 
