@@ -30,7 +30,7 @@ export default function MisPonenciasView() {
 
   return (
     <div className="p-8 bg-base-100 min-h-full relative">
-      <h1 className="text-4xl font-bold text-neutral mb-2">Mis Ponencias</h1>
+      <h1 className="text-4xl font-bold text-neutral mb-2">Mis ponencias</h1>
       <p className="text-sm text-slate-500 mb-8">Ponencias aceptadas para presentar en congreso.</p>
 
       {ponencias.length === 0 ? (
@@ -55,7 +55,7 @@ export default function MisPonenciasView() {
                   {p.tipo_participacion === 'presencial' ? (
                     <p className="font-bold">Lugar: <span className="font-normal">{p.evento?.lugar || 'Por definir'}</span></p>
                   ) : p.evento?.enlace ? (
-                    <p className="font-bold">Enlace: <a href={p.evento.enlace} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-normal">Ver Enlace</a></p>
+                    <p className="font-bold">Enlace: <a href={p.evento.enlace} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-normal">Ver enlace</a></p>
                   ) : null}
                 </div>
 
@@ -71,7 +71,7 @@ export default function MisPonenciasView() {
                   onClick={() => setSeleccionada(p)}
                   className="btn btn-primary btn-sm px-6 rounded-full shadow-sm"
                 >
-                  Ver Detalles
+                  Ver detalles
                 </button>
               </div>
             </div>

@@ -81,7 +81,7 @@ function EventoDetalleModal({ evento, onClose, onRegistrar, registrando }) {
                 disabled={registrando === evento.id}
                 onClick={() => onRegistrar(evento)}
               >
-                {registrando === evento.id ? "REGISTRANDO..." : "REGISTRARME"}
+                {registrando === evento.id ? "Registrando..." : "Registrarme"}
               </button>
             ) : null}
           </div>

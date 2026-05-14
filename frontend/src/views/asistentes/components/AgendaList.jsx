@@ -45,9 +45,9 @@ export default function AgendaList({ events = [], loading = false, error = "" })
               d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
             />
           </svg>
-          <span>MI AGENDA</span>
+          <span>Mi agenda</span>
         </div>
-        <h2 className="text-2xl font-bold">Titulo del congreso</h2>
+        <h2 className="text-2xl font-bold">Título del congreso</h2>
         <p className="opacity-80 mt-1">
           {format(date, "d", { locale: es }) +
             " de " +
@@ -60,7 +60,7 @@ export default function AgendaList({ events = [], loading = false, error = "" })
       <div className="p-4 bg-base-200 border-b border-base-300 overflow-x-auto">
         <div className="flex items-center gap-4 min-w-max">
           <span className="text-xs font-bold opacity-50 flex items-center gap-1 uppercase">
-            <MdFilterList /> Filtrar por Eje:
+            <MdFilterList /> Filtrar por eje:
           </span>
           <div className="flex gap-2">
             {ejesTematicos.map((eje) => (
@@ -81,7 +81,7 @@ export default function AgendaList({ events = [], loading = false, error = "" })
       </div>
 
       <div className="px-6 md:px-8 py-4 bg-base-100 flex justify-between items-center">
-        <h3 className="font-medium text-lg text-neutral">Ponencias Inscritas</h3>
+        <h3 className="font-medium text-lg text-neutral">Ponencias inscritas</h3>
         <div className="text-xs">
           Mostrando: <span className="font-bold text-primary">{filtroEje}</span>
         </div>

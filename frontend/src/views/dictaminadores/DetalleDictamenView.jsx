@@ -73,14 +73,14 @@ export default function DetalleDictamenView() {
       <EvaluationSuccessModal isOpen={showSuccessModal} onClose={() => { setShowSuccessModal(false); navigate('/dictaminador/dictamenes'); }} decision={finalDecision} type="dictamen" />
 
       <header>
-        <span className="text-xs font-bold text-primary uppercase tracking-widest">Evaluación de Formato</span>
+        <span className="text-xs font-bold text-primary uppercase tracking-widest">Evaluación de formato</span>
         <h1 className="text-3xl font-bold text-base-content mt-1">Resumen #{id}</h1>
       </header>
 
       <section className="bg-base-100 p-8 rounded-2xl shadow-sm border border-base-300">
         <div className="flex items-center gap-2 mb-6 font-bold border-b border-base-300 pb-2">
           <MdAssignment size={22} className="text-primary" />
-          <span>Criterios de Formato</span>
+          <span>Criterios de formato</span>
         </div>
         {preguntas.length === 0 ? (
           <p className="text-sm text-base-content/40 italic">No hay preguntas de dictamen configuradas.</p>
@@ -160,7 +160,7 @@ export default function DetalleDictamenView() {
         <section className="lg:col-span-3 bg-base-100 p-8 rounded-2xl shadow-sm border border-base-300">
           <div className="flex items-center gap-2 mb-4 font-bold border-b border-base-300 pb-2">
             <MdComment size={22} className="text-primary" />
-            <span>Observaciones Finales</span>
+            <span>Observaciones finales</span>
           </div>
           <textarea
             value={retroalimentacion}

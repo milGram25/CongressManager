@@ -167,7 +167,7 @@ function MisEventosHoy() {
       <div className="bg-primary text-white p-6 md:p-8">
         <div className="flex items-center gap-2 text-sm opacity-80 mb-2">
           <MdEvent className="w-4 h-4" />
-          <span>MI AGENDA</span>
+          <span>Mi agenda</span>
         </div>
         <h2 className="text-2xl font-bold">{selectedCongresoNombre}</h2>
         {agendaDateIso && <p className="opacity-80 mt-1">{formatDate(agendaDateIso)}</p>}
@@ -201,7 +201,7 @@ function MisEventosHoy() {
 
       {/* Encabezado de sección */}
       <div className="px-6 md:px-8 py-4 bg-base-100 flex justify-between items-center border-b border-base-200">
-        <h3 className="font-medium text-lg text-neutral">Eventos Registrados</h3>
+        <h3 className="font-medium text-lg text-neutral">Eventos registrados</h3>
         <div className="text-xs text-base-content/50">
           Total:{" "}
           <span className="font-bold text-primary">{eventosFiltrados.length}</span>

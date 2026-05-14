@@ -44,7 +44,7 @@ export default function SubirExtensoView() {
         >
           <span className="text-white text-4xl font-black leading-none -mt-1 select-none">←</span>
         </button>
-        <h2 className="text-xl font-bold">Subir Extenso</h2>
+        <h2 className="text-xl font-bold">Subir extenso</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">

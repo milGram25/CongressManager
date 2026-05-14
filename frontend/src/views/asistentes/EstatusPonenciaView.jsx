@@ -29,7 +29,7 @@ function PonenciaCard({ ponencia }) {
         <div className="flex-shrink-0 flex gap-2">
           {ponencia.estado === 'pendiente_extenso' && (
             <button className="btn btn-primary btn-sm rounded-lg" onClick={() => navigate(`/asistente/subir-extenso/${ponencia.id_resumen}`)}>
-              Subir Extenso
+              Subir extenso
             </button>
           )}
           {ponencia.estado === 'con_modificaciones' && (
@@ -40,7 +40,7 @@ function PonenciaCard({ ponencia }) {
                 </button>
               )}
               <button className="btn btn-warning btn-sm rounded-lg" onClick={() => navigate(`/asistente/subir-extenso/${ponencia.id_resumen}?correccion=true`)}>
-                Subir Corrección
+                Subir corrección
               </button>
             </>
           )}
@@ -121,7 +121,7 @@ export default function EstatusPonenciaView() {
 
   return (
     <div className="p-8 bg-base-100 min-h-screen">
-      <h1 className="text-3xl font-bold mb-2">Estatus de Ponencias</h1>
+      <h1 className="text-3xl font-bold mb-2">Estatus de ponencias</h1>
       <p className="text-sm text-slate-500 mb-6">Sigue el progreso de tus ponencias enviadas.</p>
 
       <div className="flex flex-row flex-wrap gap-4 mb-8 p-4 bg-white rounded-xl shadow-sm">
