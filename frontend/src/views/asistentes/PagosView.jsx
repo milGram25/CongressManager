@@ -14,6 +14,8 @@ import {
   MdArrowBack,
   MdDateRange,
   MdClose,
+  MdVisibility,
+  MdDeleteOutline,
 } from "react-icons/md";
 
 function roleLabel(role) {
@@ -761,15 +763,16 @@ export default function PagosView() {
                                 className="btn btn-xs btn-primary btn-outline"
                                 title="Ver archivo"
                               >
-                                Ver
+                                <MdVisibility className="text-base" />
                               </a>
                             )}
                             <button
                               type="button"
                               onClick={() => setConstanciaFiscalFile(null)}
                               className="btn btn-xs btn-error btn-outline"
+                              title="Eliminar archivo"
                             >
-                              Quitar
+                              <MdDeleteOutline className="text-base" />
                             </button>
                           </div>
                         </div>

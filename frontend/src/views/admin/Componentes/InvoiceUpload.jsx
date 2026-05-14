@@ -134,14 +134,14 @@ export default function InvoiceUpload({ selectedFactura, onUploadSuccess }) {
             </div>
             {selectedFactura.ruta_constancia_fiscal && (
               <div className="flex items-center gap-2 text-xs pt-1 mt-1">
-                <span className="text-white/50 font-bold uppercase tracking-wider w-20">CFDI</span>
+                <span className="text-white/50 font-bold uppercase tracking-wider w-20">Constancia de situación fiscal</span>
                 <a
                   href={`${API_URL}${selectedFactura.ruta_constancia_fiscal}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-white/20 px-2 py-1 rounded text-white hover:bg-white/30 transition-colors"
                 >
-                  Descargar CFDI
+                  Descargar CSF
                 </a>
               </div>
             )}
