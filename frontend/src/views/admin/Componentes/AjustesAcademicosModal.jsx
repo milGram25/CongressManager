@@ -59,7 +59,7 @@ export default function AjustesAcademicosModal({ idCongreso, nombreCongreso, ini
             {/* Header */}
             <header className="bg-black text-white p-6">
                 <h2 className="text-xl font-bold uppercase tracking-tight">{nombreCongreso}</h2>
-                <p className="text-xs text-gray-400 uppercase font-black mt-1">Ajustes Académicos</p>
+                <p className="text-xs text-gray-400 uppercase font-black mt-1">Ajustes académicos</p>
             </header>
 
             {/* Tabs */}
@@ -68,7 +68,7 @@ export default function AjustesAcademicosModal({ idCongreso, nombreCongreso, ini
                     onClick={() => setActiveTab('tipos')}
                     className={`flex-1 py-4 text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'tipos' ? 'border-b-4 border-[#005a6a] text-[#005a6a]' : 'text-gray-400 hover:bg-gray-50'}`}
                 >
-                    Tipos de Trabajo
+                    Tipos de trabajo
                 </button>
                 <button 
                     onClick={() => setActiveTab('rubricas')}

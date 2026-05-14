@@ -303,7 +303,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
         <div className={`w-full bg-base-100 ${isFullPage ? '' : 'rounded-3xl shadow-2xl'} overflow-hidden font-sans`}>
             {!isFullPage && (
                 <div className='sticky top-0 bg-primary text-primary-content flex items-center justify-between px-6 py-4 z-40 shadow-lg'>
-                    <h2 className="text-lg md:text-xl font-bold truncate pr-4 uppercase tracking-wider">Detalles de la Ponencia</h2>
+                    <h2 className="text-lg md:text-xl font-bold truncate pr-4 uppercase tracking-wider">Detalles de la ponencia</h2>
                     <div className='flex items-center gap-2'>
                         {!modificando ? (
                             <button className="w-10 h-10 rounded-full bg-primary-content text-primary flex items-center justify-center hover:brightness-110 transition-all active:scale-95 cursor-pointer shadow-md" onClick={() => setModificando(true)}>
@@ -326,7 +326,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
             <div className={`p-6 md:p-10 ${isFullPage ? '' : 'max-h-[80vh] overflow-y-auto'}`}>
                 <section className='mb-8'>
                     <h3 className={sectionTitleClasses}>
-                        <div className="w-1.5 h-6 bg-primary rounded-full"></div> Información del Congreso
+                        <div className="w-1.5 h-6 bg-primary rounded-full"></div> Información del congreso
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">
@@ -375,14 +375,14 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                         </div>
                         <div className="flex flex-col items-center justify-center bg-base-200 border-2 border-dashed border-base-300 rounded-3xl p-8 gap-6 group hover:border-primary/30 transition-all">
                             <FiAward size={48} className="text-base-content/20" />
-                            <p className='text-xs font-bold uppercase text-base-content/40'>Vista Previa</p>
+                            <p className='text-xs font-bold uppercase text-base-content/40'>Vista previa</p>
                         </div>
                     </div>
                 </section>
 
                 <section className='mb-8'>
                     <h3 className={sectionTitleClasses}>
-                        <div className="w-1.5 h-6 bg-primary rounded-full"></div> Detalles de la Ponencia
+                        <div className="w-1.5 h-6 bg-primary rounded-full"></div> Detalles de la ponencia
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                         <div className="md:col-span-2">
@@ -662,7 +662,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                         ssName='flex justify-center mt-12'>
                         <button onClick={handleSave} disabled={saving} className="px-12 py-4 rounded-2xl bg-black text-white font-black shadow-xl hover:bg-[#005a6a] transition-all active:scale-95 uppercase tracking-widest text-sm flex items-center gap-3 disabled:opacity-50">
                             {saving ? <span className="loading loading-spinner"></span> : <FiSave size={20} />}
-                            Guardar Cambios
+                            Guardar cambios
                         </button>
                     </div>
                 )}

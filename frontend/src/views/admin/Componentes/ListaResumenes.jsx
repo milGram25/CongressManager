@@ -113,7 +113,7 @@ function PopoverAsignado({ item, dictaminadores }) {
     <div>
       <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-base-content/50">Revisores asignados</p>
       {asignados.length === 0 ? (
-        <p className="text-xs italic text-base-content/50">Sin asignar todavia.</p>
+        <p className="text-xs italic text-base-content/50">Sin asignar todavía.</p>
       ) : (
         <ul className="space-y-2.5">
           {asignados.map((dictaminador) => (
@@ -140,13 +140,13 @@ function PopoverAsignado({ item, dictaminadores }) {
 function PopoverRevisado({ item }) {
   return (
     <div>
-      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-base-content/50">Estado de revision</p>
+      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-base-content/50">Estado de revisión</p>
       {item.revisado ? (
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100">
             <MdCheck size={14} className="text-green-600" />
           </div>
-          <span className="text-xs font-semibold text-green-700">Revision completada</span>
+          <span className="text-xs font-semibold text-green-700">Revisión completada</span>
         </div>
       ) : (
         <div className="space-y-2">
@@ -154,13 +154,13 @@ function PopoverRevisado({ item }) {
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100">
               <MdPanTool size={13} className="text-amber-600" />
             </div>
-            <span className="text-xs font-semibold text-amber-700">Pendiente de revision</span>
+            <span className="text-xs font-semibold text-amber-700">Pendiente de revisión</span>
           </div>
           {item.fechaLimite ? (
             <div className="flex items-center gap-2 rounded-2xl bg-red-50 px-2.5 py-2">
               <MdCalendarToday size={13} className="text-red-500" />
               <div>
-                <p className="text-[10px] uppercase tracking-wide text-red-400">Fecha limite</p>
+                <p className="text-[10px] uppercase tracking-wide text-red-400">Fecha límite</p>
                 <p className="text-xs font-bold text-red-600">{formatDate(item.fechaLimite)}</p>
               </div>
             </div>
@@ -319,7 +319,7 @@ export default function ListaResumenes({ listaElementos = [], dictaminadores = [
               type="button"
               onClick={restaurarBusqueda}
               className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-              title="Limpiar busqueda"
+              title="Limpiar búsqueda"
             >
               <MdClose size={16} />
             </button>
@@ -330,7 +330,7 @@ export default function ListaResumenes({ listaElementos = [], dictaminadores = [
           type="button"
           onClick={restaurarBusqueda}
           className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-white/70 text-white transition-colors hover:bg-white/10"
-          title="Restablecer busqueda"
+          title="Restablecer búsqueda"
         >
           <MdClose size={18} />
         </button>
@@ -400,7 +400,7 @@ export default function ListaResumenes({ listaElementos = [], dictaminadores = [
         <div className="max-h-[395px] space-y-2 overflow-y-auto pr-1 pb-1 pt-1">
           {listaFiltrada.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-300 px-4 py-10 text-center text-sm italic text-slate-400">
-              No se encontraron resumenes con ese filtro.
+              No se encontraron resúmenes con ese filtro.
             </div>
           ) : (
             listaFiltrada.map((item) => (

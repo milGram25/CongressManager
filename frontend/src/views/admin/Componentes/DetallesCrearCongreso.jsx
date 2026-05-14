@@ -85,7 +85,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
 
                 if (indexDatosModal) {
                     const realCongreso = await getCongresoByIdApi(accessToken, indexDatosModal);
-                    
+
                     const formatDate = (dateStr) => {
                         if (!dateStr) return "";
                         return dateStr.split('.')[0].substring(0, 16);
@@ -203,7 +203,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
             <div className={`p-6 md:p-10 ${isFullPage ? '' : 'max-h-[80vh] overflow-y-auto'}`}>
                 {/* Información General */}
                 <section className={sectionContainerClasses}>
-                    <h3 className={sectionTitleClasses}><div className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center"><FiFileText size={20} /></div> Información General</h3>
+                    <h3 className={sectionTitleClasses}><div className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center"><FiFileText size={20} /></div> Información general</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
                             <label className={labelClasses}>Nombre del congreso</label>
@@ -229,8 +229,8 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
                         </div>
                         <div>
                             <label className={labelClasses}>País</label>
-                            {!modificando ? <input value={formData.pais} readOnly className={inputClasses} /> : 
-                            <Select options={options} value={options.find(o => o.label === formData.pais)} onChange={handleCountryChange} />}
+                            {!modificando ? <input value={formData.pais} readOnly className={inputClasses} /> :
+                                <Select options={options} value={options.find(o => o.label === formData.pais)} onChange={handleCountryChange} />}
                         </div>
                         <div>
                             <label className={labelClasses}>Estado</label>
@@ -296,11 +296,11 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
                                                 </div>
                                             )}
                                         </div>
-                                        
+
                                         <div className="flex justify-center">
                                             <div className="h-4 w-px bg-gradient-to-b from-gray-300 to-transparent"></div>
                                         </div>
-                                        
+
                                         <div className="relative">
                                             <p className="text-[9px] font-bold text-gray-400 uppercase mb-1 ml-1">Fin</p>
                                             {modificando ? (

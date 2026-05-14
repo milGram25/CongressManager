@@ -75,7 +75,6 @@ const ItemDetallesCongreso = ({
         fontSize: '24px',
         fontWeight: '500',
         color: '#1A1A1A',
-        textTransform: 'uppercase',
         letterSpacing: '1px'
     };
 
@@ -153,7 +152,7 @@ const ItemDetallesCongreso = ({
 
     return (
         <div style={containerStyle}>
-            <h2 style={titleStyle}>DETALLES DEL CONGRESO</h2>
+            <h2 style={titleStyle}>Detalles del congreso</h2>
             <div style={dividerStyle} />
 
             <h3 style={sectionTitleStyle}>Detalles</h3>

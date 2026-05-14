@@ -161,7 +161,7 @@ function PopoverRevisado({ item }) {
             <div className="flex items-center gap-2 rounded-2xl bg-red-50 px-2.5 py-2">
               <MdCalendarToday size={13} className="text-red-500" />
               <div>
-                <p className="text-[10px] uppercase tracking-wide text-red-400">Fecha limite</p>
+                <p className="text-[10px] uppercase tracking-wide text-red-400">Fecha límite</p>
                 <p className="text-xs font-bold text-red-600">{formatDate(item.fechaLimite)}</p>
               </div>
             </div>
@@ -311,7 +311,7 @@ export default function ListaExtensos({ listaElementos = [], dictaminadores = []
               type="button"
               onClick={restaurarBusqueda}
               className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
-              title="Limpiar busqueda"
+          title="Limpiar búsqueda"
             >
               <MdClose size={16} />
             </button>
@@ -322,7 +322,7 @@ export default function ListaExtensos({ listaElementos = [], dictaminadores = []
           type="button"
           onClick={restaurarBusqueda}
           className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-white/70 text-white transition-colors hover:bg-white/10"
-          title="Restablecer busqueda"
+          title="Restablecer búsqueda"
         >
           <MdClose size={18} />
         </button>

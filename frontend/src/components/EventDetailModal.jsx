@@ -32,7 +32,7 @@ export default function EventDetailModal({ event }) {
               <div className="grid grid-cols-2 gap-4 bg-base-200 p-4 rounded-lg text-sm">
                 <div>
                   <span className="font-bold block opacity-50 uppercase text-[10px]">
-                    Fecha y Hora
+                    Fecha y hora
                   </span>
                   <p>
                     {renderDate(event.date)} • {event.time}

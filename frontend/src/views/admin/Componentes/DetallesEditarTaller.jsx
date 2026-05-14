@@ -172,7 +172,7 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
             {/* Header del Modal/Vista */}
             {!isFullPage && (
                 <div className='sticky top-0 bg-primary text-primary-content flex items-center justify-between px-6 py-4 z-40 shadow-lg'>
-                    <h2 className="text-lg md:text-xl font-bold truncate pr-4 uppercase tracking-wider">Detalles del Taller</h2>
+                    <h2 className="text-lg md:text-xl font-bold truncate pr-4 uppercase tracking-wider">Detalles del taller</h2>
                     <div className='flex items-center gap-2'>
                         {!modificando ? (
                             <button
@@ -243,7 +243,7 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
                             </div>
 
                             <div>
-                                <label className={labelClasses}>Nombre del Taller (Evento)</label>
+                                <label className={labelClasses}>Nombre del taller (evento)</label>
                                 <input
                                     id="nombre_evento"
                                     type="text"
@@ -290,7 +290,7 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
                         </div>
 
                         <div>
-                            <label className={labelClasses}>Subárea Académica</label>
+                            <label className={labelClasses}>Subárea académica</label>
                             <select
                                 id="id_subarea"
                                 value={formatData.id_subarea}
@@ -374,11 +374,11 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
                 {/* Sección Mesa */}
                 <section className='mb-8'>
                     <h3 className={sectionTitleClasses}>
-                        <div className="w-1.5 h-6 bg-primary rounded-full"></div> Ubicación Física (Mesa)
+                        <div className="w-1.5 h-6 bg-primary rounded-full"></div> Ubicación física (mesa)
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <label className={labelClasses}>Asignar Mesa de Trabajo</label>
+                            <label className={labelClasses}>Asignar mesa de trabajo</label>
                             <select
                                 id="id_mesas_trabajo"
                                 value={formatData.id_mesas_trabajo}
@@ -406,7 +406,7 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
                         <div>
                             <div className='flex items-center gap-2 mb-2 ml-1'>
                                 <FiCalendar className="text-success" size={14} />
-                                <label className="text-[10px] font-bold text-base-content/40 uppercase tracking-widest">Inicio del Taller</label>
+                                <label className="text-[10px] font-bold text-base-content/40 uppercase tracking-widest">Inicio del taller</label>
                             </div>
                             <input
                                 type="datetime-local"
@@ -420,7 +420,7 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
                         <div>
                             <div className='flex items-center gap-2 mb-2 ml-1'>
                                 <FiClock className="text-error" size={14} />
-                                <label className="text-[10px] font-bold text-base-content/40 uppercase tracking-widest">Fin del Taller</label>
+                                <label className="text-[10px] font-bold text-base-content/40 uppercase tracking-widest">Fin del taller</label>
                             </div>
                             <input
                                 type="datetime-local"
@@ -439,7 +439,7 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
                     <h3 className={sectionTitleClasses}>
                         <div className="w-1.5 h-6 bg-primary rounded-full"></div>
                         <FiUsers className="text-primary" />
-                        Asistentes Inscritos
+                        Asistentes inscritos
                         {cuposMax > 0 && (
                             <span className="ml-auto text-sm font-normal text-base-content/60">
                                 {inscritos.length} / {cuposMax} cupos
@@ -506,7 +506,7 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
                             className="px-12 py-4 rounded-2xl bg-black text-white font-black shadow-xl hover:bg-[#005a6a] transition-all active:scale-95 uppercase tracking-widest text-sm flex items-center gap-3 disabled:opacity-50"
                         >
                             {saving ? <span className="loading loading-spinner"></span> : <FiSave size={20} />}
-                            Guardar Taller
+                            Guardar taller
                         </button>
                     </div>
                 )}
