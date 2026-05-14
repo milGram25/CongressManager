@@ -10,6 +10,7 @@ const PonenciaCrearView = () => {
     const idCongreso = queryParams.get('id_congreso');
     const nombreEventoParam = queryParams.get('nombre_evento') || "";
     const idSubareaParam = queryParams.get('id_subarea') || "";
+    const esMagistral = queryParams.get('tipo') === 'magistral';
     const ponenciaRef = useRef();
 
     // Datos iniciales — pre-llenados desde query params si vienen del flujo "Publicar ponencia"
@@ -17,6 +18,7 @@ const PonenciaCrearView = () => {
         id_congreso: idCongreso || "",
         nombre_evento: nombreEventoParam,
         tipo_evento: "ponencia",
+        tipo_ponencia: esMagistral ? 'magistral' : 'normal',
         id_subarea: idSubareaParam,
         cupos: 0,
         tipo_participacion: "Presencial",
@@ -38,8 +40,10 @@ const PonenciaCrearView = () => {
                     <MdArrowBack size={20} />
                 </button>
                 <div>
-                    <h1 className="text-3xl font-bold text-base-content uppercase tracking-tight">Crear Ponencia</h1>
-                    <p className="text-sm text-base-content/50">Completa la información para registrar una nueva ponencia</p>
+                    <h1 className="text-3xl font-bold text-base-content uppercase tracking-tight">
+                        {esMagistral ? 'Crear Ponencia Magistral' : 'Crear Ponencia'}
+                    </h1>
+                    <p className="text-sm text-base-content/50">Completa la información para registrar una nueva {esMagistral ? 'ponencia magistral' : 'ponencia'}</p>
                 </div>
             </div>
 
@@ -65,7 +69,7 @@ const PonenciaCrearView = () => {
                     onClick={() => ponenciaRef.current?.handleSave()}
                     className="px-10 py-4 rounded-2xl bg-black text-white font-black shadow-xl hover:bg-[#005a6a] transition-all active:scale-95 uppercase tracking-widest text-xs"
                 >
-                    Guardar Ponencia
+                    {esMagistral ? 'Guardar Ponencia Magistral' : 'Guardar Ponencia'}
                 </button>
             </div>
         </div>
