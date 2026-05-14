@@ -80,7 +80,7 @@ export default function UsuariosFacturasView() {
           <div className="flex items-center gap-4">
             <div className="w-2 h-10 bg-[#005a6a] rounded-full"></div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">Gestión de Facturas</h1>
+              <h1 className="text-2xl font-bold text-gray-800">Gestión de facturas</h1>
               <p className="text-sm text-gray-500">Procesa y envía facturas a los participantes del congreso</p>
             </div>
           </div>
@@ -137,7 +137,7 @@ export default function UsuariosFacturasView() {
           <div className="lg:col-span-7 xl:col-span-8 bg-gray-50/50 rounded-3xl shadow-inner border border-gray-100 flex flex-col overflow-hidden">
             <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white/50 border-b border-gray-100">
               <h3 className="font-bold text-gray-700 flex items-center gap-2">
-                Facturas Pendientes
+                Facturas pendientes
                 <span className="bg-orange-400 text-white text-[10px] px-2 py-0.5 rounded-full">
                   {facturasFiltradas.length}
                 </span>

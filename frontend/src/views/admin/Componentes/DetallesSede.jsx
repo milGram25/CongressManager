@@ -78,7 +78,7 @@ export default function DetallesSede({ idSede, detalles, onUpdate }) {
 
             <div className="w-full grid bg-white border border-gray-100 rounded-b-[32px] shadow-sm p-8">
                 <div className="border-b border-gray-100 pb-6 mb-6">
-                    <p className="text-xs font-black text-gray-400  tracking-widest mb-4">Información del Edificio</p>
+                    <p className="text-xs font-black text-gray-400  tracking-widest mb-4">Información del edificio</p>
                     <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
                         <p className="w-full md:w-40 text-sm font-bold text-gray-600">Nombre del edificio</p>
                         <input
@@ -92,7 +92,7 @@ export default function DetallesSede({ idSede, detalles, onUpdate }) {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                     <div className="space-y-6">
-                        <p className="text-xs font-black text-gray-400  tracking-widest">Ubicación Geográfica</p>
+                        <p className="text-xs font-black text-gray-400  tracking-widest">Ubicación geográfica</p>
 
                         <div className="flex items-center gap-4">
                             <p className="w-24 text-xs font-bold text-gray-500 ">País</p>
@@ -126,7 +126,7 @@ export default function DetallesSede({ idSede, detalles, onUpdate }) {
                     </div>
 
                     <div className="space-y-6">
-                        <p className="text-xs font-black text-gray-400  tracking-widest">Dirección y Referencia</p>
+                        <p className="text-xs font-black text-gray-400  tracking-widest">Dirección y referencia</p>
 
                         <div className="flex items-center gap-4">
                             <p className="w-24 text-xs font-bold text-gray-500 ">Calle</p>

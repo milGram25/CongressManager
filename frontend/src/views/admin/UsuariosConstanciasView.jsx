@@ -150,7 +150,7 @@ export default function UsuariosConstanciasView() {
           <div className="flex items-center gap-4">
             <div className="w-2 h-10 bg-[#005a6a] rounded-full"></div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">Emisión de Constancias</h1>
+              <h1 className="text-2xl font-bold text-gray-800">Emisión de constancias</h1>
               <p className="text-sm text-gray-500">Genera y envía certificados a los participantes del congreso</p>
             </div>
           </div>

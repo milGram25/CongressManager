@@ -37,7 +37,7 @@ export default function UsuariosHistorialView() {
         <div className="flex items-center gap-4 mb-6">
           <div className="w-2 h-10 bg-[#005a6a] rounded-full"></div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Historial de Usuarios</h1>
+            <h1 className="text-2xl font-bold text-gray-800">Historial de usuarios</h1>
             <p className="text-sm text-gray-500">Consulta el registro de documentos emitidos y acciones realizadas</p>
           </div>
         </div>
@@ -50,7 +50,7 @@ export default function UsuariosHistorialView() {
             }`}
           >
             <MdReceipt className="text-xl" />
-            Historial de Facturas
+            Historial de facturas
           </button>
           <button 
             onClick={() => setActiveTab("constancias")}
@@ -59,7 +59,7 @@ export default function UsuariosHistorialView() {
             }`}
           >
             <MdBadge className="text-xl" />
-            Historial de Constancias
+            Historial de constancias
           </button>
         </div>
       </div>
@@ -69,7 +69,7 @@ export default function UsuariosHistorialView() {
         {activeTab === "facturas" ? (
           <div className="w-full max-w-4xl flex flex-col items-center">
              <div className="mb-4 text-center">
-                <h3 className="text-lg font-bold text-gray-700">Registro de Facturación</h3>
+                <h3 className="text-lg font-bold text-gray-700">Registro de facturación</h3>
                 <p className="text-sm text-gray-400">Listado de facturas enviadas y pagos registrados</p>
              </div>
              <ListaHistorial listaElementos={invoiceHistory} mostrarIndicadores={false} mostrarInfoFecha={true} etiquetaFecha="Fecha de envío" tipo="facturas"/>
@@ -77,7 +77,7 @@ export default function UsuariosHistorialView() {
         ) : (
           <div className="w-full max-w-4xl flex flex-col items-center">
             <div className="mb-4 text-center">
-                <h3 className="text-lg font-bold text-gray-700">Registro de Constancias</h3>
+                <h3 className="text-lg font-bold text-gray-700">Registro de constancias</h3>
                 <p className="text-sm text-gray-400">Listado de certificados y reconocimientos emitidos</p>
              </div>
             <ListaHistorial listaElementos={constanciaHistory} mostrarIndicadores={false} mostrarRol={true} mostrarInfoFecha={true} etiquetaFecha="Fecha de emisión" tipo="constancias"/>

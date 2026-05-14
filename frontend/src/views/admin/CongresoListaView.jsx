@@ -60,9 +60,9 @@ export default function CongresoListaView() {
         </p>
       </div>
       <div className="w-full px-30 mb-5 items-center justify-center ">
-        <ListaDesplegableElementosGenerica 
-          titulo={"Instituciones"} 
-          lista={instituciones} 
+        <ListaDesplegableElementosGenerica
+          titulo={"Instituciones"}
+          lista={instituciones}
           onSelect={handleSelectInstitucion}
           value={selectedInst}
         />
@@ -73,7 +73,7 @@ export default function CongresoListaView() {
         </div>
       ) : (
         <MenuCrearBorrar
-          title="Gestión de Congresos"
+          title="Gestión de congresos"
           listaElementos2={congresos}
           definirTipoElemento="congreso"
         />

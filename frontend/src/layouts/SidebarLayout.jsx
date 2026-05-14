@@ -194,7 +194,7 @@ export default function SidebarLayout({
                {MainIcon && <MainIcon className="text-5xl text-primary animate-bounce" title="¡Bienvenido!" />}
             </div>
             <div className={`transition-all duration-500 transform ${!isHeaderVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
-               <h2 className="text-3xl font-bold text-base-content">{displayTitle}</h2>
+               <h2 className="text-2xl font-bold text-base-content truncate">{displayTitle}</h2>
             </div>
           </div>
 

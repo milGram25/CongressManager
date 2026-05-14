@@ -71,7 +71,7 @@ const CrearMesasFisicas = ({ idSede, listaMesas, onUpdate }) => {
       {/* Sección */}
       <div className="bg-white border border-gray-100 rounded-b-[32px] p-8 shadow-sm h-full">
         <div className="mb-8">
-          <h3 className="text-lg font-black text-gray-900  tracking-tighter">Inventario de Espacios</h3>
+          <h3 className="text-lg font-black text-gray-900  tracking-tighter">Inventario de espacios</h3>
           <p className="text-sm text-gray-500 font-medium">
             Gestiona las mesas de trabajo físicas donde se llevarán a cabo las ponencias y talleres.
           </p>
@@ -81,7 +81,7 @@ const CrearMesasFisicas = ({ idSede, listaMesas, onUpdate }) => {
           {/* Columna Izquierda: Lista de Mesas */}
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[13px] font-black text-gray-400  tracking-widest">Listado de Mesas ({mesas.length})</span>
+              <span className="text-[13px] font-black text-gray-400  tracking-widest">Listado de mesas ({mesas.length})</span>
             </div>
 
             <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
@@ -128,14 +128,14 @@ const CrearMesasFisicas = ({ idSede, listaMesas, onUpdate }) => {
           {/* Columna Derecha: Características */}
           <div className="bg-gray-50 rounded-[32px] p-8 border border-gray-100">
             <div className="mb-6">
-              <h4 className="text-sm font-black text-gray-900  tracking-widest mb-1">Configuración Detallada</h4>
+              <h4 className="text-sm font-black text-gray-900  tracking-widest mb-1">Configuración detallada</h4>
               <p className="text-[13px] text-gray-400 font-bold ">Ajusta los atributos del espacio seleccionado</p>
             </div>
 
             {mesaActual ? (
               <div className="space-y-6">
                 <div className="flex flex-col gap-2">
-                  <label className="text-[13px] font-black text-gray-400  ml-2">Nombre Identificador</label>
+                  <label className="text-[13px] font-black text-gray-400  ml-2">Nombre identificador</label>
                   <input
                     className="w-full h-12 bg-white border border-gray-200 px-6 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-black outline-none transition-all shadow-sm"
                     value={mesaActual.nombre}
@@ -144,7 +144,7 @@ const CrearMesasFisicas = ({ idSede, listaMesas, onUpdate }) => {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <label className="text-[13px] font-black text-gray-400  ml-2">Asociado a Sede (ID)</label>
+                  <label className="text-[13px] font-black text-gray-400  ml-2">Asociado a sede (ID)</label>
                   <div className="w-full h-12 bg-gray-100 border border-transparent px-6 rounded-2xl text-sm font-mono flex items-center text-gray-400">
                     {idSede || "N/A"}
                   </div>

@@ -100,7 +100,7 @@ export default function InstitucionDetallesView() {
                     <FiArrowLeft size={20} />
                 </button>
                 <h2 className="text-3xl font-bold uppercase tracking-tight">
-                    {isNew ? 'Nueva Institución' : 'Editar Institución'}
+                    {isNew ? 'Nueva institución' : 'Editar institución'}
                 </h2>
             </div>
 
@@ -109,7 +109,7 @@ export default function InstitucionDetallesView() {
                 <div className="lg:col-span-1 space-y-4">
                     <div className="bg-base-100 p-6 rounded-3xl border border-base-300 shadow-sm">
                         <label className="text-[10px] font-black text-base-content/30 uppercase tracking-[0.2em] mb-4 block ml-1">
-                            Logotipo Institucional
+                            Logotipo institucional
                         </label>
                         
                         <div className="relative group aspect-square bg-base-200 rounded-2xl border-2 border-dashed border-base-300 flex flex-col items-center justify-center overflow-hidden transition-all hover:border-primary/50">
@@ -149,12 +149,12 @@ export default function InstitucionDetallesView() {
                         <section className="space-y-6">
                             <div className="flex items-center gap-3 mb-2">
                                 <div className="w-1.5 h-6 bg-primary rounded-full"></div>
-                                <h3 className="text-sm font-black uppercase tracking-widest text-base-content/70">Información General</h3>
+                                <h3 className="text-sm font-black uppercase tracking-widest text-base-content/70">Información general</h3>
                             </div>
 
                             <div className="grid grid-cols-1 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-base-content/40 uppercase tracking-widest ml-1">Nombre de la Institución</label>
+                                    <label className="text-[10px] font-black text-base-content/40 uppercase tracking-widest ml-1">Nombre de la institución</label>
                                     <input 
                                         name="nombre"
                                         type="text" 
@@ -209,7 +209,7 @@ export default function InstitucionDetallesView() {
                                 className="flex-1 bg-primary text-primary-content py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                             >
                                 {saving ? <span className="loading loading-spinner loading-xs"></span> : <FiSave size={18} />} 
-                                {isNew ? 'Registrar Institución' : 'Guardar Cambios'}
+                                {isNew ? 'Registrar institución' : 'Guardar cambios'}
                             </button>
                             <button 
                                 onClick={() => navigate('/admin/ajustes/instituciones')}
