@@ -968,15 +968,24 @@ class MisInscripcionesView(APIView):
     def get(self, request):
         with connection.cursor() as cursor:
             cursor.execute("""
-                SELECT DISTINCT c.id_congreso, c.nombre_congreso
+                SELECT DISTINCT c.id_congreso, c.nombre_congreso, f.fecha_inicio_evento, f.fecha_final_evento
                 FROM pagos p
                 JOIN costos_congreso cc ON cc.id_costos_congreso = p.id_costos
                 JOIN congreso c ON c.id_costos_congreso = cc.id_costos_congreso
+                JOIN fechas_congreso f ON c.id_fechas_congreso = f.id_fechas_congreso
                 WHERE p.id_persona = %s
                 ORDER BY c.id_congreso
             """, [request.user.pk])
             rows = cursor.fetchall()
-        congresos = [{'id_congreso': r[0], 'nombre_congreso': r[1]} for r in rows]
+        congresos = [
+            {
+                'id_congreso': r[0], 
+                'nombre_congreso': r[1],
+                'fecha_inicio': r[2].isoformat() if r[2] else None,
+                'fecha_fin': r[3].isoformat() if r[3] else None
+            } 
+            for r in rows
+        ]
         return Response({'inscripciones': [r['id_congreso'] for r in congresos], 'congresos': congresos})
 
 

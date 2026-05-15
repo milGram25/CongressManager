@@ -31,7 +31,23 @@ export default function EnviarPonenciaView() {
 
   useEffect(() => {
     getMisInscripcionesApi(accessToken)
-      .then(data => setCongresosInscritos(data.congresos ?? []))
+      .then(data => {
+        const list = data.congresos ?? [];
+        setCongresosInscritos(list);
+
+        // Lógica de default: el más cercano a futuro o actual
+        if (list.length > 0) {
+            const now = new Date();
+            const future = list.filter(c => new Date(c.fecha_fin) >= now);
+            future.sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
+            
+            if (future.length > 0) {
+                setSelectedCongreso(future[0].id_congreso);
+            } else {
+                setSelectedCongreso(list[0].id_congreso);
+            }
+        }
+      })
       .catch(() => setCongresosInscritos([]))
       .finally(() => setLoadingCongresos(false));
   }, [accessToken]);
