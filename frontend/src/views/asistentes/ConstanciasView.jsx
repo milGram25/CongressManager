@@ -153,12 +153,13 @@ export default function ConstanciasView() {
 
       {/* LISTA */}
       <div className="grid grid-cols-1 gap-4">
-        {constanciasFiltradas.length > 0 ? (
-          constanciasFiltradas.map((constancia) => (
-            <div
-              key={constancia.id}
-              className="bg-white border border-base-300 rounded-2xl p-6 hover:border-alt/40 transition-all shadow-sm"
-            >
+{constanciasFiltradas.length > 0 ? (
+  <>
+    {constanciasFiltradas.map((constancia) => (
+      <div
+        key={constancia.id}
+        className="bg-white border border-base-300 rounded-2xl p-6 hover:border-alt/40 transition-all shadow-sm"
+      >
               <div className="flex flex-col md:flex-row justify-between gap-6">
                 <div className="space-y-3 flex-1">
                   <div className="flex items-center gap-2">
@@ -209,15 +210,18 @@ export default function ConstanciasView() {
                 </div>
               </div>
             </div>
-          ))
-        ) : (
+          ))}
+        </>
+      ) : (
+        <div>
           <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-base-300">
             <MdReceipt className="mx-auto text-5xl text-base-300 mb-4" />
             <p className="text-neutral opacity-50 italic text-sm">
               No hay constancias disponibles.
             </p>
           </div>
-        )}
+        </div>
+      )}
       </div>
 
       {/* MODAL CONSTANCIA */}
