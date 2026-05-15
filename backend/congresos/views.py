@@ -782,16 +782,24 @@ class RegistrarPagoView(APIView):
         base_price = summary['user_payment']['base_price']
 
         if role == 'ponente':
-            pending_slots = int(summary['user_payment']['pending_slots'])
+            pending_min = int(summary['user_payment']['pending_min'])
             paid_slots = int(summary['user_payment']['paid_slots'])
-            overflow_ponencias = int(summary['user_payment']['overflow_ponencias_count'])
-
-            if overflow_ponencias > 0:
+            can_buy_more = int(summary['user_payment']['can_buy_more'])
+            
+            # El usuario puede elegir cuántos pagar (mínimo pending_min, máximo can_buy_more)
+            slots_to_pay = int(request.data.get('slots_to_pay', pending_min))
+            
+            if slots_to_pay < pending_min:
                 return Response(
-                    {'detail': 'El máximo de ponencias pagables por ponente es 5.'},
+                    {'detail': f'Debes pagar al menos {pending_min} slots para cubrir tus ponencias actuales.'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            if pending_slots <= 0:
+            if slots_to_pay > can_buy_more:
+                return Response(
+                    {'detail': f'No puedes pagar más de {can_buy_more} slots adicionales (máximo 5 ponencias en total).'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if slots_to_pay <= 0:
                 return Response(
                     {'detail': 'No hay pagos pendientes para este ponente.'},
                     status=status.HTTP_400_BAD_REQUEST,
@@ -799,16 +807,16 @@ class RegistrarPagoView(APIView):
 
             with transaction.atomic():
                 with connection.cursor() as cursor:
-                    for slot in range(paid_slots + 1, paid_slots + pending_slots + 1):
+                    for slot_idx in range(paid_slots + 1, paid_slots + slots_to_pay + 1):
                         cursor.execute(
                             "INSERT INTO pagos (id_persona, monto, concepto, id_costos, requiere_factura) "
                             "VALUES (%s, %s, %s, %s, %s)",
-                            [request.user.id_persona, base_price, _concept_for_slot(slot), costos_id, requires_invoice],
+                            [request.user.id_persona, base_price, _concept_for_slot(slot_idx), costos_id, requires_invoice],
                         )
 
             updated_summary = _build_payment_summary(request.user, id_congreso=id_congreso)
             return Response(
-                {'detail': 'Pagos de ponente registrados correctamente.', 'registered_slots': pending_slots, 'summary': updated_summary},
+                {'detail': 'Pagos de ponente registrados correctamente.', 'registered_slots': slots_to_pay, 'summary': updated_summary},
                 status=status.HTTP_201_CREATED,
             )
 
@@ -1394,6 +1402,26 @@ def _count_ponente_ponencias(id_ponente, costos_id=None):
     return int(row[0]) if row else 0
 
 
+def _count_ponente_ponencias_total(id_ponente, costos_id=None):
+    with connection.cursor() as cursor:
+        if costos_id:
+            cursor.execute(
+                """
+                SELECT COUNT(*) FROM ponente_has_ponencia php
+                JOIN ponencia pon ON pon.id_ponencia = php.id_ponencia
+                LEFT JOIN ponencia_meta pm ON pm.id_ponencia = pon.id_ponencia
+                LEFT JOIN evento e ON e.id_evento = pon.id_evento
+                JOIN congreso c ON c.id_congreso = COALESCE(e.id_congreso, pm.id_congreso)
+                WHERE php.id_ponente = %s AND c.id_costos_congreso = %s
+                """,
+                [id_ponente, costos_id],
+            )
+        else:
+            cursor.execute("SELECT COUNT(*) FROM ponente_has_ponencia WHERE id_ponente = %s", [id_ponente])
+        row = cursor.fetchone()
+    return int(row[0]) if row else 0
+
+
 def _count_paid_ponente_slots(user_id, costos_id=None):
     with connection.cursor() as cursor:
         if costos_id:
@@ -1461,7 +1489,8 @@ def _build_payment_summary(user, id_congreso=None):
         if not id_ponente:
             payload['user_payment'].update({
                 'base_price': costos['costo_ponente'],
-                'ponencias_count': 0,
+                'accepted_ponencias_count': 0,
+                'total_ponencias_count': 0,
                 'included_ponencias': PONENTE_INCLUDED_PONENCIAS,
                 'max_ponencias': PONENTE_MAX_PONENCIAS,
                 'extra_ponencias_count': 0,
@@ -1473,25 +1502,38 @@ def _build_payment_summary(user, id_congreso=None):
             })
             return payload
 
-        ponencias_count = _count_ponente_ponencias(id_ponente, costos_id=costos_id)
-        overflow_ponencias_count = max(ponencias_count - PONENTE_MAX_PONENCIAS, 0)
-        capped_ponencias_count = min(ponencias_count, PONENTE_MAX_PONENCIAS)
-        extra_ponencias_count = max(capped_ponencias_count - PONENTE_INCLUDED_PONENCIAS, 0)
+        accepted_count = _count_ponente_ponencias(id_ponente, costos_id=costos_id)
+        total_count = _count_ponente_ponencias_total(id_ponente, costos_id=costos_id)
+        
+        # required_slots ahora se basa en TOTAL_COUNT para permitir pagar por adelantado
+        overflow_ponencias_count = max(total_count - PONENTE_MAX_PONENCIAS, 0)
+        capped_total_count = min(total_count, PONENTE_MAX_PONENCIAS)
+        extra_ponencias_count = max(capped_total_count - PONENTE_INCLUDED_PONENCIAS, 0)
         required_slots = 1 + extra_ponencias_count
+        
         paid_slots = _count_paid_ponente_slots(user.id_persona, costos_id=costos_id)
-        pending_slots = max(required_slots - paid_slots, 0)
+        
+        # pending_min: lo que DEBE pagar ahora mismo por lo que ya envió
+        pending_min = max(required_slots - paid_slots, 0)
+        
+        # total_buyable_slots: hasta cuántos puede pagar (Base + 3 extras = 4 slots)
+        total_buyable_slots = 4
+        can_buy_more = max(total_buyable_slots - paid_slots, 0)
 
         payload['user_payment'].update({
             'base_price': costos['costo_ponente'],
-            'ponencias_count': ponencias_count,
+            'accepted_ponencias_count': accepted_count,
+            'total_ponencias_count': total_count,
             'included_ponencias': PONENTE_INCLUDED_PONENCIAS,
             'max_ponencias': PONENTE_MAX_PONENCIAS,
             'extra_ponencias_count': extra_ponencias_count,
             'overflow_ponencias_count': overflow_ponencias_count,
             'required_slots': required_slots,
             'paid_slots': paid_slots,
-            'pending_slots': pending_slots,
-            'total_due': pending_slots * costos['costo_ponente'],
+            'pending_slots': pending_min, 
+            'pending_min': pending_min,
+            'can_buy_more': can_buy_more,
+            'total_due': pending_min * costos['costo_ponente'],
         })
         return payload
 
