@@ -428,9 +428,9 @@ export default function PagosView() {
                   <p className="text-neutral/80 text-xs leading-relaxed">
                     El pago base cubre <b>2 ponencias</b>. De la 3ª a la 5ª, se aplica un cargo adicional por cada una.
                   </p>
-                  {userPayment?.ponencias_count > 0 && (
+                  {userPayment && (
                     <p className="text-[10px] mt-2 font-medium text-alt/70 italic">
-                      * Actualmente tienes <b>{userPayment.ponencias_count}</b> ponencias registradas.
+                      * Actualmente tienes <b>{userPayment.ponencias_count || 0}</b> ponencias aceptadas.
                     </p>
                   )}
                 </div>

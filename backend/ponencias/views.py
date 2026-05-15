@@ -350,20 +350,37 @@ class EnviarPonenciaAPIView(APIView):
                         return Response({'detail': 'No tienes inscripción pagada en ese congreso.'}, status=status.HTTP_403_FORBIDDEN)
 
                     # Verificar cuota de ponencias extras filtrado por congreso
-                    PONENTE_INCLUDED = 3
+                    PONENTE_INCLUDED = 2
                     cursor.execute("SELECT id_ponente FROM ponente WHERE id_persona = %s LIMIT 1", [request.user.id_persona])
                     ponente_row = cursor.fetchone()
                     if ponente_row:
                         id_ponente_check = ponente_row[0]
-                        # Contar ponencias del ponente solo en este congreso
+                        # Contar ponencias del ponente solo en este congreso QUE ESTÉN ACEPTADAS
                         cursor.execute("""
                             SELECT COUNT(*) FROM ponente_has_ponencia php
                             JOIN ponencia pon ON pon.id_ponencia = php.id_ponencia
-                            JOIN ponencia_meta pm ON pm.id_ponencia = pon.id_ponencia
-                            WHERE php.id_ponente = %s AND pm.id_congreso = %s
+                            LEFT JOIN ponencia_meta pm ON pm.id_ponencia = pon.id_ponencia
+                            LEFT JOIN evento e ON e.id_evento = pon.id_evento
+                            JOIN congreso c ON c.id_congreso = COALESCE(e.id_congreso, pm.id_congreso)
+                            JOIN extenso ext ON ext.id_extenso = pon.id_extenso
+                            WHERE php.id_ponente = %s AND c.id_congreso = %s
+                              AND ext.revisado = TRUE
+                              AND (
+                                  SELECT ev.estatus::TEXT FROM evaluacion ev
+                                  WHERE ev.id_extenso = ext.id_extenso
+                                  ORDER BY 
+                                    CASE 
+                                        WHEN ev.id_evaluador = ext.id_evaluador_3 THEN 1
+                                        WHEN ev.id_evaluador = ext.id_evaluador THEN 2
+                                        WHEN ev.id_evaluador = ext.id_evaluador_2 THEN 3
+                                        ELSE 4
+                                    END,
+                                    ev.fecha_de_revision DESC
+                                  LIMIT 1
+                              ) = 'aceptado'
                         """, [id_ponente_check, id_congreso])
                         current_count = int(cursor.fetchone()[0])
-                        # Las primeras 3 ponencias están incluidas; solo se cobran extras a partir de la 4a
+                        # Las primeras 2 ponencias están incluidas; solo se cobran extras a partir de la 3a
                         extra_slots_needed = max((current_count + 1) - PONENTE_INCLUDED, 0)
                         if extra_slots_needed > 0:
                             cursor.execute("""

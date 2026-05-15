@@ -69,6 +69,14 @@ function DetallePanel({ pago }) {
               <Campo label="CURP" value={pago.curp} />
               <Campo label="Correo electrónico" value={pago.correo} />
               <Campo label="Rol" value={pago.rol} />
+              {pago.rol === 'Ponente' && (
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-base-content/50 w-36 flex-shrink-0">Ponencias aceptadas</span>
+                  <span className="flex-1 border border-primary/30 rounded-full px-3 py-1 text-sm font-bold text-primary bg-primary/5 truncate h-8">
+                    {pago.ponencias_count || 0}
+                  </span>
+                </div>
+              )}
 
             </div>
 

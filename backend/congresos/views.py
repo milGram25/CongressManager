@@ -998,7 +998,9 @@ class ListaPagosAdminView(APIView):
                     WHEN po.id_ponente IS NOT NULL THEN 'Ponente'
                     WHEN a.id_asistente IS NOT NULL THEN 'Asistente'
                     ELSE 'Asistente'
-                END AS rol
+                END AS rol,
+                per.id_persona,
+                cc.id_costos_congreso
             FROM pagos p
             JOIN persona per ON per.id_persona = p.id_persona
             LEFT JOIN costos_congreso cc ON cc.id_costos_congreso = p.id_costos
@@ -1017,6 +1019,18 @@ class ListaPagosAdminView(APIView):
             rows = cursor.fetchall()
         result = []
         for r in rows:
+            rol = r[14]
+            id_persona = r[15]
+            costos_id = r[16]
+            
+            p_count = 0
+            if rol == 'Ponente':
+                # Obtener el id_ponente para poder usar la lógica de conteo refinada
+                cursor.execute("SELECT id_ponente FROM ponente WHERE id_persona = %s LIMIT 1", [id_persona])
+                p_row = cursor.fetchone()
+                if p_row:
+                    p_count = _count_ponente_ponencias(p_row[0], costos_id=costos_id)
+
             result.append({
                 'orden': r[0],
                 'nombre': r[1] or '',
@@ -1032,8 +1046,9 @@ class ListaPagosAdminView(APIView):
                 'descuento': float(r[11]) if r[11] is not None else 0,
                 'congreso': r[12] or '',
                 'sede': r[13] or '',
-                'rol': r[14] or 'Asistente',
+                'rol': rol or 'Asistente',
                 'estatus': 'Pagado',
+                'ponencias_count': p_count,
             })
         return Response(result)
     
@@ -1333,14 +1348,48 @@ def _count_ponente_ponencias(id_ponente, costos_id=None):
                 """
                 SELECT COUNT(*) FROM ponente_has_ponencia php
                 JOIN ponencia pon ON pon.id_ponencia = php.id_ponencia
-                JOIN evento e ON e.id_evento = pon.id_evento
-                JOIN congreso c ON c.id_congreso = e.id_congreso
+                LEFT JOIN ponencia_meta pm ON pm.id_ponencia = pon.id_ponencia
+                LEFT JOIN evento e ON e.id_evento = pon.id_evento
+                JOIN congreso c ON c.id_congreso = COALESCE(e.id_congreso, pm.id_congreso)
+                JOIN extenso ext ON ext.id_extenso = pon.id_extenso
                 WHERE php.id_ponente = %s AND c.id_costos_congreso = %s
+                  AND ext.revisado = TRUE
+                  AND (
+                      SELECT ev.estatus::TEXT FROM evaluacion ev
+                      WHERE ev.id_extenso = ext.id_extenso
+                      ORDER BY 
+                        CASE 
+                            WHEN ev.id_evaluador = ext.id_evaluador_3 THEN 1
+                            WHEN ev.id_evaluador = ext.id_evaluador THEN 2
+                            WHEN ev.id_evaluador = ext.id_evaluador_2 THEN 3
+                            ELSE 4
+                        END,
+                        ev.fecha_de_revision DESC
+                      LIMIT 1
+                  ) = 'aceptado'
                 """,
                 [id_ponente, costos_id],
             )
         else:
-            cursor.execute("SELECT COUNT(*) FROM ponente_has_ponencia WHERE id_ponente = %s", [id_ponente])
+            cursor.execute("""
+                SELECT COUNT(*) FROM ponente_has_ponencia php
+                JOIN ponencia pon ON pon.id_ponencia = php.id_ponencia
+                JOIN extenso ext ON ext.id_extenso = pon.id_extenso
+                WHERE php.id_ponente = %s AND ext.revisado = TRUE
+                  AND (
+                      SELECT ev.estatus::TEXT FROM evaluacion ev
+                      WHERE ev.id_extenso = ext.id_extenso
+                      ORDER BY 
+                        CASE 
+                            WHEN ev.id_evaluador = ext.id_evaluador_3 THEN 1
+                            WHEN ev.id_evaluador = ext.id_evaluador THEN 2
+                            WHEN ev.id_evaluador = ext.id_evaluador_2 THEN 3
+                            ELSE 4
+                        END,
+                        ev.fecha_de_revision DESC
+                      LIMIT 1
+                  ) = 'aceptado'
+            """, [id_ponente])
         row = cursor.fetchone()
     return int(row[0]) if row else 0
 
