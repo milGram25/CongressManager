@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMisPonenciasPonenteApi, buildMediaUrl, actualizarEnlacePonenciaApi } from '../../api/ponenciasApi';
+import { getPagosResumenApi } from '../../api/pagosApi';
+import { MdWarningAmber } from 'react-icons/md';
 
 const ESTADO_CONFIG = {
   pendiente_dictaminacion: { label: 'En espera de dictamen', border: 'border-l-gray-400', dot: 'bg-gray-400', text: 'text-gray-500' },
@@ -63,19 +65,29 @@ function EnlaceMultimediaForm({ ponencia }) {
   );
 }
 
-function PonenciaCard({ ponencia }) {
+function PonenciaCard({ ponencia, requiresPayment }) {
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const config = ESTADO_CONFIG[ponencia.estado] ?? { label: ponencia.estado, border: 'border-l-gray-400', dot: 'bg-gray-400', text: 'text-gray-500' };
   const tieneFeedback = ponencia.retroalimentacion || ponencia.criterio_comentarios?.length > 0;
 
   return (
-    <div className={`flex flex-col bg-white p-6 mb-4 rounded-xl shadow-sm border-l-[10px] ${config.border}`}>
+    <div className={`flex flex-col bg-white p-6 mb-4 rounded-xl shadow-sm border-l-[10px] ${config.border} relative overflow-hidden`}>
+      {requiresPayment && (
+        <div className="absolute top-0 right-0 bg-warning/20 px-3 py-1 rounded-bl-xl flex items-center gap-1.5 border-b border-l border-warning/30">
+          <MdWarningAmber className="text-warning text-sm" />
+          <span className="text-[9px] font-black text-warning-content uppercase tracking-tighter">Pendiente de Pago</span>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex flex-col gap-1 flex-1 min-w-0">
           <span className={`text-[10px] font-bold uppercase tracking-widest ${config.text}`}>{config.label}</span>
           <h3 className="text-lg font-semibold text-slate-700 leading-tight mb-1 truncate">{ponencia.titulo}</h3>
-          <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter">ID: {ponencia.id_ponencia}</p>
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter">ID: {ponencia.id_ponencia}</p>
+            <span className="text-[10px] text-slate-300 font-medium italic">— {ponencia.evento?.congreso || ponencia.congreso || 'Congreso'}</span>
+          </div>
         </div>
         <div className="flex-shrink-0 flex flex-wrap gap-2">
           {ponencia.estado === 'pendiente_extenso' && (
@@ -165,13 +177,50 @@ export default function EstatusPonenciaView() {
   const [ponencias, setPonencias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [congressPayments, setCongressPayments] = useState({});
 
   useEffect(() => {
-    getMisPonenciasPonenteApi(accessToken)
-      .then(setPonencias)
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
+    const load = async () => {
+        try {
+            const data = await getMisPonenciasPonenteApi(accessToken);
+            setPonencias(data);
+            
+            // Cargar info de pagos para cada congreso único
+            const uniqueCongresses = [...new Set(data.map(p => p.id_congreso || p.evento?.id_congreso))].filter(Boolean);
+            const payments = {};
+            for (const cid of uniqueCongresses) {
+                try {
+                    const summ = await getPagosResumenApi(accessToken, cid);
+                    payments[cid] = summ.user_payment;
+                } catch (e) {
+                    console.error("Error loading payment for congress", cid, e);
+                }
+            }
+            setCongressPayments(payments);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+    load();
   }, [accessToken]);
+
+  // Lógica para determinar si una ponencia está cubierta por el pago
+  const isPonenciaCovered = (ponencia, allPonencias) => {
+    const cid = ponencia.id_congreso || ponencia.evento?.id_congreso;
+    const payment = congressPayments[cid];
+    if (!payment) return true; // Si no hay info, no alarmar
+
+    const congressPonencias = allPonencias
+        .filter(p => (p.id_congreso || p.evento?.id_congreso) === cid)
+        .sort((a, b) => a.id_ponencia - b.id_ponencia); // Ordenar por ID para consistencia
+    
+    const index = congressPonencias.findIndex(p => p.id_ponencia === ponencia.id_ponencia);
+    const coverage = payment.paid_slots * 2; // Cada slot cubre 2 ponencias
+    
+    return index < coverage;
+  };
 
   if (loading) return (
     <div className="flex justify-center py-20">
@@ -202,7 +251,13 @@ export default function EstatusPonenciaView() {
       {ponencias.length === 0 ? (
         <p className="text-center py-10 text-base-content/40 italic">No tienes ponencias registradas.</p>
       ) : (
-        ponencias.map(p => <PonenciaCard key={p.id_ponencia} ponencia={p} />)
+        ponencias.map(p => (
+            <PonenciaCard 
+                key={p.id_ponencia} 
+                ponencia={p} 
+                requiresPayment={!isPonenciaCovered(p, ponencias)} 
+            />
+        ))
       )}
     </div>
   );

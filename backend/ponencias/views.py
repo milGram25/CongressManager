@@ -350,20 +350,37 @@ class EnviarPonenciaAPIView(APIView):
                         return Response({'detail': 'No tienes inscripción pagada en ese congreso.'}, status=status.HTTP_403_FORBIDDEN)
 
                     # Verificar cuota de ponencias extras filtrado por congreso
-                    PONENTE_INCLUDED = 3
+                    PONENTE_INCLUDED = 2
                     cursor.execute("SELECT id_ponente FROM ponente WHERE id_persona = %s LIMIT 1", [request.user.id_persona])
                     ponente_row = cursor.fetchone()
                     if ponente_row:
                         id_ponente_check = ponente_row[0]
-                        # Contar ponencias del ponente solo en este congreso
+                        # Contar ponencias del ponente solo en este congreso QUE ESTÉN ACEPTADAS
                         cursor.execute("""
                             SELECT COUNT(*) FROM ponente_has_ponencia php
                             JOIN ponencia pon ON pon.id_ponencia = php.id_ponencia
-                            JOIN ponencia_meta pm ON pm.id_ponencia = pon.id_ponencia
-                            WHERE php.id_ponente = %s AND pm.id_congreso = %s
+                            LEFT JOIN ponencia_meta pm ON pm.id_ponencia = pon.id_ponencia
+                            LEFT JOIN evento e ON e.id_evento = pon.id_evento
+                            JOIN congreso c ON c.id_congreso = COALESCE(e.id_congreso, pm.id_congreso)
+                            JOIN extenso ext ON ext.id_extenso = pon.id_extenso
+                            WHERE php.id_ponente = %s AND c.id_congreso = %s
+                              AND ext.revisado = TRUE
+                              AND (
+                                  SELECT ev.estatus::TEXT FROM evaluacion ev
+                                  WHERE ev.id_extenso = ext.id_extenso
+                                  ORDER BY 
+                                    CASE 
+                                        WHEN ev.id_evaluador = ext.id_evaluador_3 THEN 1
+                                        WHEN ev.id_evaluador = ext.id_evaluador THEN 2
+                                        WHEN ev.id_evaluador = ext.id_evaluador_2 THEN 3
+                                        ELSE 4
+                                    END,
+                                    ev.fecha_de_revision DESC
+                                  LIMIT 1
+                              ) = 'aceptado'
                         """, [id_ponente_check, id_congreso])
                         current_count = int(cursor.fetchone()[0])
-                        # Las primeras 3 ponencias están incluidas; solo se cobran extras a partir de la 4a
+                        # Las primeras 2 ponencias están incluidas; solo se cobran extras a partir de la 3a
                         extra_slots_needed = max((current_count + 1) - PONENTE_INCLUDED, 0)
                         if extra_slots_needed > 0:
                             cursor.execute("""
@@ -514,20 +531,39 @@ def registrar_ponencia(request):
         asistente = Asistente.objects.filter(id_persona=user).first()
         if not asistente:
             return Response({"error": "El usuario no es un participante."}, status=status.HTTP_400_BAD_REQUEST)
+        
         id_evento = request.data.get('id_evento')
         if not id_evento:
             return Response({"error": "id_evento es requerido."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            evento = Evento.objects.get(id_evento=id_evento)
+        except Evento.DoesNotExist:
+            return Response({"error": "Evento no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+        # NUEVA LÓGICA: Verificar pago para el congreso del evento
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT 1 FROM pagos p
+                JOIN costos_congreso cc ON p.id_costos = cc.id_costos_congreso
+                JOIN congreso c ON c.id_costos_congreso = cc.id_costos_congreso
+                WHERE p.id_persona = %s AND c.id_congreso = %s
+            """, [user.pk, evento.id_congreso_id])
+            pago = cursor.fetchone()
+        
+        if not pago:
+            return Response({"error": "Debes inscribirte y pagar este congreso antes de registrarte en sus eventos."}, status=status.HTTP_400_BAD_REQUEST)
+
         if AsistenteEvento.objects.filter(id_asistente=asistente, id_evento_id=id_evento).exists():
             return Response({"error": "Ya estás registrado en este evento."}, status=status.HTTP_400_BAD_REQUEST)
-        evento = Evento.objects.get(id_evento=id_evento)
+            
         if evento.cupos and evento.cupos > 0:
             ocupados = AsistenteEvento.objects.filter(id_evento_id=id_evento).count()
             if ocupados >= evento.cupos:
                 return Response({"error": "No hay cupos disponibles para este evento."}, status=status.HTTP_400_BAD_REQUEST)
+        
         asistente_evento = AsistenteEvento.objects.create(id_asistente=asistente, id_evento_id=id_evento)
         return Response({"message": "Registro exitoso", "id": asistente_evento.id_asistente_evento}, status=status.HTTP_201_CREATED)
-    except Evento.DoesNotExist:
-        return Response({"error": "Evento no encontrado."}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"error": f"Error interno del servidor: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
