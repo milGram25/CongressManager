@@ -29,6 +29,8 @@ export default function Login() {
         navigate('/dictaminador', { replace: true });
       } else if (rol === 'administrador' || rol === 'admin') {
         navigate('/admin', { replace: true });
+      } else if (rol === 'ponente') {
+        navigate('/ponente', { replace: true });
       } else {
         navigate('/asistente', { replace: true });
       }
