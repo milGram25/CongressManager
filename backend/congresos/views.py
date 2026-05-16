@@ -1034,39 +1034,39 @@ class ListaPagosAdminView(APIView):
         with connection.cursor() as cursor:
             cursor.execute(sql, params)
             rows = cursor.fetchall()
-        result = []
-        for r in rows:
-            rol = r[14]
-            id_persona = r[15]
-            costos_id = r[16]
-            
-            p_count = 0
-            if rol == 'Ponente':
-                # Obtener el id_ponente para poder usar la lógica de conteo refinada
-                cursor.execute("SELECT id_ponente FROM ponente WHERE id_persona = %s LIMIT 1", [id_persona])
-                p_row = cursor.fetchone()
-                if p_row:
-                    p_count = _count_ponente_ponencias(p_row[0], costos_id=costos_id)
+            result = []
+            for r in rows:
+                rol = r[14]
+                id_persona = r[15]
+                costos_id = r[16]
+                
+                p_count = 0
+                if rol == 'Ponente':
+                    # Obtener el id_ponente para poder usar la lógica de conteo refinada
+                    cursor.execute("SELECT id_ponente FROM ponente WHERE id_persona = %s LIMIT 1", [id_persona])
+                    p_row = cursor.fetchone()
+                    if p_row:
+                        p_count = _count_ponente_ponencias(p_row[0], costos_id=costos_id)
 
-            result.append({
-                'orden': r[0],
-                'nombre': r[1] or '',
-                'primerApellido': r[2] or '',
-                'segundoApellido': r[3] or '',
-                'telefono': r[4] or '',
-                'curp': r[5] or '',
-                'correo': r[6] or '',
-                'monto': float(r[7]) if r[7] is not None else 0,
-                'fecha': r[8].isoformat() if r[8] else None,
-                'requiere_factura': r[9],
-                'cuentaDeposito': r[10] or '',
-                'descuento': float(r[11]) if r[11] is not None else 0,
-                'congreso': r[12] or '',
-                'sede': r[13] or '',
-                'rol': rol or 'Asistente',
-                'estatus': 'Pagado',
-                'ponencias_count': p_count,
-            })
+                result.append({
+                    'orden': r[0],
+                    'nombre': r[1] or '',
+                    'primerApellido': r[2] or '',
+                    'segundoApellido': r[3] or '',
+                    'telefono': r[4] or '',
+                    'curp': r[5] or '',
+                    'correo': r[6] or '',
+                    'monto': float(r[7]) if r[7] is not None else 0,
+                    'fecha': r[8].isoformat() if r[8] else None,
+                    'requiere_factura': r[9],
+                    'cuentaDeposito': r[10] or '',
+                    'descuento': float(r[11]) if r[11] is not None else 0,
+                    'congreso': r[12] or '',
+                    'sede': r[13] or '',
+                    'rol': rol or 'Asistente',
+                    'estatus': 'Pagado',
+                    'ponencias_count': p_count,
+                })
         return Response(result)
     
 class LibrosView(APIView):
