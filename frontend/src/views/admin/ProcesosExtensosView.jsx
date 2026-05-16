@@ -43,12 +43,13 @@ function RubricaGrupoStatusRow({ grupo }) {
   );
 }
 
-function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsignarDos, onAsignarTres, toast }) {
+function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsignarDos, onAsignarTres, toast, onPublicado }) {
   const navigate = useNavigate();
   const [r1Sel, setR1Sel] = useState('');
   const [r2Sel, setR2Sel] = useState('');
   const [r3Sel, setR3Sel] = useState('');
   const [assigning, setAssigning] = useState(false);
+  const accessToken = localStorage.getItem('congress_access');
 
   useEffect(() => {
     setR1Sel(extenso?.id_evaluador ? String(extenso.id_evaluador) : '');
@@ -64,9 +65,14 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
 
   const estado = extenso.estado_derivado ?? 'en_revision';
   const yaAsignados = extenso.id_evaluador && extenso.id_evaluador_2;
-  const evaluadoresParaR3 = evaluadoresDisponibles.filter(
-    e => e.id_evaluador !== extenso.id_evaluador && e.id_evaluador !== extenso.id_evaluador_2
+  const autoresIds = new Set((extenso.ponentes_personas_ids ?? []).map(Number));
+  const evaluadoresSinAutor = evaluadoresDisponibles.filter(e => !autoresIds.has(Number(e.id_persona)));
+  const evaluadoresParaR3 = evaluadoresSinAutor.filter(
+    e => String(e.id_evaluador) !== String(extenso.id_evaluador) && String(e.id_evaluador) !== String(extenso.id_evaluador_2)
   );
+  const r1StrSel = String(r1Sel);
+  const r2StrSel = String(r2Sel);
+  const mismosRevisores = r1StrSel && r2StrSel && r1StrSel === r2StrSel;
 
   const handleAsignarDos = async () => {
     if (!r1Sel || !r2Sel) return;
@@ -91,13 +97,14 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
   };
 
   const handlePublicar = () => {
-    const tipo = extenso.tipo_ponencia === 'taller' ? 'talleres' : 'ponencias';
-    const nombre = encodeURIComponent(extenso.title ?? '');
-    const subarea = extenso.id_subarea ?? '';
-    navigate(`/admin/eventos/${tipo}/crear?id_congreso=${idCongreso}&nombre_evento=${nombre}&id_subarea=${subarea}`);
+    const params = new URLSearchParams({
+        id_congreso: String(extenso.id_congreso),
+        nombre_evento: extenso.title,
+        id_subarea: String(extenso.id_subarea || ''),
+        id_extenso: String(extenso.id_extenso),
+    });
+    navigate(`/admin/eventos/ponencias/crear?${params.toString()}`);
   };
-
-  const grupos = extenso.evaluacion?.grupos ?? null;
 
   return (
     <article className="flex min-h-[760px] flex-col rounded-[28px] border border-black/55 bg-white px-5 py-5 shadow-sm md:px-6 space-y-6">
@@ -105,7 +112,6 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
         <h3 className=" font-semibold  tracking-wide text-slate-700">Información de extenso</h3>
         <div className="mt-4 space-y-2 text-[14px] leading-6 text-slate-700">
           <p><span className="font-semibold text-slate-900">Título:</span> {extenso.title}</p>
-          <p><span className="font-semibold text-slate-900">Autores:</span> {extenso.autores?.join(' / ') || 'Sin autores'}</p>
           {extenso.ruta_extenso && (
             <a
               href={buildMediaUrl(extenso.ruta_extenso)}
@@ -137,10 +143,13 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
         </section>
       )}
 
-      {!extenso.revisado && (
-        <section>
+      <section>
           <h4 className="font-semibold tracking-wide text-slate-700 mb-2">Asignar revisores (ambos obligatorios)</h4>
-          {evaluadoresDisponibles.length === 0 ? (
+          {(extenso.revisado || extenso.evaluador_1_revisado || extenso.evaluador_2_revisado) ? (
+            <div className="text-sm px-4 py-3 rounded-xl bg-warning/10 text-warning font-medium">
+              No es posible cambiar a los revisores porque ya realizaron su revisión.
+            </div>
+          ) : evaluadoresSinAutor.length === 0 ? (
             <p className="text-xs text-amber-600 italic">No hay evaluadores asignados a este congreso.</p>
           ) : (
             <div className="space-y-4">
@@ -148,28 +157,28 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold uppercase text-slate-400 ml-1">Revisor 1</p>
                   <BuscadorPersonal
-                    options={evaluadoresDisponibles}
+                    options={evaluadoresSinAutor}
                     value={r1Sel}
-                    onChange={setR1Sel}
+                    onChange={v => setR1Sel(String(v))}
                     placeholder="Busca Revisor 1..."
                   />
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-bold uppercase text-slate-400 ml-1">Revisor 2</p>
                   <BuscadorPersonal
-                    options={evaluadoresDisponibles}
+                    options={evaluadoresSinAutor}
                     value={r2Sel}
-                    onChange={setR2Sel}
+                    onChange={v => setR2Sel(String(v))}
                     placeholder="Busca Revisor 2..."
                   />
                 </div>
               </div>
-              {r1Sel && r2Sel && r1Sel === r2Sel && (
+              {mismosRevisores && (
                 <p className="text-xs text-error font-medium">El Revisor 1 y el Revisor 2 no pueden ser la misma persona.</p>
               )}
               <button
                 onClick={handleAsignarDos}
-                disabled={!r1Sel || !r2Sel || r1Sel === r2Sel || assigning}
+                disabled={!r1StrSel || !r2StrSel || mismosRevisores || assigning}
                 className="w-full btn btn-primary btn-sm rounded-xl disabled:opacity-50"
               >
                 {assigning ? 'Asignando...' : 'Asignar revisores'}
@@ -177,59 +186,92 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
             </div>
           )}
         </section>
-      )}
 
-      {estado === 'desacuerdo' && !extenso.id_evaluador_3 && (
+      {estado === 'desacuerdo' && (
         <section>
-          <h4 className="font-semibold  tracking-wide text-orange-600 mb-2">Asignar 3er revisor (desempate)</h4>
-          <div className="flex gap-2">
-            <BuscadorPersonal
-              options={evaluadoresParaR3}
-              value={r3Sel}
-              onChange={setR3Sel}
-              placeholder="Selecciona revisor 3"
-            />
-            <button
-              onClick={handleAsignarTres}
-              disabled={!r3Sel || assigning}
-              className="btn btn-black w-full rounded-xl disabled:opacity-50 mt-2"
-            >
-              {assigning ? 'Asignando...' : 'Confirmar tercer revisor'}
-            </button>
-          </div>
+          <h4 className="font-semibold tracking-wide text-orange-600 mb-2">3er revisor (desempate)</h4>
+          {extenso.id_evaluador_3 ? (
+            <p className="text-sm text-slate-600">R3 (Desempate): <span className="font-medium">{extenso.nombre_evaluador_3}</span></p>
+          ) : (
+            <div className="space-y-4">
+              <BuscadorPersonal
+                options={evaluadoresParaR3}
+                value={r3Sel}
+                onChange={setR3Sel}
+                placeholder="Selecciona revisor 3"
+              />
+              <button
+                onClick={handleAsignarTres}
+                disabled={!r3Sel || assigning}
+                className="w-full btn btn-primary btn-sm rounded-xl disabled:opacity-50"
+              >
+                {assigning ? 'Asignando...' : 'Confirmar tercer revisor'}
+              </button>
+            </div>
+          )}
         </section>
       )}
 
-      {estado === 'extenso_aceptado' && (
+      {estado === 'extenso_aceptado' && !extenso.publicado && (
         <section>
           <button
             onClick={handlePublicar}
-            className="w-full btn btn-success rounded-xl  tracking-wider font-bold"
+            className="w-full btn btn-success rounded-xl tracking-wider font-bold"
           >
             Publicar ponencia
           </button>
         </section>
       )}
 
-      <section>
-        <h3 className="font-semibold  tracking-wide text-slate-700 mb-3">Rúbrica de evaluación (última)</h3>
-        <div className="overflow-y-auto max-h-[250px]">
-          {!grupos || grupos.length === 0 ? (
-            <p className="text-sm text-slate-400 italic">Sin evaluación enviada aún.</p>
-          ) : (
-            grupos.map((grupo, i) => <RubricaGrupoStatusRow key={i} grupo={grupo} />)
-          )}
-        </div>
-      </section>
-
-      {extenso.evaluacion?.estatus && (
+      {extenso.publicado && (
         <section>
-          <h3 className="text-[14px] font-semibold uppercase tracking-wide text-slate-700">Estatus de evaluación</h3>
-          <div className="mt-2 rounded-[18px] border border-black/60 bg-[#f4f4f4] p-4 text-sm leading-6 text-slate-700">
-            {extenso.evaluacion.estatus}
+          <div className="w-full rounded-xl bg-success/10 border border-success/40 px-4 py-3 text-center text-sm font-semibold text-success">
+            Ponencia publicada
           </div>
         </section>
       )}
+
+      <section>
+        <h3 className="font-semibold tracking-wide text-slate-700 mb-3">
+          Rúbrica — Revisor 1
+          {extenso.nombre_evaluador && (
+            <span className="text-slate-400 font-normal text-sm"> ({extenso.nombre_evaluador})</span>
+          )}
+        </h3>
+        <div className="overflow-y-auto max-h-[220px]">
+          {!extenso.evaluacion_1?.grupos?.length ? (
+            <p className="text-sm text-slate-400 italic">Sin evaluación enviada aún.</p>
+          ) : (
+            extenso.evaluacion_1.grupos.map((grupo, i) => <RubricaGrupoStatusRow key={i} grupo={grupo} />)
+          )}
+        </div>
+        {extenso.evaluacion_1?.estatus && (
+          <div className="mt-2 rounded-[18px] border border-black/60 bg-[#f4f4f4] p-4 text-sm leading-6 text-slate-700">
+            {extenso.evaluacion_1.estatus}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h3 className="font-semibold tracking-wide text-slate-700 mb-3">
+          Rúbrica — Revisor 2
+          {extenso.nombre_evaluador_2 && (
+            <span className="text-slate-400 font-normal text-sm"> ({extenso.nombre_evaluador_2})</span>
+          )}
+        </h3>
+        <div className="overflow-y-auto max-h-[220px]">
+          {!extenso.evaluacion_2?.grupos?.length ? (
+            <p className="text-sm text-slate-400 italic">Sin evaluación enviada aún.</p>
+          ) : (
+            extenso.evaluacion_2.grupos.map((grupo, i) => <RubricaGrupoStatusRow key={i} grupo={grupo} />)
+          )}
+        </div>
+        {extenso.evaluacion_2?.estatus && (
+          <div className="mt-2 rounded-[18px] border border-black/60 bg-[#f4f4f4] p-4 text-sm leading-6 text-slate-700">
+            {extenso.evaluacion_2.estatus}
+          </div>
+        )}
+      </section>
     </article>
   );
 }
@@ -301,6 +343,10 @@ export default function ProcesosExtensosView() {
     });
   };
 
+  const handlePublicado = (idExtenso) => {
+    refreshExtenso(idExtenso, { publicado: true });
+  };
+
   return (
     <div className="w-full space-y-7">
       {toastMsg && (
@@ -351,6 +397,7 @@ export default function ProcesosExtensosView() {
             idCongreso={selectedCongreso.id_congreso}
             onAsignarDos={handleAsignarDos}
             onAsignarTres={handleAsignarTres}
+            onPublicado={handlePublicado}
             toast={showToast}
           />
         </section>

@@ -1,8 +1,110 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { MdArrowBack, MdAdd, MdDelete, MdEdit, MdCheck, MdClose } from "react-icons/md";
+import { MdArrowBack, MdAdd, MdDelete, MdEdit, MdCheck, MdClose, MdUpload, MdDownload, MdDescription } from "react-icons/md";
 import Notification from "../../../components/Notification";
-import { getTiposTrabajoApi, createTipoTrabajoApi, deleteTipoTrabajoApi } from "../../../api/adminApi";
+import { getTiposTrabajoApi, createTipoTrabajoApi, deleteTipoTrabajoApi, uploadFormatoTipoTrabajoApi, deleteFormatoTipoTrabajoApi } from "../../../api/adminApi";
+import { buildMediaUrl } from "../../../api/ponenciasApi";
+
+function FormatoRow({ tipo, accessToken, onUpdated }) {
+  const fileRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+  const [confirmDel, setConfirmDel] = useState(false);
+  const [msg, setMsg] = useState(null);
+
+  const showMsg = (text, ok = true) => {
+    setMsg({ text, ok });
+    setTimeout(() => setMsg(null), 3000);
+  };
+
+  const handleFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      await uploadFormatoTipoTrabajoApi(accessToken, tipo.id_tipo_trabajo, file);
+      showMsg('Formato subido correctamente.');
+      onUpdated();
+    } catch (err) {
+      showMsg(err.message, false);
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirmDel) { setConfirmDel(true); return; }
+    try {
+      await deleteFormatoTipoTrabajoApi(accessToken, tipo.id_tipo_trabajo);
+      showMsg('Formato eliminado.');
+      setConfirmDel(false);
+      onUpdated();
+    } catch (err) {
+      showMsg(err.message, false);
+    }
+  };
+
+  return (
+    <div className="mt-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 space-y-2">
+      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Formato de extenso</p>
+      {msg && (
+        <p className={`text-xs font-medium ${msg.ok ? 'text-success' : 'text-error'}`}>{msg.text}</p>
+      )}
+      {tipo.ruta_formato ? (
+        <div className="flex items-center gap-2 flex-wrap">
+          <MdDescription size={16} className="text-slate-500 shrink-0" />
+          <a
+            href={buildMediaUrl(tipo.ruta_formato)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 text-xs text-blue-600 underline truncate"
+            title={tipo.ruta_formato}
+          >
+            {tipo.ruta_formato.split('/').pop()}
+          </a>
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="btn btn-xs rounded-full bg-black text-white border-none gap-1 disabled:opacity-50"
+            title="Reemplazar formato"
+          >
+            <MdUpload size={13} /> Reemplazar
+          </button>
+          <button
+            onClick={handleDelete}
+            className={`btn btn-xs rounded-full border-none gap-1 ${confirmDel ? 'bg-error text-white' : 'bg-slate-200 text-slate-600'}`}
+            title="Eliminar formato"
+          >
+            <MdDelete size={13} /> {confirmDel ? '¿Eliminar?' : 'Quitar'}
+          </button>
+          {confirmDel && (
+            <button onClick={() => setConfirmDel(false)} className="btn btn-xs btn-circle bg-base-300 border-none">
+              <MdClose size={12} />
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="flex items-center gap-2">
+          <p className="flex-1 text-xs italic text-slate-400">Sin formato subido.</p>
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="btn btn-xs rounded-full bg-black text-white border-none gap-1 disabled:opacity-50"
+          >
+            {uploading ? <span className="loading loading-spinner loading-xs" /> : <><MdUpload size={13} /> Subir formato</>}
+          </button>
+        </div>
+      )}
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".docx,.doc"
+        className="hidden"
+        onChange={handleFile}
+      />
+    </div>
+  );
+}
 
 export default function CongresoTiposTrabajoComponente({ idCongreso }) {
   const navigate = useNavigate();
@@ -111,11 +213,11 @@ export default function CongresoTiposTrabajoComponente({ idCongreso }) {
         </button>
       </div>
 
-      <div className="p-3 space-y-2 overflow-y-auto" style={{ maxHeight: 300 }}>
+      <div className="p-3 space-y-2 overflow-y-auto" style={{ maxHeight: 480 }}>
         {loading ? (
            <div className="flex justify-center p-5"><span className="loading loading-spinner text-primary"></span></div>
         ) : tipos.map((tipo, i) => (
-          <div key={tipo.id_tipo_trabajo} className="border-b border-base-200 pb-2 last:border-0 last:pb-0">
+          <div key={tipo.id_tipo_trabajo} className="border-b border-base-200 pb-3 last:border-0 last:pb-0">
             <div className="flex items-center gap-2">
               {editIdx === i ? (
                 <>
@@ -149,6 +251,7 @@ export default function CongresoTiposTrabajoComponente({ idCongreso }) {
                 </>
               )}
             </div>
+            <FormatoRow tipo={tipo} accessToken={accessToken} onUpdated={fetchTipos} />
           </div>
         ))}
 

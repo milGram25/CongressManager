@@ -193,3 +193,28 @@ export async function subirExtensoApi(accessToken, idResumen, archivo) {
   if (!res.ok) throw new Error(data.detail || 'Error al subir el extenso');
   return data;
 }
+
+export async function publicarPonenciaApi(accessToken, idExtenso, formData = {}) {
+  const res = await fetch(`${API_URL}/api/ponencias/extensos/${idExtenso}/publicar/`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(formData),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Error al publicar la ponencia');
+  return data;
+}
+
+export async function actualizarEnlacePonenciaApi(accessToken, idPonencia, enlace) {
+  const res = await fetch(`${API_URL}/api/ponencias/ponencia/${idPonencia}/enlace/`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ enlace }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Error al guardar el enlace');
+  return data;
+}

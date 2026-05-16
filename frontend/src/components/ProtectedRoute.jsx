@@ -34,7 +34,7 @@ export default function ProtectedRoute({ children, allowedRole, allowedRoles }) 
     
     // Casos especiales: Revisores, dictaminadores y ponentes pueden ver la sección de asistente
     const isSpecialRole = user.rol === 'revisor' || user.rol === 'dictaminador' || user.rol === 'ponente';
-    if (isSpecialRole && allowedRoles.includes('asistente')) {
+    if (isSpecialRole && allowedRoles.includes('Participante')) {
       return children;
     }
     
@@ -57,7 +57,7 @@ export default function ProtectedRoute({ children, allowedRole, allowedRoles }) 
 
     // Casos especiales para rol único
     const isSpecialRole = user.rol === 'revisor' || user.rol === 'dictaminador' || user.rol === 'ponente';
-    if (isSpecialRole && allowedRole === 'asistente') {
+    if (isSpecialRole && allowedRole === 'Participante') {
       return children;
     }
 

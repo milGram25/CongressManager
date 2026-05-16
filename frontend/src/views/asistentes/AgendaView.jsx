@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MdArrowBack, MdCalendarMonth, MdLocationOn, MdCheckCircle } from "react-icons/md";
+import { MdArrowBack, MdCalendarMonth, MdLocationOn, MdCheckCircle, MdErrorOutline } from "react-icons/md";
 import { getCongresosApi } from "../../api/adminApi";
 import { getEventosCongresoApi, getMisInscripcionesApi } from "../../api/agendaApi";
 import { registrarPonenciaApi } from "../../api/ponenciasApi";
@@ -16,7 +16,7 @@ function formatHour(iso) {
 }
 
 // ─── Modal de detalles del evento ────────────────────────────────────────────
-function EventoDetalleModal({ evento, onClose, onRegistrar, registrando }) {
+function EventoDetalleModal({ evento, inscrito, onClose, onRegistrar, registrando }) {
   if (!evento) return null;
   const tipoLabel = { ponencia: "Ponencia", taller: "Taller" }[evento.tipo] ?? evento.tipo;
   
@@ -76,6 +76,7 @@ function EventoDetalleModal({ evento, onClose, onRegistrar, registrando }) {
             ) : evento.lleno ? (
               <span className="font-semibold text-error">Cupo lleno</span>
             ) : onRegistrar ? (
+<<<<<<< HEAD
               <button
                 className="btn btn-neutral rounded-full px-8 font-bold text-sm tracking-wide"
                 disabled={registrando === evento.id}
@@ -83,6 +84,20 @@ function EventoDetalleModal({ evento, onClose, onRegistrar, registrando }) {
               >
                 {registrando === evento.id ? "Registrando..." : "Registrarme"}
               </button>
+=======
+              <div className="flex flex-col items-end gap-1">
+                <button
+                  className="btn btn-neutral rounded-full px-8 font-bold text-sm tracking-wide"
+                  disabled={registrando === evento.id || !inscrito}
+                  onClick={() => onRegistrar(evento)}
+                >
+                  {registrando === evento.id ? "REGISTRANDO..." : "REGISTRARME"}
+                </button>
+                {!inscrito && (
+                  <span className="text-[10px] text-error font-bold uppercase">Requiere inscripción</span>
+                )}
+              </div>
+>>>>>>> 65a05e0e3f642c8d3fc3ac18f4d091d252d52481
             ) : null}
           </div>
         </div>
@@ -206,7 +221,7 @@ function CongresoList({ inscritos, onVerEventos, onInscribirse }) {
 }
 
 // ─── Tarjeta de evento ────────────────────────────────────────────────────────
-function EventoCard({ evento, onRegistrar, registrando, onVerDetalles }) {
+function EventoCard({ evento, inscrito, onRegistrar, registrando, onVerDetalles }) {
   const tipoLabel = { ponencia: "Ponencia", taller: "Taller" }[evento.tipo] ?? evento.tipo;
   return (
     <div className="card bg-base-100 border border-base-200 shadow-sm hover:shadow-md transition-shadow">
@@ -260,7 +275,7 @@ function EventoCard({ evento, onRegistrar, registrando, onVerDetalles }) {
             ) : (
               <button
                 className="btn btn-primary btn-xs"
-                disabled={registrando === evento.id}
+                disabled={registrando === evento.id || !inscrito}
                 onClick={() => onRegistrar(evento)}
               >
                 {registrando === evento.id ? "Registrando..." : "Registrarme"}
@@ -280,7 +295,7 @@ function EventoCard({ evento, onRegistrar, registrando, onVerDetalles }) {
 }
 
 // ─── Vista de eventos de un congreso ─────────────────────────────────────────
-function EventosCongreso({ congreso, onBack }) {
+function EventosCongreso({ congreso, inscrito, onBack }) {
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -305,6 +320,10 @@ function EventosCongreso({ congreso, onBack }) {
   }, [congreso.id_congreso]);
 
   const handleRegistrar = async (evento) => {
+    if (!inscrito) {
+      setErrorRegistro("Debes inscribirte y pagar este congreso antes de registrarte en sus eventos.");
+      return;
+    }
     const token = localStorage.getItem("congress_access");
     setRegistrando(evento.id);
     setErrorRegistro("");
@@ -343,6 +362,16 @@ function EventosCongreso({ congreso, onBack }) {
           {congreso.nombre_congreso}
         </h2>
       </div>
+
+      {!inscrito && (
+        <div className="alert alert-warning mb-6 shadow-sm border-none bg-warning/20 text-warning-content rounded-xl">
+          <MdErrorOutline className="text-xl" />
+          <div className="text-sm">
+            <span className="font-bold">Aviso:</span> No estás inscrito en este congreso. 
+            Debes completar tu inscripción y pago para poder registrarte en los talleres y ponencias.
+          </div>
+        </div>
+      )}
 
       {tipos.length > 1 && (
         <div className="flex gap-2 mb-6 flex-wrap">
@@ -390,6 +419,7 @@ function EventosCongreso({ congreso, onBack }) {
             <EventoCard
               key={e.id}
               evento={e}
+              inscrito={inscrito}
               onRegistrar={handleRegistrar}
               registrando={registrando}
               onVerDetalles={setEventoDetalle}
@@ -400,6 +430,7 @@ function EventosCongreso({ congreso, onBack }) {
 
       <EventoDetalleModal
         evento={eventoDetalle}
+        inscrito={inscrito}
         onClose={() => setEventoDetalle(null)}
         onRegistrar={handleRegistrar}
         registrando={registrando}
@@ -434,6 +465,7 @@ export default function AgendaView() {
       <div className="w-full pt-2">
         <EventosCongreso
           congreso={selectedCongreso}
+          inscrito={inscritos.has(selectedCongreso.id_congreso)}
           onBack={() => setSelectedCongreso(null)}
         />
       </div>

@@ -26,13 +26,14 @@ export async function getPagosAdminApi(accessToken, idCongreso = null) {
 }
 
 export async function solicitarFacturaApi(accessToken, datos) {
+  const isFormData = datos instanceof FormData;
   const res = await fetch(`${API_URL}/api/users/facturas/solicitar/`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify(datos),
+    body: isFormData ? datos : JSON.stringify(datos),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.detail || 'No se pudo enviar la solicitud de factura.');

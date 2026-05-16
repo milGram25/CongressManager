@@ -111,11 +111,12 @@ function AsignarDictaminadorCard({ resumen, dictaminadores, onAsignado }) {
     setMsg(null);
     try {
       await asignarDictaminadorApi(localStorage.getItem('congress_access'), resumen.id_resumen, Number(sel));
-      const d = dictaminadores.find(d => String(d.id_dictaminador) === sel);
+      const d = dictaminadores.find(d => String(d.id_dictaminador) === String(sel));
       setMsg({ ok: true, text: 'Dictaminador asignado correctamente.' });
       onAsignado(resumen.id_resumen, Number(sel), d?.nombre_completo ?? '');
-    } catch {
-      setMsg({ ok: false, text: 'Error al asignar dictaminador.' });
+    } catch (err) {
+      const detail = err?.response?.data?.detail ?? 'Error al asignar dictaminador.';
+      setMsg({ ok: false, text: detail });
     } finally {
       setAssigning(false);
     }
@@ -128,7 +129,6 @@ function AsignarDictaminadorCard({ resumen, dictaminadores, onAsignado }) {
     <article className="rounded-[26px] border border-black/55 bg-white shadow-sm">
       <header className="bg-black px-6 py-4 rounded-t-[25px]">
         <h3 className="text-white font-bold text-lg leading-tight">{resumen.title}</h3>
-        <p className="text-gray-400 text-sm mt-0.5">{resumen.autores?.join(', ') || 'Sin autores'}</p>
       </header>
 
       <div className="p-6 space-y-5">
@@ -167,25 +167,33 @@ function AsignarDictaminadorCard({ resumen, dictaminadores, onAsignado }) {
           <h4 className=" font-semibold  tracking-wide text-slate-700 mb-2">
             {resumen.asignado ? 'Reasignar dictaminador' : 'Asignar dictaminador'}
           </h4>
-          {dictaminadores.length === 0 ? (
-            <p className="text-xs text-amber-600 italic">No hay dictaminadores registrados en este congreso.</p>
-          ) : (
-            <div className="flex flex-col gap-3">
-              <BuscadorPersonal
-                options={dictaminadores}
-                value={sel}
-                onChange={setSel}
-                placeholder="Busca un dictaminador..."
-              />
-              <button
-                onClick={handleAsignar}
-                disabled={!sel || assigning}
-                className="btn btn-black w-full rounded-xl disabled:opacity-50"
-              >
-                {assigning ? <span className="loading loading-spinner loading-xs" /> : 'Confirmar asignación'}
-              </button>
+          {resumen.revisado ? (
+            <div className="text-sm px-4 py-3 rounded-xl bg-warning/10 text-warning font-medium">
+              No es posible cambiar al dictaminador porque ya realizó la revisión.
             </div>
-          )}
+          ) : (() => {
+            const autoresIds = new Set((resumen.ponentes_personas_ids ?? []).map(Number));
+            const dictaminadoresSinAutor = dictaminadores.filter(d => !autoresIds.has(Number(d.id_persona)));
+            return dictaminadoresSinAutor.length === 0 ? (
+              <p className="text-xs text-amber-600 italic">No hay dictaminadores registrados en este congreso.</p>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <BuscadorPersonal
+                  options={dictaminadoresSinAutor}
+                  value={sel}
+                  onChange={v => setSel(String(v))}
+                  placeholder="Busca un dictaminador..."
+                />
+                <button
+                  onClick={handleAsignar}
+                  disabled={!sel || assigning}
+                  className="btn btn-black w-full rounded-xl disabled:opacity-50"
+                >
+                  {assigning ? <span className="loading loading-spinner loading-xs" /> : 'Confirmar asignación'}
+                </button>
+              </div>
+            );
+          })()}
         </section>
 
         <section>
@@ -276,7 +284,7 @@ export default function ProcesosResumenesView() {
            <ListaResumenes
              listaElementos={items}
              dictaminadores={dictaminadores}
-             selectedId={viewItem?.id_resumen ?? null} 
+             selectedId={viewItem?.id ?? null}
              onView={setViewItem}
           />
           <AsignarDictaminadorCard

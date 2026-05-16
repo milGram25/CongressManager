@@ -13,6 +13,9 @@ import {
   MdInfoOutline,
   MdArrowBack,
   MdDateRange,
+  MdClose,
+  MdVisibility,
+  MdDeleteOutline,
 } from "react-icons/md";
 
 function roleLabel(role) {
@@ -37,6 +40,13 @@ export default function PagosView() {
   const [resumenError, setResumenError] = useState("");
   const [registrandoPago, setRegistrandoPago] = useState(false);
   const [pagoError, setPagoError] = useState("");
+  const [slotsToPay, setSlotsToPay] = useState(1);
+
+  // Inicializar slotsToPay con el mínimo requerido (mínimo 1)
+  useEffect(() => {
+    const minRequired = resumen?.user_payment?.pending_min || 1;
+    setSlotsToPay(minRequired);
+  }, [resumen]);
 
   const [isStudent, setIsStudent] = useState(user?.es_estudiante_validado ? true : null);
   const [studentEmail, setStudentEmail] = useState(user?.email_institucional || "");
@@ -54,6 +64,9 @@ export default function PagosView() {
   const [errorFactura, setErrorFactura] = useState("");
   const [usarCorreoAlternativo, setUsarCorreoAlternativo] = useState(false);
   const [correoFacturacion, setCorreoFacturacion] = useState("");
+  const [confirmandoSalida, setConfirmandoSalida] = useState(false);
+  const [constanciaFiscalFile, setConstanciaFiscalFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [datosFacturacion, setDatosFacturacion] = useState({
     rfc: "",
     razonSocial: "",
@@ -130,9 +143,9 @@ export default function PagosView() {
 
         if (!currentId) {
           if (future.length > 0) {
-            setSearchParams({ 
-              id_congreso: future[0].id_congreso.toString(), 
-              nombre: future[0].nombre_congreso 
+            setSearchParams({
+              id_congreso: future[0].id_congreso.toString(),
+              nombre: future[0].nombre_congreso
             });
           } else {
             setResumenError("No hay congresos activos disponibles para pago.");
@@ -143,9 +156,9 @@ export default function PagosView() {
           const selected = list.find(c => c.id_congreso.toString() === currentId);
           if (!selected || new Date(selected.congreso_fin) < now) {
             if (future.length > 0) {
-              setSearchParams({ 
-                id_congreso: future[0].id_congreso.toString(), 
-                nombre: future[0].nombre_congreso 
+              setSearchParams({
+                id_congreso: future[0].id_congreso.toString(),
+                nombre: future[0].nombre_congreso
               });
             } else {
               setResumenError("El congreso seleccionado ha finalizado o no es válido.");
@@ -162,11 +175,20 @@ export default function PagosView() {
     init();
   }, []); // Solo al montar
 
+  useEffect(() => {
+    if (constanciaFiscalFile) {
+      const url = URL.createObjectURL(constanciaFiscalFile);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+    setPreviewUrl(null);
+  }, [constanciaFiscalFile]);
+
   // 2. Cargar resumen cuando cambie idCongreso
   useEffect(() => {
     const loadResumen = async () => {
       if (!idCongreso) return;
-      
+
       setLoadingResumen(true);
       setResumenError("");
       try {
@@ -193,14 +215,15 @@ export default function PagosView() {
       rfcRegex.test(datosFacturacion.rfc) &&
       datosFacturacion.razonSocial.length >= 3 &&
       cpRegex.test(datosFacturacion.cp) &&
-      datosFacturacion.regimenFiscal !== "";
+      datosFacturacion.regimenFiscal !== "" &&
+      constanciaFiscalFile !== null;
 
     const correoValido = usarCorreoAlternativo
       ? emailRegex.test(correoFacturacion)
       : true;
 
     return camposFiscalesValidos && correoValido;
-  }, [datosFacturacion, usarCorreoAlternativo, correoFacturacion]);
+  }, [datosFacturacion, usarCorreoAlternativo, correoFacturacion, constanciaFiscalFile]);
 
   const userPayment = resumen?.user_payment;
   const role = userPayment?.role || user?.rol || "asistente";
@@ -214,14 +237,14 @@ export default function PagosView() {
 
   const finalPrice = useMemo(() => {
     if (!userPayment) return 0;
-    if (isPonente) return backendTotalDue;
+    if (isPonente) return Number(slotsToPay) * basePrice;
     if (role === "asistente") {
       if (alreadyPaid) return 0;
       if (isVerified) return basePrice * 0.5;
       return backendTotalDue;
     }
     return backendTotalDue;
-  }, [userPayment, isPonente, role, isVerified, alreadyPaid, basePrice, backendTotalDue]);
+  }, [userPayment, isPonente, role, isVerified, alreadyPaid, basePrice, backendTotalDue, slotsToPay]);
 
   const canSubmitPayment = useMemo(() => {
     if (!userPayment) return false;
@@ -240,7 +263,7 @@ export default function PagosView() {
       setError("El correo debe ser institucional válido (.edu, .edu.mx, alumnos.udg.mx, etc).");
       return;
     }
-    
+
     setEnviandoCodigo(true);
     try {
       const token = localStorage.getItem("congress_access");
@@ -280,6 +303,7 @@ export default function PagosView() {
         requiere_factura: false,
         monto: finalPrice,
         ...(idCongreso && { id_congreso: idCongreso }),
+        ...(isPonente && { slots_to_pay: slotsToPay }),
       };
       const response = await registrarPagoApi(token, payload);
       setResumen(response.summary);
@@ -302,13 +326,17 @@ export default function PagosView() {
     setErrorFactura("");
     try {
       const token = localStorage.getItem("congress_access");
-      await solicitarFacturaApi(token, {
-        id_congreso: idCongreso ? Number(idCongreso) : null,
-        rfc: datosFacturacion.rfc,
-        razon_social: datosFacturacion.razonSocial,
-        codigo_postal: datosFacturacion.cp,
-        regimen_fiscal: datosFacturacion.regimenFiscal,
-      });
+      const formData = new FormData();
+      if (idCongreso) formData.append("id_congreso", idCongreso);
+      formData.append("rfc", datosFacturacion.rfc);
+      formData.append("razon_social", datosFacturacion.razonSocial);
+      formData.append("codigo_postal", datosFacturacion.cp);
+      formData.append("regimen_fiscal", datosFacturacion.regimenFiscal);
+      if (constanciaFiscalFile) {
+        formData.append("constancia_fiscal", constanciaFiscalFile);
+      }
+
+      await solicitarFacturaApi(token, formData);
       setSolicitudEnviada(true);
       setQuiereFactura(false);
     } catch (err) {
@@ -388,17 +416,18 @@ export default function PagosView() {
               Detalle de inscripción
             </h3>
 
-              <div className="grid grid-cols-2 gap-4 text-sm mb-6">
-                <div>
-                  <p className="opacity-50 uppercase font-bold text-[10px] tracking-widest">Nombre</p>
-                  <p className="font-medium text-neutral">{user?.nombre || "Usuario Demo"}</p>
-                </div>
-                <div>
-                  <p className="opacity-50 uppercase font-bold text-[10px] tracking-widest">Categoría</p>
-                  <p className="font-bold text-alt">{roleLabel(role).toUpperCase()}</p>
-                </div>
+            <div className="grid grid-cols-2 gap-4 text-sm mb-6">
+              <div>
+                <p className="opacity-50 uppercase font-bold text-[10px] tracking-widest">Nombre</p>
+                <p className="font-medium text-neutral">{user?.nombre || "Usuario Demo"}</p>
               </div>
+              <div>
+                <p className="opacity-50 uppercase font-bold text-[10px] tracking-widest">Categoría</p>
+                <p className="font-bold text-alt">{roleLabel(role).toUpperCase()}</p>
+              </div>
+            </div>
 
+<<<<<<< HEAD
               {isPonente && (
                 <div className="mb-6 p-4 rounded-xl border-l-4 border-alt/50 bg-alt/5 text-sm py-3 px-4 shadow-sm">
                   <div className="flex items-center gap-2 mb-1 text-alt">
@@ -407,15 +436,34 @@ export default function PagosView() {
                   </div>
                   <p className="text-neutral/80 text-xs leading-relaxed">
                     El pago base cubre <b>2 ponencias</b>. De la 3ª a la 5ª, se aplica un cargo adicional por cada una.
+=======
+            {isPonente && userPayment && (
+              <div className="mb-6 p-4 rounded-xl border-l-4 border-alt/50 bg-alt/5 text-sm py-3 px-4 shadow-sm">
+                <div className="flex items-center gap-2 mb-1 text-alt">
+                  <MdInfoOutline className="text-base" />
+                  <span className="font-bold uppercase text-[12px] tracking-widest">Regla de Ponencias</span>
+                </div>
+                <p className="text-neutral/80 text-s leading-relaxed">
+                  El pago base cubre <b>{userPayment.included_ponencias} ponencias</b>. Cada ponencia adicional tiene un cargo extra.
+                </p>
+                <div className="mt-2 space-y-1">
+                  <p className="text-[12px] font-medium text-alt/70 italic">
+                    * Tienes <b>{userPayment.total_ponencias_count || 0}</b> ponencias enviadas en total.
+>>>>>>> 65a05e0e3f642c8d3fc3ac18f4d091d252d52481
                   </p>
-                  {userPayment?.ponencias_count > 0 && (
-                    <p className="text-[10px] mt-2 font-medium text-alt/70 italic">
-                      * Actualmente tienes <b>{userPayment.ponencias_count}</b> ponencias registradas.
+                  <p className="text-[12px] font-medium text-alt/70 italic">
+                    * Tienes <b>{userPayment.accepted_ponencias_count || 0}</b> ponencias aceptadas.
+                  </p>
+                  {userPayment.total_ponencias_count > (userPayment.paid_slots || 0) * (userPayment.included_ponencias || 2) && (
+                    <p className="text-[12px] font-medium text-error uppercase mt-1">
+                      Atención: Has enviado más ponencias de las que cubre tu pago actual.
                     </p>
                   )}
                 </div>
-              )}
+              </div>
+            )}
 
+<<<<<<< HEAD
               {role === "asistente" && isStudent !== false && (
                 <div
                   className={`p-6 rounded-2xl border-2 transition-all ${isVerified ? "border-secondary bg-alt/5" : "border-dashed border-base-300"}`}
@@ -533,29 +581,119 @@ export default function PagosView() {
                   </div>
                 )}
                 {isPonente ? (
+=======
+            {role === "asistente" && isStudent !== false && (
+              <div
+                className={`p-6 rounded-2xl border-2 transition-all ${isVerified ? "border-secondary bg-alt/5" : "border-dashed border-base-300"}`}
+              >
+                {!isVerified ? (
+>>>>>>> 65a05e0e3f642c8d3fc3ac18f4d091d252d52481
                   <>
-                    {paidSlots === 0 && pendingSlots > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="opacity-60">Inscripción Base (1-2 ponencias)</span>
-                        <span>${basePrice.toFixed(2)} MXN</span>
+                    {isStudent === null && (
+                      <div className="text-center space-y-4">
+                        <MdSchool className="text-4xl mx-auto text-secondary opacity-80" />
+                        <h4 className="font-bold text-neutral">¿Eres estudiante activo?</h4>
+                        <p className="text-sm opacity-70 text-neutral">
+                          Obtén un 50% de descuento adicional validando tu correo institucional.
+                        </p>
+                        <div className="flex justify-center gap-4">
+                          <button
+                            onClick={() => setIsStudent(true)}
+                            className="btn bg-seconday hover:bg-secondary/80 border-none text-secondary hover:text-white btn-sm rounded-full px-8"
+                          >
+                            Sí, soy estudiante
+                          </button>
+                          <button
+                            onClick={() => setIsStudent(false)}
+                            className="btn btn-ghost btn-sm rounded-full opacity-60 text-neutral"
+                          >
+                            No, tarifa general
+                          </button>
+                        </div>
                       </div>
                     )}
-                    {pendingSlots > (paidSlots === 0 ? 1 : 0) && (
-                      <div className="flex justify-between text-sm">
-                        <span className="opacity-60">
-                          Ponencias adicionales (x{pendingSlots - (paidSlots === 0 ? 1 : 0)})
-                        </span>
-                        <span>${((pendingSlots - (paidSlots === 0 ? 1 : 0)) * basePrice).toFixed(2)} MXN</span>
-                      </div>
+
+                    {isStudent === true && !showVerification && (
+                      <form onSubmit={handleEmailSubmit} className="space-y-4 text-neutral">
+                        <div className="flex items-center gap-2 mb-2">
+                          <button
+                            type="button"
+                            onClick={() => setIsStudent(null)}
+                            className="btn btn-ghost btn-xs"
+                          >
+                            ← Volver
+                          </button>
+                          <span className="text-sm font-bold">Validación Institucional</span>
+                        </div>
+                        <div className="relative">
+                          <MdEmail className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary" />
+                          <input
+                            type="email"
+                            required
+                            placeholder="Tu correo institucional"
+                            className="w-full pl-12 pr-4 py-3 rounded-xl bg-base-200 border-none outline-none focus:ring-2 focus:ring-secondary text-sm"
+                            value={studentEmail}
+                            onChange={(e) => setStudentEmail(e.target.value)}
+                          />
+                        </div>
+                        {error && <p className="text-error text-[10px] px-2">{error}</p>}
+                        <button
+                          type="submit"
+                          disabled={enviandoCodigo}
+                          className={`btn bg-secondary hover:bg-secondary/80 border-none w-full text-white rounded-xl ${enviandoCodigo ? 'loading' : ''}`}
+                        >
+                          {enviandoCodigo ? "Enviando..." : "Enviar código de verificación"}
+                        </button>
+                      </form>
+                    )}
+
+                    {showVerification && (
+                      <form onSubmit={handleVerifyCode} className="space-y-4 text-neutral">
+                        <div className="text-center">
+                          <p className="text-sm font-bold mb-1">Verifica tu correo</p>
+                          <p className="text-[10px] opacity-60">Enviamos un código a {studentEmail}</p>
+                        </div>
+                        <div className="relative">
+                          <MdVpnKey className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary" />
+                          <input
+                            type="text"
+                            required
+                            placeholder="Introduce el código (123456)"
+                            className="w-full pl-12 pr-4 py-3 rounded-xl bg-base-200 border-none outline-none focus:ring-2 focus:ring-secondary text-sm font-bold"
+                            value={verificationCode}
+                            onChange={(e) => setVerificationCode(e.target.value)}
+                          />
+                        </div>
+                        {error && <p className="text-error text-[10px] px-2">{error}</p>}
+                        <button
+                          type="submit"
+                          disabled={verificandoCodigo}
+                          className={`btn bg-secondary hover:bg-secondary/80 border-none w-full text-white rounded-xl ${verificandoCodigo ? 'loading' : ''}`}
+                        >
+                          {verificandoCodigo ? "Verificando..." : "Verificar código"}
+                        </button>                          <button
+                          type="button"
+                          onClick={() => setShowVerification(false)}
+                          className="btn btn-link btn-xs w-full opacity-50 text-neutral"
+                        >
+                          Cambiar correo
+                        </button>
+                      </form>
                     )}
                   </>
                 ) : (
-                  <div className="flex justify-between text-sm">
-                    <span className="opacity-60">Precio base ({roleLabel(role)})</span>
-                    <span>${basePrice.toFixed(2)} MXN</span>
+                  <div className="flex items-center gap-4 py-2">
+                    <MdCheckCircle className="text-5xl text-secondary" />
+                    <div>
+                      <h4 className="font-bold text-alt uppercase tracking-tight">Descuento Aplicado</h4>
+                      <p className="text-xs opacity-70 text-neutral">Validado vía: {studentEmail}</p>
+                    </div>
                   </div>
                 )}
+              </div>
+            )}
 
+<<<<<<< HEAD
                 {role === "asistente" && isVerified && (
                   <div className="flex justify-between text-sm text-alt font-bold">
                     <span>Descuento estudiante (50%)</span>
@@ -565,23 +703,88 @@ export default function PagosView() {
                 <div className="flex justify-between items-end pt-4">
                   <span className="text-lg font-bold">Total Final</span>
                   <span className="text-3xl font-black text-primary">${finalPrice.toFixed(2)} MXN</span>
+=======
+            <div className="mt-8 pt-6 border-t border-base-200 space-y-2 text-neutral">
+              {((!isPonente && alreadyPaid) || (isPonente && pendingSlots === 0 && paidSlots > 0)) && (
+                <div className="mb-4 opacity-80">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Sin pagos pendientes</span>
+>>>>>>> 65a05e0e3f642c8d3fc3ac18f4d091d252d52481
                 </div>
+              )}
+              {isPonente ? (
+                <>
+                  {paidSlots === 0 && pendingSlots > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="opacity-60">Inscripción Base (1-2 ponencias)</span>
+                      <span>${basePrice.toFixed(2)} MXN</span>
+                    </div>
+                  )}
+                  {userPayment && userPayment.can_buy_more > 0 && (
+                    <div className="flex justify-between items-center text-sm">
+                      <div className="flex items-center gap-3">
+                        <span className="opacity-60">Ponencias adicionales</span>
+                        <select
+                          className="select select-bordered select-xs w-16 h-8 rounded-lg bg-white font-bold text-primary border-primary/30 focus:border-primary focus:outline-none p-1"
+                          value={slotsToPay}
+                          onChange={(e) => setSlotsToPay(Number(e.target.value))}
+                        >
+                          {[1, 2, 3].map((num) => {
+                            const isAvailable = num <= userPayment.can_buy_more;
+                            return (
+                              <option key={num} value={num} disabled={!isAvailable} className="text-neutral">
+                                {num}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
+                      <span className="font-medium text-neutral">${(slotsToPay * basePrice).toFixed(2)} MXN</span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex justify-between text-sm">
+                  <span className="opacity-60">Precio base ({roleLabel(role)})</span>
+                  <span>${basePrice.toFixed(2)} MXN</span>
+                </div>
+              )}
+
+              {role === "asistente" && isVerified && (
+                <div className="flex justify-between text-sm text-alt font-bold">
+                  <span>Descuento Estudiante (50%)</span>
+                  <span>-${(basePrice * 0.5).toFixed(2)} MXN</span>
+                </div>
+              )}
+              <div className="flex justify-between items-end pt-4">
+                <span className="text-lg font-bold">Total Final</span>
+                <span className="text-3xl font-black text-primary">${finalPrice.toFixed(2)} MXN</span>
               </div>
             </div>
           </div>
+        </div>
 
+<<<<<<< HEAD
           <div className="md:col-span-1">
             <div className="bg-base-200 p-6 rounded-2xl sticky top-24 shadow-sm text-neutral">
               <h3 className="font-bold text-xl mb-6">Resumen de pago</h3>
               <div className="flex justify-between text-xs mb-4 opacity-70 italic">
                 <span>Categoría:</span>
                 <span className="text-right">{roleLabel(role)}</span>
+=======
+        <div className="md:col-span-1">
+          <div className="bg-base-200 p-6 rounded-2xl sticky top-24 shadow-sm text-neutral">
+            <h3 className="font-bold text-xl mb-6">Resumen de Pago</h3>
+
+            <div className="flex justify-between text-xs mb-4 opacity-70 italic">
+              <span>Categoría:</span>
+              <span className="text-right">{roleLabel(role)}</span>
+            </div>
+            {pagoError && (
+              <div className="bg-error/10 border border-error/20 text-error text-xs px-3 py-2 rounded-lg mb-4">
+                {pagoError}
+>>>>>>> 65a05e0e3f642c8d3fc3ac18f4d091d252d52481
               </div>
-              {pagoError && (
-                <div className="bg-error/10 border border-error/20 text-error text-xs px-3 py-2 rounded-lg mb-4">
-                  {pagoError}
-                </div>
-              )}
+            )}
             <PagosForm
               total={finalPrice}
               onSuccess={handleRegistrarPago}
@@ -598,7 +801,39 @@ export default function PagosView() {
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
           <div className="relative bg-base-100 p-8 rounded-2xl shadow-2xl max-w-md w-full text-neutral">
-            {!quiereFactura ? (
+            {!confirmandoSalida && (
+              <button
+                onClick={() => setConfirmandoSalida(true)}
+                className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                aria-label="Cerrar"
+              >
+                <MdClose className="text-xl" />
+              </button>
+            )}
+
+            {confirmandoSalida ? (
+              <div className="text-center space-y-4">
+                <h2 className="text-2xl font-bold text-error">¿Seguro que deseas salir?</h2>
+                <p className="text-sm opacity-70">Si sales ahora, ya no será posible facturar este pago más adelante.</p>
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => {
+                      setConfirmandoSalida(false);
+                      setPagoExitoso(false);
+                    }}
+                    className="btn bg-error hover:bg-error/80 border-none text-white flex-1"
+                  >
+                    Sí, salir
+                  </button>
+                  <button
+                    onClick={() => setConfirmandoSalida(false)}
+                    className="btn btn-ghost flex-1 text-neutral"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : !quiereFactura ? (
               <div className="text-center space-y-4">
                 <div className="w-16 h-16 bg-success/20 text-success rounded-full flex items-center justify-center text-3xl mx-auto">
                   ✓
@@ -613,7 +848,7 @@ export default function PagosView() {
                     Sí, facturar
                   </button>
                   <button
-                    onClick={() => setPagoExitoso(false)}
+                    onClick={() => setConfirmandoSalida(true)}
                     className="btn btn-ghost flex-1 text-neutral"
                   >
                     Omitir
@@ -631,11 +866,10 @@ export default function PagosView() {
                       type="text"
                       placeholder="XAXX010101000"
                       maxLength={13}
-                      className={`input input-sm input-bordered uppercase bg-base-100 ${
-                        datosFacturacion.rfc && !/^([A-ZÑ&]{3,4}) ?(?:- ?)?(\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])) ?(?:- ?)?([A-Z\d]{2}[A-Z\d])$/.test(datosFacturacion.rfc)
-                          ? "border-error"
-                          : ""
-                      }`}
+                      className={`input input-sm input-bordered uppercase bg-base-100 ${datosFacturacion.rfc && !/^([A-ZÑ&]{3,4}) ?(?:- ?)?(\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])) ?(?:- ?)?([A-Z\d]{2}[A-Z\d])$/.test(datosFacturacion.rfc)
+                        ? "border-error"
+                        : ""
+                        }`}
                       value={datosFacturacion.rfc}
                       onChange={(e) => setDatosFacturacion({ ...datosFacturacion, rfc: e.target.value.toUpperCase().trim() })}
                     />
@@ -650,9 +884,8 @@ export default function PagosView() {
                       type="text"
                       placeholder="00000"
                       maxLength={5}
-                      className={`input input-sm input-bordered bg-base-100 ${
-                        datosFacturacion.cp && !/^\d{5}$/.test(datosFacturacion.cp) ? "border-error" : ""
-                      }`}
+                      className={`input input-sm input-bordered bg-base-100 ${datosFacturacion.cp && !/^\d{5}$/.test(datosFacturacion.cp) ? "border-error" : ""
+                        }`}
                       value={datosFacturacion.cp}
                       onChange={(e) => setDatosFacturacion({ ...datosFacturacion, cp: e.target.value.replace(/\D/g, "") })}
                     />
@@ -693,6 +926,47 @@ export default function PagosView() {
                       {USOS.map((u) => <option key={u.code} value={u.code}>{u.code} - {u.label}</option>)}
                     </select>
                   </div>
+
+                  <div className="form-control col-span-full">
+                    <label className="color primary text-[12px] font-bold  opacity-90">CONSTANCIA DE SITUACIÓN FISCAL (PDF)</label>
+                    {constanciaFiscalFile ? (
+                      <div className="flex flex-col gap-2 mt-2">
+                        <div className="flex items-center justify-between bg-base-200 p-3 rounded-xl border border-base-300">
+                          <span className="text-sm font-semibold text-primary truncate max-w-[200px] sm:max-w-[300px]">
+                            {constanciaFiscalFile.name}
+                          </span>
+                          <div className="flex gap-2">
+                            {previewUrl && (
+                              <a
+                                href={previewUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn btn-xs btn-primary btn-outline"
+                                title="Ver archivo"
+                              >
+                                <MdVisibility className="text-base" />
+                              </a>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setConstanciaFiscalFile(null)}
+                              className="btn btn-xs btn-error btn-outline"
+                              title="Eliminar archivo"
+                            >
+                              <MdDeleteOutline className="text-base" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        className="file-input file-input-sm file-input-bordered w-full bg-base-100"
+                        onChange={(e) => setConstanciaFiscalFile(e.target.files[0])}
+                      />
+                    )}
+                  </div>
                 </div>
 
                 <div className="form-control col-span-full border-t border-base-200 mt-4 pt-4">
@@ -713,11 +987,10 @@ export default function PagosView() {
                       <input
                         type="email"
                         placeholder="ejemplo@correo.com"
-                        className={`input input-sm input-bordered w-full bg-base-100 ${
-                          correoFacturacion && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoFacturacion)
-                            ? "border-error"
-                            : ""
-                        }`}
+                        className={`input input-sm input-bordered w-full bg-base-100 ${correoFacturacion && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoFacturacion)
+                          ? "border-error"
+                          : ""
+                          }`}
                         value={correoFacturacion}
                         onChange={(e) => setCorreoFacturacion(e.target.value.trim())}
                       />
@@ -739,9 +1012,8 @@ export default function PagosView() {
                 <button
                   disabled={!isFormValid || enviandoFactura}
                   onClick={handleEnviarSolicitudFactura}
-                  className={`btn w-full mt-4 text-white ${
-                    isFormValid && !enviandoFactura ? "bg-alt hover:bg-alt/80 border-none" : "bg-gray-400 cursor-not-allowed"
-                  }`}
+                  className={`btn w-full mt-4 text-white ${isFormValid && !enviandoFactura ? "bg-alt hover:bg-alt/80 border-none" : "bg-gray-400 cursor-not-allowed"
+                    }`}
                 >
                   {enviandoFactura ? "Enviando..." : "Enviar solicitud de factura"}
                 </button>

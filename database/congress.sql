@@ -1,7 +1,7 @@
 -- DROP SCHEMA public CASCADE; CREATE SCHEMA public;
 
 -- 1. TIPOS DE DATOS PERSONALIZADOS (ENUMS)
-CREATE TYPE tipo_evento_enum AS ENUM ('ponencia','ponencia magistral', 'taller');
+CREATE TYPE tipo_evento_enum AS ENUM ('ponencia', 'taller');
 CREATE TYPE estatus_extenso_enum AS ENUM ('aceptado', 'aceptado con ligeras modificaciones', 'aceptado con modificaciones mayores', 'rechazado');
 CREATE TYPE estatus_resumen_enum AS ENUM ('aceptado', 'rechazado');
 CREATE TYPE tipo_participacion_enum AS ENUM ('presencial', 'virtual', 'hibrida');
@@ -42,6 +42,12 @@ CREATE TABLE tipo_trabajo (
     id_tipo_trabajo SERIAL PRIMARY KEY,
     id_congreso INTEGER,
     tipo_trabajo VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE tipo_trabajo_formato (
+    id_tipo_trabajo INTEGER PRIMARY KEY REFERENCES tipo_trabajo(id_tipo_trabajo) ON DELETE CASCADE,
+    ruta_formato VARCHAR(500) NOT NULL,
+    fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE multimedia (
@@ -249,9 +255,9 @@ CREATE TABLE extenso (
     fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     revisado BOOLEAN DEFAULT FALSE,
     version_numero INTEGER DEFAULT 1,
-    id_evaluador INTEGER REFERENCES evaluador(id_evaluador),
-    id_evaluador_2 INTEGER REFERENCES evaluador(id_evaluador),
-    id_evaluador_3 INTEGER REFERENCES evaluador(id_evaluador),
+    id_evaluador INTEGER REFERENCES evaluador(id_evaluador) ON DELETE SET NULL,
+    id_evaluador_2 INTEGER REFERENCES evaluador(id_evaluador) ON DELETE SET NULL,
+    id_evaluador_3 INTEGER REFERENCES evaluador(id_evaluador) ON DELETE SET NULL,
     ruta_relativa VARCHAR(500)
 );
 
@@ -259,10 +265,17 @@ CREATE TABLE ponencia (
     id_ponencia SERIAL PRIMARY KEY,
     id_evento INTEGER REFERENCES evento(id_evento),
     tipo_participacion tipo_participacion_enum,
-    id_subarea INTEGER NOT NULL REFERENCES subareas(id_subareas),
+    id_subarea INTEGER REFERENCES subareas(id_subareas),
     id_resumen INTEGER REFERENCES resumen(id_resumen),
     id_extenso INTEGER REFERENCES extenso(id_extenso),
     id_multimedia INTEGER REFERENCES multimedia(id_material)
+);
+
+CREATE TABLE ponencia_meta (
+    id_ponencia INTEGER PRIMARY KEY REFERENCES ponencia(id_ponencia) ON DELETE CASCADE,
+    id_congreso INTEGER NOT NULL REFERENCES congreso(id_congreso),
+    id_tipo_trabajo INTEGER REFERENCES tipo_trabajo(id_tipo_trabajo),
+    enlace_multimedia VARCHAR(500)
 );
 
 -- Te parece bien asi la tabla de taller?
@@ -330,6 +343,7 @@ CREATE TABLE factura (
     codigo_postal VARCHAR(10),
     regimen_fiscal VARCHAR(255),
     ruta_pdf_xml VARCHAR(255),
+    ruta_constancia_fiscal VARCHAR(255),
     estatus VARCHAR(20) DEFAULT 'pendiente', -- 'pendiente', 'enviada'
     fecha_solicitud TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_envio TIMESTAMP
@@ -382,7 +396,7 @@ CREATE TABLE libro_has_ponencia(
 CREATE TABLE ponencia_magistral(
     id_ponencia_magistral SERIAL PRIMARY KEY,
     titulo VARCHAR(255) NOT NULL,
-    tipo_participacion tipo_participacion_enum, 
+    tipo_participacion VARCHAR(50),
     id_subarea INTEGER NOT NULL REFERENCES subareas(id_subareas),
     fecha_inicio TIMESTAMP,
     fecha_fin TIMESTAMP,

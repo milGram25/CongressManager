@@ -283,7 +283,7 @@ function App() {
           <Route
             path="/asistente"
             element={
-              <ProtectedRoute allowedRole="asistente">
+              <ProtectedRoute allowedRole="Participante">
                 <AsistenteLayoutWrapper />
               </ProtectedRoute>
             }

@@ -87,6 +87,7 @@ class Factura(models.Model):
     codigo_postal = models.CharField(max_length=10, blank=True, null=True)
     regimen_fiscal = models.CharField(max_length=255, blank=True, null=True)
     ruta_pdf_xml = models.CharField(max_length=255, blank=True, null=True)
+    ruta_constancia_fiscal = models.CharField(max_length=255, blank=True, null=True)
     estatus = models.CharField(max_length=20, default='pendiente')
     fecha_solicitud = models.DateTimeField(auto_now_add=True)
     fecha_envio = models.DateTimeField(blank=True, null=True)

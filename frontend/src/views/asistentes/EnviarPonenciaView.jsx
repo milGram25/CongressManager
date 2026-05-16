@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { FaTrashCan } from "react-icons/fa6";
-import { MdLock, MdLibraryBooks } from "react-icons/md";
+import { MdLock, MdLibraryBooks, MdWarningAmber } from "react-icons/md";
 import { useNavigate } from 'react-router-dom';
 import { getMisInscripcionesApi } from '../../api/agendaApi';
+import { getPagosResumenApi } from '../../api/pagosApi';
 import { API_URL } from '../../api/constants';
 
 export default function EnviarPonenciaView() {
@@ -14,6 +15,7 @@ export default function EnviarPonenciaView() {
   const [selectedCongreso, setSelectedCongreso] = useState(null);
   const [tiposTrabajo, setTiposTrabajo] = useState([]);
   const [loadingTipos, setLoadingTipos] = useState(false);
+  const [userPayment, setUserPayment] = useState(null);
 
   const [tipoParticipacion, setTipoParticipacion] = useState('');
   const [ejeTematico, setEjeTematico] = useState('');
@@ -29,15 +31,41 @@ export default function EnviarPonenciaView() {
 
   useEffect(() => {
     getMisInscripcionesApi(accessToken)
-      .then(data => setCongresosInscritos(data.congresos ?? []))
+      .then(data => {
+        const list = data.congresos ?? [];
+        setCongresosInscritos(list);
+
+        // Lógica de default: el más cercano a futuro o actual
+        if (list.length > 0) {
+            const now = new Date();
+            const future = list.filter(c => new Date(c.fecha_fin) >= now);
+            future.sort((a, b) => new Date(a.fecha_inicio) - new Date(b.fecha_inicio));
+            
+            if (future.length > 0) {
+                setSelectedCongreso(future[0].id_congreso);
+            } else {
+                setSelectedCongreso(list[0].id_congreso);
+            }
+        }
+      })
       .catch(() => setCongresosInscritos([]))
       .finally(() => setLoadingCongresos(false));
   }, [accessToken]);
 
   useEffect(() => {
-    if (!selectedCongreso) { setTiposTrabajo([]); return; }
+    if (!selectedCongreso) {
+      setTiposTrabajo([]);
+      setUserPayment(null);
+      return;
+    }
     setLoadingTipos(true);
     setTipoTrabajo('');
+
+    // Cargar resumen de pagos para el congreso seleccionado
+    getPagosResumenApi(accessToken, selectedCongreso)
+      .then(data => setUserPayment(data.user_payment))
+      .catch(err => console.error("Error al cargar pagos:", err));
+
     fetch(`${API_URL}/api/congresos/tipos-trabajo/?id_congreso=${selectedCongreso}`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
@@ -46,6 +74,9 @@ export default function EnviarPonenciaView() {
       .catch(() => setTiposTrabajo([]))
       .finally(() => setLoadingTipos(false));
   }, [selectedCongreso, accessToken]);
+
+  const hasHitLimit = userPayment && userPayment.total_ponencias_count >= (userPayment.paid_slots * 2); // Cada pago base cubre 2 ponencias
+
 
   useEffect(() => {
     if (mensaje.texto) {
@@ -195,6 +226,18 @@ export default function EnviarPonenciaView() {
 
       {selectedCongreso && (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full">
+          {hasHitLimit && (
+            <div className="alert alert-warning shadow-sm border-none bg-warning/20 text-warning-content rounded-2xl mb-4">
+              <MdWarningAmber className="text-2xl shrink-0" />
+              <div className="text-xs">
+                <p className="font-black uppercase tracking-tight mb-0.5">Aviso de Límite de Pago</p>
+                <p>
+                  Has alcanzado el límite de ponencias cubiertas por tu pago actual.
+                  <b> Puedes enviar esta ponencia</b>, pero no podrá ser aceptada hasta que realices el pago adicional.
+                </p>
+              </div>
+            </div>
+          )}
           <label className="font-bold">Autor *</label>
           <input
             type="text"

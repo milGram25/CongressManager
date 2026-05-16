@@ -84,7 +84,7 @@ class ParticipantSerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password = serializers.CharField(write_only=True, required=True)
     confirmPassword = serializers.CharField(write_only=True, required=True)
     nombres = serializers.CharField(source='nombre', required=True)
     apellidos = serializers.CharField(source='primer_apellido', required=True)
@@ -106,6 +106,16 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs.get('password') != attrs.get('confirmPassword'):
             raise serializers.ValidationError({"password": "Las contraseñas no coinciden."})
+        
+        # Validación personalizada de constraseña para mensajes en español
+        password = attrs.get('password')
+        try:
+            validate_password(password)
+        except Exception:
+            raise serializers.ValidationError({
+                "password": "La contraseña es muy común, solo numérica o no cumple con los requisitos de seguridad."
+            })
+        
         correo = attrs.get('correo_electronico')
         if Persona.objects.filter(correo_electronico=correo).exists():
             raise serializers.ValidationError({"email": "Un usuario con este correo electrónico ya existe."})

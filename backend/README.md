@@ -104,6 +104,58 @@ EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
 
 ---
 
+# Configuración de Envío de Correos Electrónicos 📧
+
+### Configuración para Gmail SMTP:
+**Usa contraseñas de aplicación no tu contraseña personal**
+Para enviar correos desde la aplicación, necesitas configurar las credenciales de Gmail y establecer estas variables en el archivo `.env`:
+- **Contraseña de aplicación:** Debes activar verificacion de dos pasos y crear una [contraseña](https://support.google.com/accounts/answer/185833?hl=es-419) de aplicación para tu correo 
+
+```bash
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=tu_correo@gmail.com
+# No importan los espacios, generalmente te genera una contraseña tipo xxxx xxxx xxxx xxxx
+EMAIL_HOST_PASSWORD=tu_contraseña
+```
+
+### Pruebas Locales:
+**Si no quieres configurar el corre cambia la variable de entorno `EMAIL_BACKEND` por esto**
+Para pruebas locales, puedes usar el backend de consola, que solo imprime los correos en la terminal:
+
+```bash
+EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+```
+
+### Uso de Endpoints:
+Puedes testear esto desde la aplicación web si no sabes como utilizar un API tester.
+1. **Enviar Código de Verificación:**
+   Este endpoint envía un código de verificación al correo del usuario `Asistente`. Endpoint:
+   ```
+   POST /api/users/enviar-codigo/
+   {
+     "email": "usuario@ejemplo.com"
+   }
+   ```
+2. **Verificar Código:**
+   Este endpoint valida el código enviado por el usuario:
+   ```
+   POST /api/users/verificar-codigo/
+   {
+     "email": "usuario@ejemplo.com",
+     "codigo": "123456"
+   }
+   ```
+
+### Troubleshoot
+- **Contraseña de aplicación:** Debes activar verificacion de dos pasos y crear una [contraseña](https://support.google.com/accounts/answer/185833?hl=es-419) de aplicación para tu correo 
+- **Error de autenticación:** Verifica que las credenciales en `.env` sean correctas.
+- **Correo no recibido:** Revisa la carpeta de spam o verifica que el correo esté configurado correctamente.
+
+---
+
 ## 🐍 Archivos Clave en cada App
 
 Todos los folders de apps (users, congresos, ponencias) tienen estos archivos:
@@ -138,6 +190,4 @@ python manage.py migrate
 ```
 
 Esto actualiza la base de datos de todos para que esté sincronizada con el código.
-
-
 
