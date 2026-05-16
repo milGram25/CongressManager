@@ -64,7 +64,7 @@ export default function SignatureUpload({ onSignaturesChange, idCongreso }) {
     try {
       const data = await updateCongresoSignaturesApi(accessToken, idCongreso, { lock: nextLockedState });
       setIsLocked(data.firmas_bloqueadas);
-      
+
       if (data.firmas_bloqueadas) {
         onSignaturesChange(signatures);
       }
@@ -80,11 +80,11 @@ export default function SignatureUpload({ onSignaturesChange, idCongreso }) {
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-3">
           <div className={`w-1.5 h-6 rounded-full transition-colors ${isLocked ? 'bg-green-500' : 'bg-yellow-400'}`}></div>
-          <h3 className="font-bold text-gray-700 uppercase text-xs tracking-widest">Validación Institucional</h3>
+          <h3 className="font-bold text-gray-700 text-sm tracking-base">Validación institucional</h3>
         </div>
         {isLocked && (
           <div className="flex items-center gap-1 text-green-600 font-bold text-[10px] bg-green-50 px-2 py-1 rounded-full animate-in fade-in zoom-in">
-            <HiCheckCircle /> VALIDADO
+            <HiCheckCircle /> Validado
           </div>
         )}
       </div>
@@ -92,7 +92,7 @@ export default function SignatureUpload({ onSignaturesChange, idCongreso }) {
       <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 transition-opacity duration-300 ${isLocked ? 'opacity-60' : 'opacity-100'}`}>
         {/* Firma Organizador */}
         <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-black text-gray-400 uppercase ml-1 tracking-tighter text-center">Firma Organizador</label>
+          <label className="text-[13px] font-black text-gray-400  ml-1 tracking-tighter text-center">Firma organizador</label>
           <div className={`relative group aspect-video bg-gray-50 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center overflow-hidden transition-all ${isLocked ? 'border-transparent' : 'border-gray-200 hover:border-[#005a6a]/30'}`}>
             {signatures.organizador ? (
               <>
@@ -106,7 +106,7 @@ export default function SignatureUpload({ onSignaturesChange, idCongreso }) {
             ) : (
               <label className={`flex flex-col items-center gap-1 ${isLocked ? 'cursor-default' : 'cursor-pointer'}`}>
                 <HiCloudUpload className="text-2xl text-gray-300" />
-                <span className="text-[9px] font-bold text-gray-400 uppercase">Cargar</span>
+                <span className="text-[11px] font-bold text-gray-400">Cargar</span>
                 {!isLocked && <input type="file" className="hidden" accept="image/*" onChange={(e) => handleUpload(e, 'organizador')} />}
               </label>
             )}
@@ -115,7 +115,7 @@ export default function SignatureUpload({ onSignaturesChange, idCongreso }) {
 
         {/* Firma Secretaría */}
         <div className="flex flex-col gap-2">
-          <label className="text-[10px] font-black text-gray-400 uppercase ml-1 tracking-tighter text-center">Firma Secretaría</label>
+          <label className="text-[13px] font-black text-gray-400  ml-1 tracking-tighter text-center">Firma secretaría</label>
           <div className={`relative group aspect-video bg-gray-50 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center overflow-hidden transition-all ${isLocked ? 'border-transparent' : 'border-gray-200 hover:border-[#005a6a]/30'}`}>
             {signatures.secretaria ? (
               <>
@@ -129,33 +129,33 @@ export default function SignatureUpload({ onSignaturesChange, idCongreso }) {
             ) : (
               <label className={`flex flex-col items-center gap-1 ${isLocked ? 'cursor-default' : 'cursor-pointer'}`}>
                 <HiCloudUpload className="text-2xl text-gray-300" />
-                <span className="text-[9px] font-bold text-gray-400 uppercase">Cargar</span>
+                <span className="text-[11px] font-bold text-gray-400">Cargar</span>
                 {!isLocked && <input type="file" className="hidden" accept="image/*" onChange={(e) => handleUpload(e, 'secretaria')} />}
               </label>
             )}
           </div>
         </div>
       </div>
-      
+
       <div className="mt-6 flex flex-col gap-3">
         {!isLocked ? (
-          <button 
+          <button
             onClick={toggleLock}
             disabled={!areBothSigned}
-            className={`w-full py-3 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-md active:scale-95
+            className={`w-full py-3 rounded-xl font-black text-sm  tracking-base flex items-center justify-center gap-2 transition-all shadow-md active:scale-95
               ${areBothSigned ? 'bg-green-500 text-white hover:bg-green-600 shadow-green-100' : 'bg-gray-100 text-gray-300 cursor-not-allowed'}`}
           >
-            <HiLockClosed className="text-lg" /> Confirmar y Bloquear Firmas
+            <HiLockClosed className="text-lg" /> Confirmar y bloquear firmas
           </button>
         ) : (
-          <button 
+          <button
             onClick={toggleLock}
             className="w-full py-3 bg-white border-2 border-gray-100 text-gray-400 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gray-50 hover:text-gray-600 transition-all shadow-sm active:scale-95"
           >
-            <HiLockOpen className="text-lg" /> Modificar Firmas
+            <HiLockOpen className="text-lg" /> Modificar firmas
           </button>
         )}
-        <p className="text-[9px] text-gray-400 italic text-center uppercase font-bold tracking-tighter">
+        <p className="text-[11px] text-gray-400 italic text-center font-bold tracking-tighter">
           {!isLocked ? "Sube ambas firmas para habilitar la validación masiva" : "Firmas bloqueadas para garantizar consistencia en el envío"}
         </p>
       </div>
