@@ -427,29 +427,18 @@ export default function PagosView() {
               </div>
             </div>
 
-<<<<<<< HEAD
-              {isPonente && (
-                <div className="mb-6 p-4 rounded-xl border-l-4 border-alt/50 bg-alt/5 text-sm py-3 px-4 shadow-sm">
-                  <div className="flex items-center gap-2 mb-1 text-alt">
-                    <MdInfoOutline className="text-base" />
-                    <span className="font-bold uppercase text-[10px] tracking-widest">Regla de ponencias</span>
-                  </div>
-                  <p className="text-neutral/80 text-xs leading-relaxed">
-                    El pago base cubre <b>2 ponencias</b>. De la 3ª a la 5ª, se aplica un cargo adicional por cada una.
-=======
             {isPonente && userPayment && (
               <div className="mb-6 p-4 rounded-xl border-l-4 border-alt/50 bg-alt/5 text-sm py-3 px-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-1 text-alt">
                   <MdInfoOutline className="text-base" />
-                  <span className="font-bold uppercase text-[12px] tracking-widest">Regla de Ponencias</span>
+                  <span className="font-bold uppercase text-[10px] tracking-widest">Regla de ponencias</span>
                 </div>
-                <p className="text-neutral/80 text-s leading-relaxed">
+                <p className="text-neutral/80 text-xs leading-relaxed">
                   El pago base cubre <b>{userPayment.included_ponencias} ponencias</b>. Cada ponencia adicional tiene un cargo extra.
                 </p>
                 <div className="mt-2 space-y-1">
                   <p className="text-[12px] font-medium text-alt/70 italic">
                     * Tienes <b>{userPayment.total_ponencias_count || 0}</b> ponencias enviadas en total.
->>>>>>> 65a05e0e3f642c8d3fc3ac18f4d091d252d52481
                   </p>
                   <p className="text-[12px] font-medium text-alt/70 italic">
                     * Tienes <b>{userPayment.accepted_ponencias_count || 0}</b> ponencias aceptadas.
@@ -463,131 +452,11 @@ export default function PagosView() {
               </div>
             )}
 
-<<<<<<< HEAD
-              {role === "asistente" && isStudent !== false && (
-                <div
-                  className={`p-6 rounded-2xl border-2 transition-all ${isVerified ? "border-secondary bg-alt/5" : "border-dashed border-base-300"}`}
-                >
-                  {!isVerified ? (
-                    <>
-                      {isStudent === null && (
-                        <div className="text-center space-y-4">
-                          <MdSchool className="text-4xl mx-auto text-secondary opacity-80" />
-                          <h4 className="font-bold text-neutral">¿Eres estudiante activo?</h4>
-                          <p className="text-sm opacity-70 text-neutral">
-                            Obtén un 50% de descuento adicional validando tu correo institucional.
-                          </p>
-                          <div className="flex justify-center gap-4">
-                            <button
-                              onClick={() => setIsStudent(true)}
-                              className="btn bg-seconday hover:bg-secondary/80 border-none text-secondary hover:text-white btn-sm rounded-full px-8"
-                            >
-                              Sí, soy estudiante
-                            </button>
-                            <button
-                              onClick={() => setIsStudent(false)}
-                              className="btn btn-ghost btn-sm rounded-full opacity-60 text-neutral"
-                            >
-                              No, tarifa general
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {isStudent === true && !showVerification && (
-                        <form onSubmit={handleEmailSubmit} className="space-y-4 text-neutral">
-                          <div className="flex items-center gap-2 mb-2">
-                            <button
-                              type="button"
-                              onClick={() => setIsStudent(null)}
-                              className="btn btn-ghost btn-xs"
-                            >
-                              ← Volver
-                            </button>
-                            <span className="text-sm font-bold">Validación institucional</span>
-                          </div>
-                          <div className="relative">
-                            <MdEmail className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary" />
-                            <input
-                              type="email"
-                              required
-                              placeholder="Tu correo institucional (.edu, alumnos.udg.mx)"
-                              className="w-full pl-12 pr-4 py-3 rounded-xl bg-base-200 border-none outline-none focus:ring-2 focus:ring-secondary text-sm"
-                              value={studentEmail}
-                              onChange={(e) => setStudentEmail(e.target.value)}
-                            />
-                          </div>
-                          {error && <p className="text-error text-[10px] px-2">{error}</p>}
-                          <button
-                            type="submit"
-                            disabled={enviandoCodigo}
-                            className={`btn bg-secondary hover:bg-secondary/80 border-none w-full text-white rounded-xl ${enviandoCodigo ? 'loading' : ''}`}
-                          >
-                            {enviandoCodigo ? "Enviando..." : "Enviar código de verificación"}
-                          </button>
-                          </form>
-                          )}
-
-                          {showVerification && (
-                          <form onSubmit={handleVerifyCode} className="space-y-4 text-neutral">
-                          <div className="text-center">
-                            <p className="text-sm font-bold mb-1">Verifica tu correo</p>
-                            <p className="text-[10px] opacity-60">Enviamos un código a {studentEmail}</p>
-                          </div>
-                          <div className="relative">
-                            <MdVpnKey className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary" />
-                            <input
-                              type="text"
-                              required
-                              placeholder="Introduce el código (123456)"
-                              className="w-full pl-12 pr-4 py-3 rounded-xl bg-base-200 border-none outline-none focus:ring-2 focus:ring-secondary text-sm font-bold"
-                              value={verificationCode}
-                              onChange={(e) => setVerificationCode(e.target.value)}
-                            />
-                          </div>
-                          {error && <p className="text-error text-[10px] px-2">{error}</p>}
-                          <button
-                            type="submit"
-                            disabled={verificandoCodigo}
-                            className={`btn bg-secondary hover:bg-secondary/80 border-none w-full text-white rounded-xl ${verificandoCodigo ? 'loading' : ''}`}
-                          >
-                            {verificandoCodigo ? "Verificando..." : "Verificar código"}
-                          </button>                          <button
-                            type="button"
-                            onClick={() => setShowVerification(false)}
-                            className="btn btn-link btn-xs w-full opacity-50 text-neutral"
-                          >
-                            Cambiar correo
-                          </button>
-                        </form>
-                      )}
-                    </>
-                  ) : (
-                    <div className="flex items-center gap-4 py-2">
-                      <MdCheckCircle className="text-5xl text-secondary" />
-                      <div>
-                        <h4 className="font-bold text-alt uppercase tracking-tight">Descuento aplicado</h4>
-                        <p className="text-xs opacity-70 text-neutral">Validado vía: {studentEmail}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="mt-8 pt-6 border-t border-base-200 space-y-2 text-neutral">
-                {((!isPonente && alreadyPaid) || (isPonente && pendingSlots === 0 && paidSlots > 0)) && (
-                  <div className="mb-4 opacity-80">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Sin pagos pendientes</span>
-                  </div>
-                )}
-                {isPonente ? (
-=======
             {role === "asistente" && isStudent !== false && (
               <div
                 className={`p-6 rounded-2xl border-2 transition-all ${isVerified ? "border-secondary bg-alt/5" : "border-dashed border-base-300"}`}
               >
                 {!isVerified ? (
->>>>>>> 65a05e0e3f642c8d3fc3ac18f4d091d252d52481
                   <>
                     {isStudent === null && (
                       <div className="text-center space-y-4">
@@ -623,14 +492,14 @@ export default function PagosView() {
                           >
                             ← Volver
                           </button>
-                          <span className="text-sm font-bold">Validación Institucional</span>
+                          <span className="text-sm font-bold">Validación institucional</span>
                         </div>
                         <div className="relative">
                           <MdEmail className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary" />
                           <input
                             type="email"
                             required
-                            placeholder="Tu correo institucional"
+                            placeholder="Tu correo institucional (.edu, alumnos.udg.mx)"
                             className="w-full pl-12 pr-4 py-3 rounded-xl bg-base-200 border-none outline-none focus:ring-2 focus:ring-secondary text-sm"
                             value={studentEmail}
                             onChange={(e) => setStudentEmail(e.target.value)}
@@ -671,7 +540,8 @@ export default function PagosView() {
                           className={`btn bg-secondary hover:bg-secondary/80 border-none w-full text-white rounded-xl ${verificandoCodigo ? 'loading' : ''}`}
                         >
                           {verificandoCodigo ? "Verificando..." : "Verificar código"}
-                        </button>                          <button
+                        </button>
+                        <button
                           type="button"
                           onClick={() => setShowVerification(false)}
                           className="btn btn-link btn-xs w-full opacity-50 text-neutral"
@@ -685,7 +555,7 @@ export default function PagosView() {
                   <div className="flex items-center gap-4 py-2">
                     <MdCheckCircle className="text-5xl text-secondary" />
                     <div>
-                      <h4 className="font-bold text-alt uppercase tracking-tight">Descuento Aplicado</h4>
+                      <h4 className="font-bold text-alt uppercase tracking-tight">Descuento aplicado</h4>
                       <p className="text-xs opacity-70 text-neutral">Validado vía: {studentEmail}</p>
                     </div>
                   </div>
@@ -693,22 +563,10 @@ export default function PagosView() {
               </div>
             )}
 
-<<<<<<< HEAD
-                {role === "asistente" && isVerified && (
-                  <div className="flex justify-between text-sm text-alt font-bold">
-                    <span>Descuento estudiante (50%)</span>
-                    <span>-${(basePrice * 0.5).toFixed(2)} MXN</span>
-                  </div>
-                )}
-                <div className="flex justify-between items-end pt-4">
-                  <span className="text-lg font-bold">Total Final</span>
-                  <span className="text-3xl font-black text-primary">${finalPrice.toFixed(2)} MXN</span>
-=======
             <div className="mt-8 pt-6 border-t border-base-200 space-y-2 text-neutral">
               {((!isPonente && alreadyPaid) || (isPonente && pendingSlots === 0 && paidSlots > 0)) && (
                 <div className="mb-4 opacity-80">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Sin pagos pendientes</span>
->>>>>>> 65a05e0e3f642c8d3fc3ac18f4d091d252d52481
                 </div>
               )}
               {isPonente ? (
@@ -763,18 +621,9 @@ export default function PagosView() {
           </div>
         </div>
 
-<<<<<<< HEAD
-          <div className="md:col-span-1">
-            <div className="bg-base-200 p-6 rounded-2xl sticky top-24 shadow-sm text-neutral">
-              <h3 className="font-bold text-xl mb-6">Resumen de pago</h3>
-              <div className="flex justify-between text-xs mb-4 opacity-70 italic">
-                <span>Categoría:</span>
-                <span className="text-right">{roleLabel(role)}</span>
-=======
         <div className="md:col-span-1">
           <div className="bg-base-200 p-6 rounded-2xl sticky top-24 shadow-sm text-neutral">
-            <h3 className="font-bold text-xl mb-6">Resumen de Pago</h3>
-
+            <h3 className="font-bold text-xl mb-6">Resumen de pago</h3>
             <div className="flex justify-between text-xs mb-4 opacity-70 italic">
               <span>Categoría:</span>
               <span className="text-right">{roleLabel(role)}</span>
@@ -782,7 +631,6 @@ export default function PagosView() {
             {pagoError && (
               <div className="bg-error/10 border border-error/20 text-error text-xs px-3 py-2 rounded-lg mb-4">
                 {pagoError}
->>>>>>> 65a05e0e3f642c8d3fc3ac18f4d091d252d52481
               </div>
             )}
             <PagosForm
@@ -1053,7 +901,7 @@ export default function PagosView() {
                 }}
                 className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300"
               >
-                Ir a Mis Facturas
+                Ir a mis facturas
               </button>
 
               <button
