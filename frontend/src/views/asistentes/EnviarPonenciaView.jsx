@@ -16,6 +16,8 @@ export default function EnviarPonenciaView() {
   const [selectedCongreso, setSelectedCongreso] = useState(null);
   const [tiposTrabajo, setTiposTrabajo] = useState([]);
   const [loadingTipos, setLoadingTipos] = useState(false);
+  const [subareas, setSubareas] = useState([]);
+  const [loadingSubareas, setLoadingSubareas] = useState(false);
 
   const [tipoParticipacion, setTipoParticipacion] = useState('');
   const [ejeTematico, setEjeTematico] = useState('');
@@ -48,6 +50,17 @@ export default function EnviarPonenciaView() {
       .catch(() => setTiposTrabajo([]))
       .finally(() => setLoadingTipos(false));
   }, [selectedCongreso, accessToken]);
+
+  useEffect(() => {
+    setLoadingSubareas(true);
+    fetch(`${API_URL}/api/congresos/subareas/`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+      .then(r => r.json())
+      .then(data => setSubareas(Array.isArray(data) ? data : (data.results ?? [])))
+      .catch(() => setSubareas([]))
+      .finally(() => setLoadingSubareas(false));
+  }, [accessToken]);
 
   useEffect(() => {
     if (mensaje.texto) {
@@ -266,46 +279,13 @@ export default function EnviarPonenciaView() {
 
           <label className="font-bold">Eje Temático *</label>
           <select value={ejeTematico} onChange={(e) => setEjeTematico(e.target.value)}
-            className="input input-bordered w-full" required>
-            <option value="">Selecciona una opción</option>
-            <option value="alfabetizacion digital">Alfabetización Digital</option>
-            <option value="brecha digital">Brecha Digital</option>
-            <option value="capacitacion en el proceso de enseñanza">Capacitación en el proceso de enseñanza-aprendizaje de profesores en servicio</option>
-            <option value="capacitacion y apoyo a docentes">Capacitación y apoyo a los docentes</option>
-            <option value="Competencias genericas">Competencias genéricas</option>
-            <option value="competencias genericas y habilidades">Competencias genéricas y habilidades para su desarrollo</option>
-            <option value="cara a cara al aprendizaje remoto">De cara a cara al aprendizaje remoto</option>
-            <option value="competencias digitales en profesores">Desarrollo de competencias digitales en profesores</option>
-            <option value="digitalizacion de la educacion">Digitalización de la educación</option>
-            <option value="diseño instruccional">Diseño instruccional y prioridades del plan de estudios</option>
-            <option value="educacion continua y desarrollo profesional">Educación continua y desarrollo profesional</option>
-            <option value="educacion de posgrado">Educación de posgrado</option>
-            <option value="educacion de pregrado">Educación de pregrado</option>
-            <option value="fomento de cultura de paz">Educación para el fomento para una Cultura de Paz y la prevención de violencia</option>
-            <option value="educacion para la paz">Educación para la paz y Objetivos del Desarrollo Sostenible</option>
-            <option value="educacion para la sostenibilidad">Educación para la sostenibilidad</option>
-            <option value="estrategias de diseño curricular">Estrategias de diseño curricular, principios y desafíos</option>
-            <option value="estudios multidisciplinarios">Estudios Multidisciplinarios</option>
-            <option value="evaluacion del aprendizaje">Evaluación del Aprendizaje</option>
-            <option value="evalucaion de entorno e-learning">Evaluación en entornos de e-learning</option>
-            <option value="evaluacion y aseguramiento de la calidad">Evaluación y aseguramiento de la calidad en la educación</option>
-            <option value="experiencias educativas steam">Experiencias educativas STEAM</option>
-            <option value="flexibilidad cuurricular">Flexibilidad Curricular</option>
-            <option value="fomento carreras steam">Fomento de carreras STEAM en estudios pre-universitarios</option>
-            <option value="gestion institucional y gobernanza">Gestión institucional y gobernanza de la educación</option>
-            <option value="inclusion y equidad">Inclusión y equidad en la educación</option>
-            <option value="ia en la educacion">Inteligencia Artificial en educación</option>
-            <option value="modalidades">Modalidades</option>
-            <option value="necesidad del mercado laboral">Necesidades del mercado laboral</option>
-            <option value="nuevos desafios para la educacion superior">Nuevos desafíos para el área de educación superior</option>
-            <option value="politica institucional de cultura de paz">Políticas institucionales universitarias de Cultura de Paz</option>
-            <option value="practicas de innovacion pedagogico-didactica">Prácticas de innovación pedagógico-didáctica</option>
-            <option value="practicas educativas, tendencias y problemas">Prácticas educativas, tendencias y problemas</option>
-            <option value="problemas y tendencias en educacion tecnologica">Problemas y tendencias en educación tecnológica</option>
-            <option value="problemas y tendencias de empleabilidad">Problemas y tendencias de empleabilidad</option>
-            <option value="realidad aumentada o virtual">Realidad aumentada o virtual</option>
-            <option value="redes universitarias">Redes universitarias</option>
-            <option value="retos del desarrollo de habilidades del siglo XXI">Retos del desarrollo de habilidades del siglo XXI</option>
+            className="input input-bordered w-full" required disabled={loadingSubareas}>
+            <option value="">
+              {loadingSubareas ? 'Cargando...' : subareas.length === 0 ? 'Sin ejes temáticos configurados' : 'Selecciona una opción'}
+            </option>
+            {subareas.map(sub => (
+              <option key={sub.id_subareas} value={sub.nombre}>{sub.nombre}</option>
+            ))}
           </select>
 
           <label className="font-bold">Tipo de trabajo *</label>
