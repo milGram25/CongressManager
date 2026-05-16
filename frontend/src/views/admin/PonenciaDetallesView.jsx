@@ -22,7 +22,7 @@ export default function PonenciaDetallesView() {
               <MdArrowBack size={20} />
           </button>
           <div>
-              <h2 className="text-3xl font-bold uppercase tracking-tight">
+              <h2 className="text-3xl font-bold">
                 {esMagistral ? "Detalles de la Ponencia Magistral" : "Detalles de la Ponencia"}
               </h2>
               <p className="text-sm text-base-content/50">Consulta o modifica la información de la ponencia</p>

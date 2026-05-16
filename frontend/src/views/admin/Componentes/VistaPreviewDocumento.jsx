@@ -37,7 +37,7 @@ export default function VistaPreviewDocumento({ item, etiquetaFecha, onClose }) 
                     <div className="px-6 pt-6 pb-5 border-b border-white/10">
                         <div className="flex items-start justify-between gap-2">
                             <div>
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1">
+                                <p className="text-[10px] font-bold text-white/50 mb-1">
                                     {item.accion}
                                 </p>
                                 <h2 className="text-base font-bold leading-snug text-white">
@@ -135,7 +135,7 @@ function MetaItem({ icon, label, value, mono = false }) {
                 {icon}
             </div>
             <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-0.5">{label}</p>
+                <p className="text-[10px] font-bold text-white/40 mb-0.5">{label}</p>
                 <p className={`text-sm font-semibold text-white leading-snug break-words ${mono ? "font-mono" : ""}`}>
                     {value}
                 </p>

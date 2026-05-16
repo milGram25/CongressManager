@@ -269,7 +269,7 @@ const RubricasYPreguntas = ({ idCongreso }) => {
             </h3>
             {!currentDictamen && (
               <button onClick={crearDictamen} className="btn btn-sm btn-primary gap-2 rounded-xl">
-                <MdAdd size={18} /> Crear Dictamen
+                <MdAdd size={18} /> Crear dictamen
               </button>
             )}
           </div>
@@ -282,7 +282,7 @@ const RubricasYPreguntas = ({ idCongreso }) => {
                 onClick={() => crearPregunta(currentDictamen.id_dictamen)}
                 className="btn btn-sm btn-outline btn-primary gap-2 mb-4 w-fit rounded-xl"
               >
-                <MdAdd size={18} /> Nueva Pregunta
+                <MdAdd size={18} /> Nueva pregunta
               </button>
               <div className="space-y-3">
                 {currentDictamen.preguntas?.map((p, i) => (
@@ -333,7 +333,7 @@ const RubricasYPreguntas = ({ idCongreso }) => {
                 onClick={() => crearGrupo(currentRubrica.id_rubrica)}
                 className="btn btn-sm btn-outline btn-primary gap-2 mb-4 w-fit rounded-xl"
               >
-                <MdAdd size={18} /> Nuevo Grupo
+                <MdAdd size={18} /> Nuevo grupo
               </button>
               <div className="space-y-4">
                 {currentRubrica.grupos?.map(grupo => (
@@ -392,7 +392,7 @@ const RubricasYPreguntas = ({ idCongreso }) => {
                   </div>
                 ))}
                 {(!currentRubrica.grupos || currentRubrica.grupos.length === 0) && (
-                  <p className="text-center py-10 text-xs italic text-base-content/40 uppercase tracking-widest">
+                  <p className="text-center py-10 text-xs italic text-base-content/40">
                     Sin grupos definidos.
                   </p>
                 )}

@@ -57,7 +57,7 @@ const CrearMesasFisicas = ({ idSede, listaMesas, onUpdate }) => {
     <div className="w-full min-h-[400px] animate-in slide-in-from-bottom duration-700">
       {/* Header */}
       <div className="flex items-center justify-between bg-black text-white p-6 rounded-t-[32px] shadow-lg">
-        <h2 className="text-xl font-bold  tracking-tight">Mesas físicas</h2>
+        <h2 className="text-xl font-bold">Mesas físicas</h2>
         <div className="flex gap-2">
           <button onClick={descargarMesas} className="w-10 h-10 rounded-2xl bg-white/10 text-white border border-white/20 flex items-center justify-center hover:bg-white hover:text-black transition-all cursor-pointer" title="Descargar CSV">
             <HiDownload size={20} />
@@ -71,7 +71,7 @@ const CrearMesasFisicas = ({ idSede, listaMesas, onUpdate }) => {
       {/* Sección */}
       <div className="bg-white border border-gray-100 rounded-b-[32px] p-8 shadow-sm h-full">
         <div className="mb-8">
-          <h3 className="text-lg font-black text-gray-900  tracking-tighter">Inventario de espacios</h3>
+          <h3 className="text-lg font-black text-gray-900">Inventario de espacios</h3>
           <p className="text-sm text-gray-500 font-medium">
             Gestiona las mesas de trabajo físicas donde se llevarán a cabo las ponencias y talleres.
           </p>
@@ -150,7 +150,7 @@ const CrearMesasFisicas = ({ idSede, listaMesas, onUpdate }) => {
                   </div>
                 </div>
 
-                <div className="pt-4 italic text-[13px] text-gray-400 text-center  tracking-widest font-black">
+                <div className="pt-4 italic text-[13px] text-gray-400 text-center font-black">
                   Las mesas se vinculan automáticamente a la sede actual
                 </div>
               </div>

@@ -23,12 +23,12 @@ const DetallesEditarInstitucion = ({ institucionData, onSave, onCancel }) => {
     }
 
     const inputClasses = `w-full bg-base-100 border border-base-300 rounded-xl px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all ${!modificando ? 'bg-base-200 cursor-not-allowed opacity-70' : 'hover:border-primary/50'}`;
-    const labelClasses = "text-[12px] font-bold text-base-content/40 mb-1 block ml-1 tracking-widest";
+    const labelClasses = "text-[12px] font-bold text-base-content/40 mb-1 block ml-1";
 
     return (
         <div className="w-full bg-base-100 rounded-3xl overflow-hidden font-sans">
             <div className='bg-primary text-primary-content flex items-center justify-between px-6 py-4 z-40 shadow-lg'>
-                <h2 className="text-lg md:text-xl font-bold truncate pr-4 tracking-wider">
+                <h2 className="text-lg md:text-xl font-bold truncate pr-4">
                     {institucionData ? 'Detalles de la institución' : 'Nueva institución'}
                 </h2>
                 <div className='flex items-center gap-2'>

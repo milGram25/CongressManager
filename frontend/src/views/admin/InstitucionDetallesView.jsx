@@ -99,7 +99,7 @@ export default function InstitucionDetallesView() {
                 >
                     <FiArrowLeft size={20} />
                 </button>
-                <h2 className="text-3xl font-bold tracking-tight">
+                <h2 className="text-3xl font-bold">
                     {isNew ? 'Nueva institución' : 'Editar institución'}
                 </h2>
             </div>

@@ -69,7 +69,7 @@ export default function PonenciasView() {
           >
             <MdArrowBack size={20} />
           </button>
-          <h2 className="text-3xl font-bold uppercase tracking-tight">Gestión de Ponencias</h2>
+          <h2 className="text-3xl font-bold">Gestión de ponencias</h2>
         </div>
         <p className="text-sm text-base-content/50 ml-12">
           {idCongreso 
@@ -80,7 +80,7 @@ export default function PonenciasView() {
 
       <div className="mb-10">
         <MenuCrearBorrar 
-            title={idCongreso ? "Ponencias Filtradas" : "Todas las Ponencias"} 
+            title={idCongreso ? "Ponencias filtradas" : "Todas las ponencias"} 
             listaElementos2={listaEventos} 
             definirTipoElemento="ponencia" 
         />

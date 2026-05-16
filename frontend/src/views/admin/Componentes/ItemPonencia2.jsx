@@ -17,9 +17,9 @@ const ItemPonencia = ({ listaDatos, onViewItem }) => {
                 <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center shrink-0 shadow-md">
                     <Icon size={18} />
                 </div>
-                <span className="text-[11px] font-black  tracking-[0.1em]">{label}</span>
+                <span className="text-[14px] font-black">{label}</span>
             </div>
-            <div className={`h-9 bg-base-200/50 border border-base-300 rounded-xl px-4 py-2 text-sm font-bold text-base-content text-center flex-1 break-words leading-tight ${styleRow}`}>
+            <div className={`min-h-9 bg-base-200/50 border border-base-300 rounded-xl px-4 py-2 text-sm font-bold text-base-content text-center flex-1 break-words leading-tight idden ${styleRow}`}>
                 {(value !== null && value !== undefined) ? value : "No hay datos"}
             </div>
         </div>
@@ -27,7 +27,7 @@ const ItemPonencia = ({ listaDatos, onViewItem }) => {
 
     const DateTimeBox = ({ label, date, time }) => (
         <div className="mt-2 group">
-            <span className="text-[9px] font-black text-base-content/30  tracking-[0.2em] ml-1">{label}</span>
+            <span className="text-[13px] font-black text-base-content/30 ml-1">{label}</span>
             <div className="flex gap-2 mt-1">
                 <div className="flex-1 flex bg-base-100 border border-base-300 rounded-xl overflow-hidden shadow-sm group-hover:border-primary/30 transition-colors">
                     <div className="bg-black text-white px-2 flex items-center justify-center"><FiCalendar size={12} /></div>
@@ -54,7 +54,7 @@ const ItemPonencia = ({ listaDatos, onViewItem }) => {
             <Row icon={FiAward} label="Congreso" value={listaDatos.nombre_congreso} />
             <Row icon={FiUser} label="Ponente" value={listaDatos.nombre_ponente || listaDatos.ponente_principal || "No asignado"} />
             <Row icon={FiUsers} label="Cupos" value={listaDatos.cupos} />
-            <Row icon={LuCrown} label="Tipo de ponencia" value={listaDatos.tipo_ponencia.charAt(0).to() + listaDatos.tipo_ponencia.slice(1)} styleRow={listaDatos.tipo_ponencia?.toLowerCase() === "magistral" ? "text-yellow-500" : ""} />
+            <Row icon={LuCrown} label="Tipo de ponencia" value={listaDatos.tipo_ponencia.charAt(0) + listaDatos.tipo_ponencia.slice(1)} styleRow={listaDatos.tipo_ponencia?.toLowerCase() === "magistral" ? "text-yellow-500" : ""} />
 
             <div className="mt-4 space-y-3">
                 <DateTimeBox label="Inicio" date={fecha_inicio} time={hora_inicio} />

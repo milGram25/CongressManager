@@ -18,7 +18,7 @@ function LedStatus({ label, active, neutral = false, color = null, title=""}) {
 function RubricaGrupoStatusRow({ grupo }) {
   return (
     <div className="mb-5 ml-2">
-      <h4 className="text-[12px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 pb-2 mb-1">
+      <h4 className="text-[12px] font-bold text-slate-500 border-b border-slate-200 pb-2 mb-1">
         {grupo.nombre_grupo}
       </h4>
       {grupo.criterios?.map((criterio, i) => (
@@ -155,7 +155,7 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold uppercase text-slate-400 ml-1">Revisor 1</p>
+                  <p className="text-[10px] font-bold text-slate-400 ml-1">Revisor 1</p>
                   <BuscadorPersonal
                     options={evaluadoresSinAutor}
                     value={r1Sel}
@@ -164,7 +164,7 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
                   />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold uppercase text-slate-400 ml-1">Revisor 2</p>
+                  <p className="text-[10px] font-bold text-slate-400 ml-1">Revisor 2</p>
                   <BuscadorPersonal
                     options={evaluadoresSinAutor}
                     value={r2Sel}
@@ -216,7 +216,7 @@ function ExtensoDetailCard({ extenso, evaluadoresDisponibles, idCongreso, onAsig
         <section>
           <button
             onClick={handlePublicar}
-            className="w-full btn btn-success rounded-xl tracking-wider font-bold"
+            className="w-full btn btn-success rounded-xl font-bold"
           >
             Publicar ponencia
           </button>

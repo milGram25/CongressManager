@@ -140,7 +140,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
     if (loading) return (
         <div className="flex flex-col items-center justify-center p-20 gap-4">
             <span className="loading loading-spinner loading-lg text-black"></span>
-            <p className="text-sm font-black tracking-widest opacity-40">Cargando congreso...</p>
+            <p className="text-sm font-black opacity-40">Cargando congreso...</p>
         </div>
     );
 
@@ -171,7 +171,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
     }
 
     const inputClasses = `w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-black outline-none transition-all shadow-sm ${!modificando ? 'bg-gray-50 border-transparent shadow-none cursor-default' : 'hover:border-gray-400 focus:border-black'}`;
-    const labelClasses = "text-sm font-bold text-gray-500 mb-2 block ml-1 tracking-wider";
+    const labelClasses = "text-sm font-bold text-gray-500 mb-2 block ml-1";
     const sectionTitleClasses = "text-xl font-bold text-gray-900 mb-6 flex items-center gap-3";
     const sectionContainerClasses = "bg-white p-6 md:p-8 rounded-[32px] border border-gray-100 shadow-sm mb-8 transition-all hover:shadow-md";
 
@@ -183,7 +183,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
             <div className="sticky top-0 bg-black text-white flex items-center justify-between px-8 py-5 z-40 shadow-xl rounded-t-[32px]">
                 <div>
                     <h2 className="text-lg md:text-xl font-bold tracking-tight">{modificando ? 'Panel de Edición' : 'Vista de Detalles'}</h2>
-                    <p className="text-[13px] text-gray-400  tracking-widest mt-0.5">{formData.nombre_congreso || 'Nuevo Congreso'}</p>
+                    <p className="text-[13px] text-gray-400 mt-0.5">{formData.nombre_congreso || 'Nuevo Congreso'}</p>
                 </div>
                 <div className="flex items-center gap-3">
                     {!modificando ? (
