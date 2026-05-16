@@ -21,7 +21,7 @@ const selectStyles = {
   singleValue: (base) => ({ ...base, fontSize: '13px', color: '#374151' }),
 };
 
-export default function FilterHeader({ onFilterChange = () => {}, congresos = [] }) {
+export default function FilterHeader({ onFilterChange = () => { }, congresos = [] }) {
   const [selectedInstitucion, setSelectedInstitucion] = useState(null);
 
   const institucionOptions = useMemo(() => {
@@ -53,7 +53,7 @@ export default function FilterHeader({ onFilterChange = () => {}, congresos = []
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
       <div>
-        <label className="text-[10px] font-bold text-gray-400 ml-1 mb-1.5 block uppercase tracking-widest">Institución</label>
+        <label className="text-[13px] font-bold text-gray-400 ml-1 mb-1.5 block tracking-base">Institución</label>
         <Select
           options={institucionOptions}
           styles={selectStyles}
@@ -64,7 +64,7 @@ export default function FilterHeader({ onFilterChange = () => {}, congresos = []
         />
       </div>
       <div>
-        <label className="text-[10px] font-bold text-gray-400 ml-1 mb-1.5 block uppercase tracking-widest">
+        <label className="text-[13px] font-bold text-gray-400 ml-1 mb-1.5 block  tracking-base">
           Congreso {selectedInstitucion ? `(${congresoOptions.length})` : ''}
         </label>
         <Select

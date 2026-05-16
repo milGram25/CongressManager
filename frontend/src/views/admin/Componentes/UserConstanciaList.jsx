@@ -3,9 +3,9 @@ import { GrWorkshop } from "react-icons/gr";
 import { MdPersonSearch, MdCheckCircle, MdTimer } from "react-icons/md";
 
 export default function UserConstanciaList({ users, selectedUserId, onSelectUser }) {
-  
+
   const getRoleIcon = (rol) => {
-    switch(rol.toLowerCase()) {
+    switch (rol.toLowerCase()) {
       case 'ponente': return <GrWorkshop />;
       case 'tallerista': return <BsPersonHearts />;
       case 'dictaminador': return <BsFillPersonLinesFill />;
@@ -15,20 +15,20 @@ export default function UserConstanciaList({ users, selectedUserId, onSelectUser
   };
 
   const getStatusBadge = (status) => {
-    switch(status) {
-      case 'green': 
+    switch (status) {
+      case 'green':
         return (
           <div className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-[10px] font-bold border border-green-100">
             <MdCheckCircle /> ENVIADA
           </div>
         );
-      case 'red': 
+      case 'red':
         return (
           <div className="flex items-center gap-1 text-red-500 bg-red-50 px-2 py-0.5 rounded-full text-[10px] font-bold border border-red-100">
             <MdTimer /> PENDIENTE
           </div>
         );
-      default: 
+      default:
         return (
           <div className="flex items-center gap-1 text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full text-[10px] font-bold border border-gray-100">
             N/A
@@ -56,14 +56,14 @@ export default function UserConstanciaList({ users, selectedUserId, onSelectUser
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <h4 className="font-bold text-gray-800 truncate">{user.nombre}</h4>
-              <span className="bg-gray-100 px-2 py-0.5 rounded-md text-gray-500 text-[9px] font-black uppercase tracking-widest">{user.rol}</span>
+              <span className="bg-gray-100 px-2 py-0.5 rounded-md text-gray-500 text-[12px] font-black  tracking-widest">{user.rol}</span>
             </div>
             <p className="text-[11px] text-gray-400 truncate">{user.email}</p>
           </div>
 
           <div className="flex flex-col items-end gap-2">
             {getStatusBadge(user.status)}
-            <p className="text-[10px] font-bold text-gray-300 uppercase">{user.institucion}</p>
+            <p className="text-[12px] font-bold text-gray-300 ">{user.institucion}</p>
           </div>
         </div>
       ))}

@@ -3,8 +3,8 @@ import { MdClose, MdLock, MdPerson, MdEmail, MdPhone, MdPublic, MdWc } from "rea
 import { assignRoleApi, removeRoleApi } from "../../../api/adminApi";
 
 const ROLES = [
-  { key: 'dictaminador',  label: 'Dictaminador' },
-  { key: 'evaluador',     label: 'Evaluador' },
+  { key: 'dictaminador', label: 'Dictaminador' },
+  { key: 'evaluador', label: 'Evaluador' },
   { key: 'administrador', label: 'Administrador' },
 ];
 
@@ -118,9 +118,16 @@ export default function UserRolesModal({ user, congreso, onClose, onRolesUpdated
 
         {/* Contexto de congreso */}
         {congreso && (
-          <p className="text-xs text-base-content/50 mb-3 font-semibold uppercase tracking-wider">
-            Roles en: {congreso.nombre_congreso}
-          </p>
+          <div>
+            <p className="text-xs text-base-content/50 mb-3 font-bold tracking-wider">
+              Roles en: <span className="text-xs text-base-content/50 mb-3 font-semibold tracking-wider">
+                {congreso.nombre_congreso}
+              </span>
+            </p>
+
+          </div>
+
+
         )}
 
         {/* Toggles de roles */}
@@ -131,9 +138,8 @@ export default function UserRolesModal({ user, congreso, onClose, onRolesUpdated
             return (
               <div
                 key={key}
-                className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
-                  isPending ? 'border-primary bg-primary/5' : 'border-base-300 bg-base-100'
-                }`}
+                className={`flex items-center justify-between p-3 rounded-xl border transition-all ${isPending ? 'border-primary bg-primary/5' : 'border-base-300 bg-base-100'
+                  }`}
               >
                 <span className="font-medium text-sm">{label}</span>
                 <input
