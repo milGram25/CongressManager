@@ -2,14 +2,14 @@ import { FiUser } from "react-icons/fi";  //
 
 // Info de ejemplo para dictaminadores
 export default function ListaRevisores({
-  titulo = "DICTAMINADORES",
+  titulo = "Dictaminadores",
   revisores = [],
   emptyMessage = "No hay evaluadores asignados para este elemento.",
 }) {
   return (
     <section className="rounded-[24px] border border-black/55 bg-white px-4 py-4 shadow-sm md:px-5">
       <div className="border-b border-slate-200 pb-3">
-        <h3 className="text-[18px] font-semibold uppercase tracking-tight text-slate-800">{titulo}</h3>
+        <h3 className="text-[18px] font-semibold text-slate-800">{titulo}</h3>
       </div>
 
       <div className="space-y-3 pt-3">
@@ -26,7 +26,7 @@ export default function ListaRevisores({
 
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-slate-800">{revisor.nombre}</p>
-                <p className="truncate text-xs uppercase tracking-wide text-slate-500">{revisor.especialidad}</p>
+                <p className="truncate text-xs text-slate-500">{revisor.especialidad}</p>
               </div>
             </div>
           ))

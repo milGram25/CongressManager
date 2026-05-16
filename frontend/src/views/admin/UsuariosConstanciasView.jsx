@@ -202,7 +202,7 @@ export default function UsuariosConstanciasView() {
         <div className="bg-yellow-50 border-2 border-yellow-200 p-4 rounded-2xl flex items-center gap-4 animate-in slide-in-from-top duration-500">
           <div className="bg-yellow-400 p-2 rounded-xl text-white"><HiExclamationCircle className="text-xl" /></div>
           <div>
-            <p className="text-yellow-800 font-bold  tracking-tight">Firmas requeridas</p>
+            <p className="text-yellow-800 font-bold">Firmas requeridas</p>
             <p className="text-yellow-700 text-xs">Sube y <strong>confirma</strong> las firmas institucionales para habilitar la generación y envío.</p>
           </div>
         </div>
@@ -213,7 +213,7 @@ export default function UsuariosConstanciasView() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="loading loading-spinner loading-md"></span>
-              <p className="font-black text-sm  tracking-[0.2em]">Enviando constancias...</p>
+              <p className="font-black text-sm">Enviando constancias...</p>
             </div>
             <p className="text-xs font-mono font-bold bg-white/10 px-3 py-1 rounded-lg">
               {processedCount} / {pendingCount}

@@ -150,7 +150,7 @@ export default function SignatureUpload({ onSignaturesChange, idCongreso }) {
         ) : (
           <button
             onClick={toggleLock}
-            className="w-full py-3 bg-white border-2 border-gray-100 text-gray-400 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gray-50 hover:text-gray-600 transition-all shadow-sm active:scale-95"
+            className="w-full py-3 bg-white border-2 border-gray-100 text-gray-400 rounded-xl font-black text-xs flex items-center justify-center gap-2 hover:bg-gray-50 hover:text-gray-600 transition-all shadow-sm active:scale-95"
           >
             <HiLockOpen className="text-lg" /> Modificar firmas
           </button>

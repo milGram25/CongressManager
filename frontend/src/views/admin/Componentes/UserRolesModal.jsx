@@ -119,8 +119,8 @@ export default function UserRolesModal({ user, congreso, onClose, onRolesUpdated
         {/* Contexto de congreso */}
         {congreso && (
           <div>
-            <p className="text-xs text-base-content/50 mb-3 font-bold tracking-wider">
-              Roles en: <span className="text-xs text-base-content/50 mb-3 font-semibold tracking-wider">
+            <p className="text-xs text-base-content/50 mb-3 font-bold">
+              Roles en: <span className="text-xs text-base-content/50 mb-3 font-semibold">
                 {congreso.nombre_congreso}
               </span>
             </p>

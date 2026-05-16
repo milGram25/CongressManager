@@ -111,7 +111,7 @@ function PopoverAsignado({ item, dictaminadores }) {
 
   return (
     <div>
-      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-base-content/50">Revisores asignados</p>
+      <p className="mb-2 text-[11px] font-bold text-base-content/50">Revisores asignados</p>
       {asignados.length === 0 ? (
         <p className="text-xs italic text-base-content/50">Sin asignar todavia.</p>
       ) : (
@@ -140,7 +140,7 @@ function PopoverAsignado({ item, dictaminadores }) {
 function PopoverRevisado({ item }) {
   return (
     <div>
-      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-base-content/50">Estado de revision</p>
+      <p className="mb-2 text-[11px] font-bold text-base-content/50">Estado de revision</p>
       {item.revisado ? (
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100">
@@ -160,7 +160,7 @@ function PopoverRevisado({ item }) {
             <div className="flex items-center gap-2 rounded-2xl bg-red-50 px-2.5 py-2">
               <MdCalendarToday size={13} className="text-red-500" />
               <div>
-                <p className="text-[10px] uppercase tracking-wide text-red-400">Fecha limite</p>
+                 <p className="text-[10px] text-red-400">Fecha limite</p>
                 <p className="text-xs font-bold text-red-600">{formatDate(item.fechaLimite)}</p>
               </div>
             </div>
@@ -175,7 +175,7 @@ function PopoverRevisado({ item }) {
 function PopoverAceptado({ item }) {
   return (
     <div>
-      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-base-content/50">Estado de aceptación</p>
+      <p className="mb-2 text-[11px] font-bold text-base-content/50">Estado de aceptación</p>
       {item.aceptado ==="aceptado"? (
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100">
@@ -386,7 +386,7 @@ export default function ListaResumenes({ listaElementos = [], dictaminadores = [
         </div>
 
         <div className="flex items-center justify-between border-t border-slate-200 pt-3">
-          <span className="text-xs  tracking-[0.18em] text-slate-400">Lista disponible</span>
+          <span className="text-xs text-slate-400">Lista disponible</span>
           <span className="text-xs font-medium text-slate-400">{listaFiltrada.length} resultado(s)</span>
         </div>
 

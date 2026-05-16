@@ -464,7 +464,7 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                 <div className="bg-base-100 border border-base-300 p-6 flex flex-col h-fit rounded-b-3xl">
                     <div className="flex gap-10 items-center h-15">
                         <div className="flex flex-col border-r pr-6 border-slate-200">
-                            <h2 className="text-sm font-bold text-gray-400 tracking-wider">Ponencias asignadas</h2>
+                            <h2 className="text-sm font-bold text-gray-400">Ponencias asignadas</h2>
                             <p className="text-2xl font-black text-primary">{totalPonenciasAsignadas} <span className="text-sm font-normal text-gray-400">/ {totalPonenciasDisponibles}</span></p>
                         </div>
                         <h3 className="text-lg font-bold text-primary flex items-center gap-2">

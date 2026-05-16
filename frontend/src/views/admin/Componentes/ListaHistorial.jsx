@@ -227,7 +227,7 @@ export default function ListaHistorial({ listaElementos, mostrarIndicadores = tr
                                     </div>
                                     <div className="flex flex-col min-w-0">
                                         <h4 className="font-bold text-gray-800 text-sm leading-tight">{item.nombre}</h4>
-                                        <p className="text-[13px] text-[#005a6a] font-bold mt-0.5 tracking-wide">{item.accion}</p>
+                                        <p className="text-[13px] text-[#005a6a] font-bold mt-0.5">{item.accion}</p>
                                     </div>
                                 </div>
 
@@ -242,13 +242,13 @@ export default function ListaHistorial({ listaElementos, mostrarIndicadores = tr
                                         <div className="w-px h-3 bg-gray-200"></div>
                                         <div className="flex items-center gap-1.5" title="Temporalidad">
                                             <div className={`w-2 h-2 rounded-full ${handleColorFecha(item.fecha)}`}></div>
-                                            <span className="text-[12px] font-bold text-gray-500 tracking-tight">{handleTemporalidadFecha(item.fecha)}</span>
+                                            <span className="text-[12px] font-bold text-gray-500">{handleTemporalidadFecha(item.fecha)}</span>
                                             <MdAccessTime className="text-gray-500 text-sm" />
                                         </div>
                                         <div className="w-px h-3 bg-gray-200"></div>
                                         <div className="flex items-center gap-1.5" title="Importancia">
                                             <div className={`w-2 h-2 rounded-full ${handleColorImportancia(item.accion)}`}></div>
-                                            <span className="text-[12px] font-bold text-gray-500 tracking-tight">{handleNombreImportancia(item.accion)}</span>
+                                            <span className="text-[12px] font-bold text-gray-500">{handleNombreImportancia(item.accion)}</span>
                                             <MdInfoOutline className="text-gray-500 text-sm" />
                                         </div>
                                     </div>}
@@ -267,7 +267,7 @@ export default function ListaHistorial({ listaElementos, mostrarIndicadores = tr
                                         <div className="hidden md:flex flex-col gap-1 bg-white px-3 py-2 rounded-xl border border-gray-200 shadow-sm group-hover:border-gray-300 transition-colors min-w-[160px]">
                                             <div className="flex items-center gap-1.5">
                                                 <MdAccessTime className="text-[#005a6a] text-sm shrink-0" />
-                                                <span className="text-[12px] text-gray-400 font-medium tracking-tight">{etiquetaFecha}</span>
+                                                <span className="text-[12px] text-gray-400 font-medium">{etiquetaFecha}</span>
                                             </div>
                                             <span className="text-[11px] font-bold text-gray-700 leading-tight">{formatFecha(item.fecha)}</span>
                                         </div>

@@ -171,7 +171,7 @@ export default function ConstanciaUpload({ selectedUser, signatures = {}, isSign
 
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-gray-100"></div>
-            <span className="text-[13px] text-gray-400 font-bold  tracking-widest">o subir PDF</span>
+            <span className="text-[13px] text-gray-400 font-bold">o subir PDF</span>
             <div className="flex-1 h-px bg-gray-100"></div>
           </div>
 

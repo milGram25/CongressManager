@@ -19,7 +19,7 @@ export default function TallerDetallesView() {
               <MdArrowBack size={20} />
           </button>
           <div>
-              <h2 className="text-3xl font-bold uppercase tracking-tight">Detalles del Taller</h2>
+              <h2 className="text-3xl font-bold">Detalles del Taller</h2>
               <p className="text-sm text-base-content/50">Consulta o modifica la información del taller</p>
           </div>
       </div>

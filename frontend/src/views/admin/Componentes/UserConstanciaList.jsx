@@ -19,13 +19,13 @@ export default function UserConstanciaList({ users, selectedUserId, onSelectUser
       case 'green':
         return (
           <div className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-[10px] font-bold border border-green-100">
-            <MdCheckCircle /> ENVIADA
+            <MdCheckCircle /> Enviada
           </div>
         );
       case 'red':
         return (
           <div className="flex items-center gap-1 text-red-500 bg-red-50 px-2 py-0.5 rounded-full text-[10px] font-bold border border-red-100">
-            <MdTimer /> PENDIENTE
+            <MdTimer /> Pendiente
           </div>
         );
       default:
@@ -56,7 +56,7 @@ export default function UserConstanciaList({ users, selectedUserId, onSelectUser
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <h4 className="font-bold text-gray-800 truncate">{user.nombre}</h4>
-              <span className="bg-gray-100 px-2 py-0.5 rounded-md text-gray-500 text-[12px] font-black  tracking-widest">{user.rol}</span>
+              <span className="bg-gray-100 px-2 py-0.5 rounded-md text-gray-500 text-[12px] font-black">{user.rol}</span>
             </div>
             <p className="text-[11px] text-gray-400 truncate">{user.email}</p>
           </div>

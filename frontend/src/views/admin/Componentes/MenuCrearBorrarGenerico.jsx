@@ -95,14 +95,14 @@ const MenuCrearBorrarGenerico = ({
             <header className="bg-black text-white px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div className="flex items-center gap-3">
                     {/*<div className="w-1.5 h-6 bg-white rounded-full hidden sm:block"></div>*/}
-                    <h2 className="text-xl font-bold  tracking-wider">{title}</h2>
+                    <h2 className="text-xl font-bold">{title}</h2>
                 </div>
 
                 <div className="flex items-center gap-3">
                     {mostrarAgregarEliminar && (
                         <button
                             onClick={handleAgregarElemento}
-                            className="bg-white text-black px-6 py-2 rounded-full text-sm font-black  tracking-widest hover:brightness-90 transition-all active:scale-95 flex items-center gap-2 shadow-lg"
+                            className="bg-white text-black px-6 py-2 rounded-full text-sm font-black hover:brightness-90 transition-all active:scale-95 flex items-center gap-2 shadow-lg"
                         >
                             <IoMdAdd size={18} />
                             Crear {definirTipoElemento === 'ponencia' ? 'ponencia magistral' : definirTipoElemento === 'institucion' ? 'institución' : definirTipoElemento}
