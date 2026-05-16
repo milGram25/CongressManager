@@ -10,13 +10,12 @@ function formatFecha(iso) {
   const d = new Date(iso);
   const dia = String(d.getDate()).padStart(2, "0");
   const mes = d.toLocaleString("es-MX", { month: "long" });
-  const año = d.getFullYear();
+  const anio = d.getFullYear();
   const hora = d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
-  return `${dia}/${mes}/${año}, ${hora}`;
+  return `${dia}/${mes}/${anio}, ${hora}`;
 }
 
 const FECHAS = ["Recientes", "Más antiguos"];
-const ESTATUS = ["Todos", "Pagado", "Pendiente"];
 
 // ─── Campo de detalle ─────────────────────────────────────────────────────────
 function Campo({ label, value }) {
@@ -109,16 +108,17 @@ export default function PagosComponente() {
   const [congresos, setCongresos] = useState([]);
   const [instituciones, setInstituciones] = useState([]);
   const [filtroCongreso, setFiltroCongreso] = useState(null);
+  const [filtroInstitucion, setFiltroInstitucion] = useState(null);
 
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState("");
   const [filtroRol, setFiltroRol] = useState("Todos");
   const [filtroFecha, setFiltroFecha] = useState("Recientes");
-  const [filtroEst, setFiltroEst] = useState("Todos");
+  const [filtroEst, _setFiltroEst] = useState("Todos");
 
   const [openRol, setOpenRol] = useState(false);
   const [openFech, setOpenFech] = useState(false);
-  const [openEst, setOpenEst] = useState(false);
+  const [_openEst, _setOpenEst] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("congress_access");
@@ -154,6 +154,31 @@ export default function PagosComponente() {
     }
   };
 
+  const handleSelectInstitucion = async (idStr) => {
+    const token = localStorage.getItem("congress_access");
+    const idInstitucion = idStr || null;
+    // store selected institucion and reset selected congreso/pagos selection
+    setFiltroInstitucion(idInstitucion);
+    setFiltroCongreso(null);
+    setSelected(null);
+    try {
+      const data = await getCongresosApi(token, idInstitucion);
+      const listaCong = Array.isArray(data) ? data : data.results ?? [];
+      setCongresos(listaCong);
+      // Si hay congresos para la institución, cargar los pagos de cada uno y combinarlos
+      const ids = listaCong.map(c => c.id_congreso).filter(id => id !== null && id !== undefined && id !== "");
+      if (ids.length > 0) {
+        const respuestas = await Promise.all(ids.map(id => getPagosAdminApi(token, id).then(r => Array.isArray(r) ? r : [] ).catch(() => [])));
+        const combinado = respuestas.flat();
+        setPagos(combinado);
+      } else {
+        setPagos([]);
+      }
+    } catch (err) {
+      setError(err.message || "No se pudieron cargar los congresos.");
+    }
+  };
+
   const ROLES_DISPONIBLES = useMemo(() => {
     const roles = new Set(pagos.map(p => p.rol));
     return ["Todos", ...Array.from(roles)];
@@ -171,7 +196,7 @@ export default function PagosComponente() {
   function Dropdown({ label, value, options, open, onToggle, onSelect }) {
     return (
       <div className="relative">
-        <button onClick={onToggle} className="flex items-center gap-1 text-sm text-base-content/70 hover:text-gray-800 transition-colors">
+        <button onClick={onToggle} title={label} className="flex items-center gap-1 text-sm text-base-content/70 hover:text-gray-800 transition-colors">
           {value} <MdKeyboardArrowDown size={15} className={`transition-transform ${open ? "rotate-180" : ""}`} />
         </button>
         {open && (
@@ -211,11 +236,17 @@ export default function PagosComponente() {
     <div className="bg-base-100 rounded-3xl p-5">
 
       <div className="flex gap-4 mb-10">
-        <ListaDesplegableElementosGenerica titulo="Instituciones" lista={listaInstitucionesDropdown} />
+        <ListaDesplegableElementosGenerica
+          titulo="Instituciones"
+          lista={listaInstitucionesDropdown}
+          onSelect={handleSelectInstitucion}
+          value={filtroInstitucion}
+        />
         <ListaDesplegableElementosGenerica
           titulo="Congresos"
           lista={listaCongresosDropdown}
           onSelect={handleSelectCongreso}
+          value={filtroCongreso}
         />
       </div>
       <div className="flex justify-between bg-black rounded-t-2xl p-4 h-20 items-center pl-8">
@@ -242,15 +273,15 @@ export default function PagosComponente() {
 
           <div>
             <p className="text-sm font-bold text-base-content mb-1">Rol</p>
-            <Dropdown label="Rol" value={filtroRol} options={ROLES_DISPONIBLES} open={openRol}
-              onToggle={() => { setOpenRol(o => !o); setOpenFech(false); setOpenEst(false); }}
-              onSelect={setFiltroRol} />
+              <Dropdown label="Rol" value={filtroRol} options={ROLES_DISPONIBLES} open={openRol}
+                onToggle={() => { setOpenRol(o => !o); setOpenFech(false); _setOpenEst(false); }}
+                onSelect={setFiltroRol} />
           </div>
 
           <div>
             <p className="text-sm font-bold text-base-content mb-1">Fecha</p>
             <Dropdown label="Fecha" value={filtroFecha} options={FECHAS} open={openFech}
-              onToggle={() => { setOpenFech(o => !o); setOpenRol(false); setOpenEst(false); }}
+              onToggle={() => { setOpenFech(o => !o); setOpenRol(false); _setOpenEst(false); }}
               onSelect={setFiltroFecha} />
           </div>
 
