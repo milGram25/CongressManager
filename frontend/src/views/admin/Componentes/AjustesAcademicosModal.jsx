@@ -58,21 +58,21 @@ export default function AjustesAcademicosModal({ idCongreso, nombreCongreso, ini
         <div className="flex flex-col h-full max-h-[600px] w-full max-w-2xl bg-white rounded-3xl overflow-hidden">
             {/* Header */}
             <header className="bg-black text-white p-6">
-                <h2 className="text-xl font-bold uppercase tracking-tight">{nombreCongreso}</h2>
-                <p className="text-xs text-gray-400 uppercase font-black mt-1">Ajustes Académicos</p>
+                <h2 className="text-xl font-bold">{nombreCongreso}</h2>
+                <p className="text-xs text-gray-400 font-black mt-1">Ajustes Académicos</p>
             </header>
 
             {/* Tabs */}
             <div className="flex border-b border-gray-100">
                 <button 
                     onClick={() => setActiveTab('tipos')}
-                    className={`flex-1 py-4 text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'tipos' ? 'border-b-4 border-[#005a6a] text-[#005a6a]' : 'text-gray-400 hover:bg-gray-50'}`}
+                    className={`flex-1 py-4 text-xs font-black transition-all ${activeTab === 'tipos' ? 'border-b-4 border-[#005a6a] text-[#005a6a]' : 'text-gray-400 hover:bg-gray-50'}`}
                 >
                     Tipos de Trabajo
                 </button>
                 <button 
                     onClick={() => setActiveTab('rubricas')}
-                    className={`flex-1 py-4 text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'rubricas' ? 'border-b-4 border-[#005a6a] text-[#005a6a]' : 'text-gray-400 hover:bg-gray-50'}`}
+                    className={`flex-1 py-4 text-xs font-black transition-all ${activeTab === 'rubricas' ? 'border-b-4 border-[#005a6a] text-[#005a6a]' : 'text-gray-400 hover:bg-gray-50'}`}
                 >
                     Rúbricas
                 </button>
@@ -138,7 +138,7 @@ export default function AjustesAcademicosModal({ idCongreso, nombreCongreso, ini
                                                 <div className="w-8 h-8 bg-gray-50 text-gray-400 rounded-lg flex items-center justify-center"><FiSettings size={14}/></div>
                                                 <div>
                                                     <p className="text-sm font-bold text-gray-700">{r.nombre}</p>
-                                                    <p className="text-[10px] text-gray-400 uppercase font-black">{r.criterios?.length || 0} Criterios</p>
+                                                    <p className="text-[10px] text-gray-400 font-black">{r.criterios?.length || 0} Criterios</p>
                                                 </div>
                                             </div>
                                             <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
@@ -159,7 +159,7 @@ export default function AjustesAcademicosModal({ idCongreso, nombreCongreso, ini
             <footer className="p-6 bg-white border-t border-gray-100 flex justify-end">
                 <button 
                     onClick={onClose}
-                    className="bg-black text-white px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:brightness-90 transition-all active:scale-95 shadow-lg"
+                    className="bg-black text-white px-8 py-2.5 rounded-xl text-xs font-black hover:brightness-90 transition-all active:scale-95 shadow-lg"
                 >
                     Cerrar
                 </button>

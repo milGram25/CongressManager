@@ -464,14 +464,14 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                 <div className="bg-base-100 border border-base-300 p-6 flex flex-col h-fit rounded-b-3xl">
                     <div className="flex gap-10 items-center h-15">
                         <div className="flex flex-col border-r pr-6 border-slate-200">
-                            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Ponencias Asignadas</h2>
+                            <h2 className="text-sm font-bold text-gray-400">Ponencias asignadas</h2>
                             <p className="text-2xl font-black text-primary">{totalPonenciasAsignadas} <span className="text-sm font-normal text-gray-400">/ {totalPonenciasDisponibles}</span></p>
                         </div>
                         <h3 className="text-lg font-bold text-primary flex items-center gap-2">
                             <div className="w-2 h-6 bg-primary rounded-full"></div> Libros
                         </h3>
                         <button onClick={(e) => handleAgregarLibro(e, libros.length)} className="btn btn-sm btn-outline btn-primary gap-2 mb-4 w-fit rounded-xl">
-                            <MdAdd size={18} /> Nuevo Libro
+                            <MdAdd size={18} /> Nuevo libro
                         </button>
 
                     </div>

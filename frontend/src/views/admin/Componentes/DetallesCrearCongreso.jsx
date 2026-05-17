@@ -85,7 +85,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
 
                 if (indexDatosModal) {
                     const realCongreso = await getCongresoByIdApi(accessToken, indexDatosModal);
-                    
+
                     const formatDate = (dateStr) => {
                         if (!dateStr) return "";
                         return dateStr.split('.')[0].substring(0, 16);
@@ -140,7 +140,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
     if (loading) return (
         <div className="flex flex-col items-center justify-center p-20 gap-4">
             <span className="loading loading-spinner loading-lg text-black"></span>
-            <p className="text-xs font-black uppercase tracking-widest opacity-40">Cargando congreso...</p>
+            <p className="text-sm font-black opacity-40">Cargando congreso...</p>
         </div>
     );
 
@@ -171,7 +171,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
     }
 
     const inputClasses = `w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-black outline-none transition-all shadow-sm ${!modificando ? 'bg-gray-50 border-transparent shadow-none cursor-default' : 'hover:border-gray-400 focus:border-black'}`;
-    const labelClasses = "text-xs font-bold text-gray-500 mb-2 block ml-1 uppercase tracking-wider";
+    const labelClasses = "text-sm font-bold text-gray-500 mb-2 block ml-1";
     const sectionTitleClasses = "text-xl font-bold text-gray-900 mb-6 flex items-center gap-3";
     const sectionContainerClasses = "bg-white p-6 md:p-8 rounded-[32px] border border-gray-100 shadow-sm mb-8 transition-all hover:shadow-md";
 
@@ -183,7 +183,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
             <div className="sticky top-0 bg-black text-white flex items-center justify-between px-8 py-5 z-40 shadow-xl rounded-t-[32px]">
                 <div>
                     <h2 className="text-lg md:text-xl font-bold tracking-tight">{modificando ? 'Panel de Edición' : 'Vista de Detalles'}</h2>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-0.5">{formData.nombre_congreso || 'Nuevo Congreso'}</p>
+                    <p className="text-[13px] text-gray-400 mt-0.5">{formData.nombre_congreso || 'Nuevo Congreso'}</p>
                 </div>
                 <div className="flex items-center gap-3">
                     {!modificando ? (
@@ -229,8 +229,8 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
                         </div>
                         <div>
                             <label className={labelClasses}>País</label>
-                            {!modificando ? <input value={formData.pais} readOnly className={inputClasses} /> : 
-                            <Select options={options} value={options.find(o => o.label === formData.pais)} onChange={handleCountryChange} />}
+                            {!modificando ? <input value={formData.pais} readOnly className={inputClasses} /> :
+                                <Select options={options} value={options.find(o => o.label === formData.pais)} onChange={handleCountryChange} />}
                         </div>
                         <div>
                             <label className={labelClasses}>Estado</label>
@@ -260,14 +260,14 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
                     <h3 className={sectionTitleClasses}><div className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center"><FiCalendar size={20} /></div> Cronograma</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-8">
                         {[
-                            { label: "Duración del Congreso", s: "congreso_inicio", e: "congreso_fin" },
-                            { label: "Envío de Ponencias", s: "envio_ponencias_inicio", e: "envio_ponencias_fin" },
-                            { label: "Revisión de Resúmenes", s: "revision_resumenes_inicio", e: "revision_resumenes_fin" },
-                            { label: "Carga de Extensos", s: "envio_extensos_inicio", e: "envio_extensos_fin" },
-                            { label: "Revisión de Extensos", s: "revision_extensos_inicio", e: "revision_extensos_fin" },
-                            { label: "Registro Dictaminadores", s: "inscripcion_dictaminadores_inicio", e: "inscripcion_dictaminadores_fin" },
-                            { label: "Registro Evaluadores", s: "inscripcion_evaluadores_inicio", e: "inscripcion_evaluadores_fin" },
-                            { label: "Carga Multimedia", s: "subir_multimedia_inicio", e: "subir_multimedia_fin" },
+                            { label: "Duración del congreso", s: "congreso_inicio", e: "congreso_fin" },
+                            { label: "Envío de ponencias", s: "envio_ponencias_inicio", e: "envio_ponencias_fin" },
+                            { label: "Revisión de resúmenes", s: "revision_resumenes_inicio", e: "revision_resumenes_fin" },
+                            { label: "Carga de extensos", s: "envio_extensos_inicio", e: "envio_extensos_fin" },
+                            { label: "Revisión de extensos", s: "revision_extensos_inicio", e: "revision_extensos_fin" },
+                            { label: "Registro de dictaminadores", s: "inscripcion_dictaminadores_inicio", e: "inscripcion_dictaminadores_fin" },
+                            { label: "Registro de evaluadores", s: "inscripcion_evaluadores_inicio", e: "inscripcion_evaluadores_fin" },
+                            { label: "Carga de multimedia", s: "subir_multimedia_inicio", e: "subir_multimedia_fin" },
                         ].map((d, i) => {
                             const formatDisplayDate = (dateStr) => {
                                 if (!dateStr) return "No definida";
@@ -280,13 +280,13 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
 
                             return (
                                 <div key={i} className="bg-gray-50 p-6 rounded-3xl border border-gray-100 hover:border-black/10 transition-all group/card shadow-sm hover:shadow-md">
-                                    <p className="text-[10px] font-black uppercase mb-4 opacity-40 group-hover/card:opacity-100 transition-opacity flex items-center gap-2">
+                                    <p className="text-[13px] font-black  mb-4 opacity-40 group-hover/card:opacity-100 transition-opacity flex items-center gap-2">
                                         <div className="w-1.5 h-1.5 bg-black rounded-full"></div>
                                         {d.label}
                                     </p>
                                     <div className="space-y-4">
                                         <div className="relative">
-                                            <p className="text-[9px] font-bold text-gray-400 uppercase mb-1 ml-1">Inicio</p>
+                                            <p className="text-[11px] font-bold text-gray-400 mb-1 ml-1">Inicio</p>
                                             {modificando ? (
                                                 <input type="datetime-local" id={d.s} value={formData[d.s]} onChange={handleChange} className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-black transition-all shadow-inner" />
                                             ) : (
@@ -296,13 +296,13 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
                                                 </div>
                                             )}
                                         </div>
-                                        
+
                                         <div className="flex justify-center">
                                             <div className="h-4 w-px bg-gradient-to-b from-gray-300 to-transparent"></div>
                                         </div>
-                                        
+
                                         <div className="relative">
-                                            <p className="text-[9px] font-bold text-gray-400 uppercase mb-1 ml-1">Fin</p>
+                                            <p className="text-[11px] font-bold text-gray-400 mb-1 ml-1">Fin</p>
                                             {modificando ? (
                                                 <input type="datetime-local" id={d.e} value={formData[d.e]} onChange={handleChange} className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-black transition-all shadow-inner" />
                                             ) : (
@@ -321,26 +321,27 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
 
                 {/* Costos */}
                 <section className={sectionContainerClasses}>
-                    <h3 className={sectionTitleClasses}><div className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center"><FiCreditCard size={20} /></div> Costos y Recaudación</h3>
+                    <h3 className={sectionTitleClasses}><div className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center"><FiCreditCard size={20} /></div> Costos y recaudación</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="bg-gray-50 p-6 rounded-3xl space-y-4">
                             <div><label className={labelClasses}>Participante</label><input type="number" id="costo_asistente" value={formData.costo_asistente} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
                             <div><label className={labelClasses}>Ponencias extras</label><input type="number" id="costo_ponente" value={formData.costo_ponente} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
                         </div>
                         <div className="bg-gray-50 p-6 rounded-3xl space-y-4">
-                            <div><label className={labelClasses}>Descuento Prepago %</label><input type="number" id="descuento_prepago" value={formData.descuento_prepago} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
-                            <div><label className={labelClasses}>Descuento Estudiante %</label><input type="number" id="descuento_estudiante" value={formData.descuento_estudiante} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
+                            <div><label className={labelClasses}>Descuento prepago %</label><input type="number" id="descuento_prepago" value={formData.descuento_prepago} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
+                            <div><label className={labelClasses}>Descuento estudiante %</label><input type="number" id="descuento_estudiante" value={formData.descuento_estudiante} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
                         </div>
-                        <div className="bg-black text-white p-6 rounded-3xl flex flex-col justify-center">
-                            <label className="text-[9px] font-bold uppercase opacity-50 mb-2">Cuenta Clabe / Depósito</label>
-                            <input id="cuenta_deposito" value={formData.cuenta_deposito} onChange={handleChange} className="bg-transparent border-none text-lg font-mono tracking-tighter w-full focus:outline-none" readOnly={!modificando} />
+                        <div className="bg-black text-white px-6 rounded-3xl flex flex-col justify-center">
+                            <p className="text-white text-2xl pb-3">Módulo de pago</p>
+                            <label className="text-[9px] font-bold opacity-50 mb-2">Cuenta CLABE / Depósito</label>
+                            <input id="cuenta_deposito" value={formData.cuenta_deposito} onChange={handleChange} className="bg-gray-800 rounded-full px-3 bg-opacity-30 border-none text-lg font-mono tracking-tighter w-full focus:outline-none" readOnly={!modificando} />
                         </div>
                     </div>
                 </section>
 
                 {modificando && isFullPage && (
                     <div className="flex justify-center mt-10">
-                        <button onClick={() => setShowConfirm(true)} className="bg-black text-white px-16 py-4 rounded-3xl font-black text-lg hover:scale-105 transition-all shadow-2xl">GUARDAR CAMBIOS</button>
+                        <button onClick={() => setShowConfirm(true)} className="bg-black text-white px-16 py-4 rounded-3xl font-black text-lg hover:scale-105 transition-all shadow-2xl">Guardar cambios</button>
                     </div>
                 )}
             </div>

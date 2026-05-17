@@ -46,7 +46,7 @@ function FormatoRow({ tipo, accessToken, onUpdated }) {
 
   return (
     <div className="mt-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 space-y-2">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Formato de extenso</p>
+      <p className="text-[10px] font-bold text-slate-400">Formato de extenso</p>
       {msg && (
         <p className={`text-xs font-medium ${msg.ok ? 'text-success' : 'text-error'}`}>{msg.text}</p>
       )}
@@ -206,7 +206,7 @@ export default function CongresoTiposTrabajoComponente({ idCongreso }) {
           <button onClick={() => navigate(-1)} className="text-white/70 hover:text-white transition-colors mr-1">
             <MdArrowBack size={18} />
           </button>
-          <h2 className="text-lg font-bold text-white uppercase tracking-tight">Crear tipos de trabajo</h2>
+          <h2 className="text-lg font-bold text-white">Crear tipos de trabajo</h2>
         </div>
         <button onClick={() => { setAdding(true); setConfirmDeleteIdx(null); }} className="w-8 h-8 rounded-full border-2 border-white/60 text-white flex items-center justify-center hover:bg-white/20 hover:cursor-pointer transition-colors">
           <MdAdd size={18} />

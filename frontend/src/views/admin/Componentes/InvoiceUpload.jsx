@@ -101,25 +101,25 @@ export default function InvoiceUpload({ selectedFactura, onUploadSuccess }) {
           <div className="mt-4 bg-white/10 rounded-xl p-3 border border-white/15 space-y-1">
             {selectedFactura.rfc && (
               <div className="flex items-center gap-2 text-xs">
-                <span className="text-white/50 font-bold uppercase tracking-wider w-20">RFC</span>
+                <span className="text-white/50 font-bold w-20">RFC</span>
                 <span className="font-mono font-bold text-white">{selectedFactura.rfc}</span>
               </div>
             )}
             {selectedFactura.razon_social && (
               <div className="flex items-center gap-2 text-xs">
-                <span className="text-white/50 font-bold uppercase tracking-wider w-20">Razón</span>
+                <span className="text-white/50 font-bold w-20">Razón</span>
                 <span className="font-semibold text-white/90 truncate">{selectedFactura.razon_social}</span>
               </div>
             )}
             {selectedFactura.regimen_fiscal && (
               <div className="flex items-center gap-2 text-xs">
-                <span className="text-white/50 font-bold uppercase tracking-wider w-20">Régimen</span>
+                <span className="text-white/50 font-bold w-20">Régimen</span>
                 <span className="text-white/80 text-[10px] truncate">{selectedFactura.regimen_fiscal}</span>
               </div>
             )}
             {selectedFactura.codigo_postal && (
               <div className="flex items-center gap-2 text-xs">
-                <span className="text-white/50 font-bold uppercase tracking-wider w-20">C.P.</span>
+                <span className="text-white/50 font-bold w-20">C. P.</span>
                 <span className="text-white/80">{selectedFactura.codigo_postal}</span>
               </div>
             )}
@@ -129,12 +129,12 @@ export default function InvoiceUpload({ selectedFactura, onUploadSuccess }) {
               <span className="text-white/90 font-semibold">{formatFecha(selectedFactura.fecha_solicitud)}</span>
             </div>
             <div className="flex items-center gap-2 text-xs">
-              <span className="text-white/50 font-bold uppercase tracking-wider w-20">Pagado</span>
+              <span className="text-white/50 font-bold w-20">Pagado</span>
               <span className="text-yellow-300 font-black">{formatMonto(selectedFactura.monto_pagado)}</span>
             </div>
             {selectedFactura.ruta_constancia_fiscal && (
               <div className="flex items-center gap-2 text-xs pt-1 mt-1">
-                <span className="text-white/50 font-bold uppercase tracking-wider w-20">Constancia de situación fiscal</span>
+                <span className="text-white/50 font-bold w-20">Constancia de situación fiscal</span>
                 <a
                   href={`${API_URL}${selectedFactura.ruta_constancia_fiscal}`}
                   target="_blank"
@@ -187,7 +187,7 @@ export default function InvoiceUpload({ selectedFactura, onUploadSuccess }) {
               <div className="flex items-center gap-3">
                 <MdReceipt className="text-2xl text-[#005a6a]" />
                 <div>
-                  <h3 className="font-black text-gray-800 text-sm uppercase tracking-tight">Confirmar Envío de Factura</h3>
+                  <h3 className="font-black text-gray-800 text-base">Confirmar envío de factura</h3>
                   <p className="text-xs text-gray-400">{selectedFactura.nombre_completo} — {selectedFactura.rfc || 'Sin RFC'}</p>
                 </div>
               </div>
@@ -212,17 +212,17 @@ export default function InvoiceUpload({ selectedFactura, onUploadSuccess }) {
               <button
                 disabled={isUploading}
                 onClick={() => setShowModal(false)}
-                className="px-5 py-2.5 border border-gray-200 rounded-xl font-bold text-gray-500 text-xs hover:bg-gray-50 transition-all"
+                className="px-5 py-2.5 border border-gray-200 rounded-xl font-bold text-gray-500 text-base hover:bg-gray-50 transition-all"
               >
                 Cancelar
               </button>
               <button
                 disabled={isUploading}
                 onClick={handleConfirmSend}
-                className="flex-1 py-2.5 bg-[#005a6a] text-white rounded-xl font-black text-xs flex items-center justify-center gap-2 hover:bg-[#004a5a] transition-all shadow-lg disabled:opacity-50"
+                className="flex-1 py-2.5 bg-[#005a6a] text-white rounded-xl font-black text-base flex items-center justify-center gap-2 hover:bg-[#004a5a] transition-all shadow-lg disabled:opacity-50"
               >
                 {isUploading ? <span className="loading loading-spinner loading-sm" /> : <HiMail className="text-base" />}
-                Confirmar y Enviar Factura
+                Confirmar y enviar factura
               </button>
             </div>
           </div>

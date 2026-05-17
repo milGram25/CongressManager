@@ -37,7 +37,7 @@ export default function CongresoSedeView() {
       <div>
         <div className="flex gap-4">
           <div className="border bg-[#005a6a] rounded-full h-10 w-2"></div>
-          <h2 className="flex-1 text-2xl font-black text-start uppercase tracking-tighter">Gestión de Sede y Logística</h2>
+          <h2 className="flex-1 text-2xl font-black text-start">Gestión de sede y logística</h2>
         </div>
         <p className="pl-12 text-start text-gray-500 text-sm font-medium">
           Configura los detalles de la ubicación principal y las mesas de trabajo físicas.
@@ -45,24 +45,24 @@ export default function CongresoSedeView() {
       </div>
 
       <div className="space-y-10">
-        <DetallesSede 
-            idSede={sede?.id_sede}
-            detalles={{
-                nombre: sede?.nombre_sede,
-                pais: sede?.pais,
-                estado: sede?.estado,
-                ciudad: sede?.ciudad,
-                calle: sede?.calle,
-                num_exterior: sede?.num_exterior,
-                num_interior: sede?.num_interior,
-                mod_fisico: sede?.modulo_fisico
-            }} 
-            onUpdate={fetchSedeData}
+        <DetallesSede
+          idSede={sede?.id_sede}
+          detalles={{
+            nombre: sede?.nombre_sede,
+            pais: sede?.pais,
+            estado: sede?.estado,
+            ciudad: sede?.ciudad,
+            calle: sede?.calle,
+            num_exterior: sede?.num_exterior,
+            num_interior: sede?.num_interior,
+            mod_fisico: sede?.modulo_fisico
+          }}
+          onUpdate={fetchSedeData}
         />
-        <CrearMesasFisicas 
-            idSede={sede?.id_sede}
-            listaMesas={mesas} 
-            onUpdate={fetchSedeData}
+        <CrearMesasFisicas
+          idSede={sede?.id_sede}
+          listaMesas={mesas}
+          onUpdate={fetchSedeData}
         />
       </div>
     </div>

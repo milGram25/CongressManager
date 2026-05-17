@@ -92,15 +92,15 @@ export default function InstitucionDetallesView() {
         <div className="flex flex-col gap-6 animate-in fade-in duration-500">
             {/* Header con navegación */}
             <div className="flex items-center gap-4 mb-2">
-                <button 
+                <button
                     onClick={() => navigate('/admin/ajustes/instituciones')}
                     className="p-2 bg-base-200 hover:bg-base-300 rounded-full transition-all active:scale-90"
                     disabled={saving}
                 >
                     <FiArrowLeft size={20} />
                 </button>
-                <h2 className="text-3xl font-bold uppercase tracking-tight">
-                    {isNew ? 'Nueva Institución' : 'Editar Institución'}
+                <h2 className="text-3xl font-bold">
+                    {isNew ? 'Nueva institución' : 'Editar institución'}
                 </h2>
             </div>
 
@@ -108,17 +108,17 @@ export default function InstitucionDetallesView() {
                 {/* Columna Izquierda: Imagen */}
                 <div className="lg:col-span-1 space-y-4">
                     <div className="bg-base-100 p-6 rounded-3xl border border-base-300 shadow-sm">
-                        <label className="text-[10px] font-black text-base-content/30 uppercase tracking-[0.2em] mb-4 block ml-1">
-                            Logotipo Institucional
+                        <label className="text-[12px] font-black text-base-content/30  mb-4 block ml-1">
+                            Logotipo institucional
                         </label>
-                        
+
                         <div className="relative group aspect-square bg-base-200 rounded-2xl border-2 border-dashed border-base-300 flex flex-col items-center justify-center overflow-hidden transition-all hover:border-primary/50">
                             {previewImage ? (
                                 <>
                                     <img src={previewImage} alt="Preview" className="w-full h-full object-contain p-4" />
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                        <button 
-                                            onClick={() => {setPreviewImage(null); setFormData(p => ({...p, imageFile: null}))}}
+                                        <button
+                                            onClick={() => { setPreviewImage(null); setFormData(p => ({ ...p, imageFile: null })) }}
                                             className="p-3 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-xl active:scale-90 transition-all"
                                             disabled={saving}
                                         >
@@ -133,7 +133,7 @@ export default function InstitucionDetallesView() {
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-sm font-bold text-base-content/60">Subir imagen</p>
-                                        <p className="text-[10px] text-base-content/30 uppercase font-black">PNG, JPG hasta 5MB</p>
+                                        <p className="text-[12px] text-base-content/30 font-black">PNG y JPG, hasta 5 MB</p>
                                     </div>
                                     <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} disabled={saving} />
                                 </label>
@@ -149,18 +149,18 @@ export default function InstitucionDetallesView() {
                         <section className="space-y-6">
                             <div className="flex items-center gap-3 mb-2">
                                 <div className="w-1.5 h-6 bg-primary rounded-full"></div>
-                                <h3 className="text-sm font-black uppercase tracking-widest text-base-content/70">Información General</h3>
+                                <h3 className="text-base font-black text-base-content/70">Información general</h3>
                             </div>
 
                             <div className="grid grid-cols-1 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-base-content/40 uppercase tracking-widest ml-1">Nombre de la Institución</label>
-                                    <input 
+                                    <label className="text-[12px] font-black text-base-content/40 ml-1">Nombre de la institución</label>
+                                    <input
                                         name="nombre"
-                                        type="text" 
+                                        type="text"
                                         placeholder="Ej: Universidad de Guadalajara"
-                                        className="w-full bg-base-200/50 border border-base-300 rounded-2xl px-6 py-4 text-sm font-bold focus:bg-base-100 focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all" 
-                                        value={formData.nombre} 
+                                        className="w-full bg-base-200/50 border border-base-300 rounded-2xl px-6 py-4 text-sm font-bold focus:bg-base-100 focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all"
+                                        value={formData.nombre}
                                         onChange={handleChange}
                                         disabled={saving}
                                     />
@@ -168,30 +168,30 @@ export default function InstitucionDetallesView() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-base-content/40 uppercase tracking-widest ml-1">Ubicación / Sede</label>
+                                        <label className="text-[12px] font-black text-base-content/40  ml-1">Ubicación / Sede</label>
                                         <div className="relative">
                                             <FiMapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-base-content/30" />
-                                            <input 
+                                            <input
                                                 name="ubicacion"
-                                                type="text" 
+                                                type="text"
                                                 placeholder="Ej: Guadalajara, Jalisco"
-                                                className="w-full bg-base-200/50 border border-base-300 rounded-2xl pl-12 pr-6 py-4 text-sm font-bold focus:bg-base-100 focus:border-primary outline-none transition-all" 
-                                                value={formData.ubicacion} 
+                                                className="w-full bg-base-200/50 border border-base-300 rounded-2xl pl-12 pr-6 py-4 text-sm font-bold focus:bg-base-100 focus:border-primary outline-none transition-all"
+                                                value={formData.ubicacion}
                                                 onChange={handleChange}
                                                 disabled={saving}
                                             />
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-base-content/40 uppercase tracking-widest ml-1">País</label>
+                                        <label className="text-[12px] font-black text-base-content/40 ml-1">País</label>
                                         <div className="relative">
                                             <FiFlag className="absolute left-5 top-1/2 -translate-y-1/2 text-base-content/30" />
-                                            <input 
+                                            <input
                                                 name="pais"
-                                                type="text" 
+                                                type="text"
                                                 placeholder="México"
-                                                className="w-full bg-base-200/50 border border-base-300 rounded-2xl pl-12 pr-6 py-4 text-sm font-bold focus:bg-base-100 focus:border-primary outline-none transition-all" 
-                                                value={formData.pais} 
+                                                className="w-full bg-base-200/50 border border-base-300 rounded-2xl pl-12 pr-6 py-4 text-sm font-bold focus:bg-base-100 focus:border-primary outline-none transition-all"
+                                                value={formData.pais}
                                                 onChange={handleChange}
                                                 disabled={saving}
                                             />
@@ -203,17 +203,17 @@ export default function InstitucionDetallesView() {
 
                         {/* Botones de acción */}
                         <div className="flex gap-4 pt-4">
-                            <button 
+                            <button
                                 onClick={handleSave}
                                 disabled={saving}
-                                className="flex-1 bg-primary text-primary-content py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                                className="flex-1 bg-primary text-primary-content py-4 rounded-2xl font-black text-sm shadow-xl shadow-primary/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                             >
-                                {saving ? <span className="loading loading-spinner loading-xs"></span> : <FiSave size={18} />} 
+                                {saving ? <span className="loading loading-spinner loading-xs"></span> : <FiSave size={18} />}
                                 {isNew ? 'Registrar Institución' : 'Guardar Cambios'}
                             </button>
-                            <button 
+                            <button
                                 onClick={() => navigate('/admin/ajustes/instituciones')}
-                                className="px-8 bg-base-200 text-base-content py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-base-300 active:scale-95 transition-all"
+                                className="px-8 bg-base-200 text-base-content py-4 rounded-2xl font-black text-sm hover:bg-base-300 active:scale-95 transition-all"
                                 disabled={saving}
                             >
                                 Cancelar

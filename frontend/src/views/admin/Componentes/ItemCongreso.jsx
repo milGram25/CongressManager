@@ -30,9 +30,9 @@ const ItemCongreso = ({ listaDatos }) => {
                 <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center shrink-0 shadow-md">
                     <Icon size={18} />
                 </div>
-                <span className="text-[11px] font-black uppercase tracking-[0.1em]">{label}</span>
+                <span className="text-[15px] font-black">{label}</span>
             </div>
-            <div className="bg-base-200/50 border border-base-300 rounded-xl px-4 py-2 text-sm font-bold text-base-content text-right flex-1 break-words leading-tight">
+            <div className="bg-base-200/50 border border-base-300 rounded-xl px-4 py-2 text-sm font-bold text-base-content text-center flex-1 break-words leading-tight">
                 {value}
             </div>
         </div>
@@ -40,7 +40,7 @@ const ItemCongreso = ({ listaDatos }) => {
 
     const DateTimeBox = ({ label, date, time }) => (
         <div className="mt-2 group">
-            <span className="text-[9px] font-black text-base-content/30 uppercase tracking-[0.2em] ml-1">{label}</span>
+            <span className="text-[15px] font-black text-base-content/30 ml-1">{label}</span>
             <div className="flex gap-2 mt-1">
                 <div className="flex-1 flex bg-base-100 border border-base-300 rounded-xl overflow-hidden shadow-sm group-hover:border-primary/30 transition-colors">
                     <div className="bg-black text-white px-2 flex items-center justify-center"><FiCalendar size={12} /></div>
@@ -75,7 +75,7 @@ const ItemCongreso = ({ listaDatos }) => {
                     <div
                         tabIndex={0}
                         role="button"
-                        className="w-full flex items-center justify-center gap-3 py-3 bg-base-200 text-base-content hover:bg-base-300 rounded-2xl text-sm font-black  tracking-widest transition-all cursor-pointer shadow-sm active:scale-95"
+                        className="w-full flex items-center justify-center gap-3 py-3 bg-base-200 text-base-content hover:bg-base-300 rounded-2xl text-sm font-black transition-all cursor-pointer shadow-sm active:scale-95"
                     >
                         <FiFileText size={16} /> Eventos <FiChevronDown />
                     </div>
@@ -105,9 +105,9 @@ const ItemCongreso = ({ listaDatos }) => {
                         e.stopPropagation();
                         navigate(`/admin/eventos/congresos/tipos-trabajo/${listaDatos.id_congreso}`);
                     }}
-                    className="w-full flex items-center justify-center gap-3 py-3 bg-black text-white hover:bg-[#005a6a] rounded-2xl text-sm font-black  tracking-widest transition-all cursor-pointer shadow-lg active:scale-95"
+                    className="w-full flex items-center justify-center gap-3 py-3 bg-black text-white hover:bg-[#005a6a] rounded-2xl text-sm font-black transition-all cursor-pointer shadow-lg active:scale-95"
                 >
-                    <FiSettings size={16} /> Configuración Académica
+                    <FiSettings size={16} /> Configuración académica
                 </button>
             </div>
         </TarjetaGenerica>

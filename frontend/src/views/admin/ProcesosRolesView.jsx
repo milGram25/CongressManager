@@ -65,7 +65,7 @@ export default function ProcesosRolesView() {
           <MdManageAccounts className="text-2xl" />
         </div>
         <div>
-          <h2 className="text-xl font-bold">Gestión de Roles</h2>
+          <h2 className="text-xl font-bold">Gestión de roles</h2>
           <p className="text-xs text-base-content/50">Asigna roles a usuarios por congreso</p>
         </div>
       </div>
