@@ -27,6 +27,7 @@ function exportToCSV(areas) {
 // ─── SubArea Row ──────────────────────────────────────────────────────────────
 function SubAreaRow({ subarea, onEdit, onDelete }) {
   const [editing, setEditing] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [val, setVal] = useState(subarea.nombre);
   const [saving, setSaving] = useState(false);
 
@@ -57,6 +58,18 @@ function SubAreaRow({ subarea, onEdit, onDelete }) {
             <MdClose size={12} />
           </button>
         </>
+      ) : confirming ? (
+        <>
+          <span className="flex-1 text-xs text-error font-medium px-2">¿Eliminar "{subarea.nombre}"?</span>
+          <button onClick={onDelete} title="Confirmar eliminación"
+            className="w-6 h-6 rounded-full bg-error text-white flex items-center justify-center hover:bg-red-700 transition-colors flex-shrink-0">
+            <MdCheck size={12} />
+          </button>
+          <button onClick={() => setConfirming(false)} title="Cancelar"
+            className="w-6 h-6 rounded-full bg-base-300 text-base-content/50 flex items-center justify-center hover:bg-base-400 transition-colors flex-shrink-0">
+            <MdClose size={12} />
+          </button>
+        </>
       ) : (
         <>
           <span className="flex-1 border border-base-200 rounded-full px-3 py-1 text-xs text-base-content/70 bg-base-100">
@@ -66,7 +79,7 @@ function SubAreaRow({ subarea, onEdit, onDelete }) {
             className="w-6 h-6 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0">
             <MdEdit size={11} />
           </button>
-          <button onClick={onDelete} title="Eliminar subárea"
+          <button onClick={() => setConfirming(true)} title="Eliminar subárea"
             className="w-6 h-6 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0">
             <MdDelete size={11} />
           </button>
@@ -79,6 +92,7 @@ function SubAreaRow({ subarea, onEdit, onDelete }) {
 // ─── Area Row ─────────────────────────────────────────────────────────────────
 function AreaRow({ area, onEdit, onDelete, onAddSubArea, onEditSubArea, onDeleteSubArea }) {
   const [editing, setEditing] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [val, setVal] = useState(area.nombre);
   const [showSubs, setShowSubs] = useState(false);
   const [addingSub, setAddingSub] = useState(false);
@@ -122,6 +136,18 @@ function AreaRow({ area, onEdit, onDelete, onAddSubArea, onEditSubArea, onDelete
               <MdClose size={14} />
             </button>
           </>
+        ) : confirming ? (
+          <>
+            <span className="flex-1 text-sm text-error font-medium px-1">¿Eliminar "{area.nombre}" y sus subáreas?</span>
+            <button onClick={onDelete} title="Confirmar eliminación"
+              className="w-8 h-8 rounded-full bg-error text-white flex items-center justify-center hover:bg-red-700 transition-colors flex-shrink-0">
+              <MdCheck size={14} />
+            </button>
+            <button onClick={() => setConfirming(false)} title="Cancelar"
+              className="w-8 h-8 rounded-full bg-base-300 text-base-content/50 flex items-center justify-center hover:bg-base-400 transition-colors flex-shrink-0">
+              <MdClose size={14} />
+            </button>
+          </>
         ) : (
           <>
             <span className="flex-1 border border-base-300 rounded-full px-3 py-2 text-sm text-base-content bg-base-100 truncate">
@@ -131,7 +157,7 @@ function AreaRow({ area, onEdit, onDelete, onAddSubArea, onEditSubArea, onDelete
               className="w-8 h-8 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0">
               <MdEdit size={14} />
             </button>
-            <button onClick={onDelete} title="Eliminar área"
+            <button onClick={() => setConfirming(true)} title="Eliminar área"
               className="w-8 h-8 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0">
               <MdDelete size={14} />
             </button>

@@ -194,6 +194,15 @@ export async function subirExtensoApi(accessToken, idResumen, archivo) {
   return data;
 }
 
+export async function getPreFillExtensoApi(accessToken, idExtenso) {
+  const res = await fetch(`${API_URL}/api/ponencias/extensos/${idExtenso}/publicar/`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || 'Error al obtener datos del extenso');
+  return data;
+}
+
 export async function publicarPonenciaApi(accessToken, idExtenso, formData = {}) {
   const res = await fetch(`${API_URL}/api/ponencias/extensos/${idExtenso}/publicar/`, {
     method: 'POST',
