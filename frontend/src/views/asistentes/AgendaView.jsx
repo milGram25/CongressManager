@@ -27,11 +27,11 @@ function EventoDetalleModal({ evento, inscrito, onClose, onRegistrar, registrand
 
         <div className="flex flex-col items-center text-center space-y-4 mb-6">
           <h3 className="text-lg font-medium text-base-content leading-snug">
-            <span className="font-bold">Título {tipoLabel}:</span> "{evento.titulo}"
+            <span className="font-bold">Título de la {tipoLabel.toLowerCase()}:</span> "{evento.titulo}"
           </h3>
           
           <p className="text-base text-base-content">
-            <span className="font-bold">Nombre {tipoLabel === 'Taller' ? 'Tallerista' : 'Ponente'}:</span> {evento.autor !== 'Por confirmar' ? evento.autor : 'Por confirmar'}
+            <span className="font-bold">Nombre del {tipoLabel === 'Taller' ? 'tallerista' : 'ponente'}:</span> {evento.autor !== 'Por confirmar' ? evento.autor : 'Por confirmar'}
           </p>
 
           <p className="text-base text-base-content capitalize">
@@ -82,7 +82,7 @@ function EventoDetalleModal({ evento, inscrito, onClose, onRegistrar, registrand
                   disabled={registrando === evento.id || !inscrito}
                   onClick={() => onRegistrar(evento)}
                 >
-                  {registrando === evento.id ? "REGISTRANDO..." : "REGISTRARME"}
+                  {registrando === evento.id ? "Registrando..." : "Registrarme"}
                 </button>
                 {!inscrito && (
                   <span className="text-[10px] text-error font-bold uppercase">Requiere inscripción</span>

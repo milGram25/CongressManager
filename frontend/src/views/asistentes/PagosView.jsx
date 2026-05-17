@@ -396,7 +396,7 @@ export default function PagosView() {
                   disabled={new Date(c.congreso_fin) < new Date()}
                 >
                   {c.nombre_congreso}{" "}
-                  {new Date(c.congreso_fin) < new Date() ? "(PASADO)" : ""}
+                  {new Date(c.congreso_fin) < new Date() ? "(Pasado)" : ""}
                 </option>
               ))}
             </select>
@@ -413,7 +413,7 @@ export default function PagosView() {
         <div className="md:col-span-2 space-y-6">
           <div className="bg-base-100 p-8 rounded-2xl border-2 border-base-300 shadow-sm">
             <h3 className="text-xl font-bold border-b border-base-200 pb-2 mb-4 text-neutral">
-              Detalle de Inscripción
+              Detalle de inscripción
             </h3>
 
             <div className="grid grid-cols-2 gap-4 text-sm mb-6">
@@ -423,7 +423,7 @@ export default function PagosView() {
               </div>
               <div>
                 <p className="opacity-50 uppercase font-bold text-[10px] tracking-widest">Categoría</p>
-                <p className="font-bold text-alt">{roleLabel(role).toUpperCase()}</p>
+                <p className="font-bold text-alt">{roleLabel(role)}</p>
               </div>
             </div>
 
@@ -431,7 +431,7 @@ export default function PagosView() {
               <div className="mb-6 p-4 rounded-xl border-l-4 border-alt/50 bg-alt/5 text-sm py-3 px-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-1 text-alt">
                   <MdInfoOutline className="text-base" />
-                  <span className="font-bold uppercase text-[12px] tracking-widest">Regla de Ponencias</span>
+                  <span className="font-bold uppercase text-[12px] tracking-widest">Regla de ponencias</span>
                 </div>
                 <p className="text-neutral/80 text-s leading-relaxed">
                   El pago base cubre <b>{userPayment.included_ponencias} ponencias</b>. Cada ponencia adicional tiene un cargo extra.
@@ -554,7 +554,7 @@ export default function PagosView() {
                   <div className="flex items-center gap-4 py-2">
                     <MdCheckCircle className="text-5xl text-secondary" />
                     <div>
-                      <h4 className="font-bold text-alt uppercase tracking-tight">Descuento Aplicado</h4>
+                      <h4 className="font-bold text-alt uppercase tracking-tight">Descuento aplicado</h4>
                       <p className="text-xs opacity-70 text-neutral">Validado vía: {studentEmail}</p>
                     </div>
                   </div>
@@ -572,7 +572,7 @@ export default function PagosView() {
                 <>
                   {paidSlots === 0 && pendingSlots > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="opacity-60">Inscripción Base (1-2 ponencias)</span>
+                      <span className="opacity-60">Inscripción base (1-2 ponencias)</span>
                       <span>${basePrice.toFixed(2)} MXN</span>
                     </div>
                   )}

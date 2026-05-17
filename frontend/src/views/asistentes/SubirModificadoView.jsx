@@ -48,7 +48,7 @@ export default function SubirModificadoView(){
                 Subir archivo modificado
             </h2>
         </div>
-        <p>Título Ponencia: </p>
+        <p>Título de la ponencia: </p>
         <p>ID:</p>
         <p>Resumen:</p>
         <p>Dictaminador asignado:</p>

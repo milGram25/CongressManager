@@ -68,7 +68,7 @@ export default function FacturasView() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl border border-base-300 shadow-sm">
         <div>
           <h2 className="text-2xl font-bold text-primary flex items-center gap-2">
-            <MdReceipt className="text-alt" /> Mis Comprobantes Fiscales
+            <MdReceipt className="text-alt" /> Mis comprobantes fiscales
           </h2>
           <p className="text-sm text-neutral opacity-70">Historial de solicitudes y descargas XML/PDF.</p>
         </div>
@@ -96,11 +96,11 @@ export default function FacturasView() {
               value={configFiltro}
               onChange={(e) => setConfigFiltro(e.target.value)}
             >
-              <optgroup label="Cronología General">
+              <optgroup label="Cronología general">
                 <option value="todas_desc">Todas: Más recientes primero</option>
                 <option value="todas_asc">Todas: Más antiguas primero</option>
               </optgroup>
-              <optgroup label="Por Estatus">
+              <optgroup label="Por estatus">
                 <option value="enviada_desc">Completadas (Recientes)</option>
                 <option value="pendiente_desc">Pendientes (Recientes)</option>
               </optgroup>
@@ -139,7 +139,7 @@ export default function FacturasView() {
                     <div className={`badge badge-outline badge-xs font-bold px-2 py-2 ${
                       factura.estatus === 'enviada' ? 'text-success border-success' : 'text-neutral opacity-50'
                     }`}>
-                      {factura.estatus === 'enviada' ? 'COMPLETADA' : 'PENDIENTE'}
+                      {factura.estatus === 'enviada' ? 'Completada' : 'Pendiente'}
                     </div>
                   </div>
 
@@ -181,7 +181,7 @@ export default function FacturasView() {
                     <div className="flex flex-col items-center justify-center p-3 bg-accent/40 rounded-xl w-full border-2 border-warning/30 border-dashed">
                       <MdAccessTime className="text-xl text-primary mb-1" />
                       <span className="text-[10px] font-black text-primary text-center uppercase tracking-tighter">
-                        Generando Factura
+                        Generando factura
                       </span>
                     </div>
                   )}

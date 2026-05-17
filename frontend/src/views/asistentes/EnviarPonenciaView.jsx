@@ -230,7 +230,7 @@ export default function EnviarPonenciaView() {
             <div className="alert alert-warning shadow-sm border-none bg-warning/20 text-warning-content rounded-2xl mb-4">
               <MdWarningAmber className="text-2xl shrink-0" />
               <div className="text-xs">
-                <p className="font-black uppercase tracking-tight mb-0.5">Aviso de Límite de Pago</p>
+                <p className="font-black uppercase tracking-tight mb-0.5">Aviso de límite de pago</p>
                 <p>
                   Has alcanzado el límite de ponencias cubiertas por tu pago actual.
                   <b> Puedes enviar esta ponencia</b>, pero no podrá ser aceptada hasta que realices el pago adicional.
@@ -250,7 +250,7 @@ export default function EnviarPonenciaView() {
 
           {!mostrarCoautores && (
             <button type="button" onClick={parteCoautores} className="btn btn-primary w-fit">
-              Agregar Coautor
+              Agregar coautor
             </button>
           )}
           {mostrarCoautores && (
@@ -261,14 +261,14 @@ export default function EnviarPonenciaView() {
                   <div className="flex-1 flex flex-col gap-2">
                     <input
                       type="text"
-                      placeholder={`Nombre coautor ${index + 1}`}
+                      placeholder={`Nombre del coautor ${index + 1}`}
                       value={coautor.nombre}
                       onChange={(e) => actualizaCoautor(index, 'nombre', e.target.value)}
                       className="input input-bordered w-full"
                     />
                     <input
                       type="email"
-                      placeholder={`Correo Electrónico Coautor ${index + 1}`}
+                      placeholder={`Correo electrónico del coautor ${index + 1}`}
                       value={coautor.email}
                       onChange={(e) => actualizaCoautor(index, 'email', e.target.value)}
                       className="input input-bordered w-full"
@@ -303,12 +303,12 @@ export default function EnviarPonenciaView() {
             <option value="virtual">Virtual</option>
           </select>
 
-          <label className="font-bold">Eje Temático *</label>
+          <label className="font-bold">Eje temático *</label>
           <select value={ejeTematico} onChange={(e) => setEjeTematico(e.target.value)}
             className="input input-bordered w-full" required>
             <option value="">Selecciona una opción</option>
-            <option value="alfabetizacion digital">Alfabetización Digital</option>
-            <option value="brecha digital">Brecha Digital</option>
+            <option value="alfabetizacion digital">Alfabetización digital</option>
+            <option value="brecha digital">Brecha digital</option>
             <option value="capacitacion en el proceso de enseñanza">Capacitación en el proceso de enseñanza-aprendizaje de profesores en servicio</option>
             <option value="capacitacion y apoyo a docentes">Capacitación y apoyo a los docentes</option>
             <option value="Competencias genericas">Competencias genéricas</option>
@@ -320,29 +320,29 @@ export default function EnviarPonenciaView() {
             <option value="educacion continua y desarrollo profesional">Educación continua y desarrollo profesional</option>
             <option value="educacion de posgrado">Educación de posgrado</option>
             <option value="educacion de pregrado">Educación de pregrado</option>
-            <option value="fomento de cultura de paz">Educación para el fomento para una Cultura de Paz y la prevención de violencia</option>
-            <option value="educacion para la paz">Educación para la paz y Objetivos del Desarrollo Sostenible</option>
+            <option value="fomento de cultura de paz">Educación para el fomento para una cultura de paz y la prevención de violencia</option>
+            <option value="educacion para la paz">Educación para la paz y objetivos del desarrollo sostenible</option>
             <option value="educacion para la sostenibilidad">Educación para la sostenibilidad</option>
             <option value="estrategias de diseño curricular">Estrategias de diseño curricular, principios y desafíos</option>
-            <option value="estudios multidisciplinarios">Estudios Multidisciplinarios</option>
-            <option value="evaluacion del aprendizaje">Evaluación del Aprendizaje</option>
+            <option value="estudios multidisciplinarios">Estudios multidisciplinarios</option>
+            <option value="evaluacion del aprendizaje">Evaluación del aprendizaje</option>
             <option value="evalucaion de entorno e-learning">Evaluación en entornos de e-learning</option>
             <option value="evaluacion y aseguramiento de la calidad">Evaluación y aseguramiento de la calidad en la educación</option>
             <option value="experiencias educativas steam">Experiencias educativas STEAM</option>
-            <option value="flexibilidad cuurricular">Flexibilidad Curricular</option>
+            <option value="flexibilidad cuurricular">Flexibilidad curricular</option>
             <option value="fomento carreras steam">Fomento de carreras STEAM en estudios pre-universitarios</option>
             <option value="gestion institucional y gobernanza">Gestión institucional y gobernanza de la educación</option>
             <option value="inclusion y equidad">Inclusión y equidad en la educación</option>
-            <option value="ia en la educacion">Inteligencia Artificial en educación</option>
+            <option value="ia en la educacion">Inteligencia artificial en educación</option>
             <option value="modalidades">Modalidades</option>
             <option value="necesidad del mercado laboral">Necesidades del mercado laboral</option>
             <option value="nuevos desafios para la educacion superior">Nuevos desafíos para el área de educación superior</option>
-            <option value="politica institucional de cultura de paz">Políticas institucionales universitarias de Cultura de Paz</option>
+            <option value="politica institucional de cultura de paz">Políticas institucionales universitarias de cultura de paz</option>
             <option value="practicas de innovacion pedagogico-didactica">Prácticas de innovación pedagógico-didáctica</option>
             <option value="practicas educativas, tendencias y problemas">Prácticas educativas, tendencias y problemas</option>
             <option value="problemas y tendencias en educacion tecnologica">Problemas y tendencias en educación tecnológica</option>
             <option value="problemas y tendencias de empleabilidad">Problemas y tendencias de empleabilidad</option>
-            <option value="realidad aumentada o virtual">Realidad aumentada o virtual</option>
+            <option value="realidad augmented o virtual">Realidad aumentada o virtual</option>
             <option value="redes universitarias">Redes universitarias</option>
             <option value="retos del desarrollo de habilidades del siglo XXI">Retos del desarrollo de habilidades del siglo XXI</option>
           </select>

@@ -100,7 +100,7 @@ export default function ConstanciasView() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl border border-base-300 shadow-sm">
         <div>
           <h2 className="text-2xl font-bold text-primary flex items-center gap-2">
-            <MdReceipt className="text-alt" /> Mis Constancias
+            <MdReceipt className="text-alt" /> Mis constancias
           </h2>
           <p className="text-sm text-neutral opacity-70">
             Descarga tus constancias de participación en congresos.
@@ -127,11 +127,11 @@ export default function ConstanciasView() {
               value={configFiltro}
               onChange={(e) => setConfigFiltro(e.target.value)}
             >
-              <optgroup label="Cronología General">
+              <optgroup label="Cronología general">
                 <option value="todas_desc">Todas: Más recientes primero</option>
                 <option value="todas_asc">Todas: Más antiguas primero</option>
               </optgroup>
-              <optgroup label="Por Estatus">
+              <optgroup label="Por estatus">
                 <option value="disponible_desc">Disponibles</option>
                 <option value="en_proceso_desc">En proceso</option>
               </optgroup>
@@ -166,12 +166,12 @@ export default function ConstanciasView() {
                       <span className="text-[10px] font-black bg-primary text-white px-2 py-0.5 rounded uppercase">
                         {constancia.id}
                       </span>
-                      <div className={`badge badge-outline badge-xs font-bold px-2 py-2 ${
+                      <div className={`badge badge-outline badge-xs font-bold px-2 py-2 capitalize ${
                         constancia.estatus === 'disponible'
                           ? 'text-success border-success'
                           : 'text-neutral opacity-50'
                       }`}>
-                        {constancia.estatus.replace("_", " ").toUpperCase()}
+                        {constancia.estatus.replace("_", " ")}
                       </div>
                     </div>
 
@@ -236,7 +236,7 @@ export default function ConstanciasView() {
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
               <div>
                 <p className="font-black text-gray-800 text-sm uppercase tracking-tight">
-                  Constancia de Participación
+                  Constancia de participación
                 </p>
                 <p className="text-xs text-gray-400">
                   {modalConstancia.congreso} — {modalConstancia.tipo}
