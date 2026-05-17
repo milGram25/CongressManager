@@ -41,11 +41,15 @@ export default function PagosView() {
   const [registrandoPago, setRegistrandoPago] = useState(false);
   const [pagoError, setPagoError] = useState("");
   const [slotsToPay, setSlotsToPay] = useState(1);
+  const [selectedRole, setSelectedRole] = useState(null);
 
   // Inicializar slotsToPay con el mínimo requerido (mínimo 1)
   useEffect(() => {
     const minRequired = resumen?.user_payment?.pending_min || 1;
     setSlotsToPay(minRequired);
+    if (!selectedRole && resumen?.user_payment?.role) {
+      setSelectedRole(resumen.user_payment.role);
+    }
   }, [resumen]);
 
   const [isStudent, setIsStudent] = useState(user?.es_estudiante_validado ? true : null);
@@ -226,34 +230,50 @@ export default function PagosView() {
   }, [datosFacturacion, usarCorreoAlternativo, correoFacturacion, constanciaFiscalFile]);
 
   const userPayment = resumen?.user_payment;
-  const role = userPayment?.role || user?.rol || "asistente";
-  const isPonente = role === "ponente";
-  const basePrice = Number(userPayment?.base_price || 0);
+  const currentRole = userPayment?.role || user?.rol || "asistente";
+  const activeRole = selectedRole || currentRole;
+  const isPonente = activeRole === "ponente";
+  
+  const priceCatalog = resumen?.price_catalog || {};
+  const basePrice = isPonente ? (priceCatalog.ponente || 0) : (priceCatalog.asistente || 0);
+  
   const pendingSlots = Number(userPayment?.pending_slots || 0);
   const paidSlots = Number(userPayment?.paid_slots || 0);
   const overflowPonencias = Number(userPayment?.overflow_ponencias_count || 0);
-  const alreadyPaid = isPonente ? paidSlots >= 1 : Boolean(userPayment?.already_paid);
+  const alreadyPaid = currentRole === "ponente" ? paidSlots >= 1 : Boolean(userPayment?.already_paid);
   const backendTotalDue = Number(userPayment?.total_due || 0);
 
   const finalPrice = useMemo(() => {
     if (!userPayment) return 0;
+    
+    // Si el rol activo es distinto al actual, usamos lógica de precio base simple
+    if (activeRole !== currentRole) {
+      if (activeRole === "asistente") {
+        return isVerified ? basePrice * 0.5 : basePrice;
+      }
+      if (activeRole === "ponente") {
+        return slotsToPay * basePrice;
+      }
+    }
+
+    // Si es el rol actual, respetamos la lógica del backend
     if (isPonente) return Number(slotsToPay) * basePrice;
-    if (role === "asistente") {
+    if (activeRole === "asistente") {
       if (alreadyPaid) return 0;
       if (isVerified) return basePrice * 0.5;
       return backendTotalDue;
     }
     return backendTotalDue;
-  }, [userPayment, isPonente, role, isVerified, alreadyPaid, basePrice, backendTotalDue, slotsToPay]);
+  }, [userPayment, isPonente, activeRole, currentRole, isVerified, alreadyPaid, basePrice, backendTotalDue, slotsToPay]);
 
   const canSubmitPayment = useMemo(() => {
     if (!userPayment) return false;
+    if (activeRole === currentRole && alreadyPaid && (!isPonente || userPayment.can_buy_more === 0)) return false;
     if (isPonente) {
-      // Un ponente puede pagar si tiene slots pendientes, incluso si ya pagó el base
-      return overflowPonencias === 0 && pendingSlots > 0 && finalPrice > 0;
+      return overflowPonencias === 0 && (activeRole !== currentRole || pendingSlots > 0 || userPayment.can_buy_more > 0) && finalPrice > 0;
     }
     return finalPrice > 0;
-  }, [userPayment, isPonente, overflowPonencias, pendingSlots, finalPrice]);
+  }, [userPayment, isPonente, activeRole, currentRole, alreadyPaid, overflowPonencias, pendingSlots, finalPrice]);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
@@ -302,6 +322,7 @@ export default function PagosView() {
       const payload = {
         requiere_factura: false,
         monto: finalPrice,
+        selected_role: activeRole,
         ...(idCongreso && { id_congreso: idCongreso }),
         ...(isPonente && { slots_to_pay: slotsToPay }),
       };
@@ -422,37 +443,55 @@ export default function PagosView() {
                 <p className="font-medium text-neutral">{user?.nombre || "Usuario Demo"}</p>
               </div>
               <div>
-                <p className="opacity-50 font-bold text-[10px] tracking-widest">Categoría</p>
-                <p className="font-bold text-alt">{roleLabel(role)}</p>
+                <p className="opacity-50 font-bold text-[10px] tracking-widest">Rol de registro</p>
+                {alreadyPaid ? (
+                  <p className="font-bold text-alt">{roleLabel(currentRole)}</p>
+                ) : (
+                  <select 
+                    className="select select-ghost select-xs font-bold text-alt -ml-1 focus:bg-transparent"
+                    value={activeRole}
+                    onChange={(e) => setSelectedRole(e.target.value)}
+                  >
+                    <option value="asistente">Asistente</option>
+                    <option value="ponente">Ponente</option>
+                  </select>
+                )}
               </div>
             </div>
 
-            {isPonente && userPayment && (
+            {isPonente && (
               <div className="mb-6 p-4 rounded-xl border-l-4 border-alt/50 bg-alt/5 text-sm py-3 px-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-1 text-alt">
                   <MdInfoOutline className="text-base" />
-                  <span className="font-bold uppercase text-[12px] tracking-widest">Regla de ponencias</span>
+                  <span className="font-bold text-[12px] tracking-widest">Regla de ponencias</span>
                 </div>
                 <p className="text-neutral/80 text-s leading-relaxed">
-                  El pago base cubre <b>{userPayment.included_ponencias} ponencias</b>. Cada ponencia adicional tiene un cargo extra.
+                  El pago como <b>ponente</b> cubre <b>2 ponencias</b>. Cada ponencia adicional tiene un cargo extra.
                 </p>
-                <div className="mt-2 space-y-1">
-                  <p className="text-[12px] font-medium text-alt/70 italic">
-                    * Tienes <b>{userPayment.total_ponencias_count || 0}</b> ponencias enviadas en total.
-                  </p>
-                  <p className="text-[12px] font-medium text-alt/70 italic">
-                    * Tienes <b>{userPayment.accepted_ponencias_count || 0}</b> ponencias aceptadas.
-                  </p>
-                  {userPayment.total_ponencias_count > (userPayment.paid_slots || 0) * (userPayment.included_ponencias || 2) && (
-                    <p className="text-[12px] font-medium text-error mt-1">
-                      Atención: Has enviado más ponencias de las que cubre tu pago actual.
+                {userPayment && activeRole === currentRole && (
+                  <div className="mt-2 space-y-1">
+                    <p className="text-[12px] font-medium text-alt/70 italic">
+                      * Tienes <b>{userPayment.total_ponencias_count || 0}</b> ponencias enviadas en total.
                     </p>
-                  )}
-                </div>
+                    <p className="text-[12px] font-medium text-alt/70 italic">
+                      * Tienes <b>{userPayment.accepted_ponencias_count || 0}</b> ponencias aceptadas.
+                    </p>
+                    {userPayment.total_ponencias_count > (userPayment.paid_slots || 0) * 2 && (
+                      <p className="text-[12px] font-medium text-error mt-1">
+                        Atención: Has enviado más ponencias de las que cubre tu pago actual.
+                      </p>
+                    )}
+                  </div>
+                )}
+                {activeRole !== currentRole && (
+                  <p className="text-[10px] text-alt font-medium mt-2 italic">
+                    Al registrarte como ponente podrás enviar y presentar tus trabajos de investigación.
+                  </p>
+                )}
               </div>
             )}
 
-            {role === "asistente" && isStudent !== false && (
+            {activeRole === "asistente" && isStudent !== false && (
               <div
                 className={`p-6 rounded-2xl border-2 transition-all ${isVerified ? "border-secondary bg-alt/5" : "border-dashed border-base-300"}`}
               >
@@ -563,20 +602,20 @@ export default function PagosView() {
             )}
 
             <div className="mt-8 pt-6 border-t border-base-200 space-y-2 text-neutral">
-              {((!isPonente && alreadyPaid) || (isPonente && pendingSlots === 0 && paidSlots > 0)) && (
+              {(alreadyPaid && activeRole === currentRole && (!isPonente || (userPayment && userPayment.can_buy_more === 0))) && (
                 <div className="mb-4 opacity-80">
                   <span className="text-[10px] font-bold tracking-widest text-primary">Sin pagos pendientes</span>
                 </div>
               )}
               {isPonente ? (
                 <>
-                  {paidSlots === 0 && pendingSlots > 0 && (
+                  {((activeRole !== currentRole) || (paidSlots === 0)) && (
                     <div className="flex justify-between text-sm">
                       <span className="opacity-60">Inscripción base (1-2 ponencias)</span>
                       <span>${basePrice.toFixed(2)} MXN</span>
                     </div>
                   )}
-                  {userPayment && userPayment.can_buy_more > 0 && (
+                  {((activeRole === currentRole && userPayment?.can_buy_more > 0) || (activeRole !== currentRole)) && (
                     <div className="flex justify-between items-center text-sm">
                       <div className="flex items-center gap-3">
                         <span className="opacity-60">Ponencias adicionales</span>
@@ -586,7 +625,8 @@ export default function PagosView() {
                           onChange={(e) => setSlotsToPay(Number(e.target.value))}
                         >
                           {[1, 2, 3].map((num) => {
-                            const isAvailable = num <= userPayment.can_buy_more;
+                            const maxCanBuy = activeRole === currentRole ? userPayment?.can_buy_more : 3;
+                            const isAvailable = num <= maxCanBuy;
                             return (
                               <option key={num} value={num} disabled={!isAvailable} className="text-neutral">
                                 {num}
@@ -601,12 +641,12 @@ export default function PagosView() {
                 </>
               ) : (
                 <div className="flex justify-between text-sm">
-                  <span className="opacity-60">Precio base ({roleLabel(role)})</span>
+                  <span className="opacity-60">Precio base ({roleLabel(activeRole)})</span>
                   <span>${basePrice.toFixed(2)} MXN</span>
                 </div>
               )}
 
-              {role === "asistente" && isVerified && (
+              {activeRole === "asistente" && isVerified && (
                 <div className="flex justify-between text-sm text-alt font-bold">
                   <span>Descuento Estudiante (50%)</span>
                   <span>-${(basePrice * 0.5).toFixed(2)} MXN</span>
@@ -622,11 +662,11 @@ export default function PagosView() {
 
         <div className="md:col-span-1">
           <div className="bg-base-200 p-6 rounded-2xl sticky top-24 shadow-sm text-neutral">
-            <h3 className="font-bold text-xl mb-6">Resumen de Pago</h3>
+            <h3 className="font-bold text-xl mb-6">Resumen de pago</h3>
 
             <div className="flex justify-between text-xs mb-4 opacity-70 italic">
               <span>Categoría:</span>
-              <span className="text-right">{roleLabel(role)}</span>
+              <span className="text-right">{roleLabel(activeRole)}</span>
             </div>
             {pagoError && (
               <div className="bg-error/10 border border-error/20 text-error text-xs px-3 py-2 rounded-lg mb-4">
