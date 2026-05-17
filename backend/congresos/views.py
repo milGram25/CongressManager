@@ -777,34 +777,43 @@ class RegistrarPagoView(APIView):
             )
 
         requires_invoice = bool(request.data.get('requiere_factura', False))
-        role = summary['user_payment']['role']
+        
+        # El usuario puede elegir con qué rol registrarse si no ha pagado aún
+        current_role = summary['user_payment']['role']
+        selected_role = request.data.get('selected_role', current_role)
+        
         costos_id = summary['user_payment']['costos_id']
-        base_price = summary['user_payment']['base_price']
+        base_price = summary['price_catalog'].get(selected_role, summary['price_catalog']['asistente'])
 
-        if role == 'ponente':
+        if selected_role == 'ponente':
+            # Asegurar que el usuario tenga registro de ponente si elige este rol
+            from users.models import Ponente
+            with transaction.atomic():
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT 1 FROM ponente WHERE id_persona = %s", [request.user.id_persona])
+                    if not cursor.fetchone():
+                        cursor.execute("INSERT INTO ponente (id_persona) VALUES (%s)", [request.user.id_persona])
+
+            # Recalcular resumen ahora que es ponente
+            summary = _build_payment_summary(request.user, id_congreso=id_congreso)
+            
             pending_min = int(summary['user_payment']['pending_min'])
             paid_slots = int(summary['user_payment']['paid_slots'])
             can_buy_more = int(summary['user_payment']['can_buy_more'])
             
-            # El usuario puede elegir cuántos pagar (mínimo pending_min, máximo can_buy_more)
-            slots_to_pay = int(request.data.get('slots_to_pay', pending_min))
+            slots_to_pay = int(request.data.get('slots_to_pay', max(1, pending_min)))
             
             if slots_to_pay < pending_min:
                 return Response(
                     {'detail': f'Debes pagar al menos {pending_min} slots para cubrir tus ponencias actuales.'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            if slots_to_pay > can_buy_more:
-                return Response(
-                    {'detail': f'No puedes pagar más de {can_buy_more} slots adicionales (máximo 5 ponencias en total).'},
+            if slots_to_pay > can_buy_more and paid_slots > 0:
+                 return Response(
+                    {'detail': f'No puedes pagar más de {can_buy_more} slots adicionales.'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            if slots_to_pay <= 0:
-                return Response(
-                    {'detail': 'No hay pagos pendientes para este ponente.'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
+            
             with transaction.atomic():
                 with connection.cursor() as cursor:
                     for slot_idx in range(paid_slots + 1, paid_slots + slots_to_pay + 1):
@@ -820,12 +829,13 @@ class RegistrarPagoView(APIView):
                 status=status.HTTP_201_CREATED,
             )
 
-        concept = f'inscripcion_{role}'
+        # Caso Asistente o Comite
+        concept = f'inscripcion_{selected_role}'
         already_paid = _has_role_payment(request.user.id_persona, concept, costos_id=costos_id)
 
         if already_paid:
             return Response(
-                {'detail': 'Este usuario ya tiene un pago registrado para su rol.'},
+                {'detail': 'Este usuario ya tiene un pago registrado para este rol.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -836,10 +846,8 @@ class RegistrarPagoView(APIView):
                 monto = float(raw_monto)
             except (TypeError, ValueError):
                 return Response({'detail': 'El monto enviado no es válido.'}, status=status.HTTP_400_BAD_REQUEST)
-            if monto <= 0:
-                return Response({'detail': 'El monto debe ser mayor a cero.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if role == 'asistente':
+        if selected_role == 'asistente':
             descuento_estudiante = base_price * 0.5
             if not (_is_close(monto, base_price) or _is_close(monto, descuento_estudiante)):
                 return Response({'detail': 'Monto no válido para asistente.'}, status=status.HTTP_400_BAD_REQUEST)
