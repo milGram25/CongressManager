@@ -33,10 +33,14 @@ export default function EnviarPonenciaView() {
   const [mensaje, setMensaje] = useState({ texto: '', tipo: '' });
 
   useEffect(() => {
-    obtenerAreasApi(accessToken)
+    if (!selectedCongreso) {
+      setAreasGenerales([]);
+      return;
+    }
+    obtenerAreasApi(accessToken, selectedCongreso)
       .then(data => setAreasGenerales(Array.isArray(data) ? data : []))
-      .catch(() => {});
-  }, [accessToken]);
+      .catch(() => setAreasGenerales([]));
+  }, [accessToken, selectedCongreso]);
 
   useEffect(() => {
     getMisInscripcionesApi(accessToken)
@@ -69,6 +73,7 @@ export default function EnviarPonenciaView() {
     }
     setLoadingTipos(true);
     setTipoTrabajo('');
+    setEjeTematico('');
 
     // Cargar resumen de pagos para el congreso seleccionado
     getPagosResumenApi(accessToken, selectedCongreso)
@@ -318,7 +323,9 @@ export default function EnviarPonenciaView() {
             className="sr-only" tabIndex={-1} aria-hidden="true" />
           <div className="border border-base-300 rounded-xl overflow-hidden">
             {areasGenerales.length === 0 ? (
-              <div className="p-4 text-sm text-base-content/50">Cargando áreas...</div>
+              <div className="p-4 text-sm text-base-content/50">
+                {!selectedCongreso ? 'Selecciona primero un congreso' : 'Sin ejes temáticos para este congreso'}
+              </div>
             ) : (
               areasGenerales.map(area => {
                 const expandida = areaExpandida === area.id;
