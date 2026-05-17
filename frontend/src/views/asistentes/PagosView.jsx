@@ -40,12 +40,12 @@ export default function PagosView() {
   const [resumenError, setResumenError] = useState("");
   const [registrandoPago, setRegistrandoPago] = useState(false);
   const [pagoError, setPagoError] = useState("");
-  const [slotsToPay, setSlotsToPay] = useState(1);
+  const [slotsToPay, setSlotsToPay] = useState(0);
   const [selectedRole, setSelectedRole] = useState(null);
 
-  // Inicializar slotsToPay con el mínimo requerido (mínimo 1)
+  // Inicializar slotsToPay con el mínimo requerido (mínimo 0)
   useEffect(() => {
-    const minRequired = resumen?.user_payment?.pending_min || 1;
+    const minRequired = resumen?.user_payment?.pending_min || 0;
     setSlotsToPay(minRequired);
     if (!selectedRole && resumen?.user_payment?.role) {
       setSelectedRole(resumen.user_payment.role);
@@ -252,12 +252,16 @@ export default function PagosView() {
         return isVerified ? basePrice * 0.5 : basePrice;
       }
       if (activeRole === "ponente") {
-        return slotsToPay * basePrice;
+        return basePrice + (Number(slotsToPay) * basePrice);
       }
     }
 
     // Si es el rol actual, respetamos la lógica del backend
-    if (isPonente) return Number(slotsToPay) * basePrice;
+    if (isPonente) {
+      const isBuyingBase = paidSlots === 0;
+      const baseCost = isBuyingBase ? basePrice : 0;
+      return baseCost + (Number(slotsToPay) * basePrice);
+    }
     if (activeRole === "asistente") {
       if (alreadyPaid) return 0;
       if (isVerified) return basePrice * 0.5;
@@ -624,9 +628,10 @@ export default function PagosView() {
                           value={slotsToPay}
                           onChange={(e) => setSlotsToPay(Number(e.target.value))}
                         >
-                          {[1, 2, 3].map((num) => {
+                          {[0, 1, 2, 3].map((num) => {
                             const maxCanBuy = activeRole === currentRole ? userPayment?.can_buy_more : 3;
-                            const isAvailable = num <= maxCanBuy;
+                            const minReq = activeRole === currentRole ? (resumen?.user_payment?.pending_min || 0) : 0;
+                            const isAvailable = num <= maxCanBuy && num >= minReq;
                             return (
                               <option key={num} value={num} disabled={!isAvailable} className="text-neutral">
                                 {num}
