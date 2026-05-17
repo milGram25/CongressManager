@@ -47,9 +47,9 @@ export default function UserInvoiceList({ users, selectedUserId, onSelectUser })
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <h4 className="font-bold text-gray-800 truncate">{user.nombre}</h4>
-              <span className="bg-[#005a6a]/10 px-2 py-0.5 rounded-md text-[#005a6a] text-[10px] font-bold uppercase tracking-wider">{user.rol}</span>
+              <span className="bg-[#005a6a]/10 px-2 py-0.5 rounded-md text-[#005a6a] text-[10px] font-bold">{user.rol}</span>
               {(() => { const s = getStatusLabel(user.status); return s ? (
-                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${s.cls}`}>{s.label}</span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${s.cls}`}>{s.label}</span>
               ) : null; })()}
             </div>
 
@@ -71,7 +71,7 @@ export default function UserInvoiceList({ users, selectedUserId, onSelectUser })
           </div>
 
           <div className="text-right hidden sm:block">
-            <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Institución</p>
+            <p className="text-[10px] font-bold text-gray-400">Institución</p>
             <p className="text-sm font-semibold text-gray-600">{user.institucion}</p>
           </div>
 

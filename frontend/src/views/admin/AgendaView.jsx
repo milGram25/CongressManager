@@ -55,9 +55,9 @@ function ClockDisplay({ label, timezone }) {
         <p className="text-[11px] font-medium text-base-content/60 mb-2">{label}</p>
         <div className="flex items-center gap-1">
           <div className="flex items-center gap-1">
-            <span className="bg-base-200 rounded-lg px-2 py-1 text-2xl font-bold font-mono tracking-wider text-base-content">{hh}</span>
+            <span className="bg-base-200 rounded-lg px-2 py-1 text-2xl font-bold font-mono text-base-content">{hh}</span>
             <span className="text-2xl font-bold text-base-content">:</span>
-            <span className="bg-base-200 rounded-lg px-2 py-1 text-2xl font-bold font-mono tracking-wider text-base-content">{mm}</span>
+            <span className="bg-base-200 rounded-lg px-2 py-1 text-2xl font-bold font-mono text-base-content">{mm}</span>
           </div>
           <div className="flex flex-col gap-1 ml-1">
             <button className={`text-[10px] px-2 py-0.5 rounded-md font-semibold border ${period?.toUpperCase() === "AM" ? "bg-[#e8f5f5] text-black border-black" : "bg-base-200 text-base-content/40 border-base-300"}`}>AM</button>

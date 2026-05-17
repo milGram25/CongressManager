@@ -45,10 +45,10 @@ export default function SubirMultimediaView() {
                 </span>
             </button>
             <h2 className="text-xl font-bold">
-                Subir Multimedia
+                Subir multimedia
             </h2>
         </div>
-        <p>Título Ponencia: </p>
+        <p>Título de la ponencia: </p>
         <p>ID:</p>
         <p>Resumen:</p>
         <p>Dictaminador asignado:</p>

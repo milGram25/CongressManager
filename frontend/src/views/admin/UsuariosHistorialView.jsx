@@ -38,25 +38,24 @@ export default function UsuariosHistorialView() {
           <div className="w-2 h-10 bg-[#005a6a] rounded-full"></div>
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Historial de usuarios</h1>
+            <h1 className="text-2xl font-bold text-gray-800">Historial de usuarios</h1>
             <p className="text-sm text-gray-500">Consulta el registro de documentos emitidos y acciones realizadas</p>
           </div>
         </div>
 
         <div className="flex p-1 bg-gray-100 rounded-2xl w-fit">
-          <button 
+          <button
             onClick={() => setActiveTab("facturas")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
-              activeTab === "facturas" ? "bg-white text-[#005a6a] shadow-sm" : "text-gray-500 hover:text-gray-700"
-            }`}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeTab === "facturas" ? "bg-white text-[#005a6a] shadow-sm" : "text-gray-500 hover:text-gray-700"
+              }`}
           >
             <MdReceipt className="text-xl" />
             Historial de facturas
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab("constancias")}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
-              activeTab === "constancias" ? "bg-white text-[#005a6a] shadow-sm" : "text-gray-500 hover:text-gray-700"
-            }`}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${activeTab === "constancias" ? "bg-white text-[#005a6a] shadow-sm" : "text-gray-500 hover:text-gray-700"
+              }`}
           >
             <MdBadge className="text-xl" />
             Historial de constancias

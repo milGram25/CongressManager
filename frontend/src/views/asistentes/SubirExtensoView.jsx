@@ -86,7 +86,7 @@ export default function SubirExtensoView() {
           disabled={submitting}
           className="w-full btn btn-primary rounded-xl disabled:opacity-50"
         >
-          {submitting ? <span className="loading loading-spinner loading-sm" /> : 'Subir Extenso'}
+          {submitting ? <span className="loading loading-spinner loading-sm" /> : 'Subir extenso'}
         </button>
       </form>
     </div>

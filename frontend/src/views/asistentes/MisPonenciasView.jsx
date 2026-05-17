@@ -90,32 +90,32 @@ export default function MisPonenciasView() {
             </button>
 
             <div className="text-center space-y-4 mt-6 w-full">
-              <h2 className="font-bold text-lg text-primary uppercase tracking-wide">Título:</h2>
+              <h2 className="font-bold text-lg text-primary tracking-wide">Título:</h2>
               <p className="italic font-medium text-xl">"{seleccionada.titulo}"</p>
 
               <p className="font-bold text-sm">Congreso: <span className="font-normal">{seleccionada.evento?.congreso ?? '—'}</span></p>
 
               <div className="flex flex-wrap justify-center gap-8 py-3 border-y border-base-200 w-full my-4">
                 <div>
-                  <p className="font-bold text-xs uppercase tracking-wider text-slate-500">Inicio</p>
+                  <p className="font-bold text-xs tracking-wider text-slate-500">Inicio</p>
                   <p className="text-sm">{formatFecha(seleccionada.evento?.fecha_inicio)}</p>
                 </div>
                 <div>
-                  <p className="font-bold text-xs uppercase tracking-wider text-slate-500">Fin</p>
+                  <p className="font-bold text-xs tracking-wider text-slate-500">Fin</p>
                   <p className="text-sm">{formatFecha(seleccionada.evento?.fecha_fin)}</p>
                 </div>
                 <div>
-                  <p className="font-bold text-xs uppercase tracking-wider text-slate-500">Modalidad</p>
+                  <p className="font-bold text-xs tracking-wider text-slate-500">Modalidad</p>
                   <p className="text-sm capitalize">{seleccionada.tipo_participacion || '—'}</p>
                 </div>
                 {seleccionada.tipo_participacion === 'presencial' ? (
                   <div>
-                    <p className="font-bold text-xs uppercase tracking-wider text-slate-500">Lugar</p>
+                    <p className="font-bold text-xs tracking-wider text-slate-500">Lugar</p>
                     <p className="text-sm">{seleccionada.evento?.lugar || 'Por definir'}</p>
                   </div>
                 ) : seleccionada.evento?.enlace ? (
                   <div>
-                    <p className="font-bold text-xs uppercase tracking-wider text-slate-500">Enlace</p>
+                    <p className="font-bold text-xs tracking-wider text-slate-500">Enlace</p>
                     <a href={seleccionada.evento.enlace} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
                       Abrir enlace
                     </a>

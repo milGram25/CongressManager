@@ -10,7 +10,7 @@ export default function AjustesView() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto py-10">
         {/* Opción Instituciones */}
-        <button 
+        <button
           onClick={() => navigate('instituciones')}
           className="group p-10 bg-base-200 hover:bg-primary/5 border-2 border-transparent hover:border-primary rounded-3xl transition-all flex flex-col items-center text-center space-y-4"
         >
@@ -24,7 +24,7 @@ export default function AjustesView() {
         </button>
 
         {/* Opción Áreas */}
-        <button 
+        <button
           onClick={() => navigate('areas')}
           className="group p-10 bg-base-200 hover:bg-primary/5 border-2 border-transparent hover:border-primary rounded-3xl transition-all flex flex-col items-center text-center space-y-4"
         >

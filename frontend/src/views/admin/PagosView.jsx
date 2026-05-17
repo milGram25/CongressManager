@@ -50,7 +50,7 @@ function DetallePanel({ pago }) {
 
       <div className="ml-4">
         {/* Evento */}
-        <p className="text-[11px] text-base-content/40 uppercase font-semibold tracking-wide mb-1">Pago de evento</p>
+        <p className="text-[11px] text-base-content/40 font-semibold mb-1">Pago de evento</p>
         <div className="flex items-center gap-3 mb-4 ml-4">
           <span className="text-xs text-base-content/50 w-16 flex-shrink-0">Evento</span>
           <span className="flex-1 border border-base-300 rounded-full px-3 py-1 text-sm text-base-content bg-base-100">{pago.congreso}</span>
@@ -60,7 +60,7 @@ function DetallePanel({ pago }) {
         <div className="grid grid-cols-2 gap-x-6 gap-y-2">
           {/* Columna persona */}
           <div className="space-y-2">
-            <p className="text-[11px] text-base-content/40 uppercase font-semibold tracking-wide mb-1">Persona</p>
+            <p className="text-[11px] text-base-content/40 font-semibold mb-1">Persona</p>
             <div className="ml-4 space-y-2">
               <Campo label="Nombre" value={pago.nombre} />
               <Campo label="Primer apellido" value={pago.primerApellido} />
@@ -84,7 +84,7 @@ function DetallePanel({ pago }) {
 
           {/* Columna otros detalles */}
           <div className="space-y-2 ml-4">
-            <p className="text-[11px] text-base-content/40 uppercase font-semibold tracking-wide mb-1">Otros detalles</p>
+            <p className="text-[11px] text-base-content/40 font-semibold mb-1">Otros detalles</p>
             <div className="ml-4 space-y-2">
               <Campo label="Sede destinatario" value={pago.sede} />
               <Campo label="Cuenta depósito" value={pago.cuentaDeposito ? `${pago.cuentaDeposito.slice(0, 9)}...` : '—'} />

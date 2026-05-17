@@ -471,7 +471,7 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                             <div className="w-2 h-6 bg-primary rounded-full"></div> Libros
                         </h3>
                         <button onClick={(e) => handleAgregarLibro(e, libros.length)} className="btn btn-sm btn-outline btn-primary gap-2 mb-4 w-fit rounded-xl">
-                            <MdAdd size={18} /> Nuevo Libro
+                            <MdAdd size={18} /> Nuevo libro
                         </button>
 
                     </div>

@@ -111,7 +111,7 @@ function PopoverAsignado({ item, dictaminadores }) {
 
   return (
     <div>
-      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-base-content/50">Revisores asignados</p>
+      <p className="mb-2 text-[11px] font-bold text-base-content/50">Revisores asignados</p>
       {asignados.length === 0 ? (
         <p className="text-xs italic text-base-content/50">Sin asignar todavía.</p>
       ) : (
@@ -175,7 +175,7 @@ function PopoverRevisado({ item }) {
 function PopoverAceptado({ item }) {
   return (
     <div>
-      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-base-content/50">Estado de aceptación</p>
+      <p className="mb-2 text-[11px] font-bold text-base-content/50">Estado de aceptación</p>
       {item.aceptado ==="aceptado"? (
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100">
@@ -386,7 +386,7 @@ export default function ListaResumenes({ listaElementos = [], dictaminadores = [
         </div>
 
         <div className="flex items-center justify-between border-t border-slate-200 pt-3">
-          <span className="text-xs  tracking-[0.18em] text-slate-400">Lista disponible</span>
+          <span className="text-xs text-slate-400">Lista disponible</span>
           <span className="text-xs font-medium text-slate-400">{listaFiltrada.length} resultado(s)</span>
         </div>
 

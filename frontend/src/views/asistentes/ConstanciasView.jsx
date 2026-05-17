@@ -163,15 +163,15 @@ export default function ConstanciasView() {
                 <div className="flex flex-col md:flex-row justify-between gap-6">
                   <div className="space-y-3 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black bg-primary text-white px-2 py-0.5 rounded uppercase">
+                      <span className="text-[10px] font-black bg-primary text-white px-2 py-0.5 rounded">
                         {constancia.id}
                       </span>
-                      <div className={`badge badge-outline badge-xs font-bold px-2 py-2 ${
+                      <div className={`badge badge-outline badge-xs font-bold px-2 py-2 capitalize ${
                         constancia.estatus === 'disponible'
                           ? 'text-success border-success'
                           : 'text-neutral opacity-50'
                       }`}>
-                        {constancia.estatus.replace("_", " ").toUpperCase()}
+                        {constancia.estatus.replace("_", " ")}
                       </div>
                     </div>
 
@@ -202,7 +202,7 @@ export default function ConstanciasView() {
                     ) : (
                       <div className="flex flex-col items-center justify-center p-3 bg-accent/40 rounded-xl w-full border-2 border-warning/30 border-dashed">
                         <MdAccessTime className="text-xl text-primary mb-1 animate-spin-slow" />
-                        <span className="text-[10px] font-black text-primary text-center uppercase">
+                        <span className="text-[10px] font-black text-primary text-center">
                           Generando constancia
                         </span>
                       </div>
@@ -235,7 +235,11 @@ export default function ConstanciasView() {
             {/* Header */}
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
               <div>
+<<<<<<< HEAD
                 <p className="font-black text-gray-800 text-sm uppercase tracking-tight">
+=======
+                <p className="font-black text-gray-800 text-sm tracking-tight">
+>>>>>>> b3642985737c97cf2c3de9ab5edd4ab3c3cb7550
                   Constancia de participación
                 </p>
                 <p className="text-xs text-gray-400">
@@ -273,13 +277,13 @@ export default function ConstanciasView() {
             <div className="px-6 py-4 bg-white border-t border-gray-100 flex justify-end gap-3 shrink-0">
               <button
                 onClick={() => setModalConstancia(null)}
-                className="px-5 py-2.5 border border-gray-200 rounded-xl font-bold text-gray-500 text-xs hover:bg-gray-50 transition-all uppercase tracking-wide"
+                className="px-5 py-2.5 border border-gray-200 rounded-xl font-bold text-gray-500 text-xs hover:bg-gray-50 transition-all tracking-wide"
               >
                 Cerrar
               </button>
               <button
                 onClick={handlePrintCertificate}
-                className="px-6 py-2.5 bg-primary text-white rounded-xl font-black text-xs flex items-center gap-2 hover:opacity-90 transition-all shadow-lg uppercase tracking-wide"
+                className="px-6 py-2.5 bg-primary text-white rounded-xl font-black text-xs flex items-center gap-2 hover:opacity-90 transition-all shadow-lg tracking-wide"
               >
                 <MdPrint className="text-base" /> Guardar como PDF
               </button>

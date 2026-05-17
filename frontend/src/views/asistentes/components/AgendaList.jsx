@@ -59,7 +59,11 @@ export default function AgendaList({ events = [], loading = false, error = "" })
 
       <div className="p-4 bg-base-200 border-b border-base-300 overflow-x-auto">
         <div className="flex items-center gap-4 min-w-max">
+<<<<<<< HEAD
           <span className="text-xs font-bold opacity-50 flex items-center gap-1 uppercase">
+=======
+          <span className="text-xs font-bold opacity-50 flex items-center gap-1">
+>>>>>>> b3642985737c97cf2c3de9ab5edd4ab3c3cb7550
             <MdFilterList /> Filtrar por eje:
           </span>
           <div className="flex gap-2">
@@ -106,7 +110,7 @@ export default function AgendaList({ events = [], loading = false, error = "" })
                     <div>
                       <h4 className="font-medium text-base-content">{item.title}</h4>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] badge badge-ghost uppercase opacity-70">{item.eje || "Sin eje"}</span>
+                        <span className="text-[10px] badge badge-ghost opacity-70">{item.eje || "Sin eje"}</span>
                         <p className="text-sm opacity-60">{item.author || "Sin autor"}</p>
                         {Array.isArray(item.sources) && item.sources.length > 0 && (
                           <div className="flex items-center gap-1">

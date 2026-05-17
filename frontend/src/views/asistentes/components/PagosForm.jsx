@@ -64,7 +64,11 @@ export default function PagosForm({ total, onSuccess, loading }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="form-control">
         <label className="label py-1">
+<<<<<<< HEAD
           <span className="label-text font-bold text-[10px] uppercase opacity-60">Número de tarjeta</span>
+=======
+          <span className="label-text font-bold text-[10px] opacity-60">Número de Tarjeta</span>
+>>>>>>> b3642985737c97cf2c3de9ab5edd4ab3c3cb7550
         </label>
         <div className="relative">
           <MdCreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral/40 text-lg" />
@@ -84,7 +88,7 @@ export default function PagosForm({ total, onSuccess, loading }) {
       <div className="grid grid-cols-2 gap-3">
         <div className="form-control">
           <label className="label py-1">
-            <span className="label-text font-bold text-[10px] uppercase opacity-60">Vencimiento</span>
+            <span className="label-text font-bold text-[10px] opacity-60">Vencimiento</span>
           </label>
           <div className="relative">
             <MdDateRange className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral/40 text-base" />
@@ -101,11 +105,19 @@ export default function PagosForm({ total, onSuccess, loading }) {
           </div>
         </div>
 
+<<<<<<< HEAD
         <div className="form-control">
           <label className="label py-1">
             <span className="label-text font-bold text-[10px] uppercase opacity-60">CVV</span>
           </label>
           <div className="relative">
+=======
+            <div className="form-control">
+            <label className="label py-1">
+            <span className="label-text font-bold text-[10px] opacity-60">CVV</span>
+            </label>
+            <div className="relative">
+>>>>>>> b3642985737c97cf2c3de9ab5edd4ab3c3cb7550
             <MdLock className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral/40 text-base" />
             <input
               type="text"

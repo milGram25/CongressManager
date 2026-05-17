@@ -52,7 +52,7 @@ const GenericDateComponent = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="flex flex-col gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1 uppercase tracking-wider">Nombre del Evento</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Nombre del Evento</label>
                 <input
                   type="text"
                   name="nombre"
@@ -63,7 +63,7 @@ const GenericDateComponent = () => {
                 />
               </div>
               <div className="flex-1 flex flex-col">
-                <label className="block text-sm font-medium text-gray-600 mb-1 uppercase tracking-wider">Descripción</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Descripción</label>
                 <textarea
                   name="descripcion"
                   placeholder="Detalles adicionales..."
@@ -164,7 +164,7 @@ const GenericDateComponent = () => {
                 <div className="pl-4 flex-1 mb-3 sm:mb-0">
                   <h4 className="text-lg font-bold text-[#0b1a1c]">{item.nombre}</h4>
                   <div className="flex flex-wrap items-center gap-2 mt-1">
-                    <span className="text-xs font-semibold text-[#0b1a1c] bg-gray-200 px-2 py-0.5 rounded uppercase tracking-wider border border-gray-300">
+                    <span className="text-xs font-semibold text-[#0b1a1c] bg-gray-200 px-2 py-0.5 rounded border border-gray-300">
                       PROGRAMADO
                     </span>
                     {item.descripcion && (
@@ -177,7 +177,7 @@ const GenericDateComponent = () => {
 
                 <div className="flex gap-6 pl-4 sm:pl-0 w-full sm:w-auto">
                   <div className="flex flex-col">
-                    <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">Inicio</span>
+                    <span className="text-[10px] text-gray-400 font-bold mb-0.5">Inicio</span>
                     <div className="text-sm font-bold text-gray-800">
                       {formatFecha(item.fechaInicio) || '--'}
                     </div>
@@ -188,7 +188,7 @@ const GenericDateComponent = () => {
                   
                   {(item.fechaFin || item.horaFin) && (
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">Fin</span>
+                      <span className="text-[10px] text-gray-400 font-bold mb-0.5">Fin</span>
                       <div className="text-sm font-bold text-gray-800">
                         {formatFecha(item.fechaFin) || '--'}
                       </div>

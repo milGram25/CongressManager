@@ -10,7 +10,7 @@ export default function UsuariosView() {
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto py-10">
         {/* Opción Constancias */}
-        <button 
+        <button
           onClick={() => navigate('constancias')}
           className="group p-10 bg-base-200 hover:bg-primary/5 border-2 border-transparent hover:border-primary rounded-3xl transition-all flex flex-col items-center text-center space-y-4"
         >
@@ -24,7 +24,7 @@ export default function UsuariosView() {
         </button>
 
         {/* Opción Facturas */}
-        <button 
+        <button
           onClick={() => navigate('facturas')}
           className="group p-10 bg-base-200 hover:bg-primary/5 border-2 border-transparent hover:border-primary rounded-3xl transition-all flex flex-col items-center text-center space-y-4"
         >
@@ -38,7 +38,7 @@ export default function UsuariosView() {
         </button>
 
         {/* Opción Historial */}
-        <button 
+        <button
           onClick={() => navigate('historial')}
           className="group p-10 bg-base-200 hover:bg-primary/5 border-2 border-transparent hover:border-primary rounded-3xl transition-all flex flex-col items-center text-center space-y-4"
         >

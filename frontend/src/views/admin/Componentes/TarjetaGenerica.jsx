@@ -50,7 +50,7 @@ const TarjetaGenerica = ({
             </Modal>
 
             {/* Header / Titulo */}
-            <div className="bg-black text-white rounded-2xl px-6 py-5 text-center font-bold text-base min-h-[72px] flex items-center justify-center mb-8  tracking-[0.15em] leading-tight shadow-md">
+            <div className="bg-black text-white rounded-2xl px-6 py-5 text-center font-bold text-base min-h-[72px] flex items-center justify-center mb-8 leading-tight shadow-md">
                 {titulo}
             </div>
 

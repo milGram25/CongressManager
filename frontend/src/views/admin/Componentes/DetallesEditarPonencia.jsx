@@ -93,7 +93,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                     ) : (
                         <div className="overflow-x-auto overflow-y-auto max-h-[400px] rounded-xl border border-base-200">
                             <table className="table table-sm w-full">
-                                <thead className="sticky top-0 bg-base-200 text-[10px] uppercase tracking-widest text-base-content/50 z-10">
+                                <thead className="sticky top-0 bg-base-200 text-[12px] text-base-content/50 z-10">
                                     <tr>
                                         <th>#</th>
                                         <th>Nombre</th>
@@ -316,20 +316,20 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
     };
 
     const inputClasses = `w-full bg-base-100 border border-base-300 rounded-xl px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all ${!modificando ? 'bg-base-200 cursor-not-allowed opacity-70' : 'hover:border-primary/50'}`;
-    const labelClasses = "text-[13px] font-bold text-base-content/40 mb-1 block ml-1  ";
+    const labelClasses = "text-[13px] font-bold text-base-content/40 mb-1 block ml-1";
     const sectionTitleClasses = "text-lg font-bold text-primary flex items-center gap-2 mb-6 pb-2 border-b border-base-300 mt-8 first:mt-0";
 
     if (loading) return (
         <div className="flex flex-col items-center justify-center p-20 gap-4">
             <span className="loading loading-spinner loading-lg text-primary"></span>
-            <p className="text-xs font-black uppercase tracking-widest opacity-40">Cargando información...</p>
+            <p className="text-sm font-bold opacity-40">Cargando información...</p>
         </div>
     );
 
     if (error) return (
         <div className="flex flex-col items-center justify-center p-20 gap-4 text-error">
             <FiAlertCircle size={48} />
-            <p className="font-bold uppercase tracking-widest">Error al cargar datos</p>
+            <p className="font-bold tracking-base">Error al cargar datos</p>
             <p className="text-sm opacity-70">{error}</p>
             <button onClick={() => window.location.reload()} className="btn btn-outline btn-error btn-sm mt-4">Reintentar</button>
         </div>
@@ -341,7 +341,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
         <div className={`w-full bg-base-100 ${isFullPage ? '' : 'rounded-3xl shadow-2xl'} overflow-hidden font-sans`}>
             {!isFullPage && (
                 <div className='sticky top-0 bg-primary text-primary-content flex items-center justify-between px-6 py-4 z-40 shadow-lg'>
-                    <h2 className="text-lg md:text-xl font-bold truncate pr-4 uppercase tracking-wider">Detalles de la ponencia</h2>
+                    <h2 className="text-lg md:text-xl font-bold truncate pr-4">Detalles de la ponencia</h2>
                     <div className='flex items-center gap-2'>
                         {!modificando ? (
                             <button className="w-10 h-10 rounded-full bg-primary-content text-primary flex items-center justify-center hover:brightness-110 transition-all active:scale-95 cursor-pointer shadow-md" onClick={() => setModificando(true)}>
@@ -413,7 +413,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                         </div>
                         <div className="flex flex-col items-center justify-center bg-base-200 border-2 border-dashed border-base-300 rounded-3xl p-8 gap-6 group hover:border-primary/30 transition-all">
                             <FiAward size={48} className="text-base-content/20" />
-                            <p className='text-xs font-bold uppercase text-base-content/40'>Vista previa</p>
+                            <p className='text-sm font-bold text-base-content/40'>Vista previa</p>
                         </div>
                     </div>
                 </section>
@@ -612,23 +612,23 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                             </div>
                         </div>
                         {(formatData.tipo_participacion === 'Virtual' || formatData.tipo_participacion === 'Híbrido') && (
-                        <div>
-                            <label className={labelClasses}>Enlace a videollamada</label>
-                            <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FaLink /></span>
-                                <input id="enlace" type="url" className={`${inputClasses} pl-11 pr-11 font-mono`} value={formatData.enlace || ''} onChange={handleChange} readOnly={!modificando} placeholder="e.g.: https://meet.google.com/" />
-                                {formatData.enlace && (
-                                    <button
-                                        type="button"
-                                        onClick={() => handleCopy(formatData.enlace, 'enlace')}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-base-content/40 hover:text-primary hover:bg-primary/10 transition-all"
-                                        title="Copiar enlace"
-                                    >
-                                        {copiedField === 'enlace' ? <IoIosCheckmark size={18} className="text-success" /> : <FiCopy size={14} />}
-                                    </button>
-                                )}
+                            <div>
+                                <label className={labelClasses}>Enlace a videollamada</label>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30"><FaLink /></span>
+                                    <input id="enlace" type="url" className={`${inputClasses} pl-11 pr-11 font-mono`} value={formatData.enlace || ''} onChange={handleChange} readOnly={!modificando} placeholder="e.g.: https://meet.google.com/" />
+                                    {formatData.enlace && (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleCopy(formatData.enlace, 'enlace')}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-base-content/40 hover:text-primary hover:bg-primary/10 transition-all"
+                                            title="Copiar enlace"
+                                        >
+                                            {copiedField === 'enlace' ? <IoIosCheckmark size={18} className="text-success" /> : <FiCopy size={14} />}
+                                        </button>
+                                    )}
+                                </div>
                             </div>
-                        </div>
                         )}
                         <div>
                             <label className={labelClasses}>
@@ -722,7 +722,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
 
                         <div className="w-1.5 h-6 bg-primary rounded-full"></div>
                         <FiUsers className="text-primary" />
-                        Asistentes inscritos
+                        Asistentes Inscritos
                         {cuposMax > 0 && (
                             <span className="ml-auto text-sm font-normal text-base-content/60">
                                 {inscritos.length} / {cuposMax} cupos
@@ -735,9 +735,8 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                 </section>
 
                 {isFullPage && modificando && (
-                    <div cla
-                        ssName='flex justify-center mt-12'>
-                        <button onClick={handleSave} disabled={saving} className="px-12 py-4 rounded-2xl bg-black text-white font-black shadow-xl hover:bg-[#005a6a] transition-all active:scale-95 uppercase tracking-widest text-sm flex items-center gap-3 disabled:opacity-50">
+                    <div className='flex justify-center mt-12'>
+                        <button onClick={handleSave} disabled={saving} className="px-12 py-4 rounded-2xl bg-black text-white font-black shadow-xl hover:bg-[#005a6a] transition-all active:scale-95 text-base flex items-center gap-3 disabled:opacity-50">
                             {saving ? <span className="loading loading-spinner"></span> : <FiSave size={20} />}
                             Guardar cambios
                         </button>

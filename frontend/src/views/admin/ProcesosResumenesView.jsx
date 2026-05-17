@@ -12,7 +12,7 @@ function PreguntasDictamen({ dictamen }) {
     <div className="space-y-3">
       {dictamen.calificacion_final && (
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <span className="text-xs font-semibold tracking-wide text-slate-500">
             Calificación final:
           </span>
           <span className="badge badge-primary badge-sm font-bold">
@@ -23,7 +23,7 @@ function PreguntasDictamen({ dictamen }) {
 
       {dictamen.retroalimentacion_general && (
         <div className="bg-base-200 rounded-xl px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">
+          <p className="text-xs font-semibold  tracking-wide text-slate-500 mb-1">
             Retroalimentación general
           </p>
           <p className="text-sm text-slate-700">{dictamen.retroalimentacion_general}</p>
@@ -43,22 +43,20 @@ function PreguntasDictamen({ dictamen }) {
 
       {dictamen.preguntas?.length > 0 && (
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+          <p className="text-xs font-semibold  tracking-wide text-slate-500 mb-2">
             Preguntas evaluadas
           </p>
           <ul className="space-y-2">
             {dictamen.preguntas.map((p) => (
               <li
                 key={p.id_pregunta}
-                className={`rounded-xl px-4 py-2.5 border text-sm ${
-                  p.aprobada ? "bg-success/5 border-success/30" : "bg-error/5 border-error/30"
-                }`}
+                className={`rounded-xl px-4 py-2.5 border text-sm ${p.aprobada ? "bg-success/5 border-success/30" : "bg-error/5 border-error/30"
+                  }`}
               >
                 <div className="flex items-start gap-2">
                   <span
-                    className={`mt-0.5 shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold ${
-                      p.aprobada ? "bg-success" : "bg-error"
-                    }`}
+                    className={`mt-0.5 shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold ${p.aprobada ? "bg-success" : "bg-error"
+                      }`}
                   >
                     {p.aprobada ? "✓" : "✗"}
                   </span>
@@ -140,13 +138,13 @@ function AsignarDictaminadorCard({ resumen, dictaminadores, onAsignado }) {
 
         <section className="grid grid-cols-2 gap-4">
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-0.5">Fecha de entrega</h4>
+            <h4 className="text-xs font-semibold  tracking-wide text-slate-500 mb-0.5">Fecha de entrega</h4>
             <p className="text-sm text-slate-700">
               {fmtDate(detalle?.fecha_entrega) ?? <span className="italic text-slate-400">—</span>}
             </p>
           </div>
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-0.5">Fecha de revisión</h4>
+            <h4 className="text-xs font-semibold  tracking-wide text-slate-500 mb-0.5">Fecha de revisión</h4>
             <p className="text-sm text-slate-700">
               {fmtDate(detalle?.fecha_revision) ?? <span className="italic text-slate-400">Pendiente</span>}
             </p>
@@ -197,7 +195,7 @@ function AsignarDictaminadorCard({ resumen, dictaminadores, onAsignado }) {
         </section>
 
         <section>
-          <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700 mb-3">Dictamen</h4>
+          <h4 className="text-sm font-semibold  tracking-wide text-slate-700 mb-3">Dictamen</h4>
           {loadingDetalle ? (
             <div className="flex justify-center py-4">
               <span className="loading loading-spinner loading-md text-primary" />
@@ -281,11 +279,11 @@ export default function ProcesosResumenesView() {
         <p className="text-center py-10 text-base-content/40 italic">No hay ponencias con resumen en este congreso.</p>
       ) : (
         <section className="grid items-start gap-6 xl:grid-cols-2">
-           <ListaResumenes
-             listaElementos={items}
-             dictaminadores={dictaminadores}
-             selectedId={viewItem?.id ?? null}
-             onView={setViewItem}
+          <ListaResumenes
+            listaElementos={items}
+            dictaminadores={dictaminadores}
+            selectedId={viewItem?.id ?? null}
+            onView={setViewItem}
           />
           <AsignarDictaminadorCard
             resumen={viewItem}

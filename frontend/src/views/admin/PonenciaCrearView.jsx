@@ -52,7 +52,7 @@ const PonenciaCrearView = () => {
                     <MdArrowBack size={20} />
                 </button>
                 <div>
-                    <h1 className="text-3xl font-bold text-base-content uppercase tracking-tight">
+                    <h1 className="text-3xl font-bold text-base-content">
                         {pageTitle}
                     </h1>
                     <p className="text-sm text-base-content/50">{pageSubtitle}</p>
@@ -74,13 +74,13 @@ const PonenciaCrearView = () => {
             <div className="flex justify-end gap-4 mt-6">
                 <button 
                     onClick={() => navigate(-1)}
-                    className="px-8 py-4 rounded-2xl bg-base-200 text-base-content font-black hover:bg-base-300 transition-all active:scale-95 uppercase tracking-widest text-xs"
+                    className="px-8 py-4 rounded-2xl bg-base-200 text-base-content font-black hover:bg-base-300 transition-all active:scale-95 text-xs"
                 >
                     Cancelar
                 </button>
                 <button
                     onClick={() => ponenciaRef.current?.handleSave()}
-                    className="px-10 py-4 rounded-2xl bg-black text-white font-black shadow-xl hover:bg-[#005a6a] transition-all active:scale-95 uppercase tracking-widest text-xs"
+                    className="px-10 py-4 rounded-2xl bg-black text-white font-black shadow-xl hover:bg-[#005a6a] transition-all active:scale-95 text-xs"
                 >
                     {idExtensoParam ? 'Publicar Ponencia' : esMagistral ? 'Guardar Ponencia Magistral' : 'Guardar Ponencia'}
                 </button>

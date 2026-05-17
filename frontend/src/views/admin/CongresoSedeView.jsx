@@ -45,24 +45,24 @@ export default function CongresoSedeView() {
       </div>
 
       <div className="space-y-10">
-        <DetallesSede 
-            idSede={sede?.id_sede}
-            detalles={{
-                nombre: sede?.nombre_sede,
-                pais: sede?.pais,
-                estado: sede?.estado,
-                ciudad: sede?.ciudad,
-                calle: sede?.calle,
-                num_exterior: sede?.num_exterior,
-                num_interior: sede?.num_interior,
-                mod_fisico: sede?.modulo_fisico
-            }} 
-            onUpdate={fetchSedeData}
+        <DetallesSede
+          idSede={sede?.id_sede}
+          detalles={{
+            nombre: sede?.nombre_sede,
+            pais: sede?.pais,
+            estado: sede?.estado,
+            ciudad: sede?.ciudad,
+            calle: sede?.calle,
+            num_exterior: sede?.num_exterior,
+            num_interior: sede?.num_interior,
+            mod_fisico: sede?.modulo_fisico
+          }}
+          onUpdate={fetchSedeData}
         />
-        <CrearMesasFisicas 
-            idSede={sede?.id_sede}
-            listaMesas={mesas} 
-            onUpdate={fetchSedeData}
+        <CrearMesasFisicas
+          idSede={sede?.id_sede}
+          listaMesas={mesas}
+          onUpdate={fetchSedeData}
         />
       </div>
     </div>

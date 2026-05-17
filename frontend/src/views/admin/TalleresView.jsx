@@ -76,7 +76,7 @@ export default function TalleresView() {
           >
             <MdArrowBack size={20} />
           </button>
-          <h2 className="text-3xl font-bold uppercase tracking-tight">Gestión de Talleres</h2>
+          <h2 className="text-3xl font-bold">Gestión de talleres</h2>
         </div>
         <p className="text-sm text-base-content/50 ml-12">
           {idCongreso 
@@ -87,7 +87,7 @@ export default function TalleresView() {
 
       <div className="mb-10">
         <MenuCrearBorrar
-          title={idCongreso ? "Talleres Filtrados" : "Todos los Talleres"}
+          title={idCongreso ? "Talleres filtrados" : "Todos los talleres"}
           listaElementos2={listaEventos}
           definirTipoElemento="taller"
           onViewItem={handleAbrirModal}

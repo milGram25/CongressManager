@@ -116,7 +116,7 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
     if (loading) return (
         <div className="flex flex-col items-center justify-center p-20 gap-4">
             <span className="loading loading-spinner loading-lg text-primary"></span>
-            <p className="text-xs font-black uppercase tracking-widest opacity-40">Cargando información...</p>
+            <p className="text-sm font-black opacity-40">Cargando información...</p>
         </div>
     );
 
@@ -164,7 +164,7 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
     };
 
     const inputClasses = `w-full bg-base-100 border border-base-300 rounded-xl px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all ${!modificando ? 'bg-base-200 cursor-not-allowed opacity-70' : 'hover:border-primary/50'}`;
-    const labelClasses = "text-[10px] font-bold text-base-content/40 mb-1 block ml-1 uppercase tracking-widest";
+    const labelClasses = "text-[13px] font-bold text-base-content/40 mb-1 block ml-1";
     const sectionTitleClasses = "text-lg font-bold text-primary flex items-center gap-2 mb-6 pb-2 border-b border-base-300 mt-8 first:mt-0";
 
     return (
@@ -257,7 +257,7 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
                         </div>
 
                         <div className="flex flex-col items-center justify-center bg-base-200 border-2 border-dashed border-base-300 rounded-3xl p-8 gap-6 group transition-all hover:border-primary/30 hover:bg-base-200/50">
-                            <div className="w-full aspect-video bg-base-300 rounded-2xl flex items-center justify-center text-base-content/20 text-xs font-bold uppercase tracking-widest shadow-inner overflow-hidden">
+                            <div className="w-full aspect-video bg-base-300 rounded-2xl flex items-center justify-center text-base-content/20 text-sm font-bold shadow-inner overflow-hidden">
                                 <div className="text-center p-4">
                                     <FiMapPin size={32} className="mx-auto mb-2 opacity-20" />
                                     Vista Previa
@@ -406,7 +406,7 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
                         <div>
                             <div className='flex items-center gap-2 mb-2 ml-1'>
                                 <FiCalendar className="text-success" size={14} />
-                                <label className="text-[10px] font-bold text-base-content/40 uppercase tracking-widest">Inicio del taller</label>
+                                <label className="text-[10px] font-bold text-base-content/40 uppercase tracking-widest">Inicio del Taller</label>
                             </div>
                             <input
                                 type="datetime-local"
@@ -420,7 +420,7 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
                         <div>
                             <div className='flex items-center gap-2 mb-2 ml-1'>
                                 <FiClock className="text-error" size={14} />
-                                <label className="text-[10px] font-bold text-base-content/40 uppercase tracking-widest">Fin del taller</label>
+                                <label className="text-[13px] font-bold text-base-content/40">Fin del taller</label>
                             </div>
                             <input
                                 type="datetime-local"
@@ -471,7 +471,7 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
                     ) : (
                         <div className="overflow-x-auto overflow-y-auto max-h-[400px] rounded-xl border border-base-200">
                             <table className="table table-sm w-full">
-                                <thead className="sticky top-0 bg-base-200 text-[10px] uppercase tracking-widest text-base-content/50 z-10">
+                                <thead className="sticky top-0 bg-base-200 text-[10px] text-base-content/50 z-10">
                                     <tr>
                                         <th>#</th>
                                         <th>Nombre</th>
@@ -503,7 +503,7 @@ const DetallesEditarTaller = forwardRef(({ tallerData, initialModificando = fals
                         <button
                             onClick={handleSave}
                             disabled={saving}
-                            className="px-12 py-4 rounded-2xl bg-black text-white font-black shadow-xl hover:bg-[#005a6a] transition-all active:scale-95 uppercase tracking-widest text-sm flex items-center gap-3 disabled:opacity-50"
+                            className="px-12 py-4 rounded-2xl bg-black text-white font-black shadow-xl hover:bg-[#005a6a] transition-all active:scale-95 text-sm flex items-center gap-3 disabled:opacity-50"
                         >
                             {saving ? <span className="loading loading-spinner"></span> : <FiSave size={20} />}
                             Guardar taller

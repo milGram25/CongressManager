@@ -32,15 +32,15 @@ export default function CongresoTiposTrabajoView() {
       <div className="mb-10">
         <div className="flex gap-4">
           <div className="border bg-[#005a6a] rounded-full h-10 w-2"></div>
-          <h2 className="flex-1 text-2xl font-black text-start uppercase tracking-tighter">
-            Configuración Académica: {congreso?.nombre_congreso || "Cargando..."}
+          <h2 className="flex-1 text-2xl font-black text-start">
+            Configuración académica: {congreso?.nombre_congreso || "Cargando..."}
           </h2>
         </div>
         <p className="pl-12 text-start text-gray-500 text-sm font-medium">
           Gestiona los tipos de trabajo, rúbricas y bancos de preguntas para este congreso específico.
         </p>
       </div>
-      
+
       <div className="flex flex-col gap-10">
         <CongresoTiposTrabajoComponente idCongreso={id} />
         <RubricasYPreguntas idCongreso={id} />
