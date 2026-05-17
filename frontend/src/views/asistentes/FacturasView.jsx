@@ -180,11 +180,7 @@ export default function FacturasView() {
                   ) : (
                     <div className="flex flex-col items-center justify-center p-3 bg-accent/40 rounded-xl w-full border-2 border-warning/30 border-dashed">
                       <MdAccessTime className="text-xl text-primary mb-1" />
-<<<<<<< HEAD
-                      <span className="text-[10px] font-black text-primary text-center uppercase tracking-tighter">
-=======
                       <span className="text-[10px] font-black text-primary text-center tracking-tighter">
->>>>>>> b3642985737c97cf2c3de9ab5edd4ab3c3cb7550
                         Generando factura
                       </span>
                     </div>

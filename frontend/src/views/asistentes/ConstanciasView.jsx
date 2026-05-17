@@ -235,11 +235,7 @@ export default function ConstanciasView() {
             {/* Header */}
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
               <div>
-<<<<<<< HEAD
-                <p className="font-black text-gray-800 text-sm uppercase tracking-tight">
-=======
                 <p className="font-black text-gray-800 text-sm tracking-tight">
->>>>>>> b3642985737c97cf2c3de9ab5edd4ab3c3cb7550
                   Constancia de participación
                 </p>
                 <p className="text-xs text-gray-400">

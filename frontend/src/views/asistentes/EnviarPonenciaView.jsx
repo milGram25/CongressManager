@@ -268,11 +268,7 @@ export default function EnviarPonenciaView() {
                     />
                     <input
                       type="email"
-<<<<<<< HEAD
-                      placeholder={`Correo electrónico coautor ${index + 1}`}
-=======
                       placeholder={`Correo electrónico del coautor ${index + 1}`}
->>>>>>> b3642985737c97cf2c3de9ab5edd4ab3c3cb7550
                       value={coautor.email}
                       onChange={(e) => actualizaCoautor(index, 'email', e.target.value)}
                       className="input input-bordered w-full"
