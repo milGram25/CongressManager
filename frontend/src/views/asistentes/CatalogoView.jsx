@@ -39,11 +39,11 @@ function EventoDetalleModal({ evento, onClose }) {
 
         <div className="flex flex-col items-center text-center space-y-4 mb-6">
           <h3 className="text-lg font-medium text-base-content leading-snug">
-            <span className="font-bold">Título {tipoLabel}:</span> "{evento.titulo}"
+            <span className="font-bold">Título de la {tipoLabel.toLowerCase()}:</span> "{evento.titulo}"
           </h3>
           
           <p className="text-base text-base-content">
-            <span className="font-bold">Nombre {tipoLabel === 'Taller' ? 'Tallerista' : 'Ponente'}:</span> {evento.autor !== 'Por confirmar' ? evento.autor : 'Por confirmar'}
+            <span className="font-bold">Nombre del {tipoLabel === 'Taller' ? 'tallerista' : 'ponente'}:</span> {evento.autor !== 'Por confirmar' ? evento.autor : 'Por confirmar'}
           </p>
 
           <p className="text-base text-base-content capitalize">
@@ -167,7 +167,7 @@ function MisEventosHoy() {
       <div className="bg-primary text-white p-6 md:p-8">
         <div className="flex items-center gap-2 text-sm opacity-80 mb-2">
           <MdEvent className="w-4 h-4" />
-          <span>MI AGENDA</span>
+          <span>Mi agenda</span>
         </div>
         <h2 className="text-2xl font-bold">{selectedCongresoNombre}</h2>
         {agendaDateIso && <p className="opacity-80 mt-1">{formatDate(agendaDateIso)}</p>}
@@ -177,7 +177,7 @@ function MisEventosHoy() {
       {congresos.length > 1 && (
         <div className="p-4 bg-base-200 border-b border-base-300 overflow-x-auto">
           <div className="flex items-center gap-3 min-w-max">
-            <span className="text-xs font-bold opacity-50 uppercase flex items-center gap-1">
+            <span className="text-xs font-bold opacity-50 flex items-center gap-1">
               <MdCalendarMonth /> Congreso:
             </span>
             <div className="flex gap-2">
@@ -201,7 +201,7 @@ function MisEventosHoy() {
 
       {/* Encabezado de sección */}
       <div className="px-6 md:px-8 py-4 bg-base-100 flex justify-between items-center border-b border-base-200">
-        <h3 className="font-medium text-lg text-neutral">Eventos Registrados</h3>
+        <h3 className="font-medium text-lg text-neutral">Eventos registrados</h3>
         <div className="text-xs text-base-content/50">
           Total:{" "}
           <span className="font-bold text-primary">{eventosFiltrados.length}</span>
@@ -243,7 +243,7 @@ function MisEventosHoy() {
                         {evento.titulo}
                       </h4>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span className="text-[10px] badge badge-ghost uppercase opacity-70">
+                        <span className="text-[10px] badge badge-ghost opacity-70">
                           {tipoLabel}
                         </span>
                         <p className="text-sm opacity-60">

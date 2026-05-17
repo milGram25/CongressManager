@@ -30,7 +30,7 @@ export default function MisPonenciasView() {
 
   return (
     <div className="p-8 bg-base-100 min-h-full relative">
-      <h1 className="text-4xl font-bold text-neutral mb-2">Mis Ponencias</h1>
+      <h1 className="text-4xl font-bold text-neutral mb-2">Mis ponencias</h1>
       <p className="text-sm text-slate-500 mb-8">Ponencias aceptadas para presentar en congreso.</p>
 
       {ponencias.length === 0 ? (
@@ -55,7 +55,7 @@ export default function MisPonenciasView() {
                   {p.tipo_participacion === 'presencial' ? (
                     <p className="font-bold">Lugar: <span className="font-normal">{p.evento?.lugar || 'Por definir'}</span></p>
                   ) : p.evento?.enlace ? (
-                    <p className="font-bold">Enlace: <a href={p.evento.enlace} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-normal">Ver Enlace</a></p>
+                    <p className="font-bold">Enlace: <a href={p.evento.enlace} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-normal">Ver enlace</a></p>
                   ) : null}
                 </div>
 
@@ -71,7 +71,7 @@ export default function MisPonenciasView() {
                   onClick={() => setSeleccionada(p)}
                   className="btn btn-primary btn-sm px-6 rounded-full shadow-sm"
                 >
-                  Ver Detalles
+                  Ver detalles
                 </button>
               </div>
             </div>
@@ -90,32 +90,32 @@ export default function MisPonenciasView() {
             </button>
 
             <div className="text-center space-y-4 mt-6 w-full">
-              <h2 className="font-bold text-lg text-primary uppercase tracking-wide">Título:</h2>
+              <h2 className="font-bold text-lg text-primary tracking-wide">Título:</h2>
               <p className="italic font-medium text-xl">"{seleccionada.titulo}"</p>
 
               <p className="font-bold text-sm">Congreso: <span className="font-normal">{seleccionada.evento?.congreso ?? '—'}</span></p>
 
               <div className="flex flex-wrap justify-center gap-8 py-3 border-y border-base-200 w-full my-4">
                 <div>
-                  <p className="font-bold text-xs uppercase tracking-wider text-slate-500">Inicio</p>
+                  <p className="font-bold text-xs tracking-wider text-slate-500">Inicio</p>
                   <p className="text-sm">{formatFecha(seleccionada.evento?.fecha_inicio)}</p>
                 </div>
                 <div>
-                  <p className="font-bold text-xs uppercase tracking-wider text-slate-500">Fin</p>
+                  <p className="font-bold text-xs tracking-wider text-slate-500">Fin</p>
                   <p className="text-sm">{formatFecha(seleccionada.evento?.fecha_fin)}</p>
                 </div>
                 <div>
-                  <p className="font-bold text-xs uppercase tracking-wider text-slate-500">Modalidad</p>
+                  <p className="font-bold text-xs tracking-wider text-slate-500">Modalidad</p>
                   <p className="text-sm capitalize">{seleccionada.tipo_participacion || '—'}</p>
                 </div>
                 {seleccionada.tipo_participacion === 'presencial' ? (
                   <div>
-                    <p className="font-bold text-xs uppercase tracking-wider text-slate-500">Lugar</p>
+                    <p className="font-bold text-xs tracking-wider text-slate-500">Lugar</p>
                     <p className="text-sm">{seleccionada.evento?.lugar || 'Por definir'}</p>
                   </div>
                 ) : seleccionada.evento?.enlace ? (
                   <div>
-                    <p className="font-bold text-xs uppercase tracking-wider text-slate-500">Enlace</p>
+                    <p className="font-bold text-xs tracking-wider text-slate-500">Enlace</p>
                     <a href={seleccionada.evento.enlace} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
                       Abrir enlace
                     </a>

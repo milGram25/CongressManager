@@ -27,11 +27,11 @@ function EventoDetalleModal({ evento, inscrito, onClose, onRegistrar, registrand
 
         <div className="flex flex-col items-center text-center space-y-4 mb-6">
           <h3 className="text-lg font-medium text-base-content leading-snug">
-            <span className="font-bold">Título {tipoLabel}:</span> "{evento.titulo}"
+            <span className="font-bold">Título de la {tipoLabel.toLowerCase()}:</span> "{evento.titulo}"
           </h3>
           
           <p className="text-base text-base-content">
-            <span className="font-bold">Nombre {tipoLabel === 'Taller' ? 'Tallerista' : 'Ponente'}:</span> {evento.autor !== 'Por confirmar' ? evento.autor : 'Por confirmar'}
+            <span className="font-bold">Nombre del {tipoLabel === 'Taller' ? 'tallerista' : 'ponente'}:</span> {evento.autor !== 'Por confirmar' ? evento.autor : 'Por confirmar'}
           </p>
 
           <p className="text-base text-base-content capitalize">
@@ -82,10 +82,10 @@ function EventoDetalleModal({ evento, inscrito, onClose, onRegistrar, registrand
                   disabled={registrando === evento.id || !inscrito}
                   onClick={() => onRegistrar(evento)}
                 >
-                  {registrando === evento.id ? "REGISTRANDO..." : "REGISTRARME"}
+                  {registrando === evento.id ? "Registrando..." : "Registrarme"}
                 </button>
                 {!inscrito && (
-                  <span className="text-[10px] text-error font-bold uppercase">Requiere inscripción</span>
+                  <span className="text-[10px] text-error font-bold">Requiere inscripción</span>
                 )}
               </div>
             ) : null}
@@ -249,7 +249,7 @@ function EventoCard({ evento, inscrito, onRegistrar, registrando, onVerDetalles 
 
         {evento.sinopsis && (
           <div className="mt-1">
-            <span className="font-bold text-[10px] uppercase opacity-50 block mb-0.5">Resumen</span>
+            <span className="font-bold text-[10px] opacity-50 block mb-0.5">Resumen</span>
             <p className="text-xs text-base-content/80 whitespace-pre-wrap line-clamp-3">{evento.sinopsis}</p>
           </div>
         )}
@@ -273,7 +273,7 @@ function EventoCard({ evento, inscrito, onRegistrar, registrando, onVerDetalles 
             )}
           </div>
           <button
-            className="btn btn-ghost btn-xs text-black font-extrabold uppercase"
+            className="btn btn-ghost btn-xs text-black font-extrabold"
             onClick={() => onVerDetalles(evento)}
           >
             Ver detalles

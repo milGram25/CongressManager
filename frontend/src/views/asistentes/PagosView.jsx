@@ -369,8 +369,8 @@ export default function PagosView() {
       {/* Selector de Congreso - Arriba del panel principal */}
       {listaCongresos.length > 0 && (
         <div className="mb-8 p-6 bg-base-100 rounded-2xl border-2 border-base-300 shadow-sm">
-          <label className="text-[10px] font-bold opacity-50 uppercase mb-1 block px-1">
-            Selecciona el Congreso para realizar el pago
+          <label className="text-[10px] font-bold opacity-50 mb-1 block px-1">
+            Selecciona el congreso para realizar el pago
           </label>
           <div className="relative">
             <MdDateRange className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" />
@@ -396,7 +396,7 @@ export default function PagosView() {
                   disabled={new Date(c.congreso_fin) < new Date()}
                 >
                   {c.nombre_congreso}{" "}
-                  {new Date(c.congreso_fin) < new Date() ? "(PASADO)" : ""}
+                  {new Date(c.congreso_fin) < new Date() ? "(Pasado)" : ""}
                 </option>
               ))}
             </select>
@@ -413,17 +413,17 @@ export default function PagosView() {
         <div className="md:col-span-2 space-y-6">
           <div className="bg-base-100 p-8 rounded-2xl border-2 border-base-300 shadow-sm">
             <h3 className="text-xl font-bold border-b border-base-200 pb-2 mb-4 text-neutral">
-              Detalle de Inscripción
+              Detalle de inscripción
             </h3>
 
             <div className="grid grid-cols-2 gap-4 text-sm mb-6">
               <div>
-                <p className="opacity-50 uppercase font-bold text-[10px] tracking-widest">Nombre</p>
+                <p className="opacity-50 font-bold text-[10px] tracking-widest">Nombre</p>
                 <p className="font-medium text-neutral">{user?.nombre || "Usuario Demo"}</p>
               </div>
               <div>
-                <p className="opacity-50 uppercase font-bold text-[10px] tracking-widest">Categoría</p>
-                <p className="font-bold text-alt">{roleLabel(role).toUpperCase()}</p>
+                <p className="opacity-50 font-bold text-[10px] tracking-widest">Categoría</p>
+                <p className="font-bold text-alt">{roleLabel(role)}</p>
               </div>
             </div>
 
@@ -431,7 +431,7 @@ export default function PagosView() {
               <div className="mb-6 p-4 rounded-xl border-l-4 border-alt/50 bg-alt/5 text-sm py-3 px-4 shadow-sm">
                 <div className="flex items-center gap-2 mb-1 text-alt">
                   <MdInfoOutline className="text-base" />
-                  <span className="font-bold uppercase text-[12px] tracking-widest">Regla de Ponencias</span>
+                  <span className="font-bold uppercase text-[12px] tracking-widest">Regla de ponencias</span>
                 </div>
                 <p className="text-neutral/80 text-s leading-relaxed">
                   El pago base cubre <b>{userPayment.included_ponencias} ponencias</b>. Cada ponencia adicional tiene un cargo extra.
@@ -444,7 +444,7 @@ export default function PagosView() {
                     * Tienes <b>{userPayment.accepted_ponencias_count || 0}</b> ponencias aceptadas.
                   </p>
                   {userPayment.total_ponencias_count > (userPayment.paid_slots || 0) * (userPayment.included_ponencias || 2) && (
-                    <p className="text-[12px] font-medium text-error uppercase mt-1">
+                    <p className="text-[12px] font-medium text-error mt-1">
                       Atención: Has enviado más ponencias de las que cubre tu pago actual.
                     </p>
                   )}
@@ -554,7 +554,7 @@ export default function PagosView() {
                   <div className="flex items-center gap-4 py-2">
                     <MdCheckCircle className="text-5xl text-secondary" />
                     <div>
-                      <h4 className="font-bold text-alt uppercase tracking-tight">Descuento Aplicado</h4>
+                      <h4 className="font-bold text-alt tracking-tight">Descuento aplicado</h4>
                       <p className="text-xs opacity-70 text-neutral">Validado vía: {studentEmail}</p>
                     </div>
                   </div>
@@ -565,14 +565,14 @@ export default function PagosView() {
             <div className="mt-8 pt-6 border-t border-base-200 space-y-2 text-neutral">
               {((!isPonente && alreadyPaid) || (isPonente && pendingSlots === 0 && paidSlots > 0)) && (
                 <div className="mb-4 opacity-80">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Sin pagos pendientes</span>
+                  <span className="text-[10px] font-bold tracking-widest text-primary">Sin pagos pendientes</span>
                 </div>
               )}
               {isPonente ? (
                 <>
                   {paidSlots === 0 && pendingSlots > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="opacity-60">Inscripción Base (1-2 ponencias)</span>
+                      <span className="opacity-60">Inscripción base (1-2 ponencias)</span>
                       <span>${basePrice.toFixed(2)} MXN</span>
                     </div>
                   )}
@@ -899,9 +899,9 @@ export default function PagosView() {
                   setPagoExitoso(false);
                   navigate("/asistente/facturas");
                 }}
-                className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300"
+                className="btn btn-primary btn-outline font-bold px-8 border-base-300"
               >
-                Ir a Mis Facturas
+                Ir a mis facturas
               </button>
 
               <button
@@ -910,7 +910,7 @@ export default function PagosView() {
                   setPagoExitoso(false);
                   setUsarCorreoAlternativo(false);
                 }}
-                className="btn btn-primary btn-outline uppercase font-bold px-8 border-base-300"
+                className="btn btn-primary btn-outline font-bold px-8 border-base-300"
               >
                 Cerrar
               </button>
