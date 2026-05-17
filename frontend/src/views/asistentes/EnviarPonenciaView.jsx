@@ -1,10 +1,72 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaTrashCan } from "react-icons/fa6";
 import { MdLock, MdLibraryBooks, MdWarningAmber } from "react-icons/md";
 import { useNavigate } from 'react-router-dom';
 import { getMisInscripcionesApi } from '../../api/agendaApi';
 import { getPagosResumenApi } from '../../api/pagosApi';
 import { API_URL } from '../../api/constants';
+import { obtenerAreasApi } from '../../api/areasApi';
+
+function CoautorRegistrado({ participantes, loading, seleccionado, onSeleccionar, onLimpiar }) {
+  const [busqueda, setBusqueda] = useState('');
+  const [abierto, setAbierto] = useState(!seleccionado);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    function cerrar(e) { if (ref.current && !ref.current.contains(e.target)) setAbierto(false); }
+    document.addEventListener('mousedown', cerrar);
+    return () => document.removeEventListener('mousedown', cerrar);
+  }, []);
+
+  const filtrados = participantes.filter(p =>
+    p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+    p.email.toLowerCase().includes(busqueda.toLowerCase())
+  );
+
+  if (seleccionado) {
+    return (
+      <div className="flex items-center justify-between bg-primary/10 border border-primary/30 rounded-lg px-3 py-2">
+        <div>
+          <p className="text-sm font-semibold text-primary">{seleccionado.nombre}</p>
+          <p className="text-xs text-base-content/50">{seleccionado.email}</p>
+        </div>
+        <button type="button" onClick={onLimpiar} className="btn btn-ghost btn-xs text-error">Cambiar</button>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      <input
+        type="text"
+        placeholder={loading ? 'Cargando participantes...' : 'Buscar por nombre o correo...'}
+        value={busqueda}
+        onChange={e => { setBusqueda(e.target.value); setAbierto(true); }}
+        onFocus={() => setAbierto(true)}
+        className="input input-bordered w-full input-sm"
+        disabled={loading}
+      />
+      {abierto && !loading && (
+        <ul className="absolute z-50 w-full bg-base-100 border border-base-300 rounded-xl mt-1 max-h-48 overflow-y-auto shadow-lg">
+          {filtrados.length === 0 ? (
+            <li className="px-4 py-3 text-sm text-base-content/40 italic">Sin resultados</li>
+          ) : (
+            filtrados.map((p, i) => (
+              <li
+                key={i}
+                className="px-4 py-2 hover:bg-primary/10 cursor-pointer"
+                onMouseDown={() => { onSeleccionar(p); setAbierto(false); setBusqueda(''); }}
+              >
+                <p className="text-sm font-medium">{p.nombre}</p>
+                <p className="text-xs text-base-content/50">{p.email}</p>
+              </li>
+            ))
+          )}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export default function EnviarPonenciaView() {
   const accessToken = localStorage.getItem('congress_access');
@@ -26,8 +88,22 @@ export default function EnviarPonenciaView() {
   const [resumen, setResumen] = useState('');
   const [coautores, setCoautores] = useState([]);
   const [mostrarCoautores, setMostrarCoautores] = useState(false);
+  const [participantesCongreso, setParticipantesCongreso] = useState([]);
+  const [loadingParticipantes, setLoadingParticipantes] = useState(false);
+  const [areasGenerales, setAreasGenerales] = useState([]);
+  const [areaExpandida, setAreaExpandida] = useState(null);
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState({ texto: '', tipo: '' });
+
+  useEffect(() => {
+    if (!selectedCongreso) {
+      setAreasGenerales([]);
+      return;
+    }
+    obtenerAreasApi(accessToken, selectedCongreso)
+      .then(data => setAreasGenerales(Array.isArray(data) ? data : []))
+      .catch(() => setAreasGenerales([]));
+  }, [accessToken, selectedCongreso]);
 
   useEffect(() => {
     getMisInscripcionesApi(accessToken)
@@ -53,6 +129,7 @@ export default function EnviarPonenciaView() {
   }, [accessToken]);
 
   useEffect(() => {
+    setParticipantesCongreso([]);
     if (!selectedCongreso) {
       setTiposTrabajo([]);
       setUserPayment(null);
@@ -60,6 +137,7 @@ export default function EnviarPonenciaView() {
     }
     setLoadingTipos(true);
     setTipoTrabajo('');
+    setEjeTematico('');
 
     // Cargar resumen de pagos para el congreso seleccionado
     getPagosResumenApi(accessToken, selectedCongreso)
@@ -85,16 +163,42 @@ export default function EnviarPonenciaView() {
     }
   }, [mensaje]);
 
-  const parteCoautores = () => {
-    setMostrarCoautores(true);
-    if (coautores.length === 0) setCoautores([{ nombre: '', email: '' }]);
+  const fetchParticipantes = async () => {
+    if (!selectedCongreso || participantesCongreso.length > 0) return;
+    setLoadingParticipantes(true);
+    try {
+      const res = await fetch(`${API_URL}/api/ponencias/ponentes-nombres/?id_congreso=${selectedCongreso}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const data = await res.json();
+      setParticipantesCongreso(Array.isArray(data) ? data : []);
+    } catch { setParticipantesCongreso([]); }
+    finally { setLoadingParticipantes(false); }
   };
 
-  const agregarCoautor = () => setCoautores([...coautores, { nombre: '', email: '' }]);
+  const parteCoautores = () => {
+    setMostrarCoautores(true);
+    if (coautores.length === 0) setCoautores([{ tipo: null, nombre: '', email: '', busqueda: '' }]);
+  };
+
+  const agregarCoautor = () => setCoautores([...coautores, { tipo: null, nombre: '', email: '', busqueda: '' }]);
+
+  const setTipoCoautor = (index, tipo) => {
+    const nuevos = [...coautores];
+    nuevos[index] = { tipo, nombre: '', email: '', busqueda: '' };
+    setCoautores(nuevos);
+    if (tipo === 'registrado') fetchParticipantes();
+  };
 
   const actualizaCoautor = (index, campo, valor) => {
     const nuevos = [...coautores];
     nuevos[index][campo] = valor;
+    setCoautores(nuevos);
+  };
+
+  const seleccionarParticipante = (index, participante) => {
+    const nuevos = [...coautores];
+    nuevos[index] = { ...nuevos[index], nombre: participante.nombre, email: participante.email, busqueda: participante.nombre };
     setCoautores(nuevos);
   };
 
@@ -254,29 +358,63 @@ export default function EnviarPonenciaView() {
             </button>
           )}
           {mostrarCoautores && (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
               {coautores.map((coautor, index) => (
-                <div key={index} className='flex items-center gap-2 mb-2'>
-                  <label className="font-bold">{index + 1}.</label>
-                  <div className="flex-1 flex flex-col gap-2">
-                    <input
-                      type="text"
-                      placeholder={`Nombre coautor ${index + 1}`}
-                      value={coautor.nombre}
-                      onChange={(e) => actualizaCoautor(index, 'nombre', e.target.value)}
-                      className="input input-bordered w-full"
-                    />
-                    <input
-                      type="email"
-                      placeholder={`Correo Electrónico Coautor ${index + 1}`}
-                      value={coautor.email}
-                      onChange={(e) => actualizaCoautor(index, 'email', e.target.value)}
-                      className="input input-bordered w-full"
-                    />
+                <div key={index} className="border border-base-300 rounded-xl p-3 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-base-content/60">Coautor {index + 1}</span>
+                    <button type="button" onClick={() => eliminarCoautor(index)} className="btn btn-ghost btn-xs text-error">
+                      <FaTrashCan size={12} />
+                    </button>
                   </div>
-                  <button type="button" onClick={() => eliminarCoautor(index)} className="btn btn-base btn-sm">
-                    <FaTrashCan />
-                  </button>
+
+                  {coautor.tipo === null && (
+                    <div className="flex gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => setTipoCoautor(index, 'registrado')}
+                        className="btn btn-sm btn-outline flex-1"
+                      >
+                        Registrado en el gestor
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTipoCoautor(index, 'externo')}
+                        className="btn btn-sm btn-outline flex-1"
+                      >
+                        No registrado
+                      </button>
+                    </div>
+                  )}
+
+                  {coautor.tipo === 'registrado' && (
+                    <CoautorRegistrado
+                      participantes={participantesCongreso}
+                      loading={loadingParticipantes}
+                      seleccionado={coautor.nombre ? { nombre: coautor.nombre, email: coautor.email } : null}
+                      onSeleccionar={(p) => seleccionarParticipante(index, p)}
+                      onLimpiar={() => actualizaCoautor(index, 'nombre', '') || actualizaCoautor(index, 'email', '')}
+                    />
+                  )}
+
+                  {coautor.tipo === 'externo' && (
+                    <div className="flex flex-col gap-2">
+                      <input
+                        type="text"
+                        placeholder={`Nombre coautor ${index + 1}`}
+                        value={coautor.nombre}
+                        onChange={(e) => actualizaCoautor(index, 'nombre', e.target.value)}
+                        className="input input-bordered w-full"
+                      />
+                      <input
+                        type="email"
+                        placeholder={`Correo Electrónico Coautor ${index + 1}`}
+                        value={coautor.email}
+                        onChange={(e) => actualizaCoautor(index, 'email', e.target.value)}
+                        className="input input-bordered w-full"
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
               <button type="button" onClick={agregarCoautor} className="btn btn-primary w-fit">
@@ -304,48 +442,69 @@ export default function EnviarPonenciaView() {
           </select>
 
           <label className="font-bold">Eje Temático *</label>
-          <select value={ejeTematico} onChange={(e) => setEjeTematico(e.target.value)}
-            className="input input-bordered w-full" required>
-            <option value="">Selecciona una opción</option>
-            <option value="alfabetizacion digital">Alfabetización Digital</option>
-            <option value="brecha digital">Brecha Digital</option>
-            <option value="capacitacion en el proceso de enseñanza">Capacitación en el proceso de enseñanza-aprendizaje de profesores en servicio</option>
-            <option value="capacitacion y apoyo a docentes">Capacitación y apoyo a los docentes</option>
-            <option value="Competencias genericas">Competencias genéricas</option>
-            <option value="competencias genericas y habilidades">Competencias genéricas y habilidades para su desarrollo</option>
-            <option value="cara a cara al aprendizaje remoto">De cara a cara al aprendizaje remoto</option>
-            <option value="competencias digitales en profesores">Desarrollo de competencias digitales en profesores</option>
-            <option value="digitalizacion de la educacion">Digitalización de la educación</option>
-            <option value="diseño instruccional">Diseño instruccional y prioridades del plan de estudios</option>
-            <option value="educacion continua y desarrollo profesional">Educación continua y desarrollo profesional</option>
-            <option value="educacion de posgrado">Educación de posgrado</option>
-            <option value="educacion de pregrado">Educación de pregrado</option>
-            <option value="fomento de cultura de paz">Educación para el fomento para una Cultura de Paz y la prevención de violencia</option>
-            <option value="educacion para la paz">Educación para la paz y Objetivos del Desarrollo Sostenible</option>
-            <option value="educacion para la sostenibilidad">Educación para la sostenibilidad</option>
-            <option value="estrategias de diseño curricular">Estrategias de diseño curricular, principios y desafíos</option>
-            <option value="estudios multidisciplinarios">Estudios Multidisciplinarios</option>
-            <option value="evaluacion del aprendizaje">Evaluación del Aprendizaje</option>
-            <option value="evalucaion de entorno e-learning">Evaluación en entornos de e-learning</option>
-            <option value="evaluacion y aseguramiento de la calidad">Evaluación y aseguramiento de la calidad en la educación</option>
-            <option value="experiencias educativas steam">Experiencias educativas STEAM</option>
-            <option value="flexibilidad cuurricular">Flexibilidad Curricular</option>
-            <option value="fomento carreras steam">Fomento de carreras STEAM en estudios pre-universitarios</option>
-            <option value="gestion institucional y gobernanza">Gestión institucional y gobernanza de la educación</option>
-            <option value="inclusion y equidad">Inclusión y equidad en la educación</option>
-            <option value="ia en la educacion">Inteligencia Artificial en educación</option>
-            <option value="modalidades">Modalidades</option>
-            <option value="necesidad del mercado laboral">Necesidades del mercado laboral</option>
-            <option value="nuevos desafios para la educacion superior">Nuevos desafíos para el área de educación superior</option>
-            <option value="politica institucional de cultura de paz">Políticas institucionales universitarias de Cultura de Paz</option>
-            <option value="practicas de innovacion pedagogico-didactica">Prácticas de innovación pedagógico-didáctica</option>
-            <option value="practicas educativas, tendencias y problemas">Prácticas educativas, tendencias y problemas</option>
-            <option value="problemas y tendencias en educacion tecnologica">Problemas y tendencias en educación tecnológica</option>
-            <option value="problemas y tendencias de empleabilidad">Problemas y tendencias de empleabilidad</option>
-            <option value="realidad aumentada o virtual">Realidad aumentada o virtual</option>
-            <option value="redes universitarias">Redes universitarias</option>
-            <option value="retos del desarrollo de habilidades del siglo XXI">Retos del desarrollo de habilidades del siglo XXI</option>
-          </select>
+          {/* Campo oculto para validación HTML5 */}
+          <input type="text" required value={ejeTematico} onChange={() => {}}
+            className="sr-only" tabIndex={-1} aria-hidden="true" />
+          <div className="border border-base-300 rounded-xl overflow-hidden">
+            {areasGenerales.length === 0 ? (
+              <div className="p-4 text-sm text-base-content/50">
+                {!selectedCongreso ? 'Selecciona primero un congreso' : 'Sin ejes temáticos para este congreso'}
+              </div>
+            ) : (
+              areasGenerales.map(area => {
+                const expandida = areaExpandida === area.id;
+                const subareaSeleccionada = (area.subAreas ?? []).find(s => s.nombre === ejeTematico);
+                return (
+                  <div key={area.id} className="border-b border-base-300 last:border-b-0">
+                    <button
+                      type="button"
+                      onClick={() => setAreaExpandida(expandida ? null : area.id)}
+                      className={`w-full flex items-center justify-between px-4 py-3 text-left font-semibold text-sm transition-colors
+                        ${expandida ? 'bg-primary text-primary-content' : subareaSeleccionada ? 'bg-primary/10 text-primary' : 'bg-base-100 hover:bg-base-200'}`}
+                    >
+                      <span>{area.nombre}</span>
+                      <span className="flex items-center gap-2">
+                        {subareaSeleccionada && !expandida && (
+                          <span className="text-xs font-normal opacity-70 truncate max-w-[160px]">{subareaSeleccionada.nombre}</span>
+                        )}
+                        <svg className={`w-4 h-4 transition-transform ${expandida ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </span>
+                    </button>
+                    {expandida && (
+                      <div className="flex flex-wrap gap-2 p-3 bg-base-200/50">
+                        {(area.subAreas ?? []).length === 0 ? (
+                          <span className="text-xs text-base-content/40 italic">Sin subáreas registradas</span>
+                        ) : (
+                          (area.subAreas ?? []).map(sub => (
+                            <button
+                              key={sub.id}
+                              type="button"
+                              onClick={() => { setEjeTematico(sub.nombre); setAreaExpandida(null); }}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors
+                                ${ejeTematico === sub.nombre
+                                  ? 'bg-primary text-primary-content border-primary'
+                                  : 'bg-base-100 border-base-300 hover:border-primary hover:text-primary'}`}
+                            >
+                              {sub.nombre}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+          {ejeTematico && (
+            <div className="flex items-center gap-2 text-xs text-base-content/60 -mt-2">
+              <span>Seleccionado:</span>
+              <span className="font-semibold text-primary">{ejeTematico}</span>
+              <button type="button" onClick={() => setEjeTematico('')} className="text-error hover:underline">✕ limpiar</button>
+            </div>
+          )}
 
           <label className="font-bold">Tipo de trabajo *</label>
           <select value={tipoTrabajo} onChange={(e) => setTipoTrabajo(e.target.value)}

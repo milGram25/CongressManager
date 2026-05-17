@@ -1,11 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Select from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 import countryList from 'react-select-country-list';
 import { HiEye, HiEyeOff } from 'react-icons/hi';
 import cienuLogo from '../../assets/CIENU.jpg';
 import ridmaeLogo from '../../assets/ridmae.jpg';
+import { getInstitucionesPublicApi } from '../../api/adminApi';
 
 const Register = () => {
   const { register } = useAuth();
@@ -16,6 +18,13 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const options = useMemo(() => countryList().getData(), []);
+  const [instituciones, setInstituciones] = useState([]);
+
+  useEffect(() => {
+    getInstitucionesPublicApi()
+      .then(data => setInstituciones(data.map(i => ({ value: i.nombre, label: i.nombre }))))
+      .catch(() => {});
+  }, []);
 
   const countryCodes = [
   { value: '1', label: 'US/CA +1' },
@@ -273,13 +282,66 @@ const sortedCodes = countryCodes.sort((a, b) => a.label.localeCompare(b.label));
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-base-content/50  ml-1">Institución de adscripción</label>
-                <input 
-                  name="institucion"
-                  value={formData.institucion}
-                  className="w-full px-4 py-3 rounded-xl bg-base-200 border border-transparent focus:bg-base-100 focus:border-primary outline-none transition-all" 
-                  type="text" 
-                  onChange={handleChange}
+                <label className="text-xs font-bold text-base-content/50 ml-1">Institución de adscripción</label>
+                <CreatableSelect
+                  options={instituciones}
+                  value={formData.institucion ? { value: formData.institucion, label: formData.institucion } : null}
+                  onChange={(opt) => setFormData({ ...formData, institucion: opt ? opt.value : '' })}
+                  placeholder="Busca o escribe tu institución..."
+                  noOptionsMessage={() => 'Escribe para agregar una nueva'}
+                  formatCreateLabel={(input) => `Usar "${input}"`}
+                  isClearable
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      padding: '2px 8px',
+                      borderRadius: '0.75rem',
+                      backgroundColor: 'var(--color-base-200)',
+                      border: 'none',
+                      boxShadow: 'none',
+                      '&:hover': { border: 'none' },
+                    }),
+                    placeholder: (base) => ({
+                      ...base,
+                      color: 'var(--color-base-content)',
+                      opacity: 0.5,
+                    }),
+                    singleValue: (base) => ({
+                      ...base,
+                      color: 'var(--color-base-content)',
+                    }),
+                    input: (base) => ({
+                      ...base,
+                      color: 'var(--color-base-content)',
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      backgroundColor: 'var(--color-base-100)',
+                      borderRadius: '0.75rem',
+                    }),
+                    option: (base, state) => ({
+                      ...base,
+                      backgroundColor: state.isFocused ? 'var(--color-base-200)' : 'transparent',
+                      color: 'var(--color-base-content)',
+                      '&:active': {
+                        backgroundColor: 'var(--color-primary)',
+                        color: 'var(--color-primary-content)',
+                      },
+                    }),
+                    clearIndicator: (base) => ({
+                      ...base,
+                      color: 'var(--color-base-content)',
+                      opacity: 0.4,
+                      '&:hover': { opacity: 0.8 },
+                    }),
+                    dropdownIndicator: (base) => ({
+                      ...base,
+                      color: 'var(--color-base-content)',
+                      opacity: 0.4,
+                      '&:hover': { opacity: 0.8 },
+                    }),
+                    indicatorSeparator: () => ({ display: 'none' }),
+                  }}
                 />
                 {errors.institucion && (
                   <p className="text-error text-[10px] font-bold mt-1 ml-1">{errors.institucion}</p>

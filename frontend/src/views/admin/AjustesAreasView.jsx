@@ -8,6 +8,7 @@ import {
   obtenerAreasApi, crearAreaApi, editarAreaApi, eliminarAreaApi,
   crearSubareaApi, editarSubareaApi, eliminarSubareaApi,
 } from "../../api/areasApi";
+import { getCongresosApi } from "../../api/adminApi";
 
 function exportToCSV(areas) {
   const rows = [["Área", "Subárea"]];
@@ -26,6 +27,7 @@ function exportToCSV(areas) {
 // ─── SubArea Row ──────────────────────────────────────────────────────────────
 function SubAreaRow({ subarea, onEdit, onDelete }) {
   const [editing, setEditing] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [val, setVal] = useState(subarea.nombre);
   const [saving, setSaving] = useState(false);
 
@@ -56,6 +58,18 @@ function SubAreaRow({ subarea, onEdit, onDelete }) {
             <MdClose size={12} />
           </button>
         </>
+      ) : confirming ? (
+        <>
+          <span className="flex-1 text-xs text-error font-medium px-2">¿Eliminar "{subarea.nombre}"?</span>
+          <button onClick={onDelete} title="Confirmar eliminación"
+            className="w-6 h-6 rounded-full bg-error text-white flex items-center justify-center hover:bg-red-700 transition-colors flex-shrink-0">
+            <MdCheck size={12} />
+          </button>
+          <button onClick={() => setConfirming(false)} title="Cancelar"
+            className="w-6 h-6 rounded-full bg-base-300 text-base-content/50 flex items-center justify-center hover:bg-base-400 transition-colors flex-shrink-0">
+            <MdClose size={12} />
+          </button>
+        </>
       ) : (
         <>
           <span className="flex-1 border border-base-200 rounded-full px-3 py-1 text-xs text-base-content/70 bg-base-100">
@@ -65,7 +79,7 @@ function SubAreaRow({ subarea, onEdit, onDelete }) {
             className="w-6 h-6 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0">
             <MdEdit size={11} />
           </button>
-          <button onClick={onDelete} title="Eliminar subárea"
+          <button onClick={() => setConfirming(true)} title="Eliminar subárea"
             className="w-6 h-6 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0">
             <MdDelete size={11} />
           </button>
@@ -78,6 +92,7 @@ function SubAreaRow({ subarea, onEdit, onDelete }) {
 // ─── Area Row ─────────────────────────────────────────────────────────────────
 function AreaRow({ area, onEdit, onDelete, onAddSubArea, onEditSubArea, onDeleteSubArea }) {
   const [editing, setEditing] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [val, setVal] = useState(area.nombre);
   const [showSubs, setShowSubs] = useState(false);
   const [addingSub, setAddingSub] = useState(false);
@@ -121,6 +136,18 @@ function AreaRow({ area, onEdit, onDelete, onAddSubArea, onEditSubArea, onDelete
               <MdClose size={14} />
             </button>
           </>
+        ) : confirming ? (
+          <>
+            <span className="flex-1 text-sm text-error font-medium px-1">¿Eliminar "{area.nombre}" y sus subáreas?</span>
+            <button onClick={onDelete} title="Confirmar eliminación"
+              className="w-8 h-8 rounded-full bg-error text-white flex items-center justify-center hover:bg-red-700 transition-colors flex-shrink-0">
+              <MdCheck size={14} />
+            </button>
+            <button onClick={() => setConfirming(false)} title="Cancelar"
+              className="w-8 h-8 rounded-full bg-base-300 text-base-content/50 flex items-center justify-center hover:bg-base-400 transition-colors flex-shrink-0">
+              <MdClose size={14} />
+            </button>
+          </>
         ) : (
           <>
             <span className="flex-1 border border-base-300 rounded-full px-3 py-2 text-sm text-base-content bg-base-100 truncate">
@@ -130,7 +157,7 @@ function AreaRow({ area, onEdit, onDelete, onAddSubArea, onEditSubArea, onDelete
               className="w-8 h-8 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0">
               <MdEdit size={14} />
             </button>
-            <button onClick={onDelete} title="Eliminar área"
+            <button onClick={() => setConfirming(true)} title="Eliminar área"
               className="w-8 h-8 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0">
               <MdDelete size={14} />
             </button>
@@ -197,21 +224,33 @@ function AreaRow({ area, onEdit, onDelete, onAddSubArea, onEditSubArea, onDelete
 export default function AreasGeneralesView() {
   const navigate = useNavigate();
   const [areas, setAreas] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [adding, setAdding] = useState(false);
   const [newVal, setNewVal] = useState("");
   const [savingNew, setSavingNew] = useState(false);
+  const [congresos, setCongresos] = useState([]);
+  const [selectedCongreso, setSelectedCongreso] = useState(null);
 
   const getToken = () => localStorage.getItem("congress_access");
 
-  useEffect(() => { cargarAreas(); }, []);
+  useEffect(() => {
+    getCongresosApi(getToken())
+      .then(data => setCongresos(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (selectedCongreso) cargarAreas();
+    else setAreas([]);
+  }, [selectedCongreso]);
 
   async function cargarAreas() {
+    if (!selectedCongreso) return;
     try {
       setLoading(true);
       setError(null);
-      const data = await obtenerAreasApi(getToken());
+      const data = await obtenerAreasApi(getToken(), selectedCongreso);
       setAreas(data);
     } catch (e) {
       setError(e.message);
@@ -224,7 +263,7 @@ export default function AreasGeneralesView() {
     if (!newVal.trim() || savingNew) return;
     setSavingNew(true);
     try {
-      const creada = await crearAreaApi(newVal.trim(), getToken());
+      const creada = await crearAreaApi(newVal.trim(), getToken(), selectedCongreso);
       setAreas(prev => [...prev, creada]);
       setNewVal(""); setAdding(false);
     } catch (e) {
@@ -323,6 +362,20 @@ export default function AreasGeneralesView() {
         </div>
       </div>
 
+      {/* Selector de congreso */}
+      <div className="px-4 pt-4 pb-2 border-b border-base-200">
+        <select
+          className="select select-bordered select-sm w-full rounded-xl"
+          value={selectedCongreso ?? ''}
+          onChange={e => setSelectedCongreso(e.target.value || null)}
+        >
+          <option value="">Selecciona un congreso...</option>
+          {congresos.map(c => (
+            <option key={c.id_congreso} value={c.id_congreso}>{c.nombre_congreso}</option>
+          ))}
+        </select>
+      </div>
+
       {/* Lista */}
       <div className="p-4 overflow-y-auto" style={{ maxHeight: 600 }}>
 
@@ -339,43 +392,50 @@ export default function AreasGeneralesView() {
 
         {!loading && !error && (
           <>
-            {adding && (
-              <div className="flex items-center gap-2 mb-3 pb-3 border-b border-base-200">
-                <input
-                  autoFocus placeholder="Nombre del área..." value={newVal}
-                  onChange={e => setNewVal(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === "Enter") agregarArea();
-                    if (e.key === "Escape") { setAdding(false); setNewVal(""); }
-                  }}
-                  className="flex-1 border border-[#000000] rounded-full px-3 py-2 text-sm focus:outline-none bg-base-100"
-                  disabled={savingNew}
-                />
-                <button onClick={agregarArea} disabled={savingNew}
-                  className="w-8 h-8 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0">
-                  <MdCheck size={14} />
-                </button>
-                <button onClick={() => { setAdding(false); setNewVal(""); }} disabled={savingNew}
-                  className="w-8 h-8 rounded-full bg-base-300 text-base-content/50 flex items-center justify-center hover:bg-base-400 transition-colors flex-shrink-0">
-                  <MdClose size={14} />
-                </button>
-              </div>
-            )}
-
-            {areas.length === 0 && !adding ? (
-              <p className="text-center py-10 text-sm text-base-content/40 italic">Sin áreas. Presiona + para agregar.</p>
+            {!selectedCongreso ? (
+              <p className="text-center py-10 text-sm text-base-content/40 italic">
+                Selecciona un congreso para gestionar sus áreas.
+              </p>
             ) : (
-              areas.map(area => (
-                <AreaRow
-                  key={area.id}
-                  area={area}
-                  onEdit={nombre => editarArea(area.id, nombre)}
-                  onDelete={() => eliminarArea(area.id)}
-                  onAddSubArea={nombre => agregarSubarea(area.id, nombre)}
-                  onEditSubArea={(subId, nombre) => editarSubarea(area.id, subId, nombre)}
-                  onDeleteSubArea={subId => eliminarSubarea(area.id, subId)}
-                />
-              ))
+              <>
+                {adding && (
+                  <div className="flex items-center gap-2 mb-3 pb-3 border-b border-base-200">
+                    <input
+                      autoFocus placeholder="Nombre del área..." value={newVal}
+                      onChange={e => setNewVal(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") agregarArea();
+                        if (e.key === "Escape") { setAdding(false); setNewVal(""); }
+                      }}
+                      className="flex-1 border border-[#000000] rounded-full px-3 py-2 text-sm focus:outline-none bg-base-100"
+                      disabled={savingNew}
+                    />
+                    <button onClick={agregarArea} disabled={savingNew}
+                      className="w-8 h-8 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0">
+                      <MdCheck size={14} />
+                    </button>
+                    <button onClick={() => { setAdding(false); setNewVal(""); }} disabled={savingNew}
+                      className="w-8 h-8 rounded-full bg-base-300 text-base-content/50 flex items-center justify-center hover:bg-base-400 transition-colors flex-shrink-0">
+                      <MdClose size={14} />
+                    </button>
+                  </div>
+                )}
+                {areas.length === 0 && !adding ? (
+                  <p className="text-center py-10 text-sm text-base-content/40 italic">Sin áreas. Presiona + para agregar.</p>
+                ) : (
+                  areas.map(area => (
+                    <AreaRow
+                      key={area.id}
+                      area={area}
+                      onEdit={nombre => editarArea(area.id, nombre)}
+                      onDelete={() => eliminarArea(area.id)}
+                      onAddSubArea={nombre => agregarSubarea(area.id, nombre)}
+                      onEditSubArea={(subId, nombre) => editarSubarea(area.id, subId, nombre)}
+                      onDeleteSubArea={subId => eliminarSubarea(area.id, subId)}
+                    />
+                  ))
+                )}
+              </>
             )}
           </>
         )}

@@ -1589,11 +1589,31 @@ class PonenciaMagistralViewSet(viewsets.ModelViewSet):
 
 
 class PonentesNombresView(APIView):
-    """Retorna lista de nombres de personas para autocompletado y sin repetidos (útil para el administrador)"""
+    """Retorna lista de nombres de personas para autocompletado.
+    Con ?id_congreso=X devuelve {nombre, email} de inscritos a ese congreso.
+    Sin parámetro devuelve lista de nombres (uso admin).
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        id_congreso = request.query_params.get('id_congreso')
         with connection.cursor() as cursor:
+            if id_congreso:
+                cursor.execute("""
+                    SELECT DISTINCT
+                        TRIM(CONCAT_WS(' ', pe.nombre, pe.primer_apellido, pe.segundo_apellido)) AS nombre_completo,
+                        pe.correo_electronico
+                    FROM pagos p
+                    JOIN costos_congreso cc ON cc.id_costos_congreso = p.id_costos
+                    JOIN congreso c ON c.id_costos_congreso = cc.id_costos_congreso
+                    JOIN persona pe ON pe.id_persona = p.id_persona
+                    WHERE c.id_congreso = %s AND pe.nombre IS NOT NULL
+                    ORDER BY 1
+                """, [id_congreso])
+                return Response([
+                    {'nombre': row[0], 'email': row[1]}
+                    for row in cursor.fetchall() if row[0]
+                ])
             cursor.execute("""
                 SELECT DISTINCT TRIM(CONCAT_WS(' ', nombre, primer_apellido, segundo_apellido))
                 FROM persona
@@ -1606,6 +1626,51 @@ class PonentesNombresView(APIView):
 
 class PublicarPonenciaView(APIView):
     permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        """Pre-fill data for the publish form given an extenso ID."""
+        if not request.user.is_staff:
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT p.id_ponencia, pm.id_congreso, pm.id_tipo_trabajo,
+                       p.id_subarea, p.tipo_participacion,
+                       COALESCE(ext.titulo, 'Ponencia ' || p.id_ponencia::text) AS titulo,
+                       tt.tipo_trabajo AS nombre_tipo_trabajo
+                FROM ponencia p
+                JOIN ponencia_meta pm ON pm.id_ponencia = p.id_ponencia
+                JOIN extenso ext ON p.id_extenso = ext.id_extenso
+                LEFT JOIN tipo_trabajo tt ON tt.id_tipo_trabajo = pm.id_tipo_trabajo
+                WHERE p.id_extenso = %s
+            """, [pk])
+            row = cursor.fetchone()
+            if not row:
+                return Response({'detail': 'Extenso no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+            id_ponencia, id_congreso, id_tipo_trabajo, id_subarea, tipo_participacion, titulo, nombre_tipo_trabajo = row
+
+            cursor.execute("""
+                SELECT per.nombre || ' ' || per.primer_apellido,
+                       ROW_NUMBER() OVER (ORDER BY php.id_ponente_has_ponencia)
+                FROM ponente_has_ponencia php
+                JOIN ponente po ON po.id_ponente = php.id_ponente
+                JOIN persona per ON per.id_persona = po.id_persona
+                WHERE php.id_ponencia = %s
+            """, [id_ponencia])
+            ponentes = cursor.fetchall()
+
+        ponente_principal = ponentes[0][0] if ponentes else ""
+        coautores = [r[0] for r in ponentes[1:]]
+
+        return Response({
+            'id_congreso': id_congreso,
+            'id_tipo_trabajo': id_tipo_trabajo,
+            'nombre_tipo_trabajo': nombre_tipo_trabajo or '',
+            'id_subarea': id_subarea,
+            'tipo_participacion': tipo_participacion or 'presencial',
+            'titulo': titulo,
+            'ponente_principal': ponente_principal,
+            'coautores': coautores,
+        })
 
     def post(self, request, pk):
         if not request.user.is_staff:
@@ -1677,7 +1742,7 @@ class PublicarPonenciaView(APIView):
                     [id_evento, tipo_participacion, id_ponencia]
                 )
 
-        return Response({'detail': 'Ponencia publicada correctamente.', 'id_evento': id_evento}, status=status.HTTP_201_CREATED)
+        return Response({'detail': 'Ponencia publicada correctamente.', 'id_evento': id_evento, 'id_ponencia': id_ponencia}, status=status.HTTP_201_CREATED)
 
 
 class ActualizarEnlacePonenciaView(APIView):

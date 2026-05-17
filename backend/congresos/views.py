@@ -1,6 +1,6 @@
 from rest_framework import status, viewsets, generics
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.core.files.storage import FileSystemStorage
@@ -224,7 +224,11 @@ class AreaGeneralViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return AreaGeneral.objects.prefetch_related('subarea_set').all()
+        qs = AreaGeneral.objects.prefetch_related('subarea_set').all()
+        id_congreso = self.request.query_params.get('id_congreso')
+        if id_congreso:
+            qs = qs.filter(id_congreso_id=id_congreso)
+        return qs
 
     def list(self, request, *args, **kwargs):
         areas = self.get_queryset()
@@ -232,6 +236,7 @@ class AreaGeneralViewSet(viewsets.ModelViewSet):
             {
                 'id': a.id_areas_generales,
                 'nombre': a.nombre,
+                'id_congreso': a.id_congreso_id,
                 'subAreas': [
                     {'id': s.id_subareas, 'nombre': s.nombre}
                     for s in a.subarea_set.all()
@@ -243,15 +248,16 @@ class AreaGeneralViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         nombre = request.data.get('nombre', '').strip()
+        id_congreso = request.data.get('id_congreso') or None
         if not nombre:
             return Response({'detail': 'El nombre es requerido.'}, status=status.HTTP_400_BAD_REQUEST)
         with connection.cursor() as cursor:
             cursor.execute(
-                "INSERT INTO areas_generales (nombre) VALUES (%s) RETURNING id_areas_generales",
-                [nombre],
+                "INSERT INTO areas_generales (nombre, id_congreso) VALUES (%s, %s) RETURNING id_areas_generales",
+                [nombre, id_congreso],
             )
             new_id = cursor.fetchone()[0]
-        return Response({'id': new_id, 'nombre': nombre, 'subAreas': []}, status=status.HTTP_201_CREATED)
+        return Response({'id': new_id, 'nombre': nombre, 'id_congreso': id_congreso, 'subAreas': []}, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -493,7 +499,7 @@ class TallerViewSet(viewsets.ModelViewSet):
 class InstitucionViewSet(viewsets.ModelViewSet):
     queryset = Institucion.objects.all()
     serializer_class = InstitucionSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def create(self, request, *args, **kwargs):
         data = request.data

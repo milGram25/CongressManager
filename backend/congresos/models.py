@@ -27,6 +27,10 @@ class Subarea(models.Model):
 class AreaGeneral(models.Model):
     id_areas_generales = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=255)
+    id_congreso = models.ForeignKey(
+        'Congreso', models.DO_NOTHING,
+        db_column='id_congreso', null=True, blank=True
+    )
 
     class Meta:
         managed = False

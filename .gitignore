@@ -57,6 +57,11 @@ htmlcov/
 .pytest_cache/
 
 # =====================
+# Superpowers / Skills
+# =====================
+docs/superpowers/
+
+# =====================
 # Editor / Sistema
 # =====================
 .vscode/*

@@ -3,7 +3,8 @@ import { FiEdit2, FiCopy, FiCalendar, FiClock, FiUsers, FiMapPin, FiUser, FiAwar
 import { IoIosCheckmark } from "react-icons/io";
 import { RxCross2 } from "react-icons/rx";
 import { getInstitucionesApi, getCongresosApi, getSubareasApi, getMesasApi, createPonenciaApi, getPonenciaByIdApi, getInscritosTallerApi, getPonenciaMagistralByIdApi, createPonenciaMagistralApi, updatePonenciaMagistralApi, getPonentesNombresApi } from '../../../api/adminApi';
-import { publicarPonenciaApi } from '../../../api/ponenciasApi';
+import { publicarPonenciaApi, getPreFillExtensoApi } from '../../../api/ponenciasApi';
+import { obtenerAreasApi } from '../../../api/areasApi';
 import { API_URL } from '../../../api/constants';
 import { useNavigate } from 'react-router-dom';
 import { LuCrown } from "react-icons/lu";
@@ -38,6 +39,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
     const [congresos, setCongresos] = useState([]);
     const [mesas, setMesas] = useState([]);
     const [subareas, setSubareas] = useState([]);
+    const [areasEje, setAreasEje] = useState([]);
     const [inscritos, setInscritos] = useState([]);
     const [cuposMax, setCuposMax] = useState(0);
     const [loadingInscritos, setLoadingInscritos] = useState(false);
@@ -188,6 +190,25 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                             setCuposMax(inscritosData.cupos_max || 0);
                         } catch { } finally { setLoadingInscritos(false); }
                     }
+                } else if (idExtenso) {
+                    // Publish-from-extenso flow: fetch real data from the backend
+                    try {
+                        const ext = await getPreFillExtensoApi(accessToken, idExtenso);
+                        const capFirst = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+                        setFormatData(prev => ({
+                            ...prev,
+                            id_congreso: ext.id_congreso || prev.id_congreso,
+                            id_subarea: ext.id_subarea || prev.id_subarea,
+                            nombre_evento: ponenciaData?.nombre_evento || ext.titulo || prev.nombre_evento,
+                            tipo_participacion: capFirst(ext.tipo_participacion) || prev.tipo_participacion,
+                            id_tipo_trabajo: ext.id_tipo_trabajo || prev.id_tipo_trabajo || '',
+                            nombre_tipo_trabajo: ext.nombre_tipo_trabajo || prev.nombre_tipo_trabajo || '',
+                        }));
+                        setPonentePrincipal(ext.ponente_principal || '');
+                        setCoautores(ext.coautores || []);
+                    } catch (e) {
+                        console.error('No se pudo obtener datos del extenso:', e);
+                    }
                 } else if (ponenciaData) {
                     // New ponencia: pre-fill from ponenciaData (which may contain query-param pre-fills)
                     setFormatData(prev => ({
@@ -218,6 +239,11 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
     useEffect(() => {
         if (formatData.id_congreso) {
             getMesasApi(accessToken).then(setMesas).catch(console.error);
+            obtenerAreasApi(accessToken, formatData.id_congreso)
+                .then(data => setAreasEje(Array.isArray(data) ? data : []))
+                .catch(() => setAreasEje([]));
+        } else {
+            setAreasEje([]);
         }
     }, [formatData.id_congreso]);
 
@@ -243,8 +269,8 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                     id_mesas_trabajo: formatData.id_mesas_trabajo || null,
                     tipo_participacion: formatData.tipo_participacion || 'Presencial',
                 };
-                const { id_evento } = await publicarPonenciaApi(accessToken, idExtenso, formData);
-                navigate(`/admin/eventos/ponencias/detalles/${id_evento}?edit=true`);
+                const { id_ponencia } = await publicarPonenciaApi(accessToken, idExtenso, formData);
+                navigate(`/admin/eventos/ponencias/detalles/${id_ponencia}`);
                 return;
             }
 
@@ -315,7 +341,9 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
         });
     };
 
+    const fromExtenso = !!idExtenso;
     const inputClasses = `w-full bg-base-100 border border-base-300 rounded-xl px-4 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all ${!modificando ? 'bg-base-200 cursor-not-allowed opacity-70' : 'hover:border-primary/50'}`;
+    const lockedClasses = `w-full bg-base-200 border border-base-300 rounded-xl px-4 py-2 text-sm outline-none cursor-not-allowed opacity-70`;
     const labelClasses = "text-[13px] font-bold text-base-content/40 mb-1 block ml-1";
     const sectionTitleClasses = "text-lg font-bold text-primary flex items-center gap-2 mb-6 pb-2 border-b border-base-300 mt-8 first:mt-0";
 
@@ -425,7 +453,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                         <div className="md:col-span-2">
                             <label className={labelClasses}>Título de la ponencia {isMagistral && " magistral"}</label>
-                            <input id="nombre_evento" type="text" className={`${inputClasses} font-bold text-base`} value={formatData.nombre_evento} onChange={handleChange} readOnly={!modificando} />
+                            <input id="nombre_evento" type="text" className={`${fromExtenso ? lockedClasses : inputClasses} font-bold text-base`} value={formatData.nombre_evento} onChange={handleChange} readOnly={!modificando || fromExtenso} />
                         </div>
                         <div>
                             <label className={labelClasses}>Ponente principal</label>
@@ -469,8 +497,8 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                                             if (!modificando) return;
                                             setPonentePrincipal(e.target.value);
                                         }}
-                                        disabled={!modificando || !!(ponenciaData?.id || ponenciaData?.id_ponencia)}
-                                        title={`${!modificando || !!(ponenciaData?.id || ponenciaData?.id_ponencia) ? "No se puede modificar al ponente principal una vez asignado" : "Se modifica"}`}
+                                        disabled={!modificando || !!(ponenciaData?.id || ponenciaData?.id_ponencia) || fromExtenso}
+                                        title={fromExtenso ? "El ponente proviene de la ponencia enviada y no se puede modificar" : (!modificando || !!(ponenciaData?.id || ponenciaData?.id_ponencia) ? "No se puede modificar al ponente principal una vez asignado" : "Se modifica")}
                                     >
                                         <option value="" style={{ color: "gray" }}>Seleccione un ponente</option>
                                         {ponentesNombres.map((n, i) => (
@@ -526,34 +554,36 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                                     )}
                                 </div>
                             ) : (
-                                <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30 z-10"><FiUsers /></span>
-                                    <select
-                                        className={`${inputClasses} pl-11`}
-                                        value=""
-                                        onChange={(e) => {
-                                            if (!modificando) return;
-                                            const newVal = e.target.value;
-                                            if (newVal && !coautores.includes(newVal)) {
-                                                setCoautores(prev => [...prev, newVal]);
-                                                e.target.value = "";
-                                            }
-                                        }}
-                                        disabled={!modificando}
-                                    >
-                                        <option value="" style={{ color: "gray" }}>Seleccione para agregar coautor</option>
-                                        {ponentesNombres.filter(n => n !== ponentePrincipal && !coautores.includes(n)).map((n, i) => (
-                                            <option key={i} value={n} style={{ color: "black" }}>{n}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                                coautores.length === 0 && (
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base-content/30 z-10"><FiUsers /></span>
+                                        <select
+                                            className={`${inputClasses} pl-11`}
+                                            value=""
+                                            onChange={(e) => {
+                                                if (!modificando) return;
+                                                const newVal = e.target.value;
+                                                if (newVal && !coautores.includes(newVal)) {
+                                                    setCoautores(prev => [...prev, newVal]);
+                                                    e.target.value = "";
+                                                }
+                                            }}
+                                            disabled={!modificando || fromExtenso}
+                                        >
+                                            <option value="" style={{ color: "gray" }}>Seleccione para agregar coautor</option>
+                                            {ponentesNombres.filter(n => n !== ponentePrincipal && !coautores.includes(n)).map((n, i) => (
+                                                <option key={i} value={n} style={{ color: "black" }}>{n}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )
                             )}
                             {coautores.length > 0 && (
                                 <div className="flex flex-wrap gap-2 mt-2">
                                     {coautores.map((c, i) => (
                                         <span key={i} className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs font-semibold px-3 py-1.5 rounded-full">
                                             {c}
-                                            {modificando && (
+                                            {modificando && !fromExtenso && (
                                                 <button type="button" onClick={() => {
                                                     setCoautores(prev => prev.filter((_, idx) => idx !== i))
                                                 }} className="hover:text-error transition-colors">
@@ -568,11 +598,14 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
 
                         <div>
                             <label className={labelClasses}>Subárea académica</label>
-                            <select id="id_subarea" value={formatData.id_subarea} className={inputClasses} onChange={handleChange} disabled={!modificando} style={{ color: formatData.id_subarea === "" ? "gray" : "black" }}>
+                            <select id="id_subarea" value={formatData.id_subarea} className={fromExtenso ? lockedClasses : inputClasses} onChange={handleChange} disabled={!modificando || fromExtenso} style={{ color: formatData.id_subarea === "" ? "gray" : "black" }}>
                                 <option style={{ color: "gray" }} value="">Selecciona subárea</option>
-
-                                {subareas.map((item) => (
-                                    <option style={{ color: "black" }} key={item.id_subareas} value={item.id_subareas}>{item.nombre}</option>
+                                {areasEje.map(area => (
+                                    <optgroup key={area.id} label={area.nombre}>
+                                        {(area.subAreas ?? []).map(sub => (
+                                            <option style={{ color: "black" }} key={sub.id} value={sub.id}>{sub.nombre}</option>
+                                        ))}
+                                    </optgroup>
                                 ))}
                             </select>
                         </div>
@@ -591,7 +624,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                         </div>
                         <div>
                             <label className={labelClasses}>Tipo de participación</label>
-                            <select id="tipo_participacion" value={formatData.tipo_participacion} className={inputClasses} onChange={handleChange} disabled={!modificando}>
+                            <select id="tipo_participacion" value={formatData.tipo_participacion} className={fromExtenso ? lockedClasses : inputClasses} onChange={handleChange} disabled={!modificando || fromExtenso}>
                                 <option value="Presencial">Presencial</option>
                                 <option value="Virtual">Virtual</option>
                                 <option value="Híbrido">Híbrido</option>
@@ -734,14 +767,6 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
                     {retornarAsistentes(isMagistral)}
                 </section>
 
-                {isFullPage && modificando && (
-                    <div className='flex justify-center mt-12'>
-                        <button onClick={handleSave} disabled={saving} className="px-12 py-4 rounded-2xl bg-black text-white font-black shadow-xl hover:bg-[#005a6a] transition-all active:scale-95 text-base flex items-center gap-3 disabled:opacity-50">
-                            {saving ? <span className="loading loading-spinner"></span> : <FiSave size={20} />}
-                            Guardar cambios
-                        </button>
-                    </div>
-                )}
             </div>
 
         </div>

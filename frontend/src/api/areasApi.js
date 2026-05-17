@@ -10,18 +10,19 @@ async function handleResponse(res) {
   return data;
 }
 
-export async function obtenerAreasApi(token) {
-  const res = await fetch(`${API_URL}/api/congresos/areas/`, {
+export async function obtenerAreasApi(token, idCongreso = null) {
+  const params = idCongreso ? `?id_congreso=${idCongreso}` : '';
+  const res = await fetch(`${API_URL}/api/congresos/areas/${params}`, {
     headers: authHeaders(token),
   });
   return handleResponse(res);
 }
 
-export async function crearAreaApi(nombre, token) {
+export async function crearAreaApi(nombre, token, idCongreso = null) {
   const res = await fetch(`${API_URL}/api/congresos/areas/`, {
     method: 'POST',
     headers: authHeaders(token),
-    body: JSON.stringify({ nombre }),
+    body: JSON.stringify({ nombre, id_congreso: idCongreso }),
   });
   return handleResponse(res);
 }
