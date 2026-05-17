@@ -996,7 +996,7 @@ class ListaPagosAdminView(APIView):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_congreso = request.query_params.get('id_congreso')
         sql = """
-            SELECT
+            SELECT DISTINCT
                 p.id_pagos,
                 per.nombre,
                 per.primer_apellido,
