@@ -35,7 +35,8 @@ CREATE TABLE sede (
 
 CREATE TABLE areas_generales (
     id_areas_generales SERIAL PRIMARY KEY,
-    nombre VARCHAR(255) NOT NULL
+    nombre VARCHAR(255) NOT NULL,
+    id_congreso INTEGER REFERENCES congreso(id_congreso) ON DELETE CASCADE
 );
 
 CREATE TABLE tipo_trabajo (
