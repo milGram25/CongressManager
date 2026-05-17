@@ -178,6 +178,12 @@ export async function deleteMesaApi(accessToken, idMesa) {
 }
 
 // Instituciones
+export async function getInstitucionesPublicApi() {
+  const res = await fetch(`${API_URL}/api/congresos/instituciones/`);
+  if (!res.ok) throw new Error('Error al obtener instituciones.');
+  return res.json();
+}
+
 export async function getInstitucionesApi(accessToken) {
   const res = await fetch(`${API_URL}/api/congresos/instituciones/`, { headers: { 'Authorization': `Bearer ${accessToken}` } });
   if (!res.ok) throw new Error('Error al obtener instituciones.');
