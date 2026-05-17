@@ -106,6 +106,19 @@ export default function EnviarPonenciaView() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Sanitización básica
+    const cleanTitulo = titulo.trim().replace(/\s+/g, ' ');
+    const cleanAutor = autor.trim().replace(/\s+/g, ' ');
+    const cleanPalabras = palabrasClave.trim().replace(/\s+/g, ' ');
+    const cleanResumen = resumen.trim();
+    const cleanCoautores = coautores
+      .map(c => ({
+        nombre: c.nombre.trim().replace(/\s+/g, ' '),
+        email: c.email.trim().toLowerCase()
+      }))
+      .filter(c => c.nombre !== '' || c.email !== '');
+
     if (numPalabras > 250) {
       setMensaje({ texto: 'El resumen no puede exceder las 250 palabras.', tipo: 'error' });
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -118,7 +131,6 @@ export default function EnviarPonenciaView() {
     setLoading(true);
     setMensaje({ texto: '', tipo: '' });
     try {
-      const validCoautores = coautores.filter(c => c.nombre.trim() !== '' || c.email.trim() !== '');
       const response = await fetch('http://localhost:8000/api/ponencias/enviar/', {
         method: 'POST',
         headers: {
@@ -126,14 +138,14 @@ export default function EnviarPonenciaView() {
           'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
-          titulo,
-          autor,
-          coautores: validCoautores,
+          titulo: cleanTitulo,
+          autor: cleanAutor,
+          coautores: cleanCoautores,
           tipoParticipacion,
           ejeTematico,
           tipoTrabajo,
-          palabrasClave,
-          resumen,
+          palabrasClave: cleanPalabras,
+          resumen: cleanResumen,
           id_congreso: selectedCongreso,
         }),
       });

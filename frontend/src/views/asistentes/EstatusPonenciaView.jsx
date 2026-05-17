@@ -25,7 +25,8 @@ function EnlaceMultimediaForm({ ponencia }) {
     setSaving(true);
     setMsg(null);
     try {
-      await actualizarEnlacePonenciaApi(accessToken, ponencia.id_ponencia, enlace);
+      const cleanEnlace = enlace.trim();
+      await actualizarEnlacePonenciaApi(accessToken, ponencia.id_ponencia, cleanEnlace);
       setSaved(true);
       setMsg({ ok: true, text: 'Enlace guardado correctamente.' });
       setTimeout(() => setMsg(null), 3000);
