@@ -8,6 +8,7 @@ import {
   obtenerAreasApi, crearAreaApi, editarAreaApi, eliminarAreaApi,
   crearSubareaApi, editarSubareaApi, eliminarSubareaApi,
 } from "../../api/areasApi";
+import { getCongresosApi } from "../../api/adminApi";
 
 function exportToCSV(areas) {
   const rows = [["Área", "Subárea"]];
@@ -197,21 +198,33 @@ function AreaRow({ area, onEdit, onDelete, onAddSubArea, onEditSubArea, onDelete
 export default function AreasGeneralesView() {
   const navigate = useNavigate();
   const [areas, setAreas] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [adding, setAdding] = useState(false);
   const [newVal, setNewVal] = useState("");
   const [savingNew, setSavingNew] = useState(false);
+  const [congresos, setCongresos] = useState([]);
+  const [selectedCongreso, setSelectedCongreso] = useState(null);
 
   const getToken = () => localStorage.getItem("congress_access");
 
-  useEffect(() => { cargarAreas(); }, []);
+  useEffect(() => {
+    getCongresosApi(getToken())
+      .then(data => setCongresos(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (selectedCongreso) cargarAreas();
+    else setAreas([]);
+  }, [selectedCongreso]);
 
   async function cargarAreas() {
+    if (!selectedCongreso) return;
     try {
       setLoading(true);
       setError(null);
-      const data = await obtenerAreasApi(getToken());
+      const data = await obtenerAreasApi(getToken(), selectedCongreso);
       setAreas(data);
     } catch (e) {
       setError(e.message);
@@ -224,7 +237,7 @@ export default function AreasGeneralesView() {
     if (!newVal.trim() || savingNew) return;
     setSavingNew(true);
     try {
-      const creada = await crearAreaApi(newVal.trim(), getToken());
+      const creada = await crearAreaApi(newVal.trim(), getToken(), selectedCongreso);
       setAreas(prev => [...prev, creada]);
       setNewVal(""); setAdding(false);
     } catch (e) {
@@ -323,6 +336,20 @@ export default function AreasGeneralesView() {
         </div>
       </div>
 
+      {/* Selector de congreso */}
+      <div className="px-4 pt-4 pb-2 border-b border-base-200">
+        <select
+          className="select select-bordered select-sm w-full rounded-xl"
+          value={selectedCongreso ?? ''}
+          onChange={e => setSelectedCongreso(e.target.value || null)}
+        >
+          <option value="">Selecciona un congreso...</option>
+          {congresos.map(c => (
+            <option key={c.id_congreso} value={c.id_congreso}>{c.nombre_congreso}</option>
+          ))}
+        </select>
+      </div>
+
       {/* Lista */}
       <div className="p-4 overflow-y-auto" style={{ maxHeight: 600 }}>
 
@@ -339,43 +366,50 @@ export default function AreasGeneralesView() {
 
         {!loading && !error && (
           <>
-            {adding && (
-              <div className="flex items-center gap-2 mb-3 pb-3 border-b border-base-200">
-                <input
-                  autoFocus placeholder="Nombre del área..." value={newVal}
-                  onChange={e => setNewVal(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === "Enter") agregarArea();
-                    if (e.key === "Escape") { setAdding(false); setNewVal(""); }
-                  }}
-                  className="flex-1 border border-[#000000] rounded-full px-3 py-2 text-sm focus:outline-none bg-base-100"
-                  disabled={savingNew}
-                />
-                <button onClick={agregarArea} disabled={savingNew}
-                  className="w-8 h-8 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0">
-                  <MdCheck size={14} />
-                </button>
-                <button onClick={() => { setAdding(false); setNewVal(""); }} disabled={savingNew}
-                  className="w-8 h-8 rounded-full bg-base-300 text-base-content/50 flex items-center justify-center hover:bg-base-400 transition-colors flex-shrink-0">
-                  <MdClose size={14} />
-                </button>
-              </div>
-            )}
-
-            {areas.length === 0 && !adding ? (
-              <p className="text-center py-10 text-sm text-base-content/40 italic">Sin áreas. Presiona + para agregar.</p>
+            {!selectedCongreso ? (
+              <p className="text-center py-10 text-sm text-base-content/40 italic">
+                Selecciona un congreso para gestionar sus áreas.
+              </p>
             ) : (
-              areas.map(area => (
-                <AreaRow
-                  key={area.id}
-                  area={area}
-                  onEdit={nombre => editarArea(area.id, nombre)}
-                  onDelete={() => eliminarArea(area.id)}
-                  onAddSubArea={nombre => agregarSubarea(area.id, nombre)}
-                  onEditSubArea={(subId, nombre) => editarSubarea(area.id, subId, nombre)}
-                  onDeleteSubArea={subId => eliminarSubarea(area.id, subId)}
-                />
-              ))
+              <>
+                {adding && (
+                  <div className="flex items-center gap-2 mb-3 pb-3 border-b border-base-200">
+                    <input
+                      autoFocus placeholder="Nombre del área..." value={newVal}
+                      onChange={e => setNewVal(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") agregarArea();
+                        if (e.key === "Escape") { setAdding(false); setNewVal(""); }
+                      }}
+                      className="flex-1 border border-[#000000] rounded-full px-3 py-2 text-sm focus:outline-none bg-base-100"
+                      disabled={savingNew}
+                    />
+                    <button onClick={agregarArea} disabled={savingNew}
+                      className="w-8 h-8 rounded-full bg-[#000000] text-white flex items-center justify-center hover:bg-gray-500 transition-colors flex-shrink-0">
+                      <MdCheck size={14} />
+                    </button>
+                    <button onClick={() => { setAdding(false); setNewVal(""); }} disabled={savingNew}
+                      className="w-8 h-8 rounded-full bg-base-300 text-base-content/50 flex items-center justify-center hover:bg-base-400 transition-colors flex-shrink-0">
+                      <MdClose size={14} />
+                    </button>
+                  </div>
+                )}
+                {areas.length === 0 && !adding ? (
+                  <p className="text-center py-10 text-sm text-base-content/40 italic">Sin áreas. Presiona + para agregar.</p>
+                ) : (
+                  areas.map(area => (
+                    <AreaRow
+                      key={area.id}
+                      area={area}
+                      onEdit={nombre => editarArea(area.id, nombre)}
+                      onDelete={() => eliminarArea(area.id)}
+                      onAddSubArea={nombre => agregarSubarea(area.id, nombre)}
+                      onEditSubArea={(subId, nombre) => editarSubarea(area.id, subId, nombre)}
+                      onDeleteSubArea={subId => eliminarSubarea(area.id, subId)}
+                    />
+                  ))
+                )}
+              </>
             )}
           </>
         )}
