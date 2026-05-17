@@ -282,8 +282,9 @@ export default function PagosView() {
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    const cleanEmail = studentEmail.trim().toLowerCase();
     const eduRegex = /(\.edu(\.[a-z]{2,3})?|alumnos\.udg\.mx)$/i;
-    if (!eduRegex.test(studentEmail)) {
+    if (!eduRegex.test(cleanEmail)) {
       setError("El correo debe ser institucional válido (.edu, .edu.mx, alumnos.udg.mx, etc).");
       return;
     }
@@ -291,7 +292,7 @@ export default function PagosView() {
     setEnviandoCodigo(true);
     try {
       const token = localStorage.getItem("congress_access");
-      await enviarCodigoEstudianteApi(token, studentEmail);
+      await enviarCodigoEstudianteApi(token, cleanEmail);
       setShowVerification(true);
     } catch (err) {
       setError(err.message || "Error al enviar el código.");
@@ -306,7 +307,8 @@ export default function PagosView() {
     setVerificandoCodigo(true);
     try {
       const token = localStorage.getItem("congress_access");
-      await verificarCodigoEstudianteApi(token, verificationCode);
+      const cleanCode = verificationCode.trim();
+      await verificarCodigoEstudianteApi(token, cleanCode);
       setIsVerified(true);
       setShowVerification(false);
     } catch (err) {
@@ -353,9 +355,14 @@ export default function PagosView() {
       const token = localStorage.getItem("congress_access");
       const formData = new FormData();
       if (idCongreso) formData.append("id_congreso", idCongreso);
-      formData.append("rfc", datosFacturacion.rfc);
-      formData.append("razon_social", datosFacturacion.razonSocial);
-      formData.append("codigo_postal", datosFacturacion.cp);
+
+      const cleanRFC = datosFacturacion.rfc.trim().toUpperCase();
+      const cleanRazon = datosFacturacion.razonSocial.trim().toUpperCase().replace(/\s+/g, ' ');
+      const cleanCP = datosFacturacion.cp.trim();
+
+      formData.append("rfc", cleanRFC);
+      formData.append("razon_social", cleanRazon);
+      formData.append("codigo_postal", cleanCP);
       formData.append("regimen_fiscal", datosFacturacion.regimenFiscal);
       if (constanciaFiscalFile) {
         formData.append("constancia_fiscal", constanciaFiscalFile);
