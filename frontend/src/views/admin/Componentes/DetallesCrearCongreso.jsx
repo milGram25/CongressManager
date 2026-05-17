@@ -124,6 +124,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
                         descuento_prepago: realCongreso.descuento_prepago || "",
                         descuento_estudiante: realCongreso.descuento_estudiante || "",
                         cuenta_deposito: realCongreso.cuenta_deposito || ""
+
                     });
                 }
             } catch (error) {
@@ -324,12 +325,13 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
                     <h3 className={sectionTitleClasses}><div className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center"><FiCreditCard size={20} /></div> Costos y recaudación</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="bg-gray-50 p-6 rounded-3xl space-y-4">
-                            <div><label className={labelClasses}>Participante</label><input type="number" id="costo_asistente" value={formData.costo_asistente} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
-                            <div><label className={labelClasses}>Ponencias extras</label><input type="number" id="costo_ponente" value={formData.costo_ponente} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
+                            <div><label className={labelClasses}>Asistente</label><input type="number" min="0" id="costo_asistente" value={formData.costo_asistente} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
+                            <div><label className={labelClasses}>Ponente</label><input type="number" min="0" id="costo_ponente" value={formData.costo_ponente} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
+                            <div><label className={labelClasses}>Miembro del comité</label><input type="number" min="0" id="costo_miembro_comite" value={formData.costo_miembro_comite} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
                         </div>
                         <div className="bg-gray-50 p-6 rounded-3xl space-y-4">
-                            <div><label className={labelClasses}>Descuento prepago %</label><input type="number" id="descuento_prepago" value={formData.descuento_prepago} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
-                            <div><label className={labelClasses}>Descuento estudiante %</label><input type="number" id="descuento_estudiante" value={formData.descuento_estudiante} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
+                            <div><label className={labelClasses}>Descuento prepago %</label><input type="number" min="0" max="100" id="descuento_prepago" value={formData.descuento_prepago} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
+                            <div><label className={labelClasses}>Descuento estudiante %</label><input type="number" min="0" max="100" id="descuento_estudiante" value={formData.descuento_estudiante} onChange={handleChange} className={inputClasses} readOnly={!modificando} /></div>
                         </div>
                         <div className="bg-black text-white px-6 rounded-3xl flex flex-col justify-center">
                             <p className="text-white text-2xl pb-3">Módulo de pago</p>
