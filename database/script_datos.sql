@@ -28,6 +28,7 @@ DECLARE
     -- Variables para costos y fechas
     v_id_costos INT;
     v_id_costos_2 INT;
+    v_id_costos_3 INT;
     v_id_fechas INT;
     v_id_fechas_2 INT;
 
@@ -162,6 +163,10 @@ BEGIN
     VALUES ('ITESM0987654321', 15.0, 40.0, 600.0, 1200.0, 0.0)
     RETURNING id_costos_congreso INTO v_id_costos_2;
 
+    INSERT INTO costos_congreso (cuenta_deposito, descuento_prepago, descuento_estudiante, costo_congreso_asistente, costo_congreso_ponente, costo_congreso_comite)
+    VALUES ('UNAM1122334455', 12.0, 45.0, 550.0, 1100.0, 0.0)
+    RETURNING id_costos_congreso INTO v_id_costos_3;
+
     -- ============================================
     -- 6. FECHAS DEL CONGRESO
     -- ============================================
@@ -221,7 +226,7 @@ BEGIN
     RETURNING id_congreso INTO v_id_congreso;
 
     INSERT INTO congreso (nombre_congreso, id_sede, id_institucion, id_fechas_congreso, id_costos_congreso, firma_organizador, firma_secretaria, firmas_bloqueadas)
-    VALUES ('Foro Internacional de Innovación Tecnológica 2026', v_id_sede_2, v_id_institucion_2, v_id_fechas, v_id_costos, 'Dr. Luis Fernández Sánchez', 'Dra. Carmen García López', false)
+    VALUES ('Foro Internacional de Innovación Tecnológica 2026', v_id_sede_2, v_id_institucion_2, v_id_fechas, v_id_costos_3, 'Dr. Luis Fernández Sánchez', 'Dra. Carmen García López', false)
     RETURNING id_congreso INTO v_id_congreso_2;
 
     INSERT INTO congreso (nombre_congreso, id_sede, id_institucion, id_fechas_congreso, id_costos_congreso, firma_organizador, firma_secretaria, firmas_bloqueadas)
@@ -432,7 +437,34 @@ BEGIN
     END IF;
 
     -- ============================================
-    -- 14. INSCRIPCIÓN A EVENTOS
+    -- 14. PAGOS DE PRUEBA
+    -- ============================================
+    INSERT INTO pagos (id_persona, monto, concepto, fecha_pago_realizado, id_costos, requiere_factura)
+    SELECT id_persona, 450.00, 'Registro asistente - Congreso BUAP 2026', v_now - INTERVAL '12 days', v_id_costos, false
+    FROM persona WHERE correo_electronico = 'asistente1@congreso.com' LIMIT 1;
+
+    INSERT INTO pagos (id_persona, monto, concepto, fecha_pago_realizado, id_costos, requiere_factura)
+    SELECT id_persona, 950.00, 'Registro ponente - Congreso BUAP 2026', v_now - INTERVAL '11 days', v_id_costos, true
+    FROM persona WHERE correo_electronico = 'ponente1@congreso.com' LIMIT 1;
+
+    INSERT INTO pagos (id_persona, monto, concepto, fecha_pago_realizado, id_costos, requiere_factura)
+    SELECT id_persona, 495.00, 'Registro asistente - Foro UNAM 2026', v_now - INTERVAL '10 days', v_id_costos_3, false
+    FROM persona WHERE correo_electronico = 'asistente2@congreso.com' LIMIT 1;
+
+    INSERT INTO pagos (id_persona, monto, concepto, fecha_pago_realizado, id_costos, requiere_factura)
+    SELECT id_persona, 1080.00, 'Registro ponente - Foro UNAM 2026', v_now - INTERVAL '9 days', v_id_costos_3, true
+    FROM persona WHERE correo_electronico = 'ponente2@congreso.com' LIMIT 1;
+
+    INSERT INTO pagos (id_persona, monto, concepto, fecha_pago_realizado, id_costos, requiere_factura)
+    SELECT id_persona, 1200.00, 'Registro comité - Simposio ITESM 2026', v_now - INTERVAL '8 days', v_id_costos_2, false
+    FROM persona WHERE correo_electronico = 'admin@congreso.com' LIMIT 1;
+
+    INSERT INTO pagos (id_persona, monto, concepto, fecha_pago_realizado, id_costos, requiere_factura)
+    SELECT id_persona, 1200.00, 'Pago dictaminador - Simposio ITESM 2026', v_now - INTERVAL '7 days', v_id_costos_2, false
+    FROM persona WHERE correo_electronico = 'dictaminador1@congreso.com' LIMIT 1;
+
+    -- ============================================
+    -- 15. INSCRIPCIÓN A EVENTOS
     -- ============================================
     IF v_id_asistente IS NOT NULL THEN
         INSERT INTO asistente_evento (id_asistente, id_evento, fecha_inscripcion)
@@ -441,7 +473,7 @@ BEGIN
     END IF;
 
     -- ============================================
-    -- 15. TRABAJOS (Resúmenes y Extensos)
+    -- 16. TRABAJOS (Resúmenes y Extensos)
     -- ============================================
     -- Obtener IDs de evaluador y dictaminador para las referencias
     SELECT id_evaluador INTO v_id_evaluador FROM evaluador LIMIT 1;

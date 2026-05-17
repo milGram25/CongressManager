@@ -15,13 +15,54 @@ function formatFecha(iso) {
   return `${dia}/${mes}/${anio}, ${hora}`;
 }
 
-const FECHAS = ["Recientes", "Más antiguos"];
+function formatFechaCorta(iso) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "Fecha inválida";
+
+  return d.toLocaleDateString("es-MX", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).replaceAll(".", "");
+}
+
+function getFechaKey(iso) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function normalizeText(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function uniquePagosByOrden(lista = []) {
+  const seen = new Set();
+  const unique = [];
+
+  for (const pago of lista) {
+    const key = String(pago?.orden ?? "");
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    unique.push(pago);
+  }
+
+  return unique;
+}
 
 // ─── Campo de detalle ─────────────────────────────────────────────────────────
 function Campo({ label, value }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="text-xs text-base-content/50 w-36 flex-shrink-0">{label}</span>
+      <span className="text-xs text-base-content/50 w-36 shrink-0">{label}</span>
       <span className={`flex-1 border border-base-300 rounded-full px-3 py-1 text-sm text-base-content bg-base-100 truncate h-8 ${!value&&"text-gray-500"}`} >
         {value||"Sin datos"}
       </span>
@@ -51,7 +92,7 @@ function DetallePanel({ pago }) {
         {/* Evento */}
         <p className="text-[11px] text-base-content/40 font-semibold mb-1">Pago de evento</p>
         <div className="flex items-center gap-3 mb-4 ml-4">
-          <span className="text-xs text-base-content/50 w-16 flex-shrink-0">Evento</span>
+          <span className="text-xs text-base-content/50 w-16 shrink-0">Evento</span>
           <span className="flex-1 border border-base-300 rounded-full px-3 py-1 text-sm text-base-content bg-base-100">{pago.congreso}</span>
         </div>
 
@@ -70,7 +111,7 @@ function DetallePanel({ pago }) {
               <Campo label="Rol" value={pago.rol} />
               {pago.rol === 'Ponente' && (
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-base-content/50 w-36 flex-shrink-0">Ponencias aceptadas</span>
+                  <span className="text-xs text-base-content/50 w-36 shrink-0">Ponencias aceptadas</span>
                   <span className="flex-1 border border-primary/30 rounded-full px-3 py-1 text-sm font-bold text-primary bg-primary/5 truncate h-8">
                     {pago.ponencias_count || 0}
                   </span>
@@ -111,9 +152,10 @@ export default function PagosComponente() {
   const [filtroInstitucion, setFiltroInstitucion] = useState(null);
 
   const [selected, setSelected] = useState(null);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-  const [filtroRol, setFiltroRol] = useState("Todos");
-  const [filtroFecha, setFiltroFecha] = useState("Recientes");
+  const [filtroRol, setFiltroRol] = useState("");
+  const [filtroFecha, setFiltroFecha] = useState("");
   const [filtroEst, _setFiltroEst] = useState("Todos");
 
   const [openRol, setOpenRol] = useState(false);
@@ -129,7 +171,7 @@ export default function PagosComponente() {
           getCongresosApi(token),
           getInstitucionesApi(token),
         ]);
-        setPagos(Array.isArray(pagosData) ? pagosData : []);
+        setPagos(uniquePagosByOrden(Array.isArray(pagosData) ? pagosData : []));
         setCongresos(Array.isArray(congresosData) ? congresosData : congresosData.results ?? []);
         setInstituciones(Array.isArray(institucionesData) ? institucionesData : institucionesData.results ?? []);
       } catch (err) {
@@ -141,14 +183,26 @@ export default function PagosComponente() {
     loadAll();
   }, []);
 
+  const handleSearchSubmit = (e) => {
+    e?.preventDefault?.();
+    setSearch(searchInput.trim());
+  };
+
+  const handleSearchClear = () => {
+    setSearchInput("");
+    setSearch("");
+  };
+
   const handleSelectCongreso = async (idStr) => {
     const token = localStorage.getItem("congress_access");
     const idCongreso = idStr || null;
     setFiltroCongreso(idCongreso);
     setSelected(null);
+    setFiltroRol("");
+    setFiltroFecha("");
     try {
       const data = await getPagosAdminApi(token, idCongreso);
-      setPagos(Array.isArray(data) ? data : []);
+      setPagos(uniquePagosByOrden(Array.isArray(data) ? data : []));
     } catch (err) {
       setError(err.message);
     }
@@ -161,6 +215,8 @@ export default function PagosComponente() {
     setFiltroInstitucion(idInstitucion);
     setFiltroCongreso(null);
     setSelected(null);
+    setFiltroRol("");
+    setFiltroFecha("");
     try {
       const data = await getCongresosApi(token, idInstitucion);
       const listaCong = Array.isArray(data) ? data : data.results ?? [];
@@ -169,7 +225,7 @@ export default function PagosComponente() {
       const ids = listaCong.map(c => c.id_congreso).filter(id => id !== null && id !== undefined && id !== "");
       if (ids.length > 0) {
         const respuestas = await Promise.all(ids.map(id => getPagosAdminApi(token, id).then(r => Array.isArray(r) ? r : [] ).catch(() => [])));
-        const combinado = respuestas.flat();
+        const combinado = uniquePagosByOrden(respuestas.flat());
         setPagos(combinado);
       } else {
         setPagos([]);
@@ -180,31 +236,92 @@ export default function PagosComponente() {
   };
 
   const ROLES_DISPONIBLES = useMemo(() => {
-    const roles = new Set(pagos.map(p => p.rol));
-    return ["Todos", ...Array.from(roles)];
+    const seen = new Map();
+
+    for (const pago of pagos) {
+      const rol = String(pago.rol ?? "").trim();
+      if (!rol) continue;
+
+      const key = normalizeText(rol);
+      if (!seen.has(key)) {
+        seen.set(key, { value: rol, label: rol });
+      }
+    }
+
+    return [{ value: "", label: "Todos los roles" }, ...Array.from(seen.values())];
+  }, [pagos]);
+
+  const FECHAS_DISPONIBLES = useMemo(() => {
+    const seen = new Map();
+
+    for (const pago of pagos) {
+      if (!pago?.fecha) continue;
+
+      const key = getFechaKey(pago.fecha);
+      if (!key || seen.has(key)) continue;
+
+      seen.set(key, { value: key, label: formatFechaCorta(pago.fecha) });
+    }
+
+    return [{ value: "", label: "Todas las fechas" }, ...Array.from(seen.values()).sort((a, b) => b.value.localeCompare(a.value))];
   }, [pagos]);
 
   const filtrados = useMemo(() => {
     let list = [...pagos];
-    if (search.trim()) list = list.filter(p => String(p.orden).includes(search) || p.nombre.toLowerCase().includes(search.toLowerCase()));
-    if (filtroRol !== "Todos") list = list.filter(p => p.rol === filtroRol);
+    if (search.trim()) {
+      const term = search.trim().toLowerCase();
+      list = list.filter((p) => {
+        const orden = String(p.orden ?? "");
+        const ordenConHash = `#${orden}`;
+        const nombre = String(p.nombre ?? "").toLowerCase();
+        return orden.includes(term) || ordenConHash.includes(term) || nombre.includes(term);
+      });
+    }
+
+    if (filtroRol) {
+      const rolFiltro = normalizeText(filtroRol);
+      list = list.filter((p) => normalizeText(p.rol) === rolFiltro);
+    }
+
+    if (filtroFecha) {
+      list = list.filter((p) => getFechaKey(p.fecha) === filtroFecha);
+    }
+
     if (filtroEst !== "Todos") list = list.filter(p => p.estatus === filtroEst);
-    list.sort((a, b) => filtroFecha === "Recientes" ? b.orden - a.orden : a.orden - b.orden);
+
+    list.sort((a, b) => {
+      const fechaA = new Date(a.fecha).getTime();
+      const fechaB = new Date(b.fecha).getTime();
+      if (Number.isFinite(fechaA) && Number.isFinite(fechaB) && fechaA !== fechaB) {
+        return fechaB - fechaA;
+      }
+
+      return (b.orden ?? 0) - (a.orden ?? 0);
+    });
+
     return list;
   }, [pagos, search, filtroRol, filtroFecha, filtroEst]);
 
   function Dropdown({ label, value, options, open, onToggle, onSelect }) {
+    const selectedOption = options.find((o) => o.value === value) ?? options[0];
+
     return (
       <div className="relative">
         <button onClick={onToggle} title={label} className="flex items-center gap-1 text-sm text-base-content/70 hover:text-gray-800 transition-colors">
-          {value} <MdKeyboardArrowDown size={15} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+          {selectedOption?.label ?? label} <MdKeyboardArrowDown size={15} className={`transition-transform ${open ? "rotate-180" : ""}`} />
         </button>
         {open && (
           <div className="absolute left-0 top-7 z-50 w-44 bg-base-100 border border-base-300 rounded-2xl shadow-lg overflow-hidden">
-            {options.map(o => (
-              <button key={o} onClick={() => { onSelect(o); onToggle(); }}
-                className={`w-full text-left px-4 py-2.5 text-sm hover:bg-base-200 transition-colors ${value === o ? "text-black font-semibold bg-gray-200" : "text-base-content/70"}`}>
-                {o}
+            {options.map((o) => (
+              <button
+                key={o.value || o.label}
+                onClick={() => {
+                  onSelect(o.value);
+                  onToggle();
+                }}
+                className={`w-full text-left px-4 py-2.5 text-sm hover:bg-base-200 transition-colors ${value === o.value ? "text-black font-semibold bg-gray-200" : "text-base-content/70"}`}
+              >
+                {o.label}
               </button>
             ))}
           </div>
@@ -250,7 +367,7 @@ export default function PagosComponente() {
         />
       </div>
       <div className="flex justify-between bg-black rounded-t-2xl p-4 h-20 items-center pl-8">
-        <p className=" font-bold text-base-content text-white text-2xl">Órdenes de pago</p>
+        <p className="font-bold text-white text-2xl">Órdenes de pago</p>
       </div>
       <div className="border border-base-300 p-4 rounded-b-2xl">
 
@@ -258,17 +375,25 @@ export default function PagosComponente() {
         <div className="grid grid-cols-3 gap-4 mb-2">
           <div>
             <p className="text-sm font-bold text-base-content mb-1">Orden de pago</p>
-            <div className="relative">
+            <form className="relative" onSubmit={handleSearchSubmit}>
               <MdSearch size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-base-content/40" />
               <input
                 type="text"
                 placeholder="Buscar ID..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
+                value={searchInput}
+                onChange={e => setSearchInput(e.target.value)}
                 className="w-full pl-7 pr-6 py-1 text-sm border-b border-base-300 bg-transparent focus:outline-none focus:border-[#00868a] transition-colors"
               />
-              {search && <button onClick={() => setSearch("")} className="absolute right-1 top-1/2 -translate-y-1/2 text-base-content/30"><MdClose size={12} /></button>}
-            </div>
+              {searchInput && (
+                <button
+                  type="button"
+                  onClick={handleSearchClear}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 text-base-content/30"
+                >
+                  <MdClose size={12} />
+                </button>
+              )}
+            </form>
           </div>
 
           <div>
@@ -280,7 +405,7 @@ export default function PagosComponente() {
 
           <div>
             <p className="text-sm font-bold text-base-content mb-1">Fecha</p>
-            <Dropdown label="Fecha" value={filtroFecha} options={FECHAS} open={openFech}
+            <Dropdown label="Fecha" value={filtroFecha} options={FECHAS_DISPONIBLES} open={openFech}
               onToggle={() => { setOpenFech(o => !o); setOpenRol(false); _setOpenEst(false); }}
               onSelect={setFiltroFecha} />
           </div>
@@ -305,7 +430,7 @@ export default function PagosComponente() {
             >
 
               {/* Orden */}
-              <span className="text-sm font-bold text-base-content flex-1">#{p.orden}</span>
+              <span className="text-sm font-bold text-base-content flex-1">ID #{p.orden}</span>
               {/* Rol */}
               <span className="text-sm text-base-content/70 flex-1">{p.rol}</span>
               {/* Fecha */}
