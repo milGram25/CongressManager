@@ -38,7 +38,7 @@ function EnlaceMultimediaForm({ ponencia }) {
 
   return (
     <div className="mt-4 border-t border-success/20 pt-4">
-      <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Enlace / ruta a multimedia</p>
+      <p className="text-xs font-bold tracking-widest text-slate-500 mb-2">Enlace / ruta a multimedia</p>
       {!saved && (
         <p className="text-xs text-slate-400 mb-3">Agrega el enlace a tu presentación, video u otro recurso multimedia que se mostrará en el evento.</p>
       )}
@@ -76,16 +76,16 @@ function PonenciaCard({ ponencia, requiresPayment }) {
       {requiresPayment && (
         <div className="absolute top-0 right-0 bg-warning/20 px-3 py-1 rounded-bl-xl flex items-center gap-1.5 border-b border-l border-warning/30">
           <MdWarningAmber className="text-warning text-sm" />
-          <span className="text-[9px] font-black text-warning-content uppercase tracking-tighter">Pendiente de pago</span>
+          <span className="text-[9px] font-black text-warning-content tracking-tighter">Pendiente de pago</span>
         </div>
       )}
 
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex flex-col gap-1 flex-1 min-w-0">
-          <span className={`text-[10px] font-bold uppercase tracking-widest ${config.text}`}>{config.label}</span>
+          <span className={`text-[10px] font-bold tracking-widest ${config.text}`}>{config.label}</span>
           <h3 className="text-lg font-semibold text-slate-700 leading-tight mb-1 truncate">{ponencia.titulo}</h3>
           <div className="flex items-center gap-3">
-            <p className="text-xs text-slate-400 font-bold uppercase tracking-tighter">ID: {ponencia.id_ponencia}</p>
+            <p className="text-xs text-slate-400 font-bold tracking-tighter">ID: {ponencia.id_ponencia}</p>
             <span className="text-[10px] text-slate-300 font-medium italic">— {ponencia.evento?.congreso || ponencia.congreso || 'Congreso'}</span>
           </div>
         </div>
@@ -138,13 +138,13 @@ function PonenciaCard({ ponencia, requiresPayment }) {
                 <h3 className="font-bold text-lg text-warning mb-3">Retroalimentación del revisor</h3>
                 {ponencia.retroalimentacion && (
                   <div className="mb-4">
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Comentario general</p>
+                    <p className="text-xs font-bold tracking-wider text-slate-500 mb-1">Comentario general</p>
                     <p className="text-sm text-slate-700 italic">"{ponencia.retroalimentacion}"</p>
                   </div>
                 )}
                 {ponencia.criterio_comentarios?.length > 0 && (
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Comentarios por criterio</p>
+                    <p className="text-xs font-bold tracking-wider text-slate-500 mb-2">Comentarios por criterio</p>
                     <ul className="space-y-2">
                       {ponencia.criterio_comentarios.map((c, i) => (
                         <li key={i} className="border-l-2 border-warning/40 pl-3">

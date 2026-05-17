@@ -109,7 +109,7 @@ export default function FacturasView() {
         </div>
 
         <div className="flex items-center gap-3 shrink-0 px-2 ml-auto">
-          <div className="text-[11px] uppercase tracking-tighter font-black text-bg-primary hidden lg:block">
+          <div className="text-[11px] tracking-tighter font-black text-bg-primary hidden lg:block">
             Resumen:
           </div>
           <div className="badge badge-sm py-3 px-4 bg-alt text-white border-none font-bold">
@@ -133,7 +133,7 @@ export default function FacturasView() {
               <div className="flex flex-col md:flex-row justify-between gap-6">
                 <div className="space-y-3 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black bg-primary text-white px-2 py-0.5 rounded uppercase">
+                    <span className="text-[10px] font-black bg-primary text-white px-2 py-0.5 rounded">
                       FAC-{factura.id_factura}
                     </span>
                     <div className={`badge badge-outline badge-xs font-bold px-2 py-2 ${
@@ -180,7 +180,7 @@ export default function FacturasView() {
                   ) : (
                     <div className="flex flex-col items-center justify-center p-3 bg-accent/40 rounded-xl w-full border-2 border-warning/30 border-dashed">
                       <MdAccessTime className="text-xl text-primary mb-1" />
-                      <span className="text-[10px] font-black text-primary text-center uppercase tracking-tighter">
+                      <span className="text-[10px] font-black text-primary text-center tracking-tighter">
                         Generando factura
                       </span>
                     </div>

@@ -177,7 +177,7 @@ function MisEventosHoy() {
       {congresos.length > 1 && (
         <div className="p-4 bg-base-200 border-b border-base-300 overflow-x-auto">
           <div className="flex items-center gap-3 min-w-max">
-            <span className="text-xs font-bold opacity-50 uppercase flex items-center gap-1">
+            <span className="text-xs font-bold opacity-50 flex items-center gap-1">
               <MdCalendarMonth /> Congreso:
             </span>
             <div className="flex gap-2">
@@ -243,7 +243,7 @@ function MisEventosHoy() {
                         {evento.titulo}
                       </h4>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span className="text-[10px] badge badge-ghost uppercase opacity-70">
+                        <span className="text-[10px] badge badge-ghost opacity-70">
                           {tipoLabel}
                         </span>
                         <p className="text-sm opacity-60">

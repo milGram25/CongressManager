@@ -45,7 +45,7 @@ export default function AgendaList({ events = [], loading = false, error = "" })
               d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
             />
           </svg>
-          <span>MI AGENDA</span>
+          <span>Mi agenda</span>
         </div>
         <h2 className="text-2xl font-bold">Titulo del congreso</h2>
         <p className="opacity-80 mt-1">
@@ -59,8 +59,8 @@ export default function AgendaList({ events = [], loading = false, error = "" })
 
       <div className="p-4 bg-base-200 border-b border-base-300 overflow-x-auto">
         <div className="flex items-center gap-4 min-w-max">
-          <span className="text-xs font-bold opacity-50 flex items-center gap-1 uppercase">
-            <MdFilterList /> Filtrar por Eje:
+          <span className="text-xs font-bold opacity-50 flex items-center gap-1">
+            <MdFilterList /> Filtrar por eje:
           </span>
           <div className="flex gap-2">
             {ejesTematicos.map((eje) => (
@@ -106,7 +106,7 @@ export default function AgendaList({ events = [], loading = false, error = "" })
                     <div>
                       <h4 className="font-medium text-base-content">{item.title}</h4>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] badge badge-ghost uppercase opacity-70">{item.eje || "Sin eje"}</span>
+                        <span className="text-[10px] badge badge-ghost opacity-70">{item.eje || "Sin eje"}</span>
                         <p className="text-sm opacity-60">{item.author || "Sin autor"}</p>
                         {Array.isArray(item.sources) && item.sources.length > 0 && (
                           <div className="flex items-center gap-1">

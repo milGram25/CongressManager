@@ -85,7 +85,7 @@ function EventoDetalleModal({ evento, inscrito, onClose, onRegistrar, registrand
                   {registrando === evento.id ? "Registrando..." : "Registrarme"}
                 </button>
                 {!inscrito && (
-                  <span className="text-[10px] text-error font-bold uppercase">Requiere inscripción</span>
+                  <span className="text-[10px] text-error font-bold">Requiere inscripción</span>
                 )}
               </div>
             ) : null}
@@ -249,7 +249,7 @@ function EventoCard({ evento, inscrito, onRegistrar, registrando, onVerDetalles 
 
         {evento.sinopsis && (
           <div className="mt-1">
-            <span className="font-bold text-[10px] uppercase opacity-50 block mb-0.5">Resumen</span>
+            <span className="font-bold text-[10px] opacity-50 block mb-0.5">Resumen</span>
             <p className="text-xs text-base-content/80 whitespace-pre-wrap line-clamp-3">{evento.sinopsis}</p>
           </div>
         )}
@@ -273,7 +273,7 @@ function EventoCard({ evento, inscrito, onRegistrar, registrando, onVerDetalles 
             )}
           </div>
           <button
-            className="btn btn-ghost btn-xs text-black font-extrabold uppercase"
+            className="btn btn-ghost btn-xs text-black font-extrabold"
             onClick={() => onVerDetalles(evento)}
           >
             Ver detalles
