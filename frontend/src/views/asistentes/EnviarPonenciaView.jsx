@@ -28,6 +28,7 @@ export default function EnviarPonenciaView() {
   const [coautores, setCoautores] = useState([]);
   const [mostrarCoautores, setMostrarCoautores] = useState(false);
   const [areasGenerales, setAreasGenerales] = useState([]);
+  const [areaExpandida, setAreaExpandida] = useState(null);
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState({ texto: '', tipo: '' });
 
@@ -312,15 +313,67 @@ export default function EnviarPonenciaView() {
           </select>
 
           <label className="font-bold">Eje Temático *</label>
-          <select value={ejeTematico} onChange={(e) => setEjeTematico(e.target.value)}
-            className="input input-bordered w-full" required>
-            <option value="">
-              {areasGenerales.length === 0 ? 'Cargando áreas...' : 'Selecciona una opción'}
-            </option>
-            {areasGenerales.map(area => (
-              <option key={area.id} value={area.nombre}>{area.nombre}</option>
-            ))}
-          </select>
+          {/* Campo oculto para validación HTML5 */}
+          <input type="text" required value={ejeTematico} onChange={() => {}}
+            className="sr-only" tabIndex={-1} aria-hidden="true" />
+          <div className="border border-base-300 rounded-xl overflow-hidden">
+            {areasGenerales.length === 0 ? (
+              <div className="p-4 text-sm text-base-content/50">Cargando áreas...</div>
+            ) : (
+              areasGenerales.map(area => {
+                const expandida = areaExpandida === area.id;
+                const subareaSeleccionada = (area.subAreas ?? []).find(s => s.nombre === ejeTematico);
+                return (
+                  <div key={area.id} className="border-b border-base-300 last:border-b-0">
+                    <button
+                      type="button"
+                      onClick={() => setAreaExpandida(expandida ? null : area.id)}
+                      className={`w-full flex items-center justify-between px-4 py-3 text-left font-semibold text-sm transition-colors
+                        ${expandida ? 'bg-primary text-primary-content' : subareaSeleccionada ? 'bg-primary/10 text-primary' : 'bg-base-100 hover:bg-base-200'}`}
+                    >
+                      <span>{area.nombre}</span>
+                      <span className="flex items-center gap-2">
+                        {subareaSeleccionada && !expandida && (
+                          <span className="text-xs font-normal opacity-70 truncate max-w-[160px]">{subareaSeleccionada.nombre}</span>
+                        )}
+                        <svg className={`w-4 h-4 transition-transform ${expandida ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </span>
+                    </button>
+                    {expandida && (
+                      <div className="flex flex-wrap gap-2 p-3 bg-base-200/50">
+                        {(area.subAreas ?? []).length === 0 ? (
+                          <span className="text-xs text-base-content/40 italic">Sin subáreas registradas</span>
+                        ) : (
+                          (area.subAreas ?? []).map(sub => (
+                            <button
+                              key={sub.id}
+                              type="button"
+                              onClick={() => { setEjeTematico(sub.nombre); setAreaExpandida(null); }}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors
+                                ${ejeTematico === sub.nombre
+                                  ? 'bg-primary text-primary-content border-primary'
+                                  : 'bg-base-100 border-base-300 hover:border-primary hover:text-primary'}`}
+                            >
+                              {sub.nombre}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+          {ejeTematico && (
+            <div className="flex items-center gap-2 text-xs text-base-content/60 -mt-2">
+              <span>Seleccionado:</span>
+              <span className="font-semibold text-primary">{ejeTematico}</span>
+              <button type="button" onClick={() => setEjeTematico('')} className="text-error hover:underline">✕ limpiar</button>
+            </div>
+          )}
 
           <label className="font-bold">Tipo de trabajo *</label>
           <select value={tipoTrabajo} onChange={(e) => setTipoTrabajo(e.target.value)}
