@@ -204,7 +204,7 @@ export default function DetallesCrearCongreso({ indexDatosModal, modificandoDato
             <div className={`p-6 md:p-10 ${isFullPage ? '' : 'max-h-[80vh] overflow-y-auto'}`}>
                 {/* Información General */}
                 <section className={sectionContainerClasses}>
-                    <h3 className={sectionTitleClasses}><div className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center"><FiFileText size={20} /></div> Información General</h3>
+                    <h3 className={sectionTitleClasses}><div className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center"><FiFileText size={20} /></div> Información general</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
                             <label className={labelClasses}>Nombre del congreso</label>

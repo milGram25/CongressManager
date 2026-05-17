@@ -48,7 +48,7 @@ export default function ForgotPassword() {
               {/* Input Email */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-base-content/50 uppercase ml-1">
-                  Correo Electrónico
+                  Correo electrónico
                 </label>
                 <div className="relative">
                   <input
@@ -71,7 +71,7 @@ export default function ForgotPassword() {
                 {loading ? (
                   <span className="loading loading-spinner loading-sm"></span>
                 ) : (
-                  'ENVIAR INSTRUCCIONES'
+                  'Enviar instrucciones'
                 )}
               </button>
             </form>
@@ -90,7 +90,7 @@ export default function ForgotPassword() {
                 onClick={() => navigate('/login')}
                 className="w-full py-3.5 bg-primary text-primary-content rounded-full font-bold transition-all active:scale-95"
               >
-                VOLVER AL LOGIN
+                Volver al login
               </button>
             </div>
           )}

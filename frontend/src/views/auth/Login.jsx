@@ -59,7 +59,7 @@ export default function Login() {
             {/* Input Email */}
             <div className="space-y-1">
               <label className="text-xs font-bold text-base-content/50 uppercase ml-1">
-                Correo Electrónico
+                Correo electrónico
               </label>
               <input
                 type="email"
@@ -111,7 +111,7 @@ export default function Login() {
                 disabled={loading}
                 className="w-full py-3.5 bg-primary hover:bg-primary/90 disabled:opacity-60 text-primary-content rounded-full font-bold tracking-wide transition-all shadow-md shadow-primary/20 active:scale-95"
               >
-                {loading ? 'ENTRANDO...' : 'INICIAR SESIÓN'}
+                {loading ? 'Entrando...' : 'Iniciar sesión'}
               </button>
 
               <div className="relative flex py-2 items-center">
@@ -125,7 +125,7 @@ export default function Login() {
                 onClick={() => navigate('/register')}
                 className="w-full py-3.5 bg-base-100 border-2 border-primary text-primary hover:bg-primary/5 rounded-full font-bold tracking-wide transition-all active:scale-95"
               >
-                CREAR CUENTA NUEVA
+                Crear cuenta nueva
               </button>
             </div>
           </form>

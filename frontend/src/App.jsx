@@ -97,7 +97,7 @@ const AsistenteLayoutWrapper = () => {
   const menuItems = [
     // Accesos rápidos para roles con permisos extra
     ...((user?.rol === 'administrador' || user?.rol === 'revisor' || user?.rol === 'dictaminador' || user?.es_evaluador || user?.es_dictaminador) ? [
-      { type: 'subheader', label: 'Vistas de Rol' },
+      { type: 'subheader', label: 'Vistas de rol' },
       {
         type: 'role-icons',
         roles: [
@@ -116,12 +116,12 @@ const AsistenteLayoutWrapper = () => {
     { to: '/asistente/agenda', label: 'Agenda', icon: MdCalendarMonth },
     { to: '/asistente/congresos', label: 'Congresos', icon: MdLibraryBooks },
     { to: '/asistente/pagos', label: 'Pagos', icon: MdPayment },
-    { to: '/asistente/facturas', label: 'Mis Facturas', icon: MdReceipt },
-    { to: '/asistente/constancias', label: 'Mis Constancias', icon: MdBadge },
+    { to: '/asistente/facturas', label: 'Mis facturas', icon: MdReceipt },
+    { to: '/asistente/constancias', label: 'Mis constancias', icon: MdBadge },
     { type: 'header', label: 'Ponente' },
-    { to: '/asistente/enviar-ponencia', label: 'Enviar Ponencia', icon: MdUploadFile },
-    { to: '/asistente/estatus-ponencia', label: 'Estatus Ponencia', icon: GrStatusGood },
-    { to: '/asistente/mis-ponencias', label: 'Mis Ponencias', icon: MdCoPresent },
+    { to: '/asistente/enviar-ponencia', label: 'Enviar ponencia', icon: MdUploadFile },
+    { to: '/asistente/estatus-ponencia', label: 'Estatus ponencia', icon: GrStatusGood },
+    { to: '/asistente/mis-ponencias', label: 'Mis ponencias', icon: MdCoPresent },
   ];
 
   return <SidebarLayout roleTitle="Participante" drawerId="asistente-drawer" menuItems={menuItems} MainIcon={MdSchool} />;
@@ -133,7 +133,7 @@ const PonenteLayoutWrapper = () => {
   const menuItems = [
     // Accesos rápidos para roles con permisos extra
     ...((user?.rol === 'administrador' || user?.rol === 'revisor' || user?.rol === 'dictaminador' || user?.es_evaluador || user?.es_dictaminador) ? [
-      { type: 'subheader', label: 'Vistas de Rol' },
+      { type: 'subheader', label: 'Vistas de rol' },
       {
         type: 'role-icons',
         roles: [
@@ -152,12 +152,12 @@ const PonenteLayoutWrapper = () => {
     { to: '/ponente/agenda', label: 'Agenda', icon: MdCalendarMonth },
     { to: '/ponente/catalogo', label: 'Catálogo', icon: MdLibraryBooks },
     { to: '/ponente/pagos', label: 'Pagos', icon: MdPayment },
-    { to: '/ponente/facturas', label: 'Mis Facturas', icon: MdReceipt },
-    { to: '/ponente/constancias', label: 'Mis Constancias', icon: MdBadge },
+    { to: '/ponente/facturas', label: 'Mis facturas', icon: MdReceipt },
+    { to: '/ponente/constancias', label: 'Mis constancias', icon: MdBadge },
     { type: 'header', label: 'Ponente' },
-    { to: '/ponente/mis-ponencias', label: 'Mis Ponencias', icon: MdCoPresent },
-    { to: '/ponente/enviar-ponencia', label: 'Enviar Ponencia', icon: MdUploadFile },
-    { to: '/ponente/estatus-ponencia', label: 'Estatus Ponencia', icon: GrStatusGood },
+    { to: '/ponente/mis-ponencias', label: 'Mis ponencias', icon: MdCoPresent },
+    { to: '/ponente/enviar-ponencia', label: 'Enviar ponencia', icon: MdUploadFile },
+    { to: '/ponente/estatus-ponencia', label: 'Estatus ponencia', icon: GrStatusGood },
   ];
 
   return <SidebarLayout roleTitle="Ponente" drawerId="ponente-drawer" menuItems={menuItems} MainIcon={MdCoPresent} />;
@@ -167,7 +167,7 @@ const AdminLayoutWrapper = () => {
   const { pathname } = useLocation();
 
   const menuItems = [
-    { type: 'subheader', label: 'Vistas de Rol' },
+    { type: 'subheader', label: 'Vistas de rol' },
     {
       type: 'role-icons',
       roles: [
@@ -223,7 +223,7 @@ const AdminLayoutWrapper = () => {
 const RevisorLayoutWrapper = () => {
   const { user } = useAuth();
   const menuItems = [
-    { type: 'subheader', label: 'Vistas de Rol' },
+    { type: 'subheader', label: 'Vistas de rol' },
     {
       type: 'role-icons',
       roles: [
@@ -237,7 +237,7 @@ const RevisorLayoutWrapper = () => {
       ]
     },
     { to: '/revisor/inicio', label: 'Inicio', icon: MdDashboard },
-    { to: '/revisor/revisiones', label: 'Mis Revisiones', icon: MdRateReview },
+    { to: '/revisor/revisiones', label: 'Mis revisiones', icon: MdRateReview },
     { to: '/revisor/historial', label: 'Historial', icon: MdHistory },
   ];
 
@@ -247,7 +247,7 @@ const RevisorLayoutWrapper = () => {
 const DictaminadorLayoutWrapper = () => {
   const { user } = useAuth();
   const menuItems = [
-    { type: 'subheader', label: 'Vistas de Rol' },
+    { type: 'subheader', label: 'Vistas de rol' },
     {
       type: 'role-icons',
       roles: [
@@ -261,7 +261,7 @@ const DictaminadorLayoutWrapper = () => {
       ]
     },
     { to: '/dictaminador/inicio', label: 'Inicio', icon: MdDashboard },
-    { to: '/dictaminador/dictamenes', label: 'Mis Dictámenes', icon: MdGavel },
+    { to: '/dictaminador/dictamenes', label: 'Mis dictámenes', icon: MdGavel },
     { to: '/dictaminador/historial', label: 'Historial', icon: MdHistory },
   ];
 
@@ -299,7 +299,7 @@ function App() {
             <Route path="mis-ponencias" element={<MisPonenciasView />} />
             <Route
               path="constancias"
-              element={<ConstanciasView title="Mis Constancias" />}
+              element={<ConstanciasView title="Mis constancias" />}
             />
           </Route>
 
@@ -325,7 +325,7 @@ function App() {
             <Route path="subir-extenso" element={<SubirExtensoView />} />
             <Route
               path="constancias"
-              element={<ConstanciasView title="Mis Constancias" />}
+              element={<ConstanciasView title="Mis constancias" />}
             />
           </Route>
 
@@ -406,24 +406,24 @@ function App() {
                 <Route path="sede" element={<CongresoSedeView />} />
 
                 <Route path="tipos-trabajo/:id" element={<CongresoTiposTrabajoView />} />
-                <Route path="libros" element={<LibrosView title="Gestión de Libros" />} />
+                <Route path="libros" element={<LibrosView title="Gestión de libros" />} />
               </Route>
             </Route>
             <Route path="pagos" element={<AdminPagosView />} />
             <Route path="usuarios">
               <Route index element={<UsuariosView />} />
-              <Route path="constancias" element={<UsuariosConstanciasView title="Constancias de Usuarios" />} />
-              <Route path="facturas" element={<UsuariosFacturasView title="Facturas de Usuarios" />} />
-              <Route path="historial" element={<UsuariosHistorialView title="Historial de Usuarios" />} />
+              <Route path="constancias" element={<UsuariosConstanciasView title="Constancias de usuarios" />} />
+              <Route path="facturas" element={<UsuariosFacturasView title="Facturas de usuarios" />} />
+              <Route path="historial" element={<UsuariosHistorialView title="Historial de usuarios" />} />
             </Route>
             <Route path="ajustes">
               <Route index element={<AjustesView />} />
               <Route path="instituciones">
-                <Route index element={<AjustesInstitucionesView title="Gestión de Instituciones" />} />
+                <Route index element={<AjustesInstitucionesView title="Gestión de instituciones" />} />
                 <Route path="crear" element={<InstitucionDetallesView />} />
                 <Route path="editar/:id" element={<InstitucionDetallesView />} />
               </Route>
-              <Route path="areas" element={<AjustesAreasView title="Gestión de Áreas" />} />
+              <Route path="areas" element={<AjustesAreasView title="Gestión de áreas" />} />
             </Route>
           </Route>
 

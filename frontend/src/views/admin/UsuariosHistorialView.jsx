@@ -38,6 +38,7 @@ export default function UsuariosHistorialView() {
           <div className="w-2 h-10 bg-[#005a6a] rounded-full"></div>
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Historial de usuarios</h1>
+            <h1 className="text-2xl font-bold text-gray-800">Historial de usuarios</h1>
             <p className="text-sm text-gray-500">Consulta el registro de documentos emitidos y acciones realizadas</p>
           </div>
         </div>
@@ -66,19 +67,19 @@ export default function UsuariosHistorialView() {
       <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex justify-center min-h-[500px]">
         {activeTab === "facturas" ? (
           <div className="w-full max-w-4xl flex flex-col items-center">
-            <div className="mb-4 text-center">
-              <h3 className="text-lg font-bold text-gray-700">Registro de facturación</h3>
-              <p className="text-sm text-gray-400">Listado de facturas enviadas y pagos registrados</p>
-            </div>
-            <ListaHistorial listaElementos={invoiceHistory} mostrarIndicadores={false} mostrarInfoFecha={true} etiquetaFecha="Fecha de envío" tipo="facturas" />
+             <div className="mb-4 text-center">
+                <h3 className="text-lg font-bold text-gray-700">Registro de facturación</h3>
+                <p className="text-sm text-gray-400">Listado de facturas enviadas y pagos registrados</p>
+             </div>
+             <ListaHistorial listaElementos={invoiceHistory} mostrarIndicadores={false} mostrarInfoFecha={true} etiquetaFecha="Fecha de envío" tipo="facturas"/>
           </div>
         ) : (
           <div className="w-full max-w-4xl flex flex-col items-center">
             <div className="mb-4 text-center">
-              <h3 className="text-lg font-bold text-gray-700">Registro de constancias</h3>
-              <p className="text-sm text-gray-400">Listado de certificados y reconocimientos emitidos</p>
-            </div>
-            <ListaHistorial listaElementos={constanciaHistory} mostrarIndicadores={false} mostrarRol={true} mostrarInfoFecha={true} etiquetaFecha="Fecha de emisión" tipo="constancias" />
+                <h3 className="text-lg font-bold text-gray-700">Registro de constancias</h3>
+                <p className="text-sm text-gray-400">Listado de certificados y reconocimientos emitidos</p>
+             </div>
+            <ListaHistorial listaElementos={constanciaHistory} mostrarIndicadores={false} mostrarRol={true} mostrarInfoFecha={true} etiquetaFecha="Fecha de emisión" tipo="constancias"/>
           </div>
         )}
       </div>

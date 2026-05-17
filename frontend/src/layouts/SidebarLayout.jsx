@@ -6,11 +6,11 @@ import ridmaeLogo from "../assets/ridmae.jpg";
 import { MdLogout } from "react-icons/md";
 import { FiArrowLeft, FiChevronRight } from "react-icons/fi";
 
-export default function SidebarLayout({ 
-  roleTitle, 
-  drawerId, 
-  menuItems, 
-  MainIcon 
+export default function SidebarLayout({
+  roleTitle,
+  drawerId,
+  menuItems,
+  MainIcon
 }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -20,15 +20,15 @@ export default function SidebarLayout({
 
   // Generar migas de pan (breadcrumbs) basadas en la ruta actual
   const pathSegments = pathname.split('/').filter(Boolean);
-  
+
   const breadcrumbs = pathSegments.map((segment, index) => {
     const to = `/${pathSegments.slice(0, index + 1).join('/')}`;
     const isLast = index === pathSegments.length - 1;
-    
+
     // Formatear el nombre del segmento (ej: "eventos-especiales" -> "Eventos Especiales")
     const label = segment
       .replace(/-/g, ' ')
-      .replace(/\b\w/g, l => l.toUpperCase());
+      .replace(/^./, l => l.toUpperCase());
 
     return { label, to, isLast };
   });
@@ -85,9 +85,9 @@ export default function SidebarLayout({
   };
 
   // Determinar si estamos en una sección de ponente (específico para Asistente)
-  const isPonenteSection = 
-    pathname.includes('mis-ponencias') || 
-    pathname.includes('enviar-ponencia') || 
+  const isPonenteSection =
+    pathname.includes('mis-ponencias') ||
+    pathname.includes('enviar-ponencia') ||
     pathname.includes('estatus-ponencia') ||
     pathname.includes('subir-multimedia') ||
     pathname.includes('subir-extenso');
@@ -135,7 +135,7 @@ export default function SidebarLayout({
         {!shouldHideNavigation && (
           <div className="flex items-center gap-6 mb-8">
             {/* Botón Volver Dinámico - MÁS GRANDE */}
-            <button 
+            <button
               onClick={handleGoBack}
               className="flex items-center gap-2 px-4 py-2 bg-base-200 hover:bg-base-300 rounded-full text-sm font-bold transition-all cursor-pointer shadow-sm"
             >
@@ -191,10 +191,10 @@ export default function SidebarLayout({
           {/* Título dinámico en el Sidebar para Desktop */}
           <div className="hidden lg:flex h-[88px] items-center px-4 overflow-hidden relative">
             <div className={`transition-all duration-500 transform ${isHeaderVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'} absolute`}>
-               {MainIcon && <MainIcon className="text-5xl text-primary animate-bounce" title="¡Bienvenido!" />}
+              {MainIcon && <MainIcon className="text-5xl text-primary animate-bounce" title="¡Bienvenido!" />}
             </div>
             <div className={`transition-all duration-500 transform ${!isHeaderVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
-               <h2 className="text-2xl font-bold text-base-content">{displayTitle}</h2>
+              <h2 className="text-2xl font-bold text-base-content">{displayTitle}</h2>
             </div>
           </div>
 
@@ -226,17 +226,16 @@ export default function SidebarLayout({
                     {item.roles.map((role, rIdx) => {
                       const RoleIcon = role.icon;
                       const isActiveRole = pathname.includes(role.to.split('/')[1]);
-                      
+
                       if (fitsFull) {
                         return (
                           <NavLink
                             key={rIdx}
                             to={role.to}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${
-                              isActiveRole 
-                                ? "bg-primary text-base-100 shadow-md" 
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 ${isActiveRole
+                                ? "bg-primary text-base-100 shadow-md"
                                 : "bg-base-200 text-base-content/70 hover:bg-primary/10 hover:text-primary"
-                            }`}
+                              }`}
                             onClick={closeDrawer}
                           >
                             <RoleIcon className="text-xl" />
@@ -249,11 +248,10 @@ export default function SidebarLayout({
                         <NavLink
                           key={rIdx}
                           to={role.to}
-                          className={`group flex items-center justify-center h-10 rounded-full transition-all duration-500 ease-in-out overflow-hidden ${
-                            isActiveRole 
-                              ? "bg-primary text-base-100 px-4 min-w-[130px]" 
+                          className={`group flex items-center justify-center h-10 rounded-full transition-all duration-500 ease-in-out overflow-hidden ${isActiveRole
+                              ? "bg-primary text-base-100 px-4 min-w-[130px]"
                               : "bg-base-200 text-base-content/70 hover:bg-primary/10 hover:text-primary px-3 hover:px-4 hover:min-w-[130px]"
-                          }`}
+                            }`}
                           onClick={closeDrawer}
                         >
                           <RoleIcon className={`text-xl flex-shrink-0 ${isActiveRole ? '' : 'group-hover:scale-110'} transition-transform`} />
@@ -266,11 +264,11 @@ export default function SidebarLayout({
                   </div>
                 );
               }
-              
+
               const Icon = item.icon;
               const isSubItem = item.className?.includes('pl-9');
               const isSubSubItem = item.className?.includes('pl-14');
-              
+
               // Determinar si el item debe estar activo por rutas personalizadas
               const isCustomActive = item.activePaths?.some(p => pathname.includes(p));
 
@@ -282,7 +280,7 @@ export default function SidebarLayout({
                     const isActive = navLinkActive || isCustomActive;
                     const baseClasses = `group block px-4 py-2 rounded-xl text-sm transition-all duration-200 relative ${item.className || ''}`;
                     const isSub = isSubItem || isSubSubItem;
-                    
+
                     if (isActive) {
                       if (isSub) {
                         // Color aún más oscuro para submenús activos (Nivel 1)
@@ -291,24 +289,21 @@ export default function SidebarLayout({
                       }
                       return `${baseClasses} bg-primary text-base-100 font-semibold shadow-sm`;
                     }
-                    
-                    return `${baseClasses} hover:bg-base-200/50 text-base-content/70 hover:text-base-content ${
-                      isSubItem ? 'py-1.5' : ''
-                    } ${isSubSubItem ? 'py-1' : ''}`;
+
+                    return `${baseClasses} hover:bg-base-200/50 text-base-content/70 hover:text-base-content ${isSubItem ? 'py-1.5' : ''
+                      } ${isSubSubItem ? 'py-1' : ''}`;
                   }}
                   onClick={closeDrawer}
                 >
                   {({ isActive }) => (
                     <div className="flex items-center gap-3">
                       {Icon && (
-                        <Icon className={`transition-transform duration-200 group-hover:scale-110 ${
-                          isSubSubItem ? 'text-base' : 'text-lg'
-                        } ${isActive ? '' : 'opacity-70'}`} />
+                        <Icon className={`transition-transform duration-200 group-hover:scale-110 ${isSubSubItem ? 'text-base' : 'text-lg'
+                          } ${isActive ? '' : 'opacity-70'}`} />
                       )}
-                      
-                      <span className={`truncate ${item.labelClassName || ''} ${
-                        isSubSubItem ? 'text-[13px]' : ''
-                      }`}>
+
+                      <span className={`truncate ${item.labelClassName || ''} ${isSubSubItem ? 'text-[13px]' : ''
+                        }`}>
                         {item.label}
                       </span>
                     </div>

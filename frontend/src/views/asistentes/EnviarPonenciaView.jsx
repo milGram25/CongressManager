@@ -179,7 +179,7 @@ export default function EnviarPonenciaView() {
   if (congresosInscritos.length === 0) {
     return (
       <div className="p-8 bg-base-100 min-h-screen">
-        <h1 className="text-3xl font-bold mb-6">Enviar Ponencia</h1>
+        <h1 className="text-3xl font-bold mb-6">Enviar ponencia</h1>
         <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
           <div className="p-5 bg-base-200 rounded-full">
             <MdLock className="text-5xl text-base-content/40" />
@@ -201,7 +201,7 @@ export default function EnviarPonenciaView() {
 
   return (
     <div className="p-8 bg-base-100 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">Enviar Ponencia</h1>
+      <h1 className="text-3xl font-bold mb-6">Enviar ponencia</h1>
 
       {mensaje.texto && (
         <div className={`alert ${mensaje.tipo === 'success' ? 'alert-success' : 'alert-error'} mb-4`}>

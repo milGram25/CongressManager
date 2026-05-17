@@ -98,7 +98,7 @@ export default function DetalleRevisionView() {
 
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <span className="text-xs font-bold text-primary uppercase tracking-widest">Detalle de Revisión</span>
+          <span className="text-xs font-bold text-primary uppercase tracking-widest">Detalle de revisión</span>
           <h1 className="text-3xl font-bold text-base-content mt-1">{tituloExtenso ?? `Extenso #${id}`}</h1>
         </div>
         {rutaExtenso && (
@@ -116,7 +116,7 @@ export default function DetalleRevisionView() {
       <section className="bg-base-100 p-8 rounded-2xl shadow-sm border border-base-300">
         <div className="flex items-center gap-2 mb-6 font-bold border-b border-base-300 pb-2">
           <MdAssignment size={22} />
-          <span>Rúbrica de Evaluación</span>
+          <span>Rúbrica de evaluación</span>
         </div>
         {grupos.length === 0 ? (
           <p className="text-sm text-base-content/40 italic">No hay rúbrica configurada para este tipo de trabajo.</p>

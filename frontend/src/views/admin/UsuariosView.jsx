@@ -7,7 +7,7 @@ export default function UsuariosView() {
   return (
     <div className="bg-base-100 p-8 rounded-3xl border border-base-300 shadow-sm min-h-[400px]">
       <h2 className="text-2xl font-bold mb-8 text-center">Gestión de usuarios</h2>
-
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto py-10">
         {/* Opción Constancias */}
         <button

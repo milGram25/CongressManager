@@ -435,7 +435,7 @@ const sortedCodes = countryCodes.sort((a, b) => a.label.localeCompare(b.label));
                 disabled={loading}
                 className="w-full py-3.5 bg-primary hover:bg-primary/90 disabled:opacity-60 text-primary-content rounded-full font-bold tracking-wide transition-all shadow-md shadow-primary/20 active:scale-95"
               >
-                {loading ? 'REGISTRANDO...' : 'CONFIRMAR REGISTRO'}
+                {loading ? 'Registrando...' : 'Confirmar registro'}
               </button>
               
               <div className="text-center">

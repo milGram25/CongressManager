@@ -19,7 +19,7 @@ function formatHour(iso) {
 function EventoDetalleModal({ evento, inscrito, onClose, onRegistrar, registrando }) {
   if (!evento) return null;
   const tipoLabel = { ponencia: "Ponencia", taller: "Taller" }[evento.tipo] ?? evento.tipo;
-  
+
   return (
     <dialog className="modal modal-bottom sm:modal-middle" open>
       <div className="modal-box max-w-2xl bg-base-100 p-8 rounded-xl shadow-lg border border-base-200">
@@ -29,7 +29,7 @@ function EventoDetalleModal({ evento, inscrito, onClose, onRegistrar, registrand
           <h3 className="text-lg font-medium text-base-content leading-snug">
             <span className="font-bold">Título de la {tipoLabel.toLowerCase()}:</span> "{evento.titulo}"
           </h3>
-          
+
           <p className="text-base text-base-content">
             <span className="font-bold">Nombre del {tipoLabel === 'Taller' ? 'tallerista' : 'ponente'}:</span> {evento.autor !== 'Por confirmar' ? evento.autor : 'Por confirmar'}
           </p>
@@ -71,7 +71,7 @@ function EventoDetalleModal({ evento, inscrito, onClose, onRegistrar, registrand
           <div>
             {evento.registrado ? (
               <span className="flex items-center gap-1 font-semibold text-primary">
-                 Registrado
+                Registrado
               </span>
             ) : evento.lleno ? (
               <span className="font-semibold text-error">Cupo lleno</span>
@@ -103,9 +103,8 @@ function EventoDetalleModal({ evento, inscrito, onClose, onRegistrar, registrand
 function CongresoCard({ congreso, inscrito, onVerEventos, onInscribirse }) {
   return (
     <div
-      className={`card bg-base-100 shadow-md border transition-shadow duration-200 hover:shadow-lg ${
-        inscrito ? "border-primary/40" : "border-base-200"
-      }`}
+      className={`card bg-base-100 shadow-md border transition-shadow duration-200 hover:shadow-lg ${inscrito ? "border-primary/40" : "border-base-200"
+        }`}
     >
       <div className="card-body gap-3">
         <div className="flex items-start justify-between gap-2">
@@ -323,11 +322,11 @@ function EventosCongreso({ congreso, inscrito, onBack }) {
         prev.map((e) =>
           e.id === evento.id
             ? {
-                ...e,
-                registrado: true,
-                cupos_disponibles: Math.max(0, (e.cupos_disponibles ?? 1) - 1),
-                cupos_ocupados: (e.cupos_ocupados ?? 0) + 1,
-              }
+              ...e,
+              registrado: true,
+              cupos_disponibles: Math.max(0, (e.cupos_disponibles ?? 1) - 1),
+              cupos_ocupados: (e.cupos_ocupados ?? 0) + 1,
+            }
             : e
         )
       );
@@ -357,7 +356,7 @@ function EventosCongreso({ congreso, inscrito, onBack }) {
         <div className="alert alert-warning mb-6 shadow-sm border-none bg-warning/20 text-warning-content rounded-xl">
           <MdErrorOutline className="text-xl" />
           <div className="text-sm">
-            <span className="font-bold">Aviso:</span> No estás inscrito en este congreso. 
+            <span className="font-bold">Aviso:</span> No estás inscrito en este congreso.
             Debes completar tu inscripción y pago para poder registrarte en los talleres y ponencias.
           </div>
         </div>

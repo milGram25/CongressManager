@@ -364,7 +364,7 @@ const DetallesEditarPonencia = forwardRef(({ ponenciaData, initialModificando = 
             <div className={`p-6 md:p-10 ${isFullPage ? '' : 'max-h-[80vh] overflow-y-auto'}`}>
                 <section className='mb-8'>
                     <h3 className={sectionTitleClasses}>
-                        <div className="w-1.5 h-6 bg-primary rounded-full"></div> Información del Congreso
+                        <div className="w-1.5 h-6 bg-primary rounded-full"></div> Información del congreso
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">

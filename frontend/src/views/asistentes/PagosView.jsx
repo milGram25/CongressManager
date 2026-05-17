@@ -433,7 +433,7 @@ export default function PagosView() {
                   <MdInfoOutline className="text-base" />
                   <span className="font-bold uppercase text-[12px] tracking-widest">Regla de ponencias</span>
                 </div>
-                <p className="text-neutral/80 text-s leading-relaxed">
+                <p className="text-neutral/80 text-xs leading-relaxed">
                   El pago base cubre <b>{userPayment.included_ponencias} ponencias</b>. Cada ponencia adicional tiene un cargo extra.
                 </p>
                 <div className="mt-2 space-y-1">
@@ -492,14 +492,14 @@ export default function PagosView() {
                           >
                             ← Volver
                           </button>
-                          <span className="text-sm font-bold">Validación Institucional</span>
+                          <span className="text-sm font-bold">Validación institucional</span>
                         </div>
                         <div className="relative">
                           <MdEmail className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary" />
                           <input
                             type="email"
                             required
-                            placeholder="Tu correo institucional"
+                            placeholder="Tu correo institucional (.edu, alumnos.udg.mx)"
                             className="w-full pl-12 pr-4 py-3 rounded-xl bg-base-200 border-none outline-none focus:ring-2 focus:ring-secondary text-sm"
                             value={studentEmail}
                             onChange={(e) => setStudentEmail(e.target.value)}
@@ -540,7 +540,8 @@ export default function PagosView() {
                           className={`btn bg-secondary hover:bg-secondary/80 border-none w-full text-white rounded-xl ${verificandoCodigo ? 'loading' : ''}`}
                         >
                           {verificandoCodigo ? "Verificando..." : "Verificar código"}
-                        </button>                          <button
+                        </button>
+                        <button
                           type="button"
                           onClick={() => setShowVerification(false)}
                           className="btn btn-link btn-xs w-full opacity-50 text-neutral"
@@ -622,8 +623,7 @@ export default function PagosView() {
 
         <div className="md:col-span-1">
           <div className="bg-base-200 p-6 rounded-2xl sticky top-24 shadow-sm text-neutral">
-            <h3 className="font-bold text-xl mb-6">Resumen de Pago</h3>
-
+            <h3 className="font-bold text-xl mb-6">Resumen de pago</h3>
             <div className="flex justify-between text-xs mb-4 opacity-70 italic">
               <span>Categoría:</span>
               <span className="text-right">{roleLabel(role)}</span>
@@ -686,7 +686,7 @@ export default function PagosView() {
                 <div className="w-16 h-16 bg-success/20 text-success rounded-full flex items-center justify-center text-3xl mx-auto">
                   ✓
                 </div>
-                <h2 className="text-2xl font-bold">¡Pago Exitoso!</h2>
+                <h2 className="text-2xl font-bold">¡Pago exitoso!</h2>
                 <p className="text-sm opacity-70">¿Deseas generar tu factura ahora mismo?</p>
                 <div className="flex gap-3 pt-4">
                   <button
@@ -705,7 +705,7 @@ export default function PagosView() {
               </div>
             ) : (
               <div className="space-y-4 overflow-y-auto max-h-[70vh] px-2">
-                <h3 className="text-xl font-bold text-center">Datos Fiscales</h3>
+                <h3 className="text-xl font-bold text-center">Datos fiscales</h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
                   <div className="form-control col-span-1">
@@ -727,7 +727,7 @@ export default function PagosView() {
                   </div>
 
                   <div className="form-control col-span-1">
-                    <label className="color primary text-[12px] font-bold  opacity-90">CÓDIGO POSTAL</label>
+                    <label className="color primary text-[12px] font-bold  opacity-90">Código postal</label>
                     <input
                       type="text"
                       placeholder="00000"
@@ -743,7 +743,7 @@ export default function PagosView() {
                   </div>
 
                   <div className="form-control col-span-full">
-                    <label className="color primary text-[12px] font-bold  opacity-90">NOMBRE O RAZÓN SOCIAL (Sin régimen capital)</label>
+                    <label className="color primary text-[12px] font-bold  opacity-90">Nombre o razón social (sin régimen capital)</label>
                     <input
                       type="text"
                       placeholder="Tal cual aparece en Constancia"
@@ -754,7 +754,7 @@ export default function PagosView() {
                   </div>
 
                   <div className="form-control col-span-full">
-                    <label className="color primary text-[12px] font-bold  opacity-90">RÉGIMEN FISCAL</label>
+                    <label className="color primary text-[12px] font-bold  opacity-90">Régimen fiscal</label>
                     <select
                       className="select select-sm select-bordered bg-base-100"
                       value={datosFacturacion.regimenFiscal}
@@ -765,7 +765,7 @@ export default function PagosView() {
                   </div>
 
                   <div className="form-control col-span-full">
-                    <label className="color primary text-[12px] font-bold  opacity-90">USO DE CFDI</label>
+                    <label className="color primary text-[12px] font-bold  opacity-90">Uso de CFDI</label>
                     <select
                       className="select select-sm select-bordered bg-base-100"
                       value={datosFacturacion.usoCFDI}
@@ -826,7 +826,7 @@ export default function PagosView() {
                       onChange={(e) => setUsarCorreoAlternativo(e.target.checked)}
                     />
                     <span className="text-base-content text-[12px] font-bold opacity-90">
-                      ¿ENVIAR A OTRO CORREO DISTINTO AL DEL REGISTRO?
+                      ¿Enviar a otro correo distinto al del registro?
                     </span>
                   </label>
 
@@ -863,7 +863,7 @@ export default function PagosView() {
                   className={`btn w-full mt-4 text-white ${isFormValid && !enviandoFactura ? "bg-alt hover:bg-alt/80 border-none" : "bg-gray-400 cursor-not-allowed"
                     }`}
                 >
-                  {enviandoFactura ? "Enviando..." : "Enviar Solicitud Factura"}
+                  {enviandoFactura ? "Enviando..." : "Enviar solicitud de factura"}
                 </button>
                 <button
                   onClick={() => setQuiereFactura(false)}
@@ -885,7 +885,7 @@ export default function PagosView() {
               <MdCheckCircle />
             </div>
 
-            <h3 className="text-xl font-bold mb-2 text-primary">¡Solicitud Recibida!</h3>
+            <h3 className="text-xl font-bold mb-2 text-primary">¡Solicitud recibida!</h3>
 
             <p className="text-sm text-neutral opacity-70 mb-6">
               Tus datos han sido enviados al área administrativa.

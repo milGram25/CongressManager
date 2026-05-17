@@ -6,7 +6,7 @@ function RevisionCard({ item }) {
   const navigate = useNavigate();
   const pendiente = !item.revisado;
   const config = pendiente
-    ? { border: 'border-l-warning', text: 'text-warning', label: 'PENDIENTE DE REVISIÓN' }
+    ? { border: 'border-l-warning', text: 'text-warning', label: 'Pendiente de revisión' }
     : { border: 'border-l-success', text: 'text-success', label: item.estatus_evaluacion?.toUpperCase() ?? 'COMPLETADO' };
 
   return (
@@ -21,7 +21,7 @@ function RevisionCard({ item }) {
           onClick={() => navigate(`/revisor/revision/${item.id_extenso}`)}
           className="mt-4 md:mt-0 md:ml-6 bg-primary hover:bg-primary/90 text-white px-7 py-2 rounded-lg font-bold text-sm tracking-wide transition-all shadow-sm active:scale-95 flex-shrink-0"
         >
-          REVISAR
+          Revisar
         </button>
       )}
     </div>

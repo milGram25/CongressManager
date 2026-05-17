@@ -64,7 +64,7 @@ export default function PagosForm({ total, onSuccess, loading }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="form-control">
         <label className="label py-1">
-          <span className="label-text font-bold text-[10px] opacity-60">Número de Tarjeta</span>
+          <span className="label-text font-bold text-[10px] opacity-60">Número de tarjeta</span>
         </label>
         <div className="relative">
           <MdCreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral/40 text-lg" />
@@ -98,8 +98,8 @@ export default function PagosForm({ total, onSuccess, loading }) {
               maxLength={7}
               required
             />
-            </div>
-            </div>
+          </div>
+        </div>
 
             <div className="form-control">
             <label className="label py-1">

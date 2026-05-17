@@ -6,12 +6,12 @@ import { MdWarningAmber } from 'react-icons/md';
 
 const ESTADO_CONFIG = {
   pendiente_dictaminacion: { label: 'En espera de dictamen', border: 'border-l-gray-400', dot: 'bg-gray-400', text: 'text-gray-500' },
-  resumen_rechazado:       { label: 'Resumen rechazado',    border: 'border-l-error',   dot: 'bg-error',   text: 'text-error' },
-  pendiente_extenso:       { label: 'Resumen aceptado — sube tu extenso', border: 'border-l-primary', dot: 'bg-primary', text: 'text-primary' },
-  en_revision:             { label: 'En revisión',          border: 'border-l-warning', dot: 'bg-warning', text: 'text-warning' },
-  con_modificaciones:      { label: 'Con modificaciones',   border: 'border-l-warning', dot: 'bg-warning', text: 'text-warning' },
-  extenso_aceptado:        { label: '¡Ponencia aceptada!',  border: 'border-l-success', dot: 'bg-success', text: 'text-success' },
-  extenso_rechazado:       { label: 'Ponencia rechazada',   border: 'border-l-error',   dot: 'bg-error',   text: 'text-error' },
+  resumen_rechazado: { label: 'Resumen rechazado', border: 'border-l-error', dot: 'bg-error', text: 'text-error' },
+  pendiente_extenso: { label: 'Resumen aceptado — sube tu extenso', border: 'border-l-primary', dot: 'bg-primary', text: 'text-primary' },
+  en_revision: { label: 'En revisión', border: 'border-l-warning', dot: 'bg-warning', text: 'text-warning' },
+  con_modificaciones: { label: 'Con modificaciones', border: 'border-l-warning', dot: 'bg-warning', text: 'text-warning' },
+  extenso_aceptado: { label: '¡Ponencia aceptada!', border: 'border-l-success', dot: 'bg-success', text: 'text-success' },
+  extenso_rechazado: { label: 'Ponencia rechazada', border: 'border-l-error', dot: 'bg-error', text: 'text-error' },
 };
 
 function EnlaceMultimediaForm({ ponencia }) {
@@ -181,27 +181,27 @@ export default function EstatusPonenciaView() {
 
   useEffect(() => {
     const load = async () => {
-        try {
-            const data = await getMisPonenciasPonenteApi(accessToken);
-            setPonencias(data);
-            
-            // Cargar info de pagos para cada congreso único
-            const uniqueCongresses = [...new Set(data.map(p => p.id_congreso || p.evento?.id_congreso))].filter(Boolean);
-            const payments = {};
-            for (const cid of uniqueCongresses) {
-                try {
-                    const summ = await getPagosResumenApi(accessToken, cid);
-                    payments[cid] = summ.user_payment;
-                } catch (e) {
-                    console.error("Error loading payment for congress", cid, e);
-                }
-            }
-            setCongressPayments(payments);
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
+      try {
+        const data = await getMisPonenciasPonenteApi(accessToken);
+        setPonencias(data);
+
+        // Cargar info de pagos para cada congreso único
+        const uniqueCongresses = [...new Set(data.map(p => p.id_congreso || p.evento?.id_congreso))].filter(Boolean);
+        const payments = {};
+        for (const cid of uniqueCongresses) {
+          try {
+            const summ = await getPagosResumenApi(accessToken, cid);
+            payments[cid] = summ.user_payment;
+          } catch (e) {
+            console.error("Error loading payment for congress", cid, e);
+          }
         }
+        setCongressPayments(payments);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     };
     load();
   }, [accessToken]);
@@ -213,12 +213,12 @@ export default function EstatusPonenciaView() {
     if (!payment) return true; // Si no hay info, no alarmar
 
     const congressPonencias = allPonencias
-        .filter(p => (p.id_congreso || p.evento?.id_congreso) === cid)
-        .sort((a, b) => a.id_ponencia - b.id_ponencia); // Ordenar por ID para consistencia
-    
+      .filter(p => (p.id_congreso || p.evento?.id_congreso) === cid)
+      .sort((a, b) => a.id_ponencia - b.id_ponencia); // Ordenar por ID para consistencia
+
     const index = congressPonencias.findIndex(p => p.id_ponencia === ponencia.id_ponencia);
     const coverage = payment.paid_slots * 2; // Cada slot cubre 2 ponencias
-    
+
     return index < coverage;
   };
 
@@ -252,11 +252,11 @@ export default function EstatusPonenciaView() {
         <p className="text-center py-10 text-base-content/40 italic">No tienes ponencias registradas.</p>
       ) : (
         ponencias.map(p => (
-            <PonenciaCard 
-                key={p.id_ponencia} 
-                ponencia={p} 
-                requiresPayment={!isPonenciaCovered(p, ponencias)} 
-            />
+          <PonenciaCard
+            key={p.id_ponencia}
+            ponencia={p}
+            requiresPayment={!isPonenciaCovered(p, ponencias)}
+          />
         ))
       )}
     </div>
