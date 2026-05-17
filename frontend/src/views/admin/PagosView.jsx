@@ -108,6 +108,7 @@ export default function PagosComponente() {
   const [error, setError] = useState("");
   const [congresos, setCongresos] = useState([]);
   const [instituciones, setInstituciones] = useState([]);
+  const [filtroInstitucion, setFiltroInstitucion] = useState(null);
   const [filtroCongreso, setFiltroCongreso] = useState(null);
 
   const [selected, setSelected] = useState(null);
@@ -141,6 +142,20 @@ export default function PagosComponente() {
     loadAll();
   }, []);
 
+  const handleSelectInstitucion = async (idStr) => {
+    const token = localStorage.getItem("congress_access");
+    const idInst = idStr || null;
+    setFiltroInstitucion(idInst);
+    setFiltroCongreso(null);
+    setSelected(null);
+    try {
+      const data = await getPagosAdminApi(token, null);
+      setPagos(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const handleSelectCongreso = async (idStr) => {
     const token = localStorage.getItem("congress_access");
     const idCongreso = idStr || null;
@@ -159,14 +174,26 @@ export default function PagosComponente() {
     return ["Todos", ...Array.from(roles)];
   }, [pagos]);
 
+  const congresosFiltrados = useMemo(() => {
+    if (!filtroInstitucion) return congresos;
+    return congresos.filter(c => String(c.id_institucion) === String(filtroInstitucion) || String(c.id_institucion_id) === String(filtroInstitucion));
+  }, [congresos, filtroInstitucion]);
+
+  const nombresCongresosInst = useMemo(() => {
+    return new Set(congresosFiltrados.map(c => c.nombre_congreso));
+  }, [congresosFiltrados]);
+
   const filtrados = useMemo(() => {
     let list = [...pagos];
+    if (filtroInstitucion && !filtroCongreso) {
+      list = list.filter(p => nombresCongresosInst.has(p.congreso));
+    }
     if (search.trim()) list = list.filter(p => String(p.orden).includes(search) || p.nombre.toLowerCase().includes(search.toLowerCase()));
     if (filtroRol !== "Todos") list = list.filter(p => p.rol === filtroRol);
     if (filtroEst !== "Todos") list = list.filter(p => p.estatus === filtroEst);
     list.sort((a, b) => filtroFecha === "Recientes" ? b.orden - a.orden : a.orden - b.orden);
     return list;
-  }, [pagos, search, filtroRol, filtroFecha, filtroEst]);
+  }, [pagos, filtroInstitucion, filtroCongreso, nombresCongresosInst, search, filtroRol, filtroFecha, filtroEst]);
 
   function Dropdown({ label, value, options, open, onToggle, onSelect }) {
     return (
@@ -204,17 +231,23 @@ export default function PagosComponente() {
     );
   }
 
-  const listaCongresosDropdown = congresos.map(c => ({ id: c.id_congreso, nombre: c.nombre_congreso }));
+  const listaCongresosDropdown = congresosFiltrados.map(c => ({ id: c.id_congreso, nombre: c.nombre_congreso }));
   const listaInstitucionesDropdown = instituciones.map(i => ({ id: i.id_institucion, nombre: i.nombre }));
 
   return (
     <div className="bg-base-100 rounded-3xl p-5">
 
       <div className="flex gap-4 mb-10">
-        <ListaDesplegableElementosGenerica titulo="Instituciones" lista={listaInstitucionesDropdown} />
+        <ListaDesplegableElementosGenerica
+          titulo="Instituciones"
+          lista={listaInstitucionesDropdown}
+          value={filtroInstitucion}
+          onSelect={handleSelectInstitucion}
+        />
         <ListaDesplegableElementosGenerica
           titulo="Congresos"
           lista={listaCongresosDropdown}
+          value={filtroCongreso}
           onSelect={handleSelectCongreso}
         />
       </div>
