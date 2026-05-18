@@ -2,11 +2,17 @@ import { useEffect } from "react";
 import { HiDownload, HiX } from "react-icons/hi";
 import { MdInsertDriveFile, MdPerson, MdCalendarToday, MdBusiness, MdBadge, MdReceiptLong } from "react-icons/md";
 import { API_URL } from "../../../api/constants";
+import CertificateTemplate from "./CertificateTemplate";
 
 export default function VistaPreviewDocumento({ item, etiquetaFecha, onClose }) {
-    const archivoUrl = item?.archivo || null;
-    const archivoUrlDescarga = item?.archivo ? `${API_URL}${item.archivo}` : null;
+    // Construye URL completa: rutas relativas (/media/...) necesitan el host del backend
+    const archivoUrl = item?.archivo
+        ? (item.archivo.startsWith('http') ? item.archivo : `${API_URL}${item.archivo}`)
+        : null;
+    const archivoUrlDescarga = archivoUrl;
     const esXml = item?.archivo?.toLowerCase().endsWith(".xml");
+    // Constancia generada desde plantilla: no tiene archivo físico pero sí datos del congreso
+    const esConstanciaPlantilla = !item?.archivo && item?.accion === 'emisión de constancia';
 
     useEffect(() => {
         const handleKey = (e) => { if (e.key === "Escape") onClose(); };
@@ -97,7 +103,7 @@ export default function VistaPreviewDocumento({ item, etiquetaFecha, onClose }) 
 
                 {/* ── Panel PDF ── */}
                 <div className="flex-1 bg-gray-100 flex flex-col min-w-0">
-                    {!archivoUrl ? (
+                {!archivoUrl && !esConstanciaPlantilla ? (
                         <div className="flex-1 flex flex-col items-center justify-center gap-3 text-gray-400">
                             <MdInsertDriveFile className="text-7xl text-gray-300" />
                             <p className="text-sm font-medium">No hay archivo disponible para este documento.</p>
@@ -114,6 +120,17 @@ export default function VistaPreviewDocumento({ item, etiquetaFecha, onClose }) 
                             >
                                 <HiDownload className="text-lg" /> Descargar XML
                             </a>
+                        </div>
+                    ) : esConstanciaPlantilla ? (
+                        // Constancia generada desde plantilla → renderizar el template visual
+                        <div className="flex-1 overflow-auto p-4 flex items-start justify-center bg-gray-200">
+                            <div className="w-full max-w-3xl shadow-2xl rounded-lg overflow-hidden">
+                                <CertificateTemplate
+                                    user={{ nombre: item.nombre, rol: item.rol, id: item.id }}
+                                    signatures={{}}
+                                    congressName={item.congreso}
+                                />
+                            </div>
                         </div>
                     ) : (
                         <iframe
