@@ -275,6 +275,44 @@ class ConstanciaUploadView(APIView):
         return Response(ConstanciaSerializer(constancia).data, status=status.HTTP_200_OK)
 
 
+class ConstanciaTemplateGenerateView(APIView):
+    """Marca una constancia como generada desde plantilla (sin subir archivo físico)."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, id_persona):
+        id_congreso = request.data.get('id_congreso')
+        tipo = request.data.get('tipo', 'Asistente')
+
+        try:
+            persona = Persona.objects.get(pk=id_persona)
+        except Persona.DoesNotExist:
+            return Response({'detail': 'Persona no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+
+        constancia, created = Constancia.objects.get_or_create(
+            id_persona_id=id_persona,
+            id_congreso_id=id_congreso if id_congreso else None,
+            tipo_constancia=tipo,
+            defaults={'ruta_constancia': None, 'estatus': 'generada', 'fecha_emision': timezone.now()}
+        )
+
+        if not created and constancia.estatus not in ('enviada',):
+            constancia.estatus = 'generada'
+            constancia.ruta_constancia = None
+            constancia.fecha_emision = timezone.now()
+            constancia.save()
+
+        try:
+            HistorialAcciones.objects.create(
+                id_persona=persona,
+                rol=tipo.lower(),
+                accion='generación de constancia desde plantilla'
+            )
+        except Exception:
+            pass
+
+        return Response(ConstanciaSerializer(constancia).data, status=status.HTTP_200_OK)
+
+
 class FacturaUploadView(APIView):
     permission_classes = [IsAuthenticated]
 
