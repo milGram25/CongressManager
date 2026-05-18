@@ -1,13 +1,16 @@
-import { useEffect } from "react";
-import { HiDownload, HiX } from "react-icons/hi";
+import { useEffect, useRef } from "react";
+import { HiDownload, HiX, HiPrinter } from "react-icons/hi";
 import { MdInsertDriveFile, MdPerson, MdCalendarToday, MdBusiness, MdBadge, MdReceiptLong } from "react-icons/md";
 import { API_URL } from "../../../api/constants";
+import CertificateTemplate from "./CertificateTemplate";
 
 export default function VistaPreviewDocumento({ item, etiquetaFecha, onClose }) {
     const archivoUrl = item?.archivo || null;
     const archivoUrlDescarga = item?.archivo ? `${API_URL}${item.archivo}` : null;
     const archivoXmlDescarga = item?.archivo_xml ? `${API_URL}${item.archivo_xml}` : null;
     const esXml = item?.archivo?.toLowerCase().endsWith(".xml");
+    const esConstanciaSinArchivo = !archivoUrl && item?.accion === 'emisión de constancia';
+    const printRef = useRef(null);
 
     useEffect(() => {
         const handleKey = (e) => { if (e.key === "Escape") onClose(); };
@@ -20,6 +23,30 @@ export default function VistaPreviewDocumento({ item, etiquetaFecha, onClose }) 
         const d = new Date(fecha);
         return d.toLocaleDateString("es-MX", { day: "2-digit", month: "long", year: "numeric" }) +
             " · " + d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function handlePrint() {
+        const el = printRef.current;
+        if (!el) return;
+        const nombre = item?.nombre?.replace(/\s/g, '_') || 'constancia';
+        const win = window.open('', '', 'width=1200,height=800');
+        win.document.write(`
+            <html>
+              <head>
+                <title>Constancia_${nombre}</title>
+                <script src="https://cdn.tailwindcss.com"><\/script>
+                <style>
+                  @page { size: landscape; margin: 0; }
+                  body { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-family: sans-serif; }
+                </style>
+              </head>
+              <body>
+                ${el.innerHTML}
+                <script>window.onload=()=>{setTimeout(()=>{window.print();window.close();},800)};<\/script>
+              </body>
+            </html>
+        `);
+        win.document.close();
     }
 
     return (
@@ -76,7 +103,15 @@ export default function VistaPreviewDocumento({ item, etiquetaFecha, onClose }) 
 
                     {/* Botones descarga */}
                     <div className="px-6 pb-6 shrink-0 flex flex-col gap-2">
-                        {archivoUrlDescarga ? (
+                        {esConstanciaSinArchivo ? (
+                            <button
+                                onClick={handlePrint}
+                                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-white text-[#005a6a] text-sm font-bold hover:bg-white/90 transition-all active:scale-95 cursor-pointer"
+                            >
+                                <HiPrinter className="text-lg" />
+                                Guardar como PDF
+                            </button>
+                        ) : archivoUrlDescarga ? (
                             <a
                                 href={archivoUrlDescarga}
                                 download
@@ -108,16 +143,24 @@ export default function VistaPreviewDocumento({ item, etiquetaFecha, onClose }) 
                     </div>
                 </div>
 
-                {/* ── Panel PDF ── */}
-                <div className="flex-1 bg-gray-100 flex flex-col min-w-0">
-                    {!archivoUrl ? (
+                {/* ── Panel principal ── */}
+                <div className="flex-1 bg-gray-100 flex flex-col min-w-0 overflow-auto">
+                    {esConstanciaSinArchivo ? (
+                        <div ref={printRef} className="w-full h-full">
+                            <CertificateTemplate
+                                user={{ nombre: item.nombre, rol: item.rol, id: item.id }}
+                                signatures={{
+                                    organizador: item.firma_organizador || null,
+                                    secretaria: item.firma_secretaria || null,
+                                }}
+                                congressName={item.congreso}
+                                sede={item.sede || null}
+                            />
+                        </div>
+                    ) : !archivoUrl ? (
                         <div className="flex-1 flex flex-col items-center justify-center gap-3 text-gray-400">
                             <MdInsertDriveFile className="text-7xl text-gray-300" />
-                            <p className="text-sm font-medium">
-                                {item.accion === 'emisión de constancia'
-                                    ? 'Esta constancia fue generada desde plantilla y no tiene archivo descargable.'
-                                    : 'No hay archivo disponible para este documento.'}
-                            </p>
+                            <p className="text-sm font-medium">No hay archivo disponible para este documento.</p>
                         </div>
                     ) : esXml ? (
                         <div className="flex-1 flex flex-col items-center justify-center gap-4 text-gray-500">

@@ -78,7 +78,7 @@ class UserActionHistoryView(APIView):
             return Response(data)
 
         if tipo == 'constancias':
-            items = Constancia.objects.filter(estatus='enviada').order_by('-fecha_emision').select_related('id_persona')
+            items = Constancia.objects.filter(estatus='enviada').order_by('-fecha_emision').select_related('id_persona', 'id_congreso__id_sede')
             data = [{
                 'id': f"const-{c.id_constancia}",
                 'nombre': f"{c.id_persona.nombre} {c.id_persona.primer_apellido}",
@@ -87,6 +87,9 @@ class UserActionHistoryView(APIView):
                 'accion': 'emisión de constancia',
                 'congreso': c.id_congreso.nombre_congreso if c.id_congreso else '',
                 'archivo': c.ruta_constancia or '',
+                'sede': c.id_congreso.id_sede.nombre_sede if c.id_congreso and c.id_congreso.id_sede else None,
+                'firma_organizador': c.id_congreso.firma_organizador if c.id_congreso else None,
+                'firma_secretaria': c.id_congreso.firma_secretaria if c.id_congreso else None,
             } for c in items]
             return Response(data)
 
