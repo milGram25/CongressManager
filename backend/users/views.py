@@ -73,6 +73,7 @@ class UserActionHistoryView(APIView):
                 'rfc': f.rfc or '',
                 'razon_social': f.razon_social or '',
                 'archivo': f.ruta_pdf_xml or '',
+                'archivo_xml': f.ruta_xml or '',
             } for f in items]
             return Response(data)
 

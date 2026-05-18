@@ -6,6 +6,7 @@ import { API_URL } from "../../../api/constants";
 export default function VistaPreviewDocumento({ item, etiquetaFecha, onClose }) {
     const archivoUrl = item?.archivo || null;
     const archivoUrlDescarga = item?.archivo ? `${API_URL}${item.archivo}` : null;
+    const archivoXmlDescarga = item?.archivo_xml ? `${API_URL}${item.archivo_xml}` : null;
     const esXml = item?.archivo?.toLowerCase().endsWith(".xml");
 
     useEffect(() => {
@@ -73,8 +74,8 @@ export default function VistaPreviewDocumento({ item, etiquetaFecha, onClose }) 
                         )}
                     </div>
 
-                    {/* Botón descarga */}
-                    <div className="px-6 pb-6 shrink-0">
+                    {/* Botones descarga */}
+                    <div className="px-6 pb-6 shrink-0 flex flex-col gap-2">
                         {archivoUrlDescarga ? (
                             <a
                                 href={archivoUrlDescarga}
@@ -84,13 +85,25 @@ export default function VistaPreviewDocumento({ item, etiquetaFecha, onClose }) 
                                 className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-white text-[#005a6a] text-sm font-bold hover:bg-white/90 transition-all active:scale-95 cursor-pointer"
                             >
                                 <HiDownload className="text-lg" />
-                                Descargar archivo
+                                Descargar PDF
                             </a>
                         ) : (
                             <div className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-white/10 text-white/40 text-sm font-bold cursor-not-allowed">
                                 <HiDownload className="text-lg" />
-                                Sin archivo
+                                Sin PDF
                             </div>
+                        )}
+                        {archivoXmlDescarga && (
+                            <a
+                                href={archivoXmlDescarga}
+                                download
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-white/20 text-white text-sm font-bold hover:bg-white/30 transition-all active:scale-95 cursor-pointer border border-white/20"
+                            >
+                                <HiDownload className="text-lg" />
+                                Descargar XML
+                            </a>
                         )}
                     </div>
                 </div>
