@@ -50,12 +50,6 @@ export default function FacturasView() {
 
   const getDownloadUrl = (ruta) => ruta ? `${API_URL}${ruta}` : null;
 
-  const getFileLabel = (ruta) => {
-    if (!ruta) return "Descargar";
-    if (ruta.toLowerCase().endsWith(".xml")) return "XML";
-    return "PDF";
-  };
-
   if (loading) return (
     <div className="flex justify-center py-20">
       <span className="loading loading-spinner loading-lg text-primary" />
