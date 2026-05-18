@@ -292,20 +292,19 @@ class ConstanciaTemplateGenerateView(APIView):
             id_persona_id=id_persona,
             id_congreso_id=id_congreso if id_congreso else None,
             tipo_constancia=tipo,
-            defaults={'ruta_constancia': None, 'estatus': 'generada', 'fecha_emision': timezone.now()}
+            defaults={'ruta_constancia': None, 'estatus': 'generada'}
         )
 
         if not created and constancia.estatus not in ('enviada',):
             constancia.estatus = 'generada'
             constancia.ruta_constancia = None
-            constancia.fecha_emision = timezone.now()
             constancia.save()
 
         try:
             HistorialAcciones.objects.create(
                 id_persona=persona,
                 rol=tipo.lower(),
-                accion='generación de constancia desde plantilla'
+                accion='emisión de constancia'
             )
         except Exception:
             pass
@@ -474,7 +473,7 @@ class MisConstanciasView(APIView):
 
         result = []
         for c in constancias:
-            estatus_frontend = 'disponible' if c.estatus == 'enviada' else 'en_proceso'
+            estatus_frontend = 'disponible' if c.estatus in ('enviada', 'generada') else 'en_proceso'
             congreso = c.id_congreso
             result.append({
                 'id': f"CONST-{c.id_constancia}",
