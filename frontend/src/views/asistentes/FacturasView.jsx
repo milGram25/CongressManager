@@ -165,17 +165,29 @@ export default function FacturasView() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 md:border-l md:pl-6 border-base-200 min-w-[150px]">
-                  {factura.estatus === "enviada" && factura.ruta_pdf_xml ? (
+                <div className="flex items-center gap-2 md:border-l md:pl-6 border-base-200 min-w-[180px]">
+                  {factura.estatus === "enviada" && (factura.ruta_pdf_xml || factura.ruta_xml) ? (
                     <div className="flex flex-col gap-2 w-full">
-                      <a
-                        href={getDownloadUrl(factura.ruta_pdf_xml)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-xs btn-ghost border-base-300 hover:bg-primary hover:text-white normal-case gap-2 w-full h-9 transition-all"
-                      >
-                        <MdFileDownload className="text-lg" /> {getFileLabel(factura.ruta_pdf_xml)}
-                      </a>
+                      {factura.ruta_pdf_xml && (
+                        <a
+                          href={getDownloadUrl(factura.ruta_pdf_xml)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-xs btn-ghost border-base-300 hover:bg-primary hover:text-white normal-case gap-2 w-full h-9 transition-all"
+                        >
+                          <MdFileDownload className="text-lg" /> PDF
+                        </a>
+                      )}
+                      {factura.ruta_xml && (
+                        <a
+                          href={getDownloadUrl(factura.ruta_xml)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-xs btn-ghost border-base-300 hover:bg-alt hover:text-white normal-case gap-2 w-full h-9 transition-all"
+                        >
+                          <MdFileDownload className="text-lg" /> XML
+                        </a>
+                      )}
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center p-3 bg-accent/40 rounded-xl w-full border-2 border-warning/30 border-dashed">
