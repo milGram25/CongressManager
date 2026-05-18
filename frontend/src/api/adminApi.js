@@ -36,6 +36,16 @@ export async function uploadConstanciaApi(accessToken, idPersona, idCongreso, fi
   return res.json();
 }
 
+export async function generateTemplateConstanciaApi(accessToken, idPersona, idCongreso, tipo) {
+  const res = await fetch(`${API_URL}/api/users/constancia/${idPersona}/generate-template/`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id_congreso: idCongreso, tipo }),
+  });
+  if (!res.ok) throw new Error('Error al generar constancia desde plantilla.');
+  return res.json();
+}
+
 export async function uploadFacturaApi(accessToken, idPersona, idCongreso, file) {
   const formData = new FormData();
   formData.append('file', file);
