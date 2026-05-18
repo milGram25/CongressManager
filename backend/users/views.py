@@ -279,15 +279,23 @@ class FacturaUploadView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, id_persona):
-        file = request.FILES.get('file')
+        pdf_file = request.FILES.get('pdf_file')
+        xml_file = request.FILES.get('xml_file')
         id_congreso = request.data.get('id_congreso')
 
-        if not file:
-            return Response({'detail': 'No se proporcionó ningún archivo.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not pdf_file or not xml_file:
+            return Response(
+                {'detail': 'Se requieren ambos archivos: pdf_file y xml_file.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        fs = FileSystemStorage(location='media/facturas/')
-        filename = fs.save(f"factura_{id_persona}_{id_congreso}_{file.name}", file)
-        file_url = f"/media/facturas/{filename}"
+        fs_pdf = FileSystemStorage(location='media/facturas/')
+        pdf_filename = fs_pdf.save(f"factura_{id_persona}_{id_congreso}_{pdf_file.name}", pdf_file)
+        pdf_url = f"/media/facturas/{pdf_filename}"
+
+        fs_xml = FileSystemStorage(location='media/facturas/')
+        xml_filename = fs_xml.save(f"factura_{id_persona}_{id_congreso}_{xml_file.name}", xml_file)
+        xml_url = f"/media/facturas/{xml_filename}"
 
         factura = Factura.objects.filter(
             id_persona_id=id_persona,
@@ -297,12 +305,14 @@ class FacturaUploadView(APIView):
             factura = Factura.objects.create(
                 id_persona_id=id_persona,
                 id_congreso_id=id_congreso if id_congreso else None,
-                ruta_pdf_xml=file_url,
+                ruta_pdf_xml=pdf_url,
+                ruta_xml=xml_url,
                 estatus='enviada',
-                fecha_envio=timezone.now()
+                fecha_envio=timezone.now(),
             )
         else:
-            factura.ruta_pdf_xml = file_url
+            factura.ruta_pdf_xml = pdf_url
+            factura.ruta_xml = xml_url
             factura.estatus = 'enviada'
             factura.fecha_envio = timezone.now()
             factura.save()
@@ -415,6 +425,7 @@ class MisFacturasView(APIView):
                 'codigo_postal': f.codigo_postal,
                 'regimen_fiscal': f.regimen_fiscal,
                 'ruta_pdf_xml': f.ruta_pdf_xml,
+                'ruta_xml': f.ruta_xml,
                 'ruta_constancia_fiscal': f.ruta_constancia_fiscal,
                 'estatus': f.estatus,
                 'fecha_solicitud': f.fecha_solicitud.isoformat() if f.fecha_solicitud else None,

@@ -362,3 +362,47 @@ class FacturasPendientesAdminViewTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         rfcs = [f.get('rfc') for f in res.data]
         self.assertNotIn('ENVIADA999XYZ', rfcs)
+
+
+class FacturaUploadBothFilesTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.persona = _create_persona('upload@test.com')
+        self.id_congreso = _create_congreso()
+        with connection.cursor() as c:
+            c.execute(
+                """INSERT INTO factura (id_persona, id_congreso, estatus)
+                   VALUES (%s, %s, 'pendiente') RETURNING id_factura""",
+                [self.persona.id_persona, self.id_congreso],
+            )
+            self.id_factura = c.fetchone()[0]
+
+    def _token(self):
+        from rest_framework_simplejwt.tokens import RefreshToken
+        return str(RefreshToken.for_user(self.persona).access_token)
+
+    def test_upload_pdf_and_xml_marks_enviada(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        pdf = SimpleUploadedFile('factura.pdf', b'%PDF fake', content_type='application/pdf')
+        xml = SimpleUploadedFile('factura.xml', b'<?xml version="1.0"?><cfdi/>', content_type='text/xml')
+        res = self.client.post(
+            f'/api/users/factura/{self.persona.id_persona}/upload/',
+            {'pdf_file': pdf, 'xml_file': xml, 'id_congreso': self.id_congreso},
+            HTTP_AUTHORIZATION=f'Bearer {self._token()}',
+            format='multipart',
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['estatus'], 'enviada')
+        self.assertIsNotNone(res.data['ruta_pdf_xml'])
+        self.assertIsNotNone(res.data['ruta_xml'])
+
+    def test_upload_missing_file_returns_400(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        pdf = SimpleUploadedFile('factura.pdf', b'%PDF fake', content_type='application/pdf')
+        res = self.client.post(
+            f'/api/users/factura/{self.persona.id_persona}/upload/',
+            {'pdf_file': pdf, 'id_congreso': self.id_congreso},
+            HTTP_AUTHORIZATION=f'Bearer {self._token()}',
+            format='multipart',
+        )
+        self.assertEqual(res.status_code, 400)
