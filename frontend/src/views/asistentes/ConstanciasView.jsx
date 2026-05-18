@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getMisConstanciasApi } from "../../api/pagosApi";
 import CertificateTemplate from "../admin/Componentes/CertificateTemplate";
+import { API_URL } from "../../api/constants";
 import {
   MdReceipt,
   MdFileDownload,
@@ -251,22 +252,33 @@ export default function ConstanciasView() {
             </div>
 
             {/* Vista previa */}
-            <div className="flex-1 bg-neutral-200 overflow-auto p-6 flex items-start justify-center">
-              <div id="user-certificate-print" className="w-full max-w-4xl shadow-2xl rounded-lg overflow-hidden">
-                <CertificateTemplate
-                  user={{
-                    nombre: user?.nombre_completo,
-                    rol: modalConstancia.tipo,
-                    id: modalConstancia.id,
-                  }}
-                  signatures={{
-                    organizador: modalConstancia.firmaOrganizador,
-                    secretaria: modalConstancia.firmaSecretaria,
-                  }}
-                  congressName={modalConstancia.congreso}
-                  sede={modalConstancia.sede}
+            <div className="flex-1 bg-neutral-200 overflow-auto flex items-start justify-center" style={{ minHeight: 0 }}>
+              {modalConstancia.pdfUrl ? (
+                <iframe
+                  src={`${API_URL}${modalConstancia.pdfUrl}`}
+                  title="Vista previa de constancia"
+                  className="w-full border-0"
+                  style={{ height: "100%", minHeight: "500px" }}
                 />
-              </div>
+              ) : (
+                <div className="p-6 w-full max-w-4xl">
+                  <div id="user-certificate-print" className="w-full shadow-2xl rounded-lg overflow-hidden">
+                    <CertificateTemplate
+                      user={{
+                        nombre: user?.nombre_completo,
+                        rol: modalConstancia.tipo,
+                        id: modalConstancia.id,
+                      }}
+                      signatures={{
+                        organizador: modalConstancia.firmaOrganizador,
+                        secretaria: modalConstancia.firmaSecretaria,
+                      }}
+                      congressName={modalConstancia.congreso}
+                      sede={modalConstancia.sede}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Footer */}
@@ -277,12 +289,24 @@ export default function ConstanciasView() {
               >
                 Cerrar
               </button>
-              <button
-                onClick={handlePrintCertificate}
-                className="px-6 py-2.5 bg-primary text-white rounded-xl font-black text-xs flex items-center gap-2 hover:opacity-90 transition-all shadow-lg uppercase tracking-wide"
-              >
-                <MdPrint className="text-base" /> Guardar como PDF
-              </button>
+              {modalConstancia.pdfUrl ? (
+                <a
+                  href={`${API_URL}${modalConstancia.pdfUrl}`}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-2.5 bg-primary text-white rounded-xl font-black text-xs flex items-center gap-2 hover:opacity-90 transition-all shadow-lg uppercase tracking-wide"
+                >
+                  <MdFileDownload className="text-base" /> Descargar PDF
+                </a>
+              ) : (
+                <button
+                  onClick={handlePrintCertificate}
+                  className="px-6 py-2.5 bg-primary text-white rounded-xl font-black text-xs flex items-center gap-2 hover:opacity-90 transition-all shadow-lg uppercase tracking-wide"
+                >
+                  <MdPrint className="text-base" /> Guardar como PDF
+                </button>
+              )}
             </div>
           </div>
         </div>

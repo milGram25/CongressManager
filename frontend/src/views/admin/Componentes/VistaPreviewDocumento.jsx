@@ -113,7 +113,11 @@ export default function VistaPreviewDocumento({ item, etiquetaFecha, onClose }) 
                     {!archivoUrl ? (
                         <div className="flex-1 flex flex-col items-center justify-center gap-3 text-gray-400">
                             <MdInsertDriveFile className="text-7xl text-gray-300" />
-                            <p className="text-sm font-medium">No hay archivo disponible para este documento.</p>
+                            <p className="text-sm font-medium">
+                                {item.accion === 'emisión de constancia'
+                                    ? 'Esta constancia fue generada desde plantilla y no tiene archivo descargable.'
+                                    : 'No hay archivo disponible para este documento.'}
+                            </p>
                         </div>
                     ) : esXml ? (
                         <div className="flex-1 flex flex-col items-center justify-center gap-4 text-gray-500">
