@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { HiSearch, HiMail, HiFilter, HiExclamationCircle } from "react-icons/hi";
+import { HiSearch, HiMail, HiFilter, HiExclamationCircle, HiCheckCircle, HiSparkles } from "react-icons/hi";
 import { MdPeople } from "react-icons/md";
 import ConstanciaUpload from "./Componentes/ConstanciaUpload";
 import UserConstanciaList from "./Componentes/UserConstanciaList";
@@ -18,6 +18,7 @@ export default function UsuariosConstanciasView() {
   const [congresos, setCongresos] = useState([]);
   const [filters, setFilters] = useState({ idCongreso: null, rol: null, institucion: null });
   const [showConfirmSend, setShowConfirmSend] = useState(false);
+  const [activeTab, setActiveTab] = useState('pending'); // 'pending' | 'generated' | 'sent'
 
   const accessToken = localStorage.getItem('congress_access');
 
@@ -101,7 +102,13 @@ export default function UsuariosConstanciasView() {
     );
   }, [allUsers, searchTerm]);
 
-  const pendingUsers = useMemo(() => filteredUsers.filter(u => u.status === 'red'), [filteredUsers]);
+  const pendingUsers  = useMemo(() => filteredUsers.filter(u => u.status === 'red'),    [filteredUsers]);
+  const generatedUsers = useMemo(() => filteredUsers.filter(u => u.status === 'yellow'), [filteredUsers]);
+  const sentUsers      = useMemo(() => filteredUsers.filter(u => u.status === 'green'),  [filteredUsers]);
+
+  const activeUsers = activeTab === 'pending' ? pendingUsers
+    : activeTab === 'generated' ? generatedUsers
+    : sentUsers;
 
   const handleBulkSend = async () => {
     setShowConfirmSend(false);
@@ -138,7 +145,8 @@ export default function UsuariosConstanciasView() {
   };
 
   const pendingCount = filteredUsers.filter(u => u.status === 'red').length;
-  const sentCount = filteredUsers.filter(u => u.status === 'green').length;
+  const sentCount    = filteredUsers.filter(u => u.status === 'green').length;
+  const generatedCount = filteredUsers.filter(u => u.status === 'yellow').length;
 
   const selectedCongreso = congresos.find(c => c.id_congreso === filters.idCongreso || c.id_congreso === Number(filters.idCongreso));
 
@@ -250,12 +258,55 @@ export default function UsuariosConstanciasView() {
         </div>
 
         <div className="lg:col-span-7 xl:col-span-8 bg-gray-50/50 rounded-3xl shadow-inner border border-gray-100 flex flex-col overflow-hidden h-full">
-          <div className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white/50 border-b border-gray-100">
-            <h3 className="font-bold text-gray-700 flex items-center gap-2">
+          {/* Tabs */}
+          <div className="flex border-b border-gray-100 bg-white/80">
+            <button
+              onClick={() => setActiveTab('pending')}
+              className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-xs font-bold transition-all border-b-2 ${
+                activeTab === 'pending'
+                  ? 'border-red-400 text-red-500 bg-red-50/50'
+                  : 'border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <MdPeople className="text-base" />
               Pendientes
-              <span className="bg-[#005a6a] text-white text-[10px] px-2 py-0.5 rounded-full">{pendingUsers.length}</span>
-            </h3>
-            <div className="relative w-full sm:w-64">
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+                activeTab === 'pending' ? 'bg-red-400 text-white' : 'bg-gray-100 text-gray-500'
+              }`}>{pendingCount}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('generated')}
+              className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-xs font-bold transition-all border-b-2 ${
+                activeTab === 'generated'
+                  ? 'border-amber-400 text-amber-600 bg-amber-50/50'
+                  : 'border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <HiSparkles className="text-base" />
+              Generadas
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+                activeTab === 'generated' ? 'bg-amber-400 text-white' : 'bg-gray-100 text-gray-500'
+              }`}>{generatedCount}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('sent')}
+              className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-xs font-bold transition-all border-b-2 ${
+                activeTab === 'sent'
+                  ? 'border-green-400 text-green-600 bg-green-50/50'
+                  : 'border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <HiCheckCircle className="text-base" />
+              Enviadas
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+                activeTab === 'sent' ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-500'
+              }`}>{sentCount}</span>
+            </button>
+          </div>
+
+          {/* Buscador */}
+          <div className="px-4 pt-4 pb-2">
+            <div className="relative">
               <HiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
@@ -268,17 +319,19 @@ export default function UsuariosConstanciasView() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 max-h-[480px]">
-            {pendingUsers.length === 0 ? (
+            {activeUsers.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-400 py-16">
                 <MdPeople className="text-5xl opacity-30" />
                 <p className="text-sm font-semibold">
-                  {filteredUsers.length > 0 ? 'Todas las constancias han sido enviadas' : 'Sin participantes con los filtros actuales'}
+                  {activeTab === 'pending' && 'Sin participantes pendientes'}
+                  {activeTab === 'generated' && 'No hay constancias generadas desde plantilla'}
+                  {activeTab === 'sent' && 'No hay constancias enviadas aún'}
                 </p>
                 <p className="text-xs">Ajusta los filtros o limpia la búsqueda</p>
               </div>
             ) : (
               <UserConstanciaList
-                users={pendingUsers}
+                users={activeUsers}
                 selectedUserId={selectedUser?.id}
                 onSelectUser={setSelectedUser}
               />
