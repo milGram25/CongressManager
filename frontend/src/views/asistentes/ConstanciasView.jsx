@@ -255,7 +255,7 @@ export default function ConstanciasView() {
             <div className="flex-1 bg-neutral-200 overflow-auto flex items-start justify-center" style={{ minHeight: 0 }}>
               {modalConstancia.pdfUrl ? (
                 <iframe
-                  src={`${API_URL}${modalConstancia.pdfUrl}`}
+                  src={modalConstancia.pdfUrl}
                   title="Vista previa de constancia"
                   className="w-full border-0"
                   style={{ height: "100%", minHeight: "500px" }}

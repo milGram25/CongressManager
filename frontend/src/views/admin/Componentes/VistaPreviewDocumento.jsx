@@ -134,7 +134,7 @@ export default function VistaPreviewDocumento({ item, etiquetaFecha, onClose }) 
                         </div>
                     ) : (
                         <iframe
-                            src={archivoUrlDescarga}
+                            src={archivoUrl}
                             title={`Vista previa — ${item.nombre}`}
                             className="w-full h-full border-0"
                         />
