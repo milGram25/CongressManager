@@ -367,6 +367,7 @@ class FacturasPendientesAdminViewTests(TestCase):
 class FacturaUploadBothFilesTest(TestCase):
     def setUp(self):
         self.client = APIClient()
+        self.admin = _create_persona('admin@test.com', is_staff=True)
         self.persona = _create_persona('upload@test.com')
         self.id_congreso = _create_congreso()
         with connection.cursor() as c:
@@ -377,16 +378,19 @@ class FacturaUploadBothFilesTest(TestCase):
             )
             self.id_factura = c.fetchone()[0]
 
-    def _token(self):
+    def _token(self, user=None):
         from rest_framework_simplejwt.tokens import RefreshToken
-        return str(RefreshToken.for_user(self.persona).access_token)
+        return str(RefreshToken.for_user(user or self.admin).access_token)
+
+    def _upload_url(self):
+        return f'/api/users/factura/{self.persona.id_persona}/upload/'
 
     def test_upload_pdf_and_xml_marks_enviada(self):
         from django.core.files.uploadedfile import SimpleUploadedFile
         pdf = SimpleUploadedFile('factura.pdf', b'%PDF fake', content_type='application/pdf')
         xml = SimpleUploadedFile('factura.xml', b'<?xml version="1.0"?><cfdi/>', content_type='text/xml')
         res = self.client.post(
-            f'/api/users/factura/{self.persona.id_persona}/upload/',
+            self._upload_url(),
             {'pdf_file': pdf, 'xml_file': xml, 'id_congreso': self.id_congreso},
             HTTP_AUTHORIZATION=f'Bearer {self._token()}',
             format='multipart',
@@ -400,9 +404,48 @@ class FacturaUploadBothFilesTest(TestCase):
         from django.core.files.uploadedfile import SimpleUploadedFile
         pdf = SimpleUploadedFile('factura.pdf', b'%PDF fake', content_type='application/pdf')
         res = self.client.post(
-            f'/api/users/factura/{self.persona.id_persona}/upload/',
+            self._upload_url(),
             {'pdf_file': pdf, 'id_congreso': self.id_congreso},
             HTTP_AUTHORIZATION=f'Bearer {self._token()}',
             format='multipart',
         )
         self.assertEqual(res.status_code, 400)
+
+    def test_non_staff_cannot_upload(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        pdf = SimpleUploadedFile('factura.pdf', b'%PDF fake', content_type='application/pdf')
+        xml = SimpleUploadedFile('factura.xml', b'<?xml version="1.0"?><cfdi/>', content_type='text/xml')
+        res = self.client.post(
+            self._upload_url(),
+            {'pdf_file': pdf, 'xml_file': xml, 'id_congreso': self.id_congreso},
+            HTTP_AUTHORIZATION=f'Bearer {self._token(self.persona)}',
+            format='multipart',
+        )
+        self.assertEqual(res.status_code, 403)
+
+    def test_invalid_pdf_type_returns_400(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        bad_pdf = SimpleUploadedFile('factura.txt', b'not a pdf', content_type='text/plain')
+        xml = SimpleUploadedFile('factura.xml', b'<?xml version="1.0"?><cfdi/>', content_type='text/xml')
+        res = self.client.post(
+            self._upload_url(),
+            {'pdf_file': bad_pdf, 'xml_file': xml, 'id_congreso': self.id_congreso},
+            HTTP_AUTHORIZATION=f'Bearer {self._token()}',
+            format='multipart',
+        )
+        self.assertEqual(res.status_code, 400)
+
+    def test_create_factura_when_none_exists(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        # Crear una persona sin factura previa
+        persona2 = _create_persona('nofactura@test.com')
+        pdf = SimpleUploadedFile('factura.pdf', b'%PDF fake', content_type='application/pdf')
+        xml = SimpleUploadedFile('factura.xml', b'<?xml version="1.0"?><cfdi/>', content_type='text/xml')
+        res = self.client.post(
+            f'/api/users/factura/{persona2.id_persona}/upload/',
+            {'pdf_file': pdf, 'xml_file': xml, 'id_congreso': self.id_congreso},
+            HTTP_AUTHORIZATION=f'Bearer {self._token()}',
+            format='multipart',
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['estatus'], 'enviada')

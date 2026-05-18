@@ -279,6 +279,9 @@ class FacturaUploadView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, id_persona):
+        if not request.user.is_staff:
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+
         pdf_file = request.FILES.get('pdf_file')
         xml_file = request.FILES.get('xml_file')
         id_congreso = request.data.get('id_congreso')
@@ -289,12 +292,17 @@ class FacturaUploadView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        fs_pdf = FileSystemStorage(location='media/facturas/')
-        pdf_filename = fs_pdf.save(f"factura_{id_persona}_{id_congreso}_{pdf_file.name}", pdf_file)
-        pdf_url = f"/media/facturas/{pdf_filename}"
+        pdf_ok = pdf_file.content_type == 'application/pdf' or pdf_file.name.lower().endswith('.pdf')
+        xml_ok = xml_file.content_type in ('text/xml', 'application/xml') or xml_file.name.lower().endswith('.xml')
+        if not pdf_ok:
+            return Response({'detail': 'El archivo PDF no tiene un formato válido.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not xml_ok:
+            return Response({'detail': 'El archivo XML no tiene un formato válido.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        fs_xml = FileSystemStorage(location='media/facturas/')
-        xml_filename = fs_xml.save(f"factura_{id_persona}_{id_congreso}_{xml_file.name}", xml_file)
+        fs = FileSystemStorage(location='media/facturas/')
+        pdf_filename = fs.save(f"factura_{id_persona}_{id_congreso}_{pdf_file.name}", pdf_file)
+        pdf_url = f"/media/facturas/{pdf_filename}"
+        xml_filename = fs.save(f"factura_{id_persona}_{id_congreso}_{xml_file.name}", xml_file)
         xml_url = f"/media/facturas/{xml_filename}"
 
         factura = Factura.objects.filter(
