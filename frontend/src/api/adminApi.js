@@ -591,6 +591,22 @@ export async function transferPonenciaApi(accessToken, idPonencia, idLibroDestin
   return res.json();
 }
 
+export async function descargarLibroApi(accessToken, idLibro) {
+  const res = await fetch(`${API_URL}/api/congresos/libro/${idLibro}/descargar/`, {
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error al descargar libro.');
+  return res.blob();
+}
+
+export async function descargarTodosLibrosApi(accessToken, idCongreso) {
+  const res = await fetch(`${API_URL}/api/congresos/libros/${idCongreso}/descargar/`, {
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+  if (!res.ok) throw new Error('Error al descargar libros.');
+  return res.blob();
+}
+
 // Ponencias Magistrales
 export async function getPonenciasMagistralesApi(accessToken, idCongreso = null) {
   let url = `${API_URL}/api/ponencias/magistrales/`;

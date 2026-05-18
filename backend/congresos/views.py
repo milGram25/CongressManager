@@ -996,7 +996,7 @@ class ListaPagosAdminView(APIView):
             return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
         id_congreso = request.query_params.get('id_congreso')
         sql = """
-            SELECT
+            SELECT DISTINCT
                 p.id_pagos,
                 per.nombre,
                 per.primer_apellido,
@@ -1161,6 +1161,192 @@ class LibroHasPonenciaView(APIView):
             return Response(LibroHasPonenciaSerializer(lhp).data)
         except LibroHasPonencia.DoesNotExist:
             return Response({'detail': 'Asociación no encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class DescargarLibrosView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, id_libro=None, id_congreso=None):
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+        if id_libro is not None:
+            return self._descargar_libro(id_libro)
+        return self._descargar_todos(id_congreso)
+
+    def _get_ponencias_data(self, libro):
+        from ponencias.models import PonenteHasPonencia
+        from users.models import Asistente
+
+        lhp_qs = LibroHasPonencia.objects.filter(id_libro=libro).select_related('id_ponencia')
+        ponencias = []
+        for orden, lhp in enumerate(lhp_qs, start=1):
+            p = lhp.id_ponencia
+            try:
+                evento = p.id_evento
+                nombre_evento = evento.nombre_evento
+                fecha_inicio = evento.fecha_hora_inicio
+                tipo_trabajo = evento.id_tipo_trabajo.tipo_trabajo if evento.id_tipo_trabajo else ''
+            except Exception:
+                nombre_evento = ''
+                fecha_inicio = None
+                tipo_trabajo = ''
+
+            try:
+                nombre_subarea = p.id_subarea.nombre
+                nombre_area = p.id_subarea.id_area_general.nombre
+            except Exception:
+                nombre_subarea = ''
+                nombre_area = ''
+
+            rels = PonenteHasPonencia.objects.filter(id_ponencia=p).select_related(
+                'id_ponente__id_persona'
+            )
+
+            ponentes_info = []
+            for rel in rels:
+                persona = rel.id_ponente.id_persona
+                nombre_completo = f"{persona.nombre} {persona.primer_apellido} {persona.segundo_apellido or ''}".strip()
+                email = persona.correo_electronico
+                institucion = ''
+                try:
+                    asistente = Asistente.objects.get(id_persona=persona)
+                    institucion = asistente.institucion_procedencia or ''
+                except Asistente.DoesNotExist:
+                    pass
+                ponentes_info.append({'nombre': nombre_completo, 'email': email, 'institucion': institucion})
+
+            ponente_principal = ponentes_info[0]['nombre'] if ponentes_info else ''
+            email_principal = ponentes_info[0]['email'] if ponentes_info else ''
+            institucion_principal = ponentes_info[0]['institucion'] if ponentes_info else ''
+            coautores = ', '.join(pi['nombre'] for pi in ponentes_info[1:]) if len(ponentes_info) > 1 else ''
+
+            ponencias.append({
+                'orden': orden,
+                'titulo': nombre_evento,
+                'tipo_trabajo': tipo_trabajo,
+                'tipo_participacion': p.tipo_participacion,
+                'subarea': nombre_subarea,
+                'area_general': nombre_area,
+                'fecha': fecha_inicio.strftime('%d/%m/%Y %H:%M') if fecha_inicio else '',
+                'ponente_principal': ponente_principal,
+                'email': email_principal,
+                'coautores': coautores,
+                'institucion': institucion_principal,
+            })
+        return ponencias
+
+    def _fill_sheet(self, ws, libro, congreso_nombre):
+        from openpyxl.styles import Font, PatternFill, Alignment
+        from openpyxl.utils import get_column_letter
+
+        meta_fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+        bold_font = Font(bold=True)
+
+        for label, value in [
+            ('Libro:', libro.titulo),
+            ('Congreso:', congreso_nombre),
+            ('Fecha de publicación:', libro.fecha_publicacion.strftime('%d/%m/%Y') if libro.fecha_publicacion else ''),
+            ('Descripción:', libro.descripcion),
+        ]:
+            ws.append([label, value])
+            fila = ws.max_row
+            ws.cell(row=fila, column=1).font = bold_font
+            ws.cell(row=fila, column=1).fill = meta_fill
+
+        ws.append([])
+
+        headers = [
+            'N°', 'Título de la ponencia', 'Tipo de trabajo', 'Tipo de participación',
+            'Subárea', 'Área general', 'Fecha del evento',
+            'Ponente principal', 'Email del ponente', 'Coautores', 'Institución',
+        ]
+        ws.append(headers)
+        header_row = ws.max_row
+        header_font = Font(bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="1a1a1a", end_color="1a1a1a", fill_type="solid")
+        header_align = Alignment(horizontal='center')
+        for col in range(1, len(headers) + 1):
+            cell = ws.cell(row=header_row, column=col)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_align
+
+        alt_fill = PatternFill(start_color="F9F9F9", end_color="F9F9F9", fill_type="solid")
+        for i, p in enumerate(self._get_ponencias_data(libro)):
+            ws.append([
+                p['orden'], p['titulo'], p['tipo_trabajo'], p['tipo_participacion'],
+                p['subarea'], p['area_general'], p['fecha'],
+                p['ponente_principal'], p['email'], p['coautores'], p['institucion'],
+            ])
+            if i % 2 == 0:
+                for col in range(1, len(headers) + 1):
+                    ws.cell(row=ws.max_row, column=col).fill = alt_fill
+
+        for i, width in enumerate([5, 40, 20, 20, 20, 20, 18, 25, 30, 30, 25], 1):
+            ws.column_dimensions[get_column_letter(i)].width = width
+
+    def _descargar_libro(self, id_libro):
+        import io
+        import openpyxl
+        from django.http import HttpResponse
+
+        try:
+            libro = Libros.objects.select_related('id_congreso').get(pk=id_libro)
+        except Libros.DoesNotExist:
+            return Response({'detail': 'Libro no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = libro.titulo[:31]
+        self._fill_sheet(ws, libro, libro.id_congreso.nombre_congreso)
+
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+
+        titulo_safe = "".join(c if c.isalnum() or c in (' ', '-', '_') else '_' for c in libro.titulo).strip()
+        response = HttpResponse(
+            buffer.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = f'attachment; filename="{titulo_safe}.xlsx"'
+        return response
+
+    def _descargar_todos(self, id_congreso):
+        import io
+        import zipfile
+        import openpyxl
+        from django.http import HttpResponse
+
+        try:
+            congreso = Congreso.objects.get(pk=id_congreso)
+        except Congreso.DoesNotExist:
+            return Response({'detail': 'Congreso no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+        libros = Libros.objects.filter(id_congreso_id=id_congreso)
+        if not libros.exists():
+            return Response({'detail': 'No hay libros en este congreso.'}, status=status.HTTP_404_NOT_FOUND)
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for libro in libros:
+                wb = openpyxl.Workbook()
+                ws = wb.active
+                ws.title = libro.titulo[:31]
+                self._fill_sheet(ws, libro, congreso.nombre_congreso)
+
+                xl_buffer = io.BytesIO()
+                wb.save(xl_buffer)
+                xl_buffer.seek(0)
+
+                titulo_safe = "".join(c if c.isalnum() or c in (' ', '-', '_') else '_' for c in libro.titulo).strip()
+                zf.writestr(f'{titulo_safe}.xlsx', xl_buffer.getvalue())
+
+        zip_buffer.seek(0)
+        congreso_safe = "".join(c if c.isalnum() or c in (' ', '-', '_') else '_' for c in congreso.nombre_congreso).strip()
+        response = HttpResponse(zip_buffer.getvalue(), content_type='application/zip')
+        response['Content-Disposition'] = f'attachment; filename="libros_{congreso_safe}.zip"'
+        return response
 
 
 def _fetch_events_between(start, end, user=None):
