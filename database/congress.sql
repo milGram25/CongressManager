@@ -36,7 +36,7 @@ CREATE TABLE sede (
 CREATE TABLE areas_generales (
     id_areas_generales SERIAL PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL,
-    id_congreso INTEGER REFERENCES congreso(id_congreso) ON DELETE CASCADE
+    id_congreso INTEGER
 );
 
 CREATE TABLE tipo_trabajo (
@@ -105,15 +105,15 @@ CREATE TABLE fechas_congreso (
     fecha_fin_evaluar_extensos TIMESTAMP NOT NULL,
     fecha_inicio_subir_multimedia TIMESTAMP NOT NULL,
     fecha_fin_subir_multimedia TIMESTAMP NOT NULL,
-    fecha_inicio_subir_extenso_final TIMESTAMP NOT NULL,
-    fecha_fin_subir_extenso_final TIMESTAMP NOT NULL
+    fecha_inicio_subir_extenso_final TIMESTAMP,
+    fecha_fin_subir_extenso_final TIMESTAMP
 );
 
 -- 3. SISTEMA DE RÚBRICAS (Plantillas de evaluación)
 CREATE TABLE rubrica (
     id_rubrica SERIAL PRIMARY KEY,
     id_congreso INTEGER,
-    tipo_trabajo INTEGER REFERENCES tipo_trabajo(id_tipo_trabajo),
+    tipo_trabajo INTEGER NOT NULL REFERENCES tipo_trabajo(id_tipo_trabajo),
     nombre VARCHAR(255) NOT NULL,
     esta_activo BOOLEAN DEFAULT true,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -166,8 +166,9 @@ CREATE TABLE congreso (
     firmas_bloqueadas BOOLEAN DEFAULT FALSE
 );
 
-ALTER TABLE tipo_trabajo ADD CONSTRAINT fk_tipo_trabajo_congreso FOREIGN KEY (id_congreso) REFERENCES congreso(id_congreso) ON DELETE CASCADE;
-ALTER TABLE rubrica ADD CONSTRAINT fk_rubrica_congreso FOREIGN KEY (id_congreso) REFERENCES congreso(id_congreso) ON DELETE CASCADE;
+ALTER TABLE areas_generales ADD CONSTRAINT areas_generales_id_congreso_fkey FOREIGN KEY (id_congreso) REFERENCES congreso(id_congreso) ON DELETE CASCADE;
+ALTER TABLE tipo_trabajo ADD CONSTRAINT fk_tipo_trabajo_congreso FOREIGN KEY (id_congreso) REFERENCES congreso(id_congreso);
+ALTER TABLE rubrica ADD CONSTRAINT fk_rubrica_congreso FOREIGN KEY (id_congreso) REFERENCES congreso(id_congreso);
 
 -- 5. ROLES Y LOGÍSTICA
 CREATE TABLE evaluador (
@@ -203,10 +204,11 @@ CREATE TABLE asistente (
     id_asistente SERIAL PRIMARY KEY,
     id_persona INTEGER NOT NULL REFERENCES persona(id_persona) ON DELETE CASCADE,
     institucion_procedencia VARCHAR(255),
-    es_estudiante_validado BOOLEAN DEFAULT FALSE,
+    es_estudiante_validado BOOLEAN DEFAULT FALSE NOT NULL,
     email_institucional VARCHAR(255),
     codigo_verificacion VARCHAR(6),
-    fecha_envio_codigo TIMESTAMP
+    fecha_envio_codigo TIMESTAMP,
+    UNIQUE(id_persona)
 );
 
 CREATE TABLE mesas_trabajo (
@@ -286,7 +288,7 @@ CREATE TABLE taller (
     tallerista VARCHAR(255) NOT NULL,
     id_evento INTEGER NOT NULL REFERENCES evento(id_evento),
     tipo_participacion tipo_participacion_enum,
-    id_subarea INTEGER NOT NULL REFERENCES subareas(id_subareas),
+    id_subarea INTEGER REFERENCES subareas(id_subareas),
     id_multimedia INTEGER REFERENCES multimedia(id_material)
 );
 
@@ -345,6 +347,7 @@ CREATE TABLE factura (
     regimen_fiscal VARCHAR(255),
     ruta_pdf_xml VARCHAR(255),
     ruta_constancia_fiscal VARCHAR(255),
+    ruta_xml VARCHAR(255),
     estatus VARCHAR(20) DEFAULT 'pendiente', -- 'pendiente', 'enviada'
     fecha_solicitud TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_envio TIMESTAMP
@@ -402,7 +405,8 @@ CREATE TABLE ponencia_magistral(
     fecha_inicio TIMESTAMP,
     fecha_fin TIMESTAMP,
     id_congreso INTEGER REFERENCES congreso(id_congreso),
-    id_multimedia INTEGER REFERENCES multimedia(id_material)
+    id_multimedia INTEGER REFERENCES multimedia(id_material),
+    enlace_multimedia VARCHAR(500) DEFAULT ''
 );
 
 CREATE TABLE ponencia_magistral_has_ponente_magistral(
