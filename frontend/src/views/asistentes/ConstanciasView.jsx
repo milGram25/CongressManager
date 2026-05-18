@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { getMisConstanciasApi } from "../../api/pagosApi";
+import { API_URL } from "../../api/constants";
 import CertificateTemplate from "../admin/Componentes/CertificateTemplate";
 import {
   MdReceipt,
@@ -58,6 +59,7 @@ export default function ConstanciasView() {
   const enProcesoCount = misConstancias.filter(c => c.estatus === "en_proceso").length;
 
   const handlePrintCertificate = () => {
+    // Solo imprimible cuando es plantilla (no PDF externo)
     const el = document.getElementById('user-certificate-print');
     if (!el) return;
     const nombre = user?.nombre_completo?.replace(/\s/g, '_') || 'constancia';
@@ -79,6 +81,13 @@ export default function ConstanciasView() {
       </html>
     `);
     printWindow.document.close();
+  };
+
+  // Construye la URL completa del PDF si viene del servidor
+  const buildPdfUrl = (pdfUrl) => {
+    if (!pdfUrl) return null;
+    if (pdfUrl.startsWith('http')) return pdfUrl;
+    return `${API_URL}${pdfUrl}`;
   };
 
   if (loading) return (
@@ -252,21 +261,34 @@ export default function ConstanciasView() {
 
             {/* Vista previa */}
             <div className="flex-1 bg-neutral-200 overflow-auto p-6 flex items-start justify-center">
-              <div id="user-certificate-print" className="w-full max-w-4xl shadow-2xl rounded-lg overflow-hidden">
-                <CertificateTemplate
-                  user={{
-                    nombre: user?.nombre_completo,
-                    rol: modalConstancia.tipo,
-                    id: modalConstancia.id,
-                  }}
-                  signatures={{
-                    organizador: modalConstancia.firmaOrganizador,
-                    secretaria: modalConstancia.firmaSecretaria,
-                  }}
-                  congressName={modalConstancia.congreso}
-                  sede={modalConstancia.sede}
-                />
-              </div>
+              {buildPdfUrl(modalConstancia.pdfUrl) ? (
+                // PDF manual subido por el admin → mostrar el archivo real
+                <div className="w-full max-w-4xl shadow-2xl rounded-lg overflow-hidden bg-white" style={{ minHeight: '500px' }}>
+                  <iframe
+                    src={buildPdfUrl(modalConstancia.pdfUrl)}
+                    className="w-full border-none"
+                    style={{ height: '70vh' }}
+                    title="Constancia PDF"
+                  />
+                </div>
+              ) : (
+                // Constancia generada desde plantilla → renderizar el template visual
+                <div id="user-certificate-print" className="w-full max-w-4xl shadow-2xl rounded-lg overflow-hidden">
+                  <CertificateTemplate
+                    user={{
+                      nombre: user?.nombre_completo,
+                      rol: modalConstancia.tipo,
+                      id: modalConstancia.id,
+                    }}
+                    signatures={{
+                      organizador: modalConstancia.firmaOrganizador,
+                      secretaria: modalConstancia.firmaSecretaria,
+                    }}
+                    congressName={modalConstancia.congreso}
+                    sede={modalConstancia.sede}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Footer */}
@@ -277,12 +299,15 @@ export default function ConstanciasView() {
               >
                 Cerrar
               </button>
-              <button
-                onClick={handlePrintCertificate}
-                className="px-6 py-2.5 bg-primary text-white rounded-xl font-black text-xs flex items-center gap-2 hover:opacity-90 transition-all shadow-lg tracking-wide"
-              >
-                <MdPrint className="text-base" /> Guardar como PDF
-              </button>
+              {/* El botón de imprimir solo aplica para constancias desde plantilla */}
+              {!buildPdfUrl(modalConstancia.pdfUrl) && (
+                <button
+                  onClick={handlePrintCertificate}
+                  className="px-6 py-2.5 bg-primary text-white rounded-xl font-black text-xs flex items-center gap-2 hover:opacity-90 transition-all shadow-lg tracking-wide"
+                >
+                  <MdPrint className="text-base" /> Guardar como PDF
+                </button>
+              )}
             </div>
           </div>
         </div>
