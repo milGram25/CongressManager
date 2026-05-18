@@ -1134,6 +1134,74 @@ class PreguntasResumenView(APIView):
         return Response([{'id_pregunta': r[0], 'descripcion': r[1]} for r in rows])
 
 
+class ResumenDetalleView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        if not request.user.is_staff:
+            return Response({'detail': 'No autorizado.'}, status=status.HTTP_403_FORBIDDEN)
+
+        with connection.cursor() as cursor:
+            # 1. Obtener datos del resumen
+            cursor.execute("""
+                SELECT fecha_entrega, revisado
+                FROM resumen
+                WHERE id_resumen = %s
+            """, [pk])
+            row = cursor.fetchone()
+            if not row:
+                return Response({'detail': 'Resumen no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            fecha_entrega, revisado = row
+
+            # 2. Obtener el dictamen si existe
+            dictamen = None
+            fecha_revision = None
+            if revisado:
+                cursor.execute("""
+                    SELECT id_dictamen, estatus, retroalimentacion_general, fecha_de_revision
+                    FROM dictamen_resumen
+                    WHERE id_resumen = %s
+                    ORDER BY fecha_de_revision DESC
+                    LIMIT 1
+                """, [pk])
+                dr_row = cursor.fetchone()
+                if dr_row:
+                    id_dictamen, dr_estatus, dr_retro, dr_fecha = dr_row
+                    fecha_revision = dr_fecha
+
+                    # Obtener las preguntas evaluadas en este dictamen
+                    cursor.execute("""
+                        SELECT ep.id_pregunta, dp.descripcion, ep.cumplio, ep.comentario_especifico
+                        FROM evaluacion_pregunta ep
+                        JOIN dictamen_pregunta dp ON ep.id_pregunta = dp.id_pregunta
+                        WHERE ep.id_dictamen = %s
+                        ORDER BY ep.id_evaluacion_pregunta
+                    """, [id_dictamen])
+                    preguntas = []
+                    for id_preg, desc, cumplio, com in cursor.fetchall():
+                        preguntas.append({
+                            'id_pregunta': id_preg,
+                            'pregunta': desc,
+                            'aprobada': bool(cumplio) if cumplio is not None else False,
+                            'comentario': com or '',
+                        })
+
+                    dictamen = {
+                        'calificacion_final': str(dr_estatus).capitalize() if dr_estatus else '',
+                        'retroalimentacion_general': dr_retro or '',
+                        'fecha_revision': dr_fecha.isoformat() if dr_fecha else None,
+                        'preguntas': preguntas,
+                    }
+
+        return Response({
+            'id_resumen': pk,
+            'fecha_entrega': fecha_entrega.isoformat() if fecha_entrega else None,
+            'fecha_revision': fecha_revision.isoformat() if fecha_revision else None,
+            'dictamen': dictamen,
+        })
+
+
 class EnviarEvaluacionView(APIView):
     permission_classes = [IsAuthenticated]
 
