@@ -174,9 +174,8 @@ export default function FacturasView() {
                       )}
                       {factura.ruta_xml && (
                         <a
-                          href={getDownloadUrl(factura.ruta_xml)}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          href={factura.ruta_xml}
+                          download
                           className="btn btn-xs btn-ghost border-base-300 hover:bg-alt hover:text-white normal-case gap-2 w-full h-9 transition-all"
                         >
                           <MdFileDownload className="text-lg" /> XML
