@@ -155,6 +155,7 @@ export default function VistaPreviewDocumento({ item, etiquetaFecha, onClose }) 
                                 }}
                                 congressName={item.congreso}
                                 sede={item.sede || null}
+                                fecha={item.fecha || null}
                             />
                         </div>
                     ) : !archivoUrl ? (

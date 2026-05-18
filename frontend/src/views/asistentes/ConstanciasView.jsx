@@ -275,6 +275,7 @@ export default function ConstanciasView() {
                       }}
                       congressName={modalConstancia.congreso}
                       sede={modalConstancia.sede}
+                      fecha={modalConstancia.fechaEmision}
                     />
                   </div>
                 </div>

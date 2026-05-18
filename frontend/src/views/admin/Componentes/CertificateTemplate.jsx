@@ -2,8 +2,8 @@ import React from 'react';
 import logoCienu from "../../../assets/CIENU.jpg";
 import logoRidmae from "../../../assets/ridmae.jpg";
 
-export default function CertificateTemplate({ user, congressName = "CIENU 2026", sede = null, signatures = {} }) {
-  const date = new Date().toLocaleDateString('es-MX', {
+export default function CertificateTemplate({ user, congressName = "CIENU 2026", sede = null, signatures = {}, fecha = null }) {
+  const date = (fecha ? new Date(fecha) : new Date()).toLocaleDateString('es-MX', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
