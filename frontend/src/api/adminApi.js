@@ -36,9 +36,10 @@ export async function uploadConstanciaApi(accessToken, idPersona, idCongreso, fi
   return res.json();
 }
 
-export async function uploadFacturaApi(accessToken, idPersona, idCongreso, file) {
+export async function uploadFacturaApi(accessToken, idPersona, idCongreso, pdfFile, xmlFile) {
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append('pdf_file', pdfFile);
+  formData.append('xml_file', xmlFile);
   formData.append('id_congreso', idCongreso);
   const res = await fetch(`${API_URL}/api/users/factura/${idPersona}/upload/`, {
     method: 'POST',
