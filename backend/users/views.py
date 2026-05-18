@@ -243,13 +243,17 @@ class ConstanciaUploadView(APIView):
         file = request.FILES.get('file')
         id_congreso = request.data.get('id_congreso')
         tipo = request.data.get('tipo', 'Asistente')
+        auto_generated = request.data.get('auto_generated') == 'true'
 
-        if not file:
+        if not file and not auto_generated:
             return Response({'detail': 'No se proporcionó ningún archivo.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        fs = FileSystemStorage(location='media/constancias/')
-        filename = fs.save(f"constancia_{id_persona}_{id_congreso}_{file.name}", file)
-        file_url = f"/media/constancias/{filename}"
+        if file:
+            fs = FileSystemStorage(location='media/constancias/')
+            filename = fs.save(f"constancia_{id_persona}_{id_congreso}_{file.name}", file)
+            file_url = f"/media/constancias/{filename}"
+        else:
+            file_url = None
 
         constancia, created = Constancia.objects.get_or_create(
             id_persona_id=id_persona,
@@ -259,7 +263,8 @@ class ConstanciaUploadView(APIView):
         )
 
         if not created:
-            constancia.ruta_constancia = file_url
+            if file_url is not None:
+                constancia.ruta_constancia = file_url
             constancia.estatus = 'enviada'
             constancia.save()
 
