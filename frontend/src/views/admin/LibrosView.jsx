@@ -1,5 +1,5 @@
 import ListaDesplegableElementosGenerica from "./Componentes/ListaDesplegableElementosGenerica.jsx";
-import { MdDelete, MdAdd, MdSave, MdCheck } from 'react-icons/md';
+import { MdDelete, MdAdd, MdSave, MdCheck, MdDownload } from 'react-icons/md';
 import { useState, useEffect } from 'react';
 import { FiEye, FiCopy, FiEdit2 } from 'react-icons/fi';
 import { FaAngleDown, FaCaretDown, FaCaretUp } from "react-icons/fa";
@@ -9,7 +9,8 @@ import { MdOutlineChangeCircle } from "react-icons/md";
 import {
     getCongresosApi, getInstitucionesApi, getLibrosApi, getPonenciasApi, getLibroHasPonenciaApi,
     createLibroApi, updateLibroApi, deleteLibroApi,
-    addPonenciaToLibroApi, removePonenciaFromLibroApi, transferPonenciaApi
+    addPonenciaToLibroApi, removePonenciaFromLibroApi, transferPonenciaApi,
+    descargarLibroApi, descargarTodosLibrosApi
 } from "../../api/adminApi";
 
 
@@ -376,6 +377,46 @@ export default function LibrosView({ librosRecibidos, congreso }) {
             alert("No se pudo eliminar el libro de la base de datos.");
         }
     }
+    async function handleDescargarLibro(libro) {
+        try {
+            const blob = await descargarLibroApi(accessToken, libro.id_libro);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${libro.titulo}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Error al descargar libro:", error);
+            alert("No se pudo descargar el libro.");
+        }
+    }
+
+    async function handleDescargarTodos() {
+        if (!selectedCongId) {
+            alert("Por favor seleccione un congreso primero.");
+            return;
+        }
+        const congreso = congresos.find(c => c.id_congreso == selectedCongId);
+        const nombre = congreso?.nombre_congreso || 'libros';
+        try {
+            const blob = await descargarTodosLibrosApi(accessToken, selectedCongId);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `libros_${nombre}.zip`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Error al descargar libros:", error);
+            alert("No se pudieron descargar los libros.");
+        }
+    }
+
     const listaPonenciasLibro = (ponencia, index2, libroIndex) => {
         console.log("PONENCIA COMPLETA:", ponencia);
         return (
@@ -473,6 +514,11 @@ export default function LibrosView({ librosRecibidos, congreso }) {
                         <button onClick={(e) => handleAgregarLibro(e, libros.length)} className="btn btn-sm btn-outline btn-primary gap-2 mb-4 w-fit rounded-xl">
                             <MdAdd size={18} /> Nuevo libro
                         </button>
+                        {libros.length > 0 && selectedCongId && (
+                            <button onClick={handleDescargarTodos} className="btn btn-sm btn-outline gap-2 mb-4 w-fit rounded-xl" title="Descargar todos los libros del congreso como ZIP">
+                                <MdDownload size={18} /> Descargar libros
+                            </button>
+                        )}
 
                     </div>
 
@@ -554,6 +600,11 @@ export default function LibrosView({ librosRecibidos, congreso }) {
 
 
                                         </button>
+                                        {index !== editingLibro && (
+                                            <button className={buttonStyle} onClick={() => handleDescargarLibro(libro)} title="Descargar libro como Excel">
+                                                <MdDownload />
+                                            </button>
+                                        )}
                                         <button className={buttonStyle} onClick={() => handleMostrarPonencias(index, libro)}>
                                             <FaAngleDown />
 
